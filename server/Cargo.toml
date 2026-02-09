@@ -9,6 +9,7 @@ async-stream = "0.3.6"
 axum = "0.8.8"
 chrono = "0.4.43"
 clap = { version = "4.5.57", features = ["derive"] }
+dashmap = "6.1.0"
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 log = "0.4.29"
 log4rs = "1.4.0"
@@ -17,6 +18,7 @@ prost = "0.14.3"
 rand = "0.10.0"
 regex = "1.12.3"
 serde = "1.0.228"
+thiserror = "2.0.18"
 tokio = { version = "1.49.0", features = ["rt-multi-thread", "macros", "signal"] }
 tokio-stream = { version = "0.1.18", features = ["sync"] }
 tonic = "0.14.3"

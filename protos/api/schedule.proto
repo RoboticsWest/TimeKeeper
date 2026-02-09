@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package tk.api;
+
+message UploadScheduleCsvRequest {
+  bytes csv_data = 1;
+}
+message UploadScheduleCsvResponse {}
+
+message UploadScheduleIcsRequest {
+  bytes ics_data = 1;
+}
+message UploadScheduleIcsResponse {}
+
+service ScheduleService {
+  rpc UploadScheduleCsv(UploadScheduleCsvRequest) returns (UploadScheduleCsvResponse);
+  rpc UploadScheduleIcs(UploadScheduleIcsRequest) returns (UploadScheduleIcsResponse);
+}

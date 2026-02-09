@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "db/db.proto";
+
+message UploadStudentCsvRequest {
+  bytes csv_data = 1;
+}
+message UploadStudentCsvResponse {}
+
+message UploadMentorCsvRequest {
+  bytes csv_data = 1;
+}
+message UploadMentorCsvResponse {}
+
+message TeamMemberResponse {
+  string id = 1;
+  db.TeamMember team_member = 2;
+}
+
+message GetTeamMembersRequest {}
+message GetTeamMembersResponse {
+  repeated TeamMemberResponse team_members = 1;
+}
+
+message GetStudentsRequest {}
+message GetStudentsResponse {
+  repeated TeamMemberResponse students = 1;
+}
+
+message GetMentorsRequest {}
+message GetMentorsResponse {
+  repeated TeamMemberResponse mentors = 1;
+}
+
+message StreamTeamMembersRequest {}
+message StreamTeamMembersResponse {
+  repeated TeamMemberResponse team_members = 1;
+}
+
+message StreamStudentsRequest {}
+message StreamStudentsResponse {
+  repeated TeamMemberResponse students = 1;
+}
+
+message StreamMentorsRequest {}
+message StreamMentorsResponse {
+  repeated TeamMemberResponse mentors = 1;
+}
+
+service TeamMemberService {
+  rpc UploadStudentCsv(UploadStudentCsvRequest) returns (UploadStudentCsvResponse);
+  rpc UploadMentorCsv(UploadMentorCsvRequest) returns (UploadMentorCsvResponse);
+
+  rpc GetTeamMembers(GetTeamMembersRequest) returns (GetTeamMembersResponse);
+  rpc GetStudents(GetStudentsRequest) returns (GetStudentsResponse);
+  rpc GetMentors(GetMentorsRequest) returns (GetMentorsResponse);
+
+  rpc StreamTeamMembers(StreamTeamMembersRequest) returns (stream StreamTeamMembersResponse);
+  rpc StreamStudents(StreamStudentsRequest) returns (stream StreamStudentsResponse);
+  rpc StreamMentors(StreamMentorsRequest) returns (stream StreamMentorsResponse);
+}

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package tk.db;
+
+import "common/common.proto";
+
+message Secret {
+  bytes secret_bytes = 1;
+}
+
+message User {
+  string username = 1;
+  string password = 2;
+  repeated common.Role roles = 3;
+}
+
+enum TeamMemberType {
+  STUDENT = 0;
+  MENTOR = 1;
+}
+
+message TeamMember {
+  string first_name = 1;
+  string last_name = 2;
+  TeamMemberType member_type = 3;
+  optional string alias = 4;
+  optional string secondary_alias = 5;
+}
+
+message Location {
+  string location = 1;
+}
+
+message TeamMemberSession {
+  string team_member_id = 1;
+  common.TkDateTime check_in_time = 2;
+  optional common.TkDateTime check_out_time = 3;
+}
+
+message Session {
+  common.TkDateTime start_time = 1;
+  common.TkDateTime end_time = 2;
+  string location_id = 3;
+  repeated TeamMemberSession member_sessions = 4;
+  bool finished = 5;
+}

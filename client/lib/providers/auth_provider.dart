@@ -1,0 +1,149 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:time_keeper/generated/api/user.pbgrpc.dart';
+import 'package:time_keeper/generated/common/common.pbenum.dart';
+import 'package:time_keeper/helpers/auth_interceptor.dart';
+import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/helpers/local_storage.dart';
+import 'package:time_keeper/providers/grpc_channel_provider.dart';
+import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/logger.dart';
+
+part 'auth_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+class Token extends _$Token {
+  final _tokenKey = 'jwt_token';
+
+  Future<void> set(String token) async {
+    await localStorage.setString(_tokenKey, token);
+    state = token;
+  }
+
+  void clear() async {
+    await localStorage.remove(_tokenKey);
+    state = null;
+  }
+
+  @override
+  String? build() {
+    final token = localStorage.getString(_tokenKey);
+    return (token == null || token.isEmpty) ? null : token;
+  }
+}
+
+@Riverpod(keepAlive: true)
+class Username extends _$Username {
+  final _usernameKey = 'username';
+
+  Future<void> set(String username) async {
+    await localStorage.setString(_usernameKey, username);
+    state = username;
+  }
+
+  Future<void> clear() async {
+    await localStorage.remove(_usernameKey);
+    state = null;
+  }
+
+  @override
+  String? build() {
+    final username = localStorage.getString(_usernameKey);
+    return (username == null || username.isEmpty) ? null : username;
+  }
+}
+
+@Riverpod(keepAlive: true)
+class Roles extends _$Roles {
+  final _rolesKey = 'user_roles';
+
+  Future<void> set(List<Role> roles) async {
+    await localStorage.setStringList(
+      _rolesKey,
+      roles.map((role) => role.value.toString()).toList(),
+    );
+    state = roles;
+  }
+
+  Future<void> clear() async {
+    await localStorage.remove(_rolesKey);
+    state = [];
+  }
+
+  @override
+  List<Role> build() {
+    final roleStrings = localStorage.getStringList(_rolesKey) ?? [];
+    return roleStrings
+        .map((str) => int.tryParse(str))
+        .whereType<int>()
+        .map((value) => Role.valueOf(value))
+        .whereType<Role>()
+        .toList();
+  }
+}
+
+@Riverpod(keepAlive: true)
+class UserService extends _$UserService {
+  Future<GrpcResult<LoginResponse>> login(
+    String username,
+    String password,
+  ) async {
+    final response = await callGrpcEndpoint(() async {
+      final request = LoginRequest(username: username, password: password);
+      return await state.login(request);
+    });
+
+    if (response is GrpcSuccess<LoginResponse>) {
+      final loginResponse = response.data;
+      ref.read(usernameProvider.notifier).set(username);
+      ref.read(tokenProvider.notifier).set(loginResponse.token);
+      ref.read(rolesProvider.notifier).set(loginResponse.roles.toList());
+    }
+
+    return response;
+  }
+
+  Future<bool> validateToken() async {
+    final response = await callGrpcEndpoint(() async {
+      final request = ValidateTokenRequest();
+      return await state.validateToken(request);
+    });
+
+    // On success, token is valid
+    if (response is GrpcSuccess<ValidateTokenResponse>) {
+      logger.i('Validated Auth Token');
+      return true;
+    }
+
+    if (response is GrpcFailure<ValidateTokenResponse>) {
+      // If it's an unauthenticated error (status code 16), the token is invalid
+      if (response.statusCode == 16) {
+        logger.i('Invalid Auth Token');
+        return false;
+      }
+      // For other errors (network, timeout, etc), assume token is still valid
+      return true;
+    }
+
+    return true;
+  }
+
+  void logout() {
+    ref.read(usernameProvider.notifier).clear();
+    ref.read(tokenProvider.notifier).clear();
+    ref.read(rolesProvider.notifier).clear();
+  }
+
+  @override
+  UserServiceClient build() {
+    final channel = ref.watch(grpcChannelProvider);
+    final token = ref.watch(tokenProvider);
+    final options = authCallOptions(token);
+    return UserServiceClient(channel, options: options);
+  }
+}
+
+@Riverpod(keepAlive: true)
+bool isLoggedIn(Ref ref) {
+  final token = ref.watch(tokenProvider);
+  return token?.isNotEmpty ?? false;
+}
