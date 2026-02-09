@@ -27,7 +27,7 @@ jobs:
         run: dart pub global activate protoc_plugin
       - name: Validate protobufs
         run: |
-          protoc --proto_path=protos --dart_out=grpc:client/lib/generated protos/*.proto
+          protoc --proto_path=protos --dart_out=grpc:client/lib/generated protos/common/*.proto protos/api/*.proto protos/db/*.proto
 
   rust-check:
     runs-on: ubuntu-latest

@@ -28,9 +28,14 @@ fn main() -> Result<()> {
   let workspace_root = find_workspace_root();
   let proto_dir = workspace_root.join("protos");
 
-  tonic_prost_build::configure()
-    .out_dir("src/generated")
-    .compile_protos(&[proto_dir.join("tk.proto").to_str().unwrap_or_default()], &[proto_dir.to_str().unwrap()])?;
+  tonic_prost_build::configure().out_dir("src/generated").compile_protos(
+    &[
+      proto_dir.join("db/db.proto").to_str().unwrap(),
+      proto_dir.join("common/common.proto").to_str().unwrap(),
+      proto_dir.join("api/api.proto").to_str().unwrap(),
+    ],
+    &[proto_dir.to_str().unwrap()],
+  )?;
 
   Ok(())
 }

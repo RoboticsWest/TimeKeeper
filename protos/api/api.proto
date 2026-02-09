@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package tk.api;
+
+import public "api/user.proto";
+import public "api/schedule.proto";
+import public "api/session.proto";
+import public "api/team_member.proto";
+
+message GetHealthRequest {}
+message GetHealthResponse {}
+
+service HealthService {
+  rpc GetHealth(GetHealthRequest) returns (GetHealthResponse);
+  rpc StreamHealth(GetHealthRequest) returns (stream GetHealthResponse);
+}

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "db/db.proto";
+
+message SessionResponse {
+  string id = 1;
+  db.Session session = 2;
+}
+
+message GetSessionsRequest {}
+message GetSessionsResponse {
+  repeated SessionResponse sessions = 1;
+}
+
+message StreamSessionsRequest {}
+message StreamSessionsResponse {
+  repeated SessionResponse sessions = 1;
+}
+
+service SessionService {
+  rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse);
+  rpc StreamSessions(StreamSessionsRequest) returns (stream StreamSessionsResponse);
+}
