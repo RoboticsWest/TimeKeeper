@@ -19,7 +19,17 @@ message StreamSessionsResponse {
   repeated SessionResponse sessions = 1;
 }
 
+message CheckInOutRequest {
+  string team_member_id = 1;
+  db.Location location = 2;
+}
+
+message CheckInOutResponse {
+  bool checked_in = 1;
+}
+
 service SessionService {
   rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse);
   rpc StreamSessions(StreamSessionsRequest) returns (stream StreamSessionsResponse);
+  rpc CheckInOut(CheckInOutRequest) returns (CheckInOutResponse);
 }

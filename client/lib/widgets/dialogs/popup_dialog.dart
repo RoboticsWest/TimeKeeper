@@ -168,7 +168,7 @@ class PopupDialog extends BaseDialog {
                         children: actions!,
                       ),
                     )
-                  else
+                  else if (actions == null)
                     Padding(
                       padding: const EdgeInsets.only(right: 16, bottom: 16),
                       child: Row(

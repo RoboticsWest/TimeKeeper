@@ -2,13 +2,13 @@ mod api;
 use anyhow::Result;
 pub use api::*;
 
-use crate::{generated::common::TkDateTime, modules::schedule::csv_parser::CsvParser};
+use crate::{generated::common::Timestamp, modules::schedule::csv_parser::CsvParser};
 
 mod csv_parser;
 
 pub struct ScheduleSessionT {
-  pub start_time: TkDateTime,
-  pub end_time: TkDateTime,
+  pub start_time: Timestamp,
+  pub end_time: Timestamp,
   pub location_name: String,
 }
 

@@ -7,18 +7,26 @@ use tokio_stream::{
 use tonic::{Request, Response, Result, Status};
 
 use crate::{
+  auth::auth_helpers::require_permission,
   core::{
     events::{ChangeEvent, EVENT_BUS},
     shutdown::with_shutdown,
   },
   generated::{
     api::{
-      GetSessionsRequest, GetSessionsResponse, SessionResponse, StreamSessionsRequest, StreamSessionsResponse,
-      session_service_server::SessionService,
+      CheckInOutRequest, CheckInOutResponse, GetSessionsRequest, GetSessionsResponse, SessionResponse,
+      StreamSessionsRequest, StreamSessionsResponse, session_service_server::SessionService,
     },
-    db::Session,
+    common::Role,
+    db::{Session, TeamMemberSession},
   },
-  modules::session::SessionRepository,
+  modules::session::{
+    SessionRepository,
+    helpers::{
+      find_check_in_target_index, get_next_session_threshold_secs, get_unfinished_sessions_sorted,
+      is_member_checked_in, now_timestamp,
+    },
+  },
 };
 
 pub struct SessionApi;
@@ -81,5 +89,44 @@ impl SessionService for SessionApi {
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))
+  }
+
+  // Check In / Out
+
+  async fn check_in_out(&self, request: Request<CheckInOutRequest>) -> Result<Response<CheckInOutResponse>, Status> {
+    require_permission(&request, Role::Kiosk)?;
+    let team_member_id = request.into_inner().team_member_id;
+    let now = now_timestamp();
+
+    let mut unfinished =
+      get_unfinished_sessions_sorted().map_err(|e| Status::internal(format!("Failed to get sessions: {}", e)))?;
+
+    // Check if the member is already checked in to any session — if so, check them out
+    for (id, session) in &mut unfinished {
+      for ms in &mut session.member_sessions {
+        if ms.team_member_id == team_member_id && is_member_checked_in(ms) {
+          ms.check_out_time = Some(now);
+          Session::update(id, session).map_err(|e| Status::internal(format!("Failed to update session: {}", e)))?;
+          return Ok(Response::new(CheckInOutResponse { checked_in: false }));
+        }
+      }
+    }
+
+    // Not checked in — find the right session to check into
+    if unfinished.is_empty() {
+      return Err(Status::not_found("No active sessions available"));
+    }
+
+    let threshold = get_next_session_threshold_secs();
+    let target_index = find_check_in_target_index(&unfinished, &now, threshold);
+
+    let (id, session) =
+      unfinished.get_mut(target_index).ok_or_else(|| Status::internal("Failed to resolve target session"))?;
+
+    session.member_sessions.push(TeamMemberSession { team_member_id, check_in_time: Some(now), check_out_time: None });
+
+    Session::update(id, session).map_err(|e| Status::internal(format!("Failed to update session: {}", e)))?;
+
+    Ok(Response::new(CheckInOutResponse { checked_in: true }))
   }
 }

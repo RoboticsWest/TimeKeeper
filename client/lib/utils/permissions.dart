@@ -83,3 +83,9 @@ extension RolePermissions on Role {
     return roleGraph.hasPermission(this, required);
   }
 }
+
+extension RolePermission on List<Role> {
+  bool hasPermission(Role required) {
+    return any((role) => role.hasPermission(required));
+  }
+}

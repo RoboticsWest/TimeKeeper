@@ -123,7 +123,7 @@ const TeamMemberSession$json = {
       '3': 2,
       '4': 1,
       '5': 11,
-      '6': '.tk.common.TkDateTime',
+      '6': '.tk.common.Timestamp',
       '10': 'checkInTime'
     },
     {
@@ -131,7 +131,7 @@ const TeamMemberSession$json = {
       '3': 3,
       '4': 1,
       '5': 11,
-      '6': '.tk.common.TkDateTime',
+      '6': '.tk.common.Timestamp',
       '9': 0,
       '10': 'checkOutTime',
       '17': true
@@ -145,9 +145,9 @@ const TeamMemberSession$json = {
 /// Descriptor for `TeamMemberSession`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List teamMemberSessionDescriptor = $convert.base64Decode(
     'ChFUZWFtTWVtYmVyU2Vzc2lvbhIkCg50ZWFtX21lbWJlcl9pZBgBIAEoCVIMdGVhbU1lbWJlck'
-    'lkEjkKDWNoZWNrX2luX3RpbWUYAiABKAsyFS50ay5jb21tb24uVGtEYXRlVGltZVILY2hlY2tJ'
-    'blRpbWUSQAoOY2hlY2tfb3V0X3RpbWUYAyABKAsyFS50ay5jb21tb24uVGtEYXRlVGltZUgAUg'
-    'xjaGVja091dFRpbWWIAQFCEQoPX2NoZWNrX291dF90aW1l');
+    'lkEjgKDWNoZWNrX2luX3RpbWUYAiABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUgtjaGVja0lu'
+    'VGltZRI/Cg5jaGVja19vdXRfdGltZRgDIAEoCzIULnRrLmNvbW1vbi5UaW1lc3RhbXBIAFIMY2'
+    'hlY2tPdXRUaW1liAEBQhEKD19jaGVja19vdXRfdGltZQ==');
 
 @$core.Deprecated('Use sessionDescriptor instead')
 const Session$json = {
@@ -158,7 +158,7 @@ const Session$json = {
       '3': 1,
       '4': 1,
       '5': 11,
-      '6': '.tk.common.TkDateTime',
+      '6': '.tk.common.Timestamp',
       '10': 'startTime'
     },
     {
@@ -166,7 +166,7 @@ const Session$json = {
       '3': 2,
       '4': 1,
       '5': 11,
-      '6': '.tk.common.TkDateTime',
+      '6': '.tk.common.Timestamp',
       '10': 'endTime'
     },
     {'1': 'location_id', '3': 3, '4': 1, '5': 9, '10': 'locationId'},
@@ -184,8 +184,27 @@ const Session$json = {
 
 /// Descriptor for `Session`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List sessionDescriptor = $convert.base64Decode(
-    'CgdTZXNzaW9uEjQKCnN0YXJ0X3RpbWUYASABKAsyFS50ay5jb21tb24uVGtEYXRlVGltZVIJc3'
-    'RhcnRUaW1lEjAKCGVuZF90aW1lGAIgASgLMhUudGsuY29tbW9uLlRrRGF0ZVRpbWVSB2VuZFRp'
-    'bWUSHwoLbG9jYXRpb25faWQYAyABKAlSCmxvY2F0aW9uSWQSQQoPbWVtYmVyX3Nlc3Npb25zGA'
-    'QgAygLMhgudGsuZGIuVGVhbU1lbWJlclNlc3Npb25SDm1lbWJlclNlc3Npb25zEhoKCGZpbmlz'
-    'aGVkGAUgASgIUghmaW5pc2hlZA==');
+    'CgdTZXNzaW9uEjMKCnN0YXJ0X3RpbWUYASABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUglzdG'
+    'FydFRpbWUSLwoIZW5kX3RpbWUYAiABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUgdlbmRUaW1l'
+    'Eh8KC2xvY2F0aW9uX2lkGAMgASgJUgpsb2NhdGlvbklkEkEKD21lbWJlcl9zZXNzaW9ucxgEIA'
+    'MoCzIYLnRrLmRiLlRlYW1NZW1iZXJTZXNzaW9uUg5tZW1iZXJTZXNzaW9ucxIaCghmaW5pc2hl'
+    'ZBgFIAEoCFIIZmluaXNoZWQ=');
+
+@$core.Deprecated('Use settingsDescriptor instead')
+const Settings$json = {
+  '1': 'Settings',
+  '2': [
+    {
+      '1': 'next_session_threshold_secs',
+      '3': 1,
+      '4': 1,
+      '5': 3,
+      '10': 'nextSessionThresholdSecs'
+    },
+  ],
+};
+
+/// Descriptor for `Settings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
+    'CghTZXR0aW5ncxI9ChtuZXh0X3Nlc3Npb25fdGhyZXNob2xkX3NlY3MYASABKANSGG5leHRTZX'
+    'NzaW9uVGhyZXNob2xkU2Vjcw==');

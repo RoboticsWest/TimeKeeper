@@ -48,6 +48,13 @@ class SessionServiceClient extends $grpc.Client {
         options: options);
   }
 
+  $grpc.ResponseFuture<$0.CheckInOutResponse> checkInOut(
+    $0.CheckInOutRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$checkInOut, request, options: options);
+  }
+
   // method descriptors
 
   static final _$getSessions =
@@ -60,6 +67,11 @@ class SessionServiceClient extends $grpc.Client {
           '/tk.api.SessionService/StreamSessions',
           ($0.StreamSessionsRequest value) => value.writeToBuffer(),
           $0.StreamSessionsResponse.fromBuffer);
+  static final _$checkInOut =
+      $grpc.ClientMethod<$0.CheckInOutRequest, $0.CheckInOutResponse>(
+          '/tk.api.SessionService/CheckInOut',
+          ($0.CheckInOutRequest value) => value.writeToBuffer(),
+          $0.CheckInOutResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('tk.api.SessionService')
@@ -85,6 +97,13 @@ abstract class SessionServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.StreamSessionsRequest.fromBuffer(value),
         ($0.StreamSessionsResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.CheckInOutRequest, $0.CheckInOutResponse>(
+        'CheckInOut',
+        checkInOut_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.CheckInOutRequest.fromBuffer(value),
+        ($0.CheckInOutResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.GetSessionsResponse> getSessions_Pre($grpc.ServiceCall $call,
@@ -103,4 +122,12 @@ abstract class SessionServiceBase extends $grpc.Service {
 
   $async.Stream<$0.StreamSessionsResponse> streamSessions(
       $grpc.ServiceCall call, $0.StreamSessionsRequest request);
+
+  $async.Future<$0.CheckInOutResponse> checkInOut_Pre($grpc.ServiceCall $call,
+      $async.Future<$0.CheckInOutRequest> $request) async {
+    return checkInOut($call, await $request);
+  }
+
+  $async.Future<$0.CheckInOutResponse> checkInOut(
+      $grpc.ServiceCall call, $0.CheckInOutRequest request);
 }

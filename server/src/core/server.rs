@@ -8,6 +8,7 @@ use crate::{
   core::{
     api::Api, db::init_db, events::init_event_bus, scheduler::SchedulerPool, shutdown::ShutdownNotifier, web::Web,
   },
+  modules::session::SessionService,
 };
 
 pub struct Server {
@@ -35,7 +36,8 @@ impl Server {
     init_db(&self.config)?;
     init_jwt_secret()?;
 
-    // @TODO: Setup future background scheduled services here
+    // Schedule background services
+    self.scheduler.schedule(SessionService, shutdown_notifier);
 
     log::info!("Scheduled {} background service(s)", self.scheduler.count());
 

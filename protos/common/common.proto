@@ -7,27 +7,6 @@ message Timestamp {
   int32 nanos = 2; // Nanoseconds since the Unix epoch.
 }
 
-// Represents a date (year, month, day)
-message TkDate {
-  int32 year = 1; // Year (e.g., 2024)
-  uint32 month = 2; // Month (1-12)
-  uint32 day = 3; // Day (1-31)
-}
-
-// Represents a time of day
-message TkTime {
-  uint32 hour = 1; // Hour (0-23)
-  uint32 minute = 2; // Minute (0-59)
-  uint32 second = 3; // Second (0-59)
-}
-
-// Represents a date and/or time
-// Can contain just date, just time, or both
-message TkDateTime {
-  optional TkDate date = 1;
-  optional TkTime time = 2;
-}
-
 enum Role {
   ADMIN = 0;
   KIOSK = 1;

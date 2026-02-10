@@ -7,7 +7,7 @@ class SettingsAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      onPressed: () => AppRoute.setup.go(context),
+      onPressed: () => AppRoute.settings.go(context),
       icon: Icon(Icons.settings),
     );
   }

@@ -94,6 +94,27 @@ class TeamMemberServiceClient extends $grpc.Client {
         options: options);
   }
 
+  $grpc.ResponseFuture<$0.CreateTeamMemberResponse> createTeamMember(
+    $0.CreateTeamMemberRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$createTeamMember, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.UpdateTeamMemberResponse> updateTeamMember(
+    $0.UpdateTeamMemberRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$updateTeamMember, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.DeleteTeamMemberResponse> deleteTeamMember(
+    $0.DeleteTeamMemberRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$deleteTeamMember, request, options: options);
+  }
+
   // method descriptors
 
   static final _$uploadStudentCsv = $grpc.ClientMethod<
@@ -136,6 +157,21 @@ class TeamMemberServiceClient extends $grpc.Client {
           '/tk.api.TeamMemberService/StreamMentors',
           ($0.StreamMentorsRequest value) => value.writeToBuffer(),
           $0.StreamMentorsResponse.fromBuffer);
+  static final _$createTeamMember = $grpc.ClientMethod<
+          $0.CreateTeamMemberRequest, $0.CreateTeamMemberResponse>(
+      '/tk.api.TeamMemberService/CreateTeamMember',
+      ($0.CreateTeamMemberRequest value) => value.writeToBuffer(),
+      $0.CreateTeamMemberResponse.fromBuffer);
+  static final _$updateTeamMember = $grpc.ClientMethod<
+          $0.UpdateTeamMemberRequest, $0.UpdateTeamMemberResponse>(
+      '/tk.api.TeamMemberService/UpdateTeamMember',
+      ($0.UpdateTeamMemberRequest value) => value.writeToBuffer(),
+      $0.UpdateTeamMemberResponse.fromBuffer);
+  static final _$deleteTeamMember = $grpc.ClientMethod<
+          $0.DeleteTeamMemberRequest, $0.DeleteTeamMemberResponse>(
+      '/tk.api.TeamMemberService/DeleteTeamMember',
+      ($0.DeleteTeamMemberRequest value) => value.writeToBuffer(),
+      $0.DeleteTeamMemberResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('tk.api.TeamMemberService')
@@ -213,6 +249,33 @@ abstract class TeamMemberServiceBase extends $grpc.Service {
             ($core.List<$core.int> value) =>
                 $0.StreamMentorsRequest.fromBuffer(value),
             ($0.StreamMentorsResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.CreateTeamMemberRequest,
+            $0.CreateTeamMemberResponse>(
+        'CreateTeamMember',
+        createTeamMember_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.CreateTeamMemberRequest.fromBuffer(value),
+        ($0.CreateTeamMemberResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UpdateTeamMemberRequest,
+            $0.UpdateTeamMemberResponse>(
+        'UpdateTeamMember',
+        updateTeamMember_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.UpdateTeamMemberRequest.fromBuffer(value),
+        ($0.UpdateTeamMemberResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.DeleteTeamMemberRequest,
+            $0.DeleteTeamMemberResponse>(
+        'DeleteTeamMember',
+        deleteTeamMember_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.DeleteTeamMemberRequest.fromBuffer(value),
+        ($0.DeleteTeamMemberResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.UploadStudentCsvResponse> uploadStudentCsv_Pre(
@@ -284,4 +347,31 @@ abstract class TeamMemberServiceBase extends $grpc.Service {
 
   $async.Stream<$0.StreamMentorsResponse> streamMentors(
       $grpc.ServiceCall call, $0.StreamMentorsRequest request);
+
+  $async.Future<$0.CreateTeamMemberResponse> createTeamMember_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.CreateTeamMemberRequest> $request) async {
+    return createTeamMember($call, await $request);
+  }
+
+  $async.Future<$0.CreateTeamMemberResponse> createTeamMember(
+      $grpc.ServiceCall call, $0.CreateTeamMemberRequest request);
+
+  $async.Future<$0.UpdateTeamMemberResponse> updateTeamMember_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.UpdateTeamMemberRequest> $request) async {
+    return updateTeamMember($call, await $request);
+  }
+
+  $async.Future<$0.UpdateTeamMemberResponse> updateTeamMember(
+      $grpc.ServiceCall call, $0.UpdateTeamMemberRequest request);
+
+  $async.Future<$0.DeleteTeamMemberResponse> deleteTeamMember_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.DeleteTeamMemberRequest> $request) async {
+    return deleteTeamMember($call, await $request);
+  }
+
+  $async.Future<$0.DeleteTeamMemberResponse> deleteTeamMember(
+      $grpc.ServiceCall call, $0.DeleteTeamMemberRequest request);
 }

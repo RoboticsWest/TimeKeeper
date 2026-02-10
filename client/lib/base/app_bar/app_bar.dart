@@ -47,7 +47,7 @@ class BaseAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     return IconButton(
       icon: Icon(Icons.home),
-      onPressed: () => AppRoute.home.go(context),
+      onPressed: () => AppRoute.kiosk.go(context),
     );
   }
 

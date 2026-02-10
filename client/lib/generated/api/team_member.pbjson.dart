@@ -256,3 +256,121 @@ const StreamMentorsResponse$json = {
 final $typed_data.Uint8List streamMentorsResponseDescriptor = $convert.base64Decode(
     'ChVTdHJlYW1NZW50b3JzUmVzcG9uc2USNAoHbWVudG9ycxgBIAMoCzIaLnRrLmFwaS5UZWFtTW'
     'VtYmVyUmVzcG9uc2VSB21lbnRvcnM=');
+
+@$core.Deprecated('Use createTeamMemberRequestDescriptor instead')
+const CreateTeamMemberRequest$json = {
+  '1': 'CreateTeamMemberRequest',
+  '2': [
+    {'1': 'first_name', '3': 1, '4': 1, '5': 9, '10': 'firstName'},
+    {'1': 'last_name', '3': 2, '4': 1, '5': 9, '10': 'lastName'},
+    {
+      '1': 'member_type',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.db.TeamMemberType',
+      '10': 'memberType'
+    },
+    {'1': 'alias', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'alias', '17': true},
+    {
+      '1': 'secondary_alias',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'secondaryAlias',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_alias'},
+    {'1': '_secondary_alias'},
+  ],
+};
+
+/// Descriptor for `CreateTeamMemberRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createTeamMemberRequestDescriptor = $convert.base64Decode(
+    'ChdDcmVhdGVUZWFtTWVtYmVyUmVxdWVzdBIdCgpmaXJzdF9uYW1lGAEgASgJUglmaXJzdE5hbW'
+    'USGwoJbGFzdF9uYW1lGAIgASgJUghsYXN0TmFtZRI2CgttZW1iZXJfdHlwZRgDIAEoDjIVLnRr'
+    'LmRiLlRlYW1NZW1iZXJUeXBlUgptZW1iZXJUeXBlEhkKBWFsaWFzGAQgASgJSABSBWFsaWFziA'
+    'EBEiwKD3NlY29uZGFyeV9hbGlhcxgFIAEoCUgBUg5zZWNvbmRhcnlBbGlhc4gBAUIICgZfYWxp'
+    'YXNCEgoQX3NlY29uZGFyeV9hbGlhcw==');
+
+@$core.Deprecated('Use createTeamMemberResponseDescriptor instead')
+const CreateTeamMemberResponse$json = {
+  '1': 'CreateTeamMemberResponse',
+};
+
+/// Descriptor for `CreateTeamMemberResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createTeamMemberResponseDescriptor =
+    $convert.base64Decode('ChhDcmVhdGVUZWFtTWVtYmVyUmVzcG9uc2U=');
+
+@$core.Deprecated('Use updateTeamMemberRequestDescriptor instead')
+const UpdateTeamMemberRequest$json = {
+  '1': 'UpdateTeamMemberRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'first_name', '3': 2, '4': 1, '5': 9, '10': 'firstName'},
+    {'1': 'last_name', '3': 3, '4': 1, '5': 9, '10': 'lastName'},
+    {
+      '1': 'member_type',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.db.TeamMemberType',
+      '10': 'memberType'
+    },
+    {'1': 'alias', '3': 5, '4': 1, '5': 9, '9': 0, '10': 'alias', '17': true},
+    {
+      '1': 'secondary_alias',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'secondaryAlias',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_alias'},
+    {'1': '_secondary_alias'},
+  ],
+};
+
+/// Descriptor for `UpdateTeamMemberRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateTeamMemberRequestDescriptor = $convert.base64Decode(
+    'ChdVcGRhdGVUZWFtTWVtYmVyUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQSHQoKZmlyc3RfbmFtZR'
+    'gCIAEoCVIJZmlyc3ROYW1lEhsKCWxhc3RfbmFtZRgDIAEoCVIIbGFzdE5hbWUSNgoLbWVtYmVy'
+    'X3R5cGUYBCABKA4yFS50ay5kYi5UZWFtTWVtYmVyVHlwZVIKbWVtYmVyVHlwZRIZCgVhbGlhcx'
+    'gFIAEoCUgAUgVhbGlhc4gBARIsCg9zZWNvbmRhcnlfYWxpYXMYBiABKAlIAVIOc2Vjb25kYXJ5'
+    'QWxpYXOIAQFCCAoGX2FsaWFzQhIKEF9zZWNvbmRhcnlfYWxpYXM=');
+
+@$core.Deprecated('Use updateTeamMemberResponseDescriptor instead')
+const UpdateTeamMemberResponse$json = {
+  '1': 'UpdateTeamMemberResponse',
+};
+
+/// Descriptor for `UpdateTeamMemberResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateTeamMemberResponseDescriptor =
+    $convert.base64Decode('ChhVcGRhdGVUZWFtTWVtYmVyUmVzcG9uc2U=');
+
+@$core.Deprecated('Use deleteTeamMemberRequestDescriptor instead')
+const DeleteTeamMemberRequest$json = {
+  '1': 'DeleteTeamMemberRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+  ],
+};
+
+/// Descriptor for `DeleteTeamMemberRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteTeamMemberRequestDescriptor = $convert
+    .base64Decode('ChdEZWxldGVUZWFtTWVtYmVyUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+
+@$core.Deprecated('Use deleteTeamMemberResponseDescriptor instead')
+const DeleteTeamMemberResponse$json = {
+  '1': 'DeleteTeamMemberResponse',
+};
+
+/// Descriptor for `DeleteTeamMemberResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteTeamMemberResponseDescriptor =
+    $convert.base64Decode('ChhEZWxldGVUZWFtTWVtYmVyUmVzcG9uc2U=');
