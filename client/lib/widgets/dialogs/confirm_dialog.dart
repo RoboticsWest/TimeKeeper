@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/base_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
 class ConfirmDialog extends BaseDialog {
   final PopupDialog _popupDialog;
@@ -210,16 +211,17 @@ class _AsyncConfirmButton extends HookWidget {
           Navigator.of(context).pop();
 
           if (showResultDialog) {
-            PopupDialog.success(
-              title: 'Success',
-              message:
-                  successMessage ??
-                  const Text('Operation completed successfully'),
+            SnackBarDialog.success(
+              message: successMessage is Text
+                  ? (successMessage as Text).data ?? 'Success'
+                  : 'Success',
             ).show(context);
           }
         }
       } catch (e) {
         if (context.mounted) {
+          Navigator.of(context).pop();
+
           if (showResultDialog) {
             PopupDialog.error(
               title: 'Error',
@@ -274,14 +276,22 @@ class _AsyncGrpcConfirmButton extends HookWidget {
           Navigator.of(context).pop();
 
           if (showResultDialog) {
-            PopupDialog.fromGrpcStatus(
-              result: result,
-              successMessage: successMessage,
-            ).show(context);
+            switch (result) {
+              case GrpcSuccess():
+                SnackBarDialog.success(
+                  message: successMessage is Text
+                      ? (successMessage as Text).data ?? 'Success'
+                      : 'Success',
+                ).show(context);
+              case GrpcFailure():
+                PopupDialog.fromGrpcStatus(result: result).show(context);
+            }
           }
         }
       } catch (e) {
         if (context.mounted) {
+          Navigator.of(context).pop();
+
           if (showResultDialog) {
             PopupDialog.error(
               title: 'Error',

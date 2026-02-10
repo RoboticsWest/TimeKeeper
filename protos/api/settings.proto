@@ -14,7 +14,11 @@ message UpdateSettingsRequest {
 }
 message UpdateSettingsResponse {}
 
+message PurgeDatabaseRequest {}
+message PurgeDatabaseResponse {}
+
 service SettingsService {
   rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
   rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+  rpc PurgeDatabase(PurgeDatabaseRequest) returns (PurgeDatabaseResponse);
 }

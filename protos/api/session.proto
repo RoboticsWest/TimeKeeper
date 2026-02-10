@@ -21,6 +21,27 @@ message StreamSessionsResponse {
   common.SyncType sync_type = 2;
 }
 
+message CreateSessionRequest {
+  common.Timestamp start_time = 1;
+  common.Timestamp end_time = 2;
+  string location_id = 3;
+}
+message CreateSessionResponse {}
+
+message UpdateSessionRequest {
+  string id = 1;
+  common.Timestamp start_time = 2;
+  common.Timestamp end_time = 3;
+  string location_id = 4;
+  bool finished = 5;
+}
+message UpdateSessionResponse {}
+
+message DeleteSessionRequest {
+  string id = 1;
+}
+message DeleteSessionResponse {}
+
 message CheckInOutRequest {
   string team_member_id = 1;
   db.Location location = 2;
@@ -33,5 +54,8 @@ message CheckInOutResponse {
 service SessionService {
   rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse);
   rpc StreamSessions(StreamSessionsRequest) returns (stream StreamSessionsResponse);
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc UpdateSession(UpdateSessionRequest) returns (UpdateSessionResponse);
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
   rpc CheckInOut(CheckInOutRequest) returns (CheckInOutResponse);
 }

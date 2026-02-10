@@ -5,6 +5,7 @@ pub use api::*;
 use crate::{generated::common::Timestamp, modules::schedule::csv_parser::CsvParser};
 
 mod csv_parser;
+mod ics_parser;
 
 pub struct ScheduleSessionT {
   pub start_time: Timestamp,
@@ -22,5 +23,7 @@ impl Schedule {
     CsvParser::csv_to_schedule(csv)
   }
 
-  // pub fn from_ics(ics: &str) -> Result<Schedule> {}
+  pub fn from_ics(ics: &str) -> Result<Schedule> {
+    ics_parser::IcsParser::ics_to_schedule(ics)
+  }
 }

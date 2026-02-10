@@ -209,6 +209,83 @@ class UpdateSettingsResponse extends $pb.GeneratedMessage {
   static UpdateSettingsResponse? _defaultInstance;
 }
 
+class PurgeDatabaseRequest extends $pb.GeneratedMessage {
+  factory PurgeDatabaseRequest() => create();
+
+  PurgeDatabaseRequest._();
+
+  factory PurgeDatabaseRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PurgeDatabaseRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PurgeDatabaseRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeDatabaseRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeDatabaseRequest copyWith(void Function(PurgeDatabaseRequest) updates) =>
+      super.copyWith((message) => updates(message as PurgeDatabaseRequest))
+          as PurgeDatabaseRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PurgeDatabaseRequest create() => PurgeDatabaseRequest._();
+  @$core.override
+  PurgeDatabaseRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PurgeDatabaseRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PurgeDatabaseRequest>(create);
+  static PurgeDatabaseRequest? _defaultInstance;
+}
+
+class PurgeDatabaseResponse extends $pb.GeneratedMessage {
+  factory PurgeDatabaseResponse() => create();
+
+  PurgeDatabaseResponse._();
+
+  factory PurgeDatabaseResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory PurgeDatabaseResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'PurgeDatabaseResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeDatabaseResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  PurgeDatabaseResponse copyWith(
+          void Function(PurgeDatabaseResponse) updates) =>
+      super.copyWith((message) => updates(message as PurgeDatabaseResponse))
+          as PurgeDatabaseResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PurgeDatabaseResponse create() => PurgeDatabaseResponse._();
+  @$core.override
+  PurgeDatabaseResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static PurgeDatabaseResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<PurgeDatabaseResponse>(create);
+  static PurgeDatabaseResponse? _defaultInstance;
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

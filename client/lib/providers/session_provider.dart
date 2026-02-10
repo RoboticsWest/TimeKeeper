@@ -52,8 +52,8 @@ class Sessions extends _$Sessions {
       hasItem: (item) => item.hasSession(),
       getId: (item) => item.id,
       getItem: (item) => item.session,
-      onSync: (fullState) => state = fullState,
-      onUpdate: (updates) => state = {...state, ...updates},
+      getState: () => state,
+      setState: (newState) => state = newState,
     );
 
     return localSessions;

@@ -3,5 +3,3 @@
 variables:
   - name: tk_version
     value: 1.0.0
-  - name: flutter_version
-    value: 3.38.9

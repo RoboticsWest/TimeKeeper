@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "db/db.proto";
+
+message HoursBucket {
+  double regular_secs = 1;
+  double overtime_secs = 2;
+}
+
+message LeaderboardEntry {
+  string team_member_id = 1;
+  db.TeamMember team_member = 2;
+  HoursBucket active_session = 3;
+  HoursBucket this_week = 4;
+  HoursBucket all_time = 5;
+  double total_secs = 6;
+}
+
+message GetLeaderboardRequest {}
+message GetLeaderboardResponse {
+  repeated LeaderboardEntry entries = 1;
+}
+
+service StatsService {
+  rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse);
+}

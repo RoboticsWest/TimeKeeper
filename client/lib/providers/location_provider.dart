@@ -53,8 +53,8 @@ class Locations extends _$Locations {
       hasItem: (item) => item.hasLocation(),
       getId: (item) => item.id,
       getItem: (item) => item.location,
-      onSync: (fullState) => state = fullState,
-      onUpdate: (updates) => state = {...state, ...updates},
+      getState: () => state,
+      setState: (newState) => state = newState,
     );
 
     return localLocations;

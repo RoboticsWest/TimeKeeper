@@ -5,7 +5,6 @@ import 'package:time_keeper/base/app_bar/login_action.dart';
 import 'package:time_keeper/base/app_bar/settings_action.dart';
 import 'package:time_keeper/base/app_bar/theme_action.dart';
 import 'package:time_keeper/colors.dart';
-import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/health_provider.dart';
 import 'package:time_keeper/router/app_routes.dart';
 
@@ -32,33 +31,54 @@ class BaseAppBar extends ConsumerWidget implements PreferredSizeWidget {
       );
     }
 
+    final routeName = state.topRoute?.name;
+    if (routeName != null) {
+      for (final route in AppRoute.values) {
+        if (route.name == routeName) {
+          return Text(
+            route.name.toUpperCase(),
+            style: TextStyle(fontWeight: FontWeight.bold),
+          );
+        }
+      }
+    }
+
     return null;
   }
 
-  Widget _leading(BuildContext context, String username) {
-    // Show home button only when not on home page
+  Widget _leading(BuildContext context) {
     final isHomePage = state.matchedLocation == '/';
 
-    if (isHomePage) {
-      return Center(
-        child: Text(username, style: TextStyle(fontWeight: FontWeight.bold)),
-      ); // Hide button on home page
-    }
-
-    return IconButton(
-      icon: Icon(Icons.home),
-      onPressed: () => AppRoute.kiosk.go(context),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (!isHomePage)
+          IconButton(
+            icon: Icon(Icons.home),
+            onPressed: () => AppRoute.kiosk.go(context),
+          ),
+        IconButton(
+          icon: Icon(Icons.leaderboard),
+          tooltip: 'Leaderboard',
+          onPressed: () => AppRoute.leaderboard.go(context),
+        ),
+        IconButton(
+          icon: Icon(Icons.calendar_month),
+          tooltip: 'Calendar',
+          onPressed: () => AppRoute.calendar.go(context),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isConnected = ref.watch(isConnectedProvider).value ?? false;
-    final username = ref.watch(usernameProvider);
 
     return AppBar(
       backgroundColor: isConnected ? null : supportErrorColor,
-      leading: _leading(context, username ?? ''),
+      leadingWidth: 120,
+      leading: _leading(context),
       title: _title(isConnected, ref),
       actions: _actions(),
     );

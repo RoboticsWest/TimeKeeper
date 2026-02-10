@@ -92,6 +92,64 @@ impl ScheduleService for ScheduleApi {
     request: Request<UploadScheduleIcsRequest>,
   ) -> Result<Response<UploadScheduleIcsResponse>, Status> {
     require_permission(&request, Role::Admin)?;
+    let bytes = request.into_inner().ics_data;
+    let ics_string = String::from_utf8_lossy(&bytes);
+    let schedule = match Schedule::from_ics(&ics_string) {
+      Ok(schedule) => schedule,
+      Err(err) => return Err(Status::invalid_argument(err.to_string())),
+    };
+
+    for location in schedule.locations {
+      let existing_loc = match Location::get_by_name(&location) {
+        Ok(existing_loc) => existing_loc,
+        Err(err) => {
+          log::error!("Database error getting data {}: {}", location, err);
+          return Err(Status::not_found(err.to_string()));
+        }
+      };
+
+      if existing_loc.is_empty() {
+        match Location::add(&Location { location: location.clone() }) {
+          Ok(_) => {}
+          Err(err) => {
+            log::error!("Database error adding location {}: {}", location, err);
+            return Err(Status::internal(err.to_string()));
+          }
+        }
+      }
+    }
+
+    for session in schedule.sessions {
+      let locations = match Location::get_by_name(&session.location_name) {
+        Ok(locations) => locations,
+        Err(err) => {
+          log::error!("Database error getting location {}: {}", session.location_name, err);
+          return Err(Status::internal(err.to_string()));
+        }
+      };
+
+      let Some((location_id, _)) = locations.into_iter().next() else {
+        log::error!("Location not found: {}", session.location_name);
+        return Err(Status::not_found(format!("Location not found: {}", session.location_name)));
+      };
+
+      let new_session = Session {
+        start_time: Some(session.start_time),
+        end_time: Some(session.end_time),
+        location_id,
+        member_sessions: vec![],
+        finished: false,
+      };
+
+      match Session::add(&new_session) {
+        Ok(_) => {}
+        Err(err) => {
+          log::error!("Database error adding session: {}", err);
+          return Err(Status::internal(err.to_string()));
+        }
+      }
+    }
+
     Ok(Response::new(UploadScheduleIcsResponse {}))
   }
 }

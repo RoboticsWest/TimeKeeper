@@ -102,3 +102,69 @@ final $typed_data.Uint8List streamLocationsResponseDescriptor = $convert.base64D
     'ChdTdHJlYW1Mb2NhdGlvbnNSZXNwb25zZRI2Cglsb2NhdGlvbnMYASADKAsyGC50ay5hcGkuTG'
     '9jYXRpb25SZXNwb25zZVIJbG9jYXRpb25zEjAKCXN5bmNfdHlwZRgCIAEoDjITLnRrLmNvbW1v'
     'bi5TeW5jVHlwZVIIc3luY1R5cGU=');
+
+@$core.Deprecated('Use createLocationRequestDescriptor instead')
+const CreateLocationRequest$json = {
+  '1': 'CreateLocationRequest',
+  '2': [
+    {'1': 'location', '3': 1, '4': 1, '5': 9, '10': 'location'},
+  ],
+};
+
+/// Descriptor for `CreateLocationRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createLocationRequestDescriptor =
+    $convert.base64Decode(
+        'ChVDcmVhdGVMb2NhdGlvblJlcXVlc3QSGgoIbG9jYXRpb24YASABKAlSCGxvY2F0aW9u');
+
+@$core.Deprecated('Use createLocationResponseDescriptor instead')
+const CreateLocationResponse$json = {
+  '1': 'CreateLocationResponse',
+};
+
+/// Descriptor for `CreateLocationResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createLocationResponseDescriptor =
+    $convert.base64Decode('ChZDcmVhdGVMb2NhdGlvblJlc3BvbnNl');
+
+@$core.Deprecated('Use updateLocationRequestDescriptor instead')
+const UpdateLocationRequest$json = {
+  '1': 'UpdateLocationRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'location', '3': 2, '4': 1, '5': 9, '10': 'location'},
+  ],
+};
+
+/// Descriptor for `UpdateLocationRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateLocationRequestDescriptor = $convert.base64Decode(
+    'ChVVcGRhdGVMb2NhdGlvblJlcXVlc3QSDgoCaWQYASABKAlSAmlkEhoKCGxvY2F0aW9uGAIgAS'
+    'gJUghsb2NhdGlvbg==');
+
+@$core.Deprecated('Use updateLocationResponseDescriptor instead')
+const UpdateLocationResponse$json = {
+  '1': 'UpdateLocationResponse',
+};
+
+/// Descriptor for `UpdateLocationResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateLocationResponseDescriptor =
+    $convert.base64Decode('ChZVcGRhdGVMb2NhdGlvblJlc3BvbnNl');
+
+@$core.Deprecated('Use deleteLocationRequestDescriptor instead')
+const DeleteLocationRequest$json = {
+  '1': 'DeleteLocationRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+  ],
+};
+
+/// Descriptor for `DeleteLocationRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteLocationRequestDescriptor = $convert
+    .base64Decode('ChVEZWxldGVMb2NhdGlvblJlcXVlc3QSDgoCaWQYASABKAlSAmlk');
+
+@$core.Deprecated('Use deleteLocationResponseDescriptor instead')
+const DeleteLocationResponse$json = {
+  '1': 'DeleteLocationResponse',
+};
+
+/// Descriptor for `DeleteLocationResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteLocationResponseDescriptor =
+    $convert.base64Decode('ChZEZWxldGVMb2NhdGlvblJlc3BvbnNl');

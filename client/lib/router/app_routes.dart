@@ -16,6 +16,8 @@ import 'package:go_router/go_router.dart';
 enum AppRoute {
   // Public routes
   kiosk(path: '/', name: 'kiosk', railIndex: null),
+  leaderboard(path: '/leaderboard', name: 'leaderboard', railIndex: null),
+  calendar(path: '/calendar', name: 'calendar', railIndex: null),
   login(path: '/login', name: 'login', railIndex: null),
   settings(path: '/settings', name: 'settings', railIndex: null),
 
@@ -27,7 +29,10 @@ enum AppRoute {
   ),
 
   users(path: '/users', name: 'users', railIndex: 1),
-  team(path: '/team', name: 'team', railIndex: 2);
+  team(path: '/team', name: 'team', railIndex: 2),
+  sessions(path: '/sessions', name: 'sessions', railIndex: 3),
+  locations(path: '/locations', name: 'locations', railIndex: 4),
+  stats(path: '/stats', name: 'stats', railIndex: 5);
 
   const AppRoute({
     required this.path,

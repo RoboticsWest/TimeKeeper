@@ -129,7 +129,7 @@ final class SessionsProvider
   }
 }
 
-String _$sessionsHash() => r'555df6c37b6ec5b96a8014b40ef71e314d2fd0d1';
+String _$sessionsHash() => r'016b85181a79b84edf3fe259a9e3f4aa3a929bff';
 
 abstract class _$Sessions extends $Notifier<Map<String, Session>> {
   Map<String, Session> build();

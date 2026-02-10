@@ -21,7 +21,26 @@ message StreamLocationsResponse {
   common.SyncType sync_type = 2;
 }
 
+message CreateLocationRequest {
+  string location = 1;
+}
+message CreateLocationResponse {}
+
+message UpdateLocationRequest {
+  string id = 1;
+  string location = 2;
+}
+message UpdateLocationResponse {}
+
+message DeleteLocationRequest {
+  string id = 1;
+}
+message DeleteLocationResponse {}
+
 service LocationService {
   rpc GetLocations(GetLocationsRequest) returns (GetLocationsResponse);
   rpc StreamLocations(StreamLocationsRequest) returns (stream StreamLocationsResponse);
+  rpc CreateLocation(CreateLocationRequest) returns (CreateLocationResponse);
+  rpc UpdateLocation(UpdateLocationRequest) returns (UpdateLocationResponse);
+  rpc DeleteLocation(DeleteLocationRequest) returns (DeleteLocationResponse);
 }
