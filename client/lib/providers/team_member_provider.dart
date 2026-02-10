@@ -52,8 +52,8 @@ class TeamMembers extends _$TeamMembers {
       hasItem: (item) => item.hasTeamMember(),
       getId: (item) => item.id,
       getItem: (item) => item.teamMember,
-      onSync: (fullState) => state = fullState,
-      onUpdate: (updates) => state = {...state, ...updates},
+      getState: () => state,
+      setState: (newState) => state = newState,
     );
 
     return localMembers;

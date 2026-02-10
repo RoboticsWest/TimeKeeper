@@ -8,8 +8,10 @@ anyhow = "1.0.101"
 async-stream = "0.3.6"
 axum = "0.8.8"
 chrono = "0.4.43"
+chrono-tz = "0.10"
 clap = { version = "4.5.57", features = ["derive"] }
 dashmap = "6.1.0"
+icalendar = { version = "0.17", features = ["parser"] }
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 log = "0.4.29"
 log4rs = "1.4.0"

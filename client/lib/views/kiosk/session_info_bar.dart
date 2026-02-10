@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/widgets/time_until.dart';
 
@@ -9,35 +10,6 @@ class SessionInfoBar extends StatelessWidget {
 
   const SessionInfoBar({super.key, this.currentSession, this.nextSession});
 
-  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  static const _months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  String _formatTime(DateTime dt) {
-    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
-    final minute = dt.minute.toString().padLeft(2, '0');
-    final period = dt.hour < 12 ? 'AM' : 'PM';
-    return '$hour:$minute $period';
-  }
-
-  String _formatDate(DateTime dt) {
-    final weekday = _weekdays[dt.weekday - 1];
-    final month = _months[dt.month - 1];
-    return '$weekday, $month ${dt.day}';
-  }
-
   Widget _sessionDateTime(Session session, Color color) {
     final start = session.startTime.toDateTime();
     final end = session.endTime.toDateTime();
@@ -45,7 +17,7 @@ class SessionInfoBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          _formatDate(start),
+          formatDate(start),
           style: TextStyle(color: color, fontWeight: FontWeight.w500),
         ),
         Padding(
@@ -57,7 +29,7 @@ class SessionInfoBar extends StatelessWidget {
           ),
         ),
         Text(
-          '${_formatTime(start)} - ${_formatTime(end)}',
+          '${formatTime(start)} - ${formatTime(end)}',
           style: TextStyle(color: color),
         ),
       ],

@@ -120,15 +120,17 @@ impl UserService for UserApi {
 
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
-        ChangeEvent::Record { id, data, .. } => data.and_then(|user| {
-          if user.username == DEFAULT_ADMIN_USERNAME {
-            return None;
-          }
-          Some(Ok(StreamUsersResponse {
+        ChangeEvent::Record { id, data, .. } => match data {
+          Some(user) if user.username == DEFAULT_ADMIN_USERNAME => None,
+          Some(user) => Some(Ok(StreamUsersResponse {
             users: vec![UserResponse { id, username: user.username, roles: user.roles }],
             sync_type: SyncType::Partial as i32,
-          }))
-        }),
+          })),
+          None => Some(Ok(StreamUsersResponse {
+            users: vec![UserResponse { id, username: String::new(), roles: vec![] }],
+            sync_type: SyncType::Partial as i32,
+          })),
+        },
         ChangeEvent::Table => match get_all_users() {
           Ok(users) => Some(Ok(StreamUsersResponse { users, sync_type: SyncType::Full as i32 })),
           Err(e) => {

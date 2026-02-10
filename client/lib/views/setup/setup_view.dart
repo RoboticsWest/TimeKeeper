@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/views/setup/database_setup.dart';
 import 'package:time_keeper/views/setup/member_setup.dart';
 import 'package:time_keeper/views/setup/session_setup.dart';
 
@@ -18,13 +19,13 @@ class SetupView extends HookConsumerWidget {
           tabs: const [
             Tab(text: 'Session Setup'),
             Tab(text: 'Team Member Setup'),
-            Tab(text: 'Database Setup'),
+            Tab(text: 'Database'),
           ],
         ),
         Expanded(
           child: TabBarView(
             controller: tabController,
-            children: [SessionSetupTab(), MemberSetupTab(), Text('3')],
+            children: [SessionSetupTab(), MemberSetupTab(), DatabaseSetupTab()],
           ),
         ),
       ],

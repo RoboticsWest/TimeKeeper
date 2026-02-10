@@ -102,28 +102,36 @@ class CollectionStorage<T extends GeneratedMessage> {
     return ids.contains(id);
   }
 
-  /// Process stream updates and return a map of changes.
+  /// Process stream updates, handling both upserts and deletes.
   ///
-  /// Takes an iterable of response items and a callback:
-  /// - extractIdAndItem: Given a response item, returns (id, item) if valid, or null to skip
+  /// Takes an iterable of response items and callbacks:
+  /// - hasItem: Returns true if the response item contains data (false = delete)
+  /// - getId: Extracts the ID from a response item
+  /// - getItem: Extracts the data from a response item
   ///
-  /// Returns a map of all items that were updated.
-  Map<String, T> processStreamUpdates<R>(
-    Iterable<R> responseItems,
-    (String, T)? Function(R) extractIdAndItem,
-  ) {
+  /// Returns a record of (updates, deletedIds).
+  ({Map<String, T> updates, Set<String> deletedIds}) processStreamUpdates<R>(
+    Iterable<R> responseItems, {
+    required bool Function(R) hasItem,
+    required String Function(R) getId,
+    required T Function(R) getItem,
+  }) {
     final updates = <String, T>{};
+    final deletedIds = <String>{};
 
     for (final responseItem in responseItems) {
-      final result = extractIdAndItem(responseItem);
-      if (result != null) {
-        final (id, item) = result;
+      final id = getId(responseItem);
+      if (hasItem(responseItem)) {
+        final item = getItem(responseItem);
         set(id, item);
         updates[id] = item;
+      } else {
+        remove(id);
+        deletedIds.add(id);
       }
     }
 
-    return updates;
+    return (updates: updates, deletedIds: deletedIds);
   }
 
   /// Replaces the entire collection with the given items.
@@ -131,16 +139,16 @@ class CollectionStorage<T extends GeneratedMessage> {
   /// Clears stale entries that are not in [items] and saves the new data.
   /// Returns the new full map.
   Map<String, T> replaceAll<R>(
-    Iterable<R> responseItems,
-    (String, T)? Function(R) extractIdAndItem,
-  ) {
+    Iterable<R> responseItems, {
+    required bool Function(R) hasItem,
+    required String Function(R) getId,
+    required T Function(R) getItem,
+  }) {
     final incoming = <String, T>{};
 
     for (final responseItem in responseItems) {
-      final result = extractIdAndItem(responseItem);
-      if (result != null) {
-        final (id, item) = result;
-        incoming[id] = item;
+      if (hasItem(responseItem)) {
+        incoming[getId(responseItem)] = getItem(responseItem);
       }
     }
 
@@ -160,23 +168,13 @@ class CollectionStorage<T extends GeneratedMessage> {
     return incoming;
   }
 
-  /// Sets up a listener for stream updates that automatically syncs with storage and state.
+  /// Sets up a listener for stream updates that automatically syncs storage and provider state.
   ///
   /// Uses the server-provided [SyncType] to determine behavior:
   /// - [SyncType.FULL]: Replace the entire local collection with the server snapshot.
-  /// - [SyncType.PARTIAL]: Merge incremental updates into the existing collection.
+  /// - [SyncType.PARTIAL]: Merge incremental updates and remove deleted items.
   ///
-  /// Parameters:
-  /// - ref: The Riverpod ref
-  /// - streamProvider: The stream provider to listen to
-  /// - extractItems: Function to extract the list of response items from the stream response
-  /// - getSyncType: Function to extract the SyncType from the stream response
-  /// - hasItem: Function to check if a response item has the actual data (e.g., hasGameMatch())
-  /// - getId: Function to extract the ID from a response item
-  /// - getItem: Function to extract the actual item from a response item
-  /// - onSync: Callback when a full sync replaces local state
-  /// - onUpdate: Callback when incremental updates are merged
-  /// - onError: Optional callback when an error occurs
+  /// State management is handled internally — callers just provide [getState] and [setState].
   void bindToStream<StreamResponse, ResponseItem>({
     required Ref ref,
     required ProviderListenable<AsyncValue<StreamResponse>> streamProvider,
@@ -185,28 +183,35 @@ class CollectionStorage<T extends GeneratedMessage> {
     required bool Function(ResponseItem) hasItem,
     required String Function(ResponseItem) getId,
     required T Function(ResponseItem) getItem,
-    void Function(Map<String, T> fullState)? onSync,
-    void Function(Map<String, T> updates)? onUpdate,
+    required Map<String, T> Function() getState,
+    required void Function(Map<String, T>) setState,
     void Function(Object error, StackTrace stackTrace)? onError,
   }) {
     ref.listen(streamProvider, (previous, next) {
       next.when(
         data: (response) {
           final items = extractItems(response);
-          (String, T)? extractor(ResponseItem responseItem) =>
-              hasItem(responseItem)
-              ? (getId(responseItem), getItem(responseItem))
-              : null;
-
           final syncType = getSyncType(response);
 
           if (syncType == SyncType.FULL) {
-            final fullState = replaceAll(items, extractor);
-            onSync?.call(fullState);
+            final fullState = replaceAll(
+              items,
+              hasItem: hasItem,
+              getId: getId,
+              getItem: getItem,
+            );
+            setState(fullState);
           } else {
-            final updates = processStreamUpdates(items, extractor);
-            if (updates.isNotEmpty) {
-              onUpdate?.call(updates);
+            final (:updates, :deletedIds) = processStreamUpdates(
+              items,
+              hasItem: hasItem,
+              getId: getId,
+              getItem: getItem,
+            );
+            if (updates.isNotEmpty || deletedIds.isNotEmpty) {
+              final newState = {...getState(), ...updates};
+              newState.removeWhere((id, _) => deletedIds.contains(id));
+              setState(newState);
             }
           }
         },

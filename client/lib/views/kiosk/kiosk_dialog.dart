@@ -8,6 +8,7 @@ import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/helpers/session_helper.dart';
 import 'package:time_keeper/widgets/dialogs/base_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -69,19 +70,6 @@ class _KioskDialogContent extends HookConsumerWidget {
                 member.secondaryAlias.toLowerCase().contains(query);
           }).toList();
 
-    bool isCheckedIn(String memberId) {
-      for (final session in sessions) {
-        for (final ms in session.memberSessions) {
-          if (ms.teamMemberId == memberId &&
-              ms.hasCheckInTime() &&
-              !ms.hasCheckOutTime()) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
     Widget membersList() {
       if (filteredMembers.isEmpty) {
         return Center(
@@ -102,7 +90,7 @@ class _KioskDialogContent extends HookConsumerWidget {
             final entry = filteredMembers[index];
             final member = entry.value;
             final memberId = entry.key;
-            final checkedIn = isCheckedIn(memberId);
+            final checkedIn = isMemberCheckedIn(memberId, sessions);
             final alias = member.alias.isNotEmpty ? ' (${member.alias})' : '';
 
             return ListTile(

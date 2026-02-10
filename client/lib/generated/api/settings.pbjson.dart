@@ -71,3 +71,21 @@ const UpdateSettingsResponse$json = {
 /// Descriptor for `UpdateSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateSettingsResponseDescriptor =
     $convert.base64Decode('ChZVcGRhdGVTZXR0aW5nc1Jlc3BvbnNl');
+
+@$core.Deprecated('Use purgeDatabaseRequestDescriptor instead')
+const PurgeDatabaseRequest$json = {
+  '1': 'PurgeDatabaseRequest',
+};
+
+/// Descriptor for `PurgeDatabaseRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List purgeDatabaseRequestDescriptor =
+    $convert.base64Decode('ChRQdXJnZURhdGFiYXNlUmVxdWVzdA==');
+
+@$core.Deprecated('Use purgeDatabaseResponseDescriptor instead')
+const PurgeDatabaseResponse$json = {
+  '1': 'PurgeDatabaseResponse',
+};
+
+/// Descriptor for `PurgeDatabaseResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List purgeDatabaseResponseDescriptor =
+    $convert.base64Decode('ChVQdXJnZURhdGFiYXNlUmVzcG9uc2U=');

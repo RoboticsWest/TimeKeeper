@@ -11,20 +11,6 @@ on:
       - master
 
 jobs:
-  read-vars:
-    name: Read Variables
-    runs-on: ubuntu-latest
-    outputs:
-      flutter_version: ${{ steps.parse.outputs.flutter_version }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Parse vars.yml
-        id: parse
-        run: |
-          flutter_version=$(grep 'name: flutter_version' vars.yml -A1 | grep 'value:' | awk '{print $2}')
-          echo "flutter_version=$flutter_version" >> "$GITHUB_OUTPUT"
-          echo "Flutter: $flutter_version"
-
   protobuf-check:
     name: Protobuf Linting
     runs-on: ubuntu-latest
@@ -62,7 +48,6 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
   flutter-check:
-    needs: [read-vars]
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -70,7 +55,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ needs.read-vars.outputs.flutter_version }}
           channel: stable
       - run: flutter --version
       - name: Get dependencies

@@ -55,8 +55,16 @@ class BaseRail extends HookConsumerWidget {
                 label: Text('Team'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.help),
-                label: Text('Help'),
+                icon: Icon(Icons.event_note),
+                label: Text('Sessions'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.location_on),
+                label: Text('Locations'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.analytics),
+                label: Text('Stats'),
               ),
             ],
           ),

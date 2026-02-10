@@ -19,18 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.parse.outputs.version }}
-      flutter_version: ${{ steps.parse.outputs.flutter_version }}
     steps:
       - uses: actions/checkout@v4
       - name: Parse vars.yml
         id: parse
         run: |
           version=$(grep 'name: tk_version' vars.yml -A1 | grep 'value:' | awk '{print $2}')
-          flutter_version=$(grep 'name: flutter_version' vars.yml -A1 | grep 'value:' | awk '{print $2}')
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "flutter_version=$flutter_version" >> "$GITHUB_OUTPUT"
           echo "Version: $version"
-          echo "Flutter: $flutter_version"
 
   # ── Build Flutter web client ────────────────────────────────────────
   build-web-client:
@@ -41,7 +37,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ needs.read-vars.outputs.flutter_version }}
           channel: stable
       - name: Generate Flutter Icons
         working-directory: client
@@ -187,7 +182,6 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ needs.read-vars.outputs.flutter_version }}
           channel: stable
 
       # Android needs Java

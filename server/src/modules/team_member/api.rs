@@ -177,12 +177,10 @@ impl TeamMemberService for TeamMemberApi {
 
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
-        ChangeEvent::Record { id, data, .. } => data.map(|member| {
-          Ok(StreamTeamMembersResponse {
-            team_members: vec![TeamMemberResponse { id, team_member: Some(member) }],
-            sync_type: SyncType::Partial as i32,
-          })
-        }),
+        ChangeEvent::Record { id, data, .. } => Some(Ok(StreamTeamMembersResponse {
+          team_members: vec![TeamMemberResponse { id, team_member: data }],
+          sync_type: SyncType::Partial as i32,
+        })),
         ChangeEvent::Table => match get_all_members() {
           Ok(members) => {
             Some(Ok(StreamTeamMembersResponse { team_members: members, sync_type: SyncType::Full as i32 }))
@@ -226,16 +224,17 @@ impl TeamMemberService for TeamMemberApi {
 
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
-        ChangeEvent::Record { id, data, .. } => data.and_then(|member| {
-          if member.member_type == TeamMemberType::Student as i32 {
-            Some(Ok(StreamStudentsResponse {
-              students: vec![TeamMemberResponse { id, team_member: Some(member) }],
-              sync_type: SyncType::Partial as i32,
-            }))
-          } else {
-            None
-          }
-        }),
+        ChangeEvent::Record { id, data, .. } => match data {
+          Some(member) if member.member_type == TeamMemberType::Student as i32 => Some(Ok(StreamStudentsResponse {
+            students: vec![TeamMemberResponse { id, team_member: Some(member) }],
+            sync_type: SyncType::Partial as i32,
+          })),
+          None => Some(Ok(StreamStudentsResponse {
+            students: vec![TeamMemberResponse { id, team_member: None }],
+            sync_type: SyncType::Partial as i32,
+          })),
+          _ => None,
+        },
         ChangeEvent::Table => match get_all_members() {
           Ok(members) => {
             let students = filter_by_type(members, TeamMemberType::Student);
@@ -280,16 +279,17 @@ impl TeamMemberService for TeamMemberApi {
 
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
-        ChangeEvent::Record { id, data, .. } => data.and_then(|member| {
-          if member.member_type == TeamMemberType::Mentor as i32 {
-            Some(Ok(StreamMentorsResponse {
-              mentors: vec![TeamMemberResponse { id, team_member: Some(member) }],
-              sync_type: SyncType::Partial as i32,
-            }))
-          } else {
-            None
-          }
-        }),
+        ChangeEvent::Record { id, data, .. } => match data {
+          Some(member) if member.member_type == TeamMemberType::Mentor as i32 => Some(Ok(StreamMentorsResponse {
+            mentors: vec![TeamMemberResponse { id, team_member: Some(member) }],
+            sync_type: SyncType::Partial as i32,
+          })),
+          None => Some(Ok(StreamMentorsResponse {
+            mentors: vec![TeamMemberResponse { id, team_member: None }],
+            sync_type: SyncType::Partial as i32,
+          })),
+          _ => None,
+        },
         ChangeEvent::Table => match get_all_members() {
           Ok(members) => {
             let mentors = filter_by_type(members, TeamMemberType::Mentor);

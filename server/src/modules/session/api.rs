@@ -14,8 +14,9 @@ use crate::{
   },
   generated::{
     api::{
-      CheckInOutRequest, CheckInOutResponse, GetSessionsRequest, GetSessionsResponse, SessionResponse,
-      StreamSessionsRequest, StreamSessionsResponse, session_service_server::SessionService,
+      CheckInOutRequest, CheckInOutResponse, CreateSessionRequest, CreateSessionResponse, DeleteSessionRequest,
+      DeleteSessionResponse, GetSessionsRequest, GetSessionsResponse, SessionResponse, StreamSessionsRequest,
+      StreamSessionsResponse, UpdateSessionRequest, UpdateSessionResponse, session_service_server::SessionService,
     },
     common::{Role, SyncType},
     db::{Session, TeamMemberSession},
@@ -68,12 +69,10 @@ impl SessionService for SessionApi {
 
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
-        ChangeEvent::Record { id, data, .. } => data.map(|session| {
-          Ok(StreamSessionsResponse {
-            sessions: vec![SessionResponse { id, session: Some(session) }],
-            sync_type: SyncType::Partial as i32,
-          })
-        }),
+        ChangeEvent::Record { id, data, .. } => Some(Ok(StreamSessionsResponse {
+          sessions: vec![SessionResponse { id, session: data }],
+          sync_type: SyncType::Partial as i32,
+        })),
         ChangeEvent::Table => match get_all_sessions() {
           Ok(sessions) => Some(Ok(StreamSessionsResponse { sessions, sync_type: SyncType::Full as i32 })),
           Err(e) => {
@@ -95,6 +94,80 @@ impl SessionService for SessionApi {
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))
+  }
+
+  // Create / Update / Delete
+
+  async fn create_session(
+    &self,
+    request: Request<CreateSessionRequest>,
+  ) -> Result<Response<CreateSessionResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    let session = Session {
+      start_time: request.start_time,
+      end_time: request.end_time,
+      location_id: request.location_id,
+      member_sessions: vec![],
+      finished: false,
+    };
+
+    Session::add(&session).map_err(|e| Status::internal(format!("Failed to create session: {}", e)))?;
+
+    Ok(Response::new(CreateSessionResponse {}))
+  }
+
+  async fn update_session(
+    &self,
+    request: Request<UpdateSessionRequest>,
+  ) -> Result<Response<UpdateSessionResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    if request.id.is_empty() {
+      return Err(Status::invalid_argument("Session ID is required"));
+    }
+
+    let existing = Session::get(&request.id).map_err(|e| Status::internal(format!("Failed to get session: {}", e)))?;
+
+    let Some(existing) = existing else {
+      return Err(Status::not_found("Session not found"));
+    };
+
+    let session = Session {
+      start_time: request.start_time,
+      end_time: request.end_time,
+      location_id: request.location_id,
+      member_sessions: existing.member_sessions,
+      finished: request.finished,
+    };
+
+    Session::update(&request.id, &session).map_err(|e| Status::internal(format!("Failed to update session: {}", e)))?;
+
+    Ok(Response::new(UpdateSessionResponse {}))
+  }
+
+  async fn delete_session(
+    &self,
+    request: Request<DeleteSessionRequest>,
+  ) -> Result<Response<DeleteSessionResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    if request.id.is_empty() {
+      return Err(Status::invalid_argument("Session ID is required"));
+    }
+
+    let existing = Session::get(&request.id).map_err(|e| Status::internal(format!("Failed to get session: {}", e)))?;
+
+    if existing.is_none() {
+      return Err(Status::not_found("Session not found"));
+    }
+
+    Session::remove(&request.id).map_err(|e| Status::internal(format!("Failed to delete session: {}", e)))?;
+
+    Ok(Response::new(DeleteSessionResponse {}))
   }
 
   // Check In / Out

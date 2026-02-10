@@ -46,6 +46,13 @@ class SettingsServiceClient extends $grpc.Client {
     return $createUnaryCall(_$updateSettings, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.PurgeDatabaseResponse> purgeDatabase(
+    $0.PurgeDatabaseRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$purgeDatabase, request, options: options);
+  }
+
   // method descriptors
 
   static final _$getSettings =
@@ -58,6 +65,11 @@ class SettingsServiceClient extends $grpc.Client {
           '/tk.api.SettingsService/UpdateSettings',
           ($0.UpdateSettingsRequest value) => value.writeToBuffer(),
           $0.UpdateSettingsResponse.fromBuffer);
+  static final _$purgeDatabase =
+      $grpc.ClientMethod<$0.PurgeDatabaseRequest, $0.PurgeDatabaseResponse>(
+          '/tk.api.SettingsService/PurgeDatabase',
+          ($0.PurgeDatabaseRequest value) => value.writeToBuffer(),
+          $0.PurgeDatabaseResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('tk.api.SettingsService')
@@ -83,6 +95,15 @@ abstract class SettingsServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.UpdateSettingsRequest.fromBuffer(value),
         ($0.UpdateSettingsResponse value) => value.writeToBuffer()));
+    $addMethod(
+        $grpc.ServiceMethod<$0.PurgeDatabaseRequest, $0.PurgeDatabaseResponse>(
+            'PurgeDatabase',
+            purgeDatabase_Pre,
+            false,
+            false,
+            ($core.List<$core.int> value) =>
+                $0.PurgeDatabaseRequest.fromBuffer(value),
+            ($0.PurgeDatabaseResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.GetSettingsResponse> getSettings_Pre($grpc.ServiceCall $call,
@@ -101,4 +122,13 @@ abstract class SettingsServiceBase extends $grpc.Service {
 
   $async.Future<$0.UpdateSettingsResponse> updateSettings(
       $grpc.ServiceCall call, $0.UpdateSettingsRequest request);
+
+  $async.Future<$0.PurgeDatabaseResponse> purgeDatabase_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.PurgeDatabaseRequest> $request) async {
+    return purgeDatabase($call, await $request);
+  }
+
+  $async.Future<$0.PurgeDatabaseResponse> purgeDatabase(
+      $grpc.ServiceCall call, $0.PurgeDatabaseRequest request);
 }

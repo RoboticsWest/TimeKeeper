@@ -103,6 +103,108 @@ final $typed_data.Uint8List streamSessionsResponseDescriptor = $convert.base64De
     'Npb25SZXNwb25zZVIIc2Vzc2lvbnMSMAoJc3luY190eXBlGAIgASgOMhMudGsuY29tbW9uLlN5'
     'bmNUeXBlUghzeW5jVHlwZQ==');
 
+@$core.Deprecated('Use createSessionRequestDescriptor instead')
+const CreateSessionRequest$json = {
+  '1': 'CreateSessionRequest',
+  '2': [
+    {
+      '1': 'start_time',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.common.Timestamp',
+      '10': 'startTime'
+    },
+    {
+      '1': 'end_time',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.common.Timestamp',
+      '10': 'endTime'
+    },
+    {'1': 'location_id', '3': 3, '4': 1, '5': 9, '10': 'locationId'},
+  ],
+};
+
+/// Descriptor for `CreateSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createSessionRequestDescriptor = $convert.base64Decode(
+    'ChRDcmVhdGVTZXNzaW9uUmVxdWVzdBIzCgpzdGFydF90aW1lGAEgASgLMhQudGsuY29tbW9uLl'
+    'RpbWVzdGFtcFIJc3RhcnRUaW1lEi8KCGVuZF90aW1lGAIgASgLMhQudGsuY29tbW9uLlRpbWVz'
+    'dGFtcFIHZW5kVGltZRIfCgtsb2NhdGlvbl9pZBgDIAEoCVIKbG9jYXRpb25JZA==');
+
+@$core.Deprecated('Use createSessionResponseDescriptor instead')
+const CreateSessionResponse$json = {
+  '1': 'CreateSessionResponse',
+};
+
+/// Descriptor for `CreateSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createSessionResponseDescriptor =
+    $convert.base64Decode('ChVDcmVhdGVTZXNzaW9uUmVzcG9uc2U=');
+
+@$core.Deprecated('Use updateSessionRequestDescriptor instead')
+const UpdateSessionRequest$json = {
+  '1': 'UpdateSessionRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {
+      '1': 'start_time',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.common.Timestamp',
+      '10': 'startTime'
+    },
+    {
+      '1': 'end_time',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.common.Timestamp',
+      '10': 'endTime'
+    },
+    {'1': 'location_id', '3': 4, '4': 1, '5': 9, '10': 'locationId'},
+    {'1': 'finished', '3': 5, '4': 1, '5': 8, '10': 'finished'},
+  ],
+};
+
+/// Descriptor for `UpdateSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateSessionRequestDescriptor = $convert.base64Decode(
+    'ChRVcGRhdGVTZXNzaW9uUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQSMwoKc3RhcnRfdGltZRgCIA'
+    'EoCzIULnRrLmNvbW1vbi5UaW1lc3RhbXBSCXN0YXJ0VGltZRIvCghlbmRfdGltZRgDIAEoCzIU'
+    'LnRrLmNvbW1vbi5UaW1lc3RhbXBSB2VuZFRpbWUSHwoLbG9jYXRpb25faWQYBCABKAlSCmxvY2'
+    'F0aW9uSWQSGgoIZmluaXNoZWQYBSABKAhSCGZpbmlzaGVk');
+
+@$core.Deprecated('Use updateSessionResponseDescriptor instead')
+const UpdateSessionResponse$json = {
+  '1': 'UpdateSessionResponse',
+};
+
+/// Descriptor for `UpdateSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateSessionResponseDescriptor =
+    $convert.base64Decode('ChVVcGRhdGVTZXNzaW9uUmVzcG9uc2U=');
+
+@$core.Deprecated('Use deleteSessionRequestDescriptor instead')
+const DeleteSessionRequest$json = {
+  '1': 'DeleteSessionRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+  ],
+};
+
+/// Descriptor for `DeleteSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteSessionRequestDescriptor = $convert
+    .base64Decode('ChREZWxldGVTZXNzaW9uUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+
+@$core.Deprecated('Use deleteSessionResponseDescriptor instead')
+const DeleteSessionResponse$json = {
+  '1': 'DeleteSessionResponse',
+};
+
+/// Descriptor for `DeleteSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteSessionResponseDescriptor =
+    $convert.base64Decode('ChVEZWxldGVTZXNzaW9uUmVzcG9uc2U=');
+
 @$core.Deprecated('Use checkInOutRequestDescriptor instead')
 const CheckInOutRequest$json = {
   '1': 'CheckInOutRequest',

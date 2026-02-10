@@ -31,8 +31,19 @@ class DropdownSetting<T> extends StatelessWidget {
             child: DropdownButtonFormField<T>(
               initialValue: value,
               decoration: const InputDecoration(border: OutlineInputBorder()),
+              isExpanded: true,
               items: items,
               onChanged: onChanged,
+              selectedItemBuilder: (context) => items.map((item) {
+                return Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    (item.child is Text) ? (item.child as Text).data ?? '' : '',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                );
+              }).toList(),
             ),
           ),
           const SizedBox(width: 12),

@@ -35,11 +35,11 @@ class Users extends _$Users {
       streamProvider: usersStreamProvider,
       extractItems: (response) => response.users,
       getSyncType: (response) => response.syncType,
-      hasItem: (item) => item.hasId(),
+      hasItem: (item) => item.username.isNotEmpty,
       getId: (item) => item.id,
       getItem: (item) => item,
-      onSync: (fullState) => state = fullState,
-      onUpdate: (updates) => state = {...state, ...updates},
+      getState: () => state,
+      setState: (newState) => state = newState,
     );
 
     return localUsers;
