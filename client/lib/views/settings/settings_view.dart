@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/helpers/kiosk_mode_stub.dart'
+    if (dart.library.io) 'package:time_keeper/helpers/kiosk_mode_native.dart'
+    if (dart.library.js_interop) 'package:time_keeper/helpers/kiosk_mode_web.dart';
+import 'package:time_keeper/providers/kiosk_mode_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/network_config_provider.dart';
 import 'package:time_keeper/views/setup/common/dropdown_setting.dart';
@@ -33,6 +37,7 @@ class SettingsView extends HookConsumerWidget {
     );
 
     final selectedLocationId = useState<String?>(currentLocationId);
+    final kioskMode = ref.watch(kioskModeProvider);
 
     return SettingsPageLayout(
       title: 'Settings',
@@ -60,6 +65,19 @@ class SettingsView extends HookConsumerWidget {
                 .setLocation(selectedLocationId.value);
             _showConfirmation(context, 'Device location updated');
           },
+        ),
+        const SizedBox(height: 24),
+        SwitchListTile(
+          title: const Text('Kiosk Mode'),
+          subtitle: Text(
+            isKioskModeSupported
+                ? 'Lock the app fullscreen and always-on-top (desktop only)'
+                : 'Only available on desktop platforms',
+          ),
+          value: kioskMode,
+          onChanged: isKioskModeSupported
+              ? (_) => ref.read(kioskModeProvider.notifier).toggle()
+              : null,
         ),
         const SizedBox(height: 24),
         const Divider(),

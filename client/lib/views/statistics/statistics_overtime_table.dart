@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/views/stats/stats_helpers.dart';
+import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 
-class StatsOvertimeTable extends StatelessWidget {
+class StatisticsOvertimeTable extends StatelessWidget {
   final Map<String, MemberHoursData> memberHours;
 
-  const StatsOvertimeTable({super.key, required this.memberHours});
+  const StatisticsOvertimeTable({super.key, required this.memberHours});
 
   @override
   Widget build(BuildContext context) {

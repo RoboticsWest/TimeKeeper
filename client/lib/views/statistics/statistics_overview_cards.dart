@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/utils/time.dart';
-import 'package:time_keeper/views/stats/stats_helpers.dart';
+import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/stat_card.dart';
 
-class StatsOverviewCards extends StatelessWidget {
+class StatisticsOverviewCards extends StatelessWidget {
   final Map<String, Session> filteredSessions;
   final Map<String, MemberHoursData> memberHours;
   final AttendanceInsights insights;
 
-  const StatsOverviewCards({
+  const StatisticsOverviewCards({
     super.key,
     required this.filteredSessions,
     required this.memberHours,

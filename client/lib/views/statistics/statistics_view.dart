@@ -4,17 +4,17 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/views/stats/stats_attendance_chart.dart';
-import 'package:time_keeper/views/stats/stats_day_detail.dart';
-import 'package:time_keeper/views/stats/stats_helpers.dart';
-import 'package:time_keeper/views/stats/stats_hours_chart.dart';
-import 'package:time_keeper/views/stats/stats_location_chart.dart';
-import 'package:time_keeper/views/stats/stats_member_hours_table.dart';
-import 'package:time_keeper/views/stats/stats_overview_cards.dart';
-import 'package:time_keeper/views/stats/stats_overtime_table.dart';
+import 'package:time_keeper/views/statistics/statistics_attendance_chart.dart';
+import 'package:time_keeper/views/statistics/statistics_day_detail.dart';
+import 'package:time_keeper/views/statistics/statistics_helpers.dart';
+import 'package:time_keeper/views/statistics/statistics_hours_chart.dart';
+import 'package:time_keeper/views/statistics/statistics_location_chart.dart';
+import 'package:time_keeper/views/statistics/statistics_member_hours_table.dart';
+import 'package:time_keeper/views/statistics/statistics_overview_cards.dart';
+import 'package:time_keeper/views/statistics/statistics_overtime_table.dart';
 
-class StatsView extends HookConsumerWidget {
-  const StatsView({super.key});
+class StatisticsView extends HookConsumerWidget {
+  const StatisticsView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,7 +23,7 @@ class StatsView extends HookConsumerWidget {
     final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
 
-    final selectedRange = useState(StatsRange.week);
+    final selectedRange = useState(StatisticsRange.week);
     final selectedDay = useState<DateTime?>(null);
 
     final filtered = filterSessionsByRange(sessions, selectedRange.value);
@@ -51,14 +51,17 @@ class StatsView extends HookConsumerWidget {
             children: [
               Icon(Icons.analytics, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text('Stats Dashboard', style: theme.textTheme.headlineMedium),
+              Text(
+                'Statistics Dashboard',
+                style: theme.textTheme.headlineMedium,
+              ),
               const Spacer(),
-              SegmentedButton<StatsRange>(
-                segments: StatsRange.values
+              SegmentedButton<StatisticsRange>(
+                segments: StatisticsRange.values
                     .map(
                       (r) => ButtonSegment(
                         value: r,
-                        label: Text(statsRangeLabel(r)),
+                        label: Text(statisticsRangeLabel(r)),
                       ),
                     )
                     .toList(),
@@ -79,7 +82,7 @@ class StatsView extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Overview cards
-                  StatsOverviewCards(
+                  StatisticsOverviewCards(
                     filteredSessions: filtered,
                     memberHours: memberHours,
                     insights: insights,
@@ -92,7 +95,7 @@ class StatsView extends HookConsumerWidget {
                     children: [
                       Expanded(
                         flex: 3,
-                        child: StatsHoursChart(
+                        child: StatisticsHoursChart(
                           dailyHours: dailyHours,
                           selectedDay: selectedDay.value,
                           onDaySelected: onDaySelected,
@@ -101,7 +104,7 @@ class StatsView extends HookConsumerWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         flex: 2,
-                        child: StatsLocationChart(
+                        child: StatisticsLocationChart(
                           locationData: locationAttendance,
                         ),
                       ),
@@ -110,7 +113,7 @@ class StatsView extends HookConsumerWidget {
                   const SizedBox(height: 16),
 
                   // People per day chart
-                  StatsAttendanceChart(
+                  StatisticsAttendanceChart(
                     dailyAttendance: dailyAttendance,
                     selectedDay: selectedDay.value,
                     onDaySelected: onDaySelected,
@@ -121,7 +124,7 @@ class StatsView extends HookConsumerWidget {
                   if (selectedDay.value != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: StatsDayDetail(
+                      child: StatisticsDayDetail(
                         selectedDay: selectedDay.value!,
                         members: dayMemberDetails,
                         onClose: () => selectedDay.value = null,
@@ -132,12 +135,12 @@ class StatsView extends HookConsumerWidget {
                   AttendanceInsightsCards(insights: insights),
                   const SizedBox(height: 24),
 
-                  // Member hours table
-                  StatsMemberHoursTable(memberHours: memberHours),
+                  // Overtime flags table
+                  StatisticsOvertimeTable(memberHours: memberHours),
                   const SizedBox(height: 24),
 
-                  // Overtime flags table
-                  StatsOvertimeTable(memberHours: memberHours),
+                  // Member hours table
+                  StatisticsMemberHoursTable(memberHours: memberHours),
                 ],
               ),
             ),

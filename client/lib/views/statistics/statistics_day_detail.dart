@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/views/stats/stats_helpers.dart';
+import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 
-class StatsDayDetail extends StatelessWidget {
+class StatisticsDayDetail extends StatelessWidget {
   final DateTime selectedDay;
   final List<DayMemberDetail> members;
   final VoidCallback onClose;
 
-  const StatsDayDetail({
+  const StatisticsDayDetail({
     super.key,
     required this.selectedDay,
     required this.members,

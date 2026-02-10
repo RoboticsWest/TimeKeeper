@@ -6,14 +6,15 @@ use tonic::{Request, Response, Result, Status};
 use crate::{
   generated::{
     api::{
-      GetLeaderboardRequest, GetLeaderboardResponse, HoursBucket, LeaderboardEntry, stats_service_server::StatsService,
+      GetLeaderboardRequest, GetLeaderboardResponse, HoursBucket, LeaderboardEntry,
+      statistics_service_server::StatisticsService,
     },
     db::{Session, TeamMember, TeamMemberSession},
   },
   modules::{session::SessionRepository, team_member::TeamMemberRepository},
 };
 
-pub struct StatsApi;
+pub struct StatisticsApi;
 
 /// Compute regular and overtime seconds for a single member session.
 ///
@@ -91,7 +92,7 @@ impl MemberAccumulator {
 }
 
 #[tonic::async_trait]
-impl StatsService for StatsApi {
+impl StatisticsService for StatisticsApi {
   async fn get_leaderboard(
     &self,
     _request: Request<GetLeaderboardRequest>,

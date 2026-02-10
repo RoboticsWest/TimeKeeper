@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from api/stats.proto.
+// Generated from api/statistics.proto.
 
 // @dart = 3.3
 
@@ -16,12 +16,12 @@ import 'dart:core' as $core;
 import 'package:grpc/service_api.dart' as $grpc;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'stats.pb.dart' as $0;
+import 'statistics.pb.dart' as $0;
 
-export 'stats.pb.dart';
+export 'statistics.pb.dart';
 
-@$pb.GrpcServiceName('tk.api.StatsService')
-class StatsServiceClient extends $grpc.Client {
+@$pb.GrpcServiceName('tk.api.StatisticsService')
+class StatisticsServiceClient extends $grpc.Client {
   /// The hostname for this service.
   static const $core.String defaultHost = '';
 
@@ -30,7 +30,7 @@ class StatsServiceClient extends $grpc.Client {
     '',
   ];
 
-  StatsServiceClient(super.channel, {super.options, super.interceptors});
+  StatisticsServiceClient(super.channel, {super.options, super.interceptors});
 
   $grpc.ResponseFuture<$0.GetLeaderboardResponse> getLeaderboard(
     $0.GetLeaderboardRequest request, {
@@ -43,16 +43,16 @@ class StatsServiceClient extends $grpc.Client {
 
   static final _$getLeaderboard =
       $grpc.ClientMethod<$0.GetLeaderboardRequest, $0.GetLeaderboardResponse>(
-          '/tk.api.StatsService/GetLeaderboard',
+          '/tk.api.StatisticsService/GetLeaderboard',
           ($0.GetLeaderboardRequest value) => value.writeToBuffer(),
           $0.GetLeaderboardResponse.fromBuffer);
 }
 
-@$pb.GrpcServiceName('tk.api.StatsService')
-abstract class StatsServiceBase extends $grpc.Service {
-  $core.String get $name => 'tk.api.StatsService';
+@$pb.GrpcServiceName('tk.api.StatisticsService')
+abstract class StatisticsServiceBase extends $grpc.Service {
+  $core.String get $name => 'tk.api.StatisticsService';
 
-  StatsServiceBase() {
+  StatisticsServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.GetLeaderboardRequest,
             $0.GetLeaderboardResponse>(
         'GetLeaderboard',

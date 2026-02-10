@@ -65,69 +65,69 @@ void showSessionDetailDialog(
           else
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 300),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: memberSessions.length,
-                itemBuilder: (context, index) {
-                  final ms = memberSessions[index];
-                  final member = teamMembers[ms.teamMemberId];
-                  final name = member != null
-                      ? '${member.firstName} ${member.lastName}'
-                      : ms.teamMemberId;
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: memberSessions.map((ms) {
+                    final member = teamMembers[ms.teamMemberId];
+                    final name = member != null
+                        ? '${member.firstName} ${member.lastName}'
+                        : ms.teamMemberId;
 
-                  final checkIn = ms.hasCheckInTime()
-                      ? formatTime(ms.checkInTime.toDateTime())
-                      : '\u2014';
-                  final checkOut = ms.hasCheckOutTime()
-                      ? formatTime(ms.checkOutTime.toDateTime())
-                      : '\u2014';
+                    final checkIn = ms.hasCheckInTime()
+                        ? formatTime(ms.checkInTime.toDateTime())
+                        : '\u2014';
+                    final checkOut = ms.hasCheckOutTime()
+                        ? formatTime(ms.checkOutTime.toDateTime())
+                        : '\u2014';
 
-                  Duration? memberDuration;
-                  if (ms.hasCheckInTime() && ms.hasCheckOutTime()) {
-                    memberDuration = ms.checkOutTime.toDateTime().difference(
-                      ms.checkInTime.toDateTime(),
-                    );
-                  }
+                    Duration? memberDuration;
+                    if (ms.hasCheckInTime() && ms.hasCheckOutTime()) {
+                      memberDuration = ms.checkOutTime.toDateTime().difference(
+                        ms.checkInTime.toDateTime(),
+                      );
+                    }
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          ms.hasCheckOutTime()
-                              ? Icons.check_circle
-                              : Icons.radio_button_checked,
-                          size: 16,
-                          color: ms.hasCheckOutTime()
-                              ? Colors.grey
-                              : Colors.green,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(name)),
-                        Text(
-                          '$checkIn - $checkOut',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                            fontSize: 13,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            ms.hasCheckOutTime()
+                                ? Icons.check_circle
+                                : Icons.radio_button_checked,
+                            size: 16,
+                            color: ms.hasCheckOutTime()
+                                ? Colors.grey
+                                : Colors.green,
                           ),
-                        ),
-                        if (memberDuration != null) ...[
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(name)),
                           Text(
-                            formatDuration(memberDuration),
+                            '$checkIn - $checkOut',
                             style: TextStyle(
-                              fontWeight: FontWeight.w500,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 13,
-                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
+                          if (memberDuration != null) ...[
+                            const SizedBox(width: 12),
+                            Text(
+                              formatDuration(memberDuration),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  );
-                },
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
         ],

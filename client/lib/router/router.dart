@@ -23,7 +23,8 @@ import 'package:time_keeper/views/locations/locations_view.dart'
 import 'package:time_keeper/views/users/users_view.dart' deferred as users;
 import 'package:time_keeper/views/leaderboard/leaderboard_view.dart'
     deferred as leaderboard;
-import 'package:time_keeper/views/stats/stats_view.dart' deferred as stats;
+import 'package:time_keeper/views/statistics/statistics_view.dart'
+    deferred as statistics;
 import 'package:time_keeper/views/calendar/calendar_view.dart'
     deferred as calendar;
 
@@ -116,18 +117,6 @@ GoRouter router(Ref ref) {
         },
         routes: [
           GoRoute(
-            name: AppRoute.leaderboard.name,
-            path: AppRoute.leaderboard.path,
-            pageBuilder: (context, state) => _buildTransitionPage(
-              key: state.pageKey,
-              child: DeferredWidget(
-                libraryKey: AppRoute.leaderboard.path,
-                libraryLoader: leaderboard.loadLibrary,
-                builder: (context) => leaderboard.LeaderboardView(),
-              ),
-            ),
-          ),
-          GoRoute(
             name: AppRoute.calendar.name,
             path: AppRoute.calendar.path,
             pageBuilder: (context, state) => _buildTransitionPage(
@@ -152,87 +141,112 @@ GoRouter router(Ref ref) {
             ),
           ),
 
-          // Protected Admin routes
+          // Protected Routes
           GoRoute(
             path: _protectedRoute,
             redirect: (context, state) {
-              if (!isLoggedIn && roles.hasPermission(Role.ADMIN)) {
+              if (!isLoggedIn) {
                 return AppRoute.login.path;
               }
               return null;
             },
             routes: [
               GoRoute(
-                name: AppRoute.setup.name,
-                path: AppRoute.setup.path,
+                name: AppRoute.leaderboard.name,
+                path: AppRoute.leaderboard.path,
                 pageBuilder: (context, state) => _buildTransitionPage(
                   key: state.pageKey,
                   child: DeferredWidget(
-                    libraryKey: AppRoute.setup.path,
-                    libraryLoader: setup.loadLibrary,
-                    builder: (context) => setup.SetupView(),
+                    libraryKey: AppRoute.leaderboard.path,
+                    libraryLoader: leaderboard.loadLibrary,
+                    builder: (context) => leaderboard.LeaderboardView(),
                   ),
                 ),
               ),
+
+              // Protected Admin routes
               GoRoute(
-                name: AppRoute.users.name,
-                path: AppRoute.users.path,
-                pageBuilder: (context, state) => _buildTransitionPage(
-                  key: state.pageKey,
-                  child: DeferredWidget(
-                    libraryKey: AppRoute.users.path,
-                    libraryLoader: users.loadLibrary,
-                    builder: (context) => users.UsersView(),
+                path: '/admin',
+                redirect: (context, state) {
+                  if (!isLoggedIn && roles.hasPermission(Role.ADMIN)) {
+                    return AppRoute.login.path;
+                  }
+                  return null;
+                },
+                routes: [
+                  GoRoute(
+                    name: AppRoute.setup.name,
+                    path: AppRoute.setup.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.setup.path,
+                        libraryLoader: setup.loadLibrary,
+                        builder: (context) => setup.SetupView(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              GoRoute(
-                name: AppRoute.team.name,
-                path: AppRoute.team.path,
-                pageBuilder: (context, state) => _buildTransitionPage(
-                  key: state.pageKey,
-                  child: DeferredWidget(
-                    libraryKey: AppRoute.team.path,
-                    libraryLoader: team.loadLibrary,
-                    builder: (context) => team.TeamView(),
+                  GoRoute(
+                    name: AppRoute.users.name,
+                    path: AppRoute.users.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.users.path,
+                        libraryLoader: users.loadLibrary,
+                        builder: (context) => users.UsersView(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              GoRoute(
-                name: AppRoute.sessions.name,
-                path: AppRoute.sessions.path,
-                pageBuilder: (context, state) => _buildTransitionPage(
-                  key: state.pageKey,
-                  child: DeferredWidget(
-                    libraryKey: AppRoute.sessions.path,
-                    libraryLoader: sessions.loadLibrary,
-                    builder: (context) => sessions.SessionView(),
+                  GoRoute(
+                    name: AppRoute.team.name,
+                    path: AppRoute.team.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.team.path,
+                        libraryLoader: team.loadLibrary,
+                        builder: (context) => team.TeamView(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              GoRoute(
-                name: AppRoute.locations.name,
-                path: AppRoute.locations.path,
-                pageBuilder: (context, state) => _buildTransitionPage(
-                  key: state.pageKey,
-                  child: DeferredWidget(
-                    libraryKey: AppRoute.locations.path,
-                    libraryLoader: locations.loadLibrary,
-                    builder: (context) => locations.LocationsView(),
+                  GoRoute(
+                    name: AppRoute.sessions.name,
+                    path: AppRoute.sessions.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.sessions.path,
+                        libraryLoader: sessions.loadLibrary,
+                        builder: (context) => sessions.SessionView(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              GoRoute(
-                name: AppRoute.stats.name,
-                path: AppRoute.stats.path,
-                pageBuilder: (context, state) => _buildTransitionPage(
-                  key: state.pageKey,
-                  child: DeferredWidget(
-                    libraryKey: AppRoute.stats.path,
-                    libraryLoader: stats.loadLibrary,
-                    builder: (context) => stats.StatsView(),
+                  GoRoute(
+                    name: AppRoute.locations.name,
+                    path: AppRoute.locations.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.locations.path,
+                        libraryLoader: locations.loadLibrary,
+                        builder: (context) => locations.LocationsView(),
+                      ),
+                    ),
                   ),
-                ),
+                  GoRoute(
+                    name: AppRoute.statistics.name,
+                    path: AppRoute.statistics.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.statistics.path,
+                        libraryLoader: statistics.loadLibrary,
+                        builder: (context) => statistics.StatisticsView(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -1,12 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:time_keeper/colors.dart';
-import 'package:time_keeper/views/stats/stats_helpers.dart';
+import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 
-class StatsLocationChart extends StatelessWidget {
+class StatisticsLocationChart extends StatelessWidget {
   final List<LocationAttendanceData> locationData;
 
-  const StatsLocationChart({super.key, required this.locationData});
+  const StatisticsLocationChart({super.key, required this.locationData});
 
   @override
   Widget build(BuildContext context) {

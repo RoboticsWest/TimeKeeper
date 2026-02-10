@@ -32,7 +32,7 @@ enum AppRoute {
   team(path: '/team', name: 'team', railIndex: 2),
   sessions(path: '/sessions', name: 'sessions', railIndex: 3),
   locations(path: '/locations', name: 'locations', railIndex: 4),
-  stats(path: '/stats', name: 'stats', railIndex: 5);
+  statistics(path: '/statistics', name: 'statistics', railIndex: 5);
 
   const AppRoute({
     required this.path,

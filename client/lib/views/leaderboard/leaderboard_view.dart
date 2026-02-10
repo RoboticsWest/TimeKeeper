@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/stats.pb.dart';
+import 'package:time_keeper/generated/api/statistics.pb.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/providers/stats_provider.dart';
+import 'package:time_keeper/providers/statistics_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 
 class LeaderboardView extends ConsumerWidget {

@@ -23,6 +23,7 @@ dependencies:
   fixnum: ^1.1.1
   table_calendar: ^3.2.0
   fl_chart: ^1.1.1
+  window_manager: ^0.4.3
 
 dev_dependencies:
   flutter_test:
