@@ -134,13 +134,22 @@ const StreamUsersResponse$json = {
       '6': '.tk.api.UserResponse',
       '10': 'users'
     },
+    {
+      '1': 'sync_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.common.SyncType',
+      '10': 'syncType'
+    },
   ],
 };
 
 /// Descriptor for `StreamUsersResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List streamUsersResponseDescriptor = $convert.base64Decode(
     'ChNTdHJlYW1Vc2Vyc1Jlc3BvbnNlEioKBXVzZXJzGAEgAygLMhQudGsuYXBpLlVzZXJSZXNwb2'
-    '5zZVIFdXNlcnM=');
+    '5zZVIFdXNlcnMSMAoJc3luY190eXBlGAIgASgOMhMudGsuY29tbW9uLlN5bmNUeXBlUghzeW5j'
+    'VHlwZQ==');
 
 @$core.Deprecated('Use createUserRequestDescriptor instead')
 const CreateUserRequest$json = {

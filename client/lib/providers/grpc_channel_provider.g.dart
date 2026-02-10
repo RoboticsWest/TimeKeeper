@@ -10,17 +10,17 @@ part of 'grpc_channel_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(GrpcChannel)
-const grpcChannelProvider = GrpcChannelProvider._();
+final grpcChannelProvider = GrpcChannelProvider._();
 
 final class GrpcChannelProvider
     extends $NotifierProvider<GrpcChannel, ClientChannel> {
-  const GrpcChannelProvider._()
+  GrpcChannelProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'grpcChannelProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -41,14 +41,13 @@ final class GrpcChannelProvider
   }
 }
 
-String _$grpcChannelHash() => r'9d81ca665b9f37abc1ee5bfd3df142e2d9dcb623';
+String _$grpcChannelHash() => r'69b5e978005418208cce780f7f4680db4ee0b9e7';
 
 abstract class _$GrpcChannel extends $Notifier<ClientChannel> {
   ClientChannel build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<ClientChannel, ClientChannel>;
     final element =
         ref.element
@@ -58,6 +57,6 @@ abstract class _$GrpcChannel extends $Notifier<ClientChannel> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

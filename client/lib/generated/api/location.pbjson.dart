@@ -86,11 +86,19 @@ const StreamLocationsResponse$json = {
       '6': '.tk.api.LocationResponse',
       '10': 'locations'
     },
+    {
+      '1': 'sync_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.common.SyncType',
+      '10': 'syncType'
+    },
   ],
 };
 
 /// Descriptor for `StreamLocationsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List streamLocationsResponseDescriptor =
-    $convert.base64Decode(
-        'ChdTdHJlYW1Mb2NhdGlvbnNSZXNwb25zZRI2Cglsb2NhdGlvbnMYASADKAsyGC50ay5hcGkuTG'
-        '9jYXRpb25SZXNwb25zZVIJbG9jYXRpb25z');
+final $typed_data.Uint8List streamLocationsResponseDescriptor = $convert.base64Decode(
+    'ChdTdHJlYW1Mb2NhdGlvbnNSZXNwb25zZRI2Cglsb2NhdGlvbnMYASADKAsyGC50ay5hcGkuTG'
+    '9jYXRpb25SZXNwb25zZVIJbG9jYXRpb25zEjAKCXN5bmNfdHlwZRgCIAEoDjITLnRrLmNvbW1v'
+    'bi5TeW5jVHlwZVIIc3luY1R5cGU=');

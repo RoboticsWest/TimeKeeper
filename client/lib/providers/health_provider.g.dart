@@ -10,7 +10,7 @@ part of 'health_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(healthService)
-const healthServiceProvider = HealthServiceProvider._();
+final healthServiceProvider = HealthServiceProvider._();
 
 final class HealthServiceProvider
     extends
@@ -20,7 +20,7 @@ final class HealthServiceProvider
           HealthServiceClient
         >
     with $Provider<HealthServiceClient> {
-  const HealthServiceProvider._()
+  HealthServiceProvider._()
     : super(
         from: null,
         argument: null,
@@ -57,12 +57,12 @@ final class HealthServiceProvider
 String _$healthServiceHash() => r'14d38fb6c1bdce03a96070f98ef74adf2a2d2e23';
 
 @ProviderFor(isConnected)
-const isConnectedProvider = IsConnectedProvider._();
+final isConnectedProvider = IsConnectedProvider._();
 
 final class IsConnectedProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
     with $FutureModifier<bool>, $StreamProvider<bool> {
-  const IsConnectedProvider._()
+  IsConnectedProvider._()
     : super(
         from: null,
         argument: null,

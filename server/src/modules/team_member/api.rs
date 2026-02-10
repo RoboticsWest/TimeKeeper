@@ -21,7 +21,7 @@ use crate::{
       UpdateTeamMemberRequest, UpdateTeamMemberResponse, UploadMentorCsvRequest, UploadMentorCsvResponse,
       UploadStudentCsvRequest, UploadStudentCsvResponse, team_member_service_server::TeamMemberService,
     },
-    common::Role,
+    common::{Role, SyncType},
     db::{TeamMember, TeamMemberType},
   },
   modules::team_member::{TeamMemberImportList, TeamMemberRepository},
@@ -178,10 +178,15 @@ impl TeamMemberService for TeamMemberApi {
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
         ChangeEvent::Record { id, data, .. } => data.map(|member| {
-          Ok(StreamTeamMembersResponse { team_members: vec![TeamMemberResponse { id, team_member: Some(member) }] })
+          Ok(StreamTeamMembersResponse {
+            team_members: vec![TeamMemberResponse { id, team_member: Some(member) }],
+            sync_type: SyncType::Partial as i32,
+          })
         }),
         ChangeEvent::Table => match get_all_members() {
-          Ok(members) => Some(Ok(StreamTeamMembersResponse { team_members: members })),
+          Ok(members) => {
+            Some(Ok(StreamTeamMembersResponse { team_members: members, sync_type: SyncType::Full as i32 }))
+          }
           Err(e) => {
             log::error!("Failed to get all team members after table change: {}", e);
             None
@@ -195,7 +200,9 @@ impl TeamMemberService for TeamMemberApi {
       }
     });
 
-    let full_stream = tokio_stream::once(Ok(StreamTeamMembersResponse { team_members: initial })).chain(stream);
+    let full_stream =
+      tokio_stream::once(Ok(StreamTeamMembersResponse { team_members: initial, sync_type: SyncType::Full as i32 }))
+        .chain(stream);
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))
@@ -221,7 +228,10 @@ impl TeamMemberService for TeamMemberApi {
       Ok(event) => match event {
         ChangeEvent::Record { id, data, .. } => data.and_then(|member| {
           if member.member_type == TeamMemberType::Student as i32 {
-            Some(Ok(StreamStudentsResponse { students: vec![TeamMemberResponse { id, team_member: Some(member) }] }))
+            Some(Ok(StreamStudentsResponse {
+              students: vec![TeamMemberResponse { id, team_member: Some(member) }],
+              sync_type: SyncType::Partial as i32,
+            }))
           } else {
             None
           }
@@ -229,7 +239,7 @@ impl TeamMemberService for TeamMemberApi {
         ChangeEvent::Table => match get_all_members() {
           Ok(members) => {
             let students = filter_by_type(members, TeamMemberType::Student);
-            Some(Ok(StreamStudentsResponse { students }))
+            Some(Ok(StreamStudentsResponse { students, sync_type: SyncType::Full as i32 }))
           }
           Err(e) => {
             log::error!("Failed to get students after table change: {}", e);
@@ -244,7 +254,9 @@ impl TeamMemberService for TeamMemberApi {
       }
     });
 
-    let full_stream = tokio_stream::once(Ok(StreamStudentsResponse { students: initial })).chain(stream);
+    let full_stream =
+      tokio_stream::once(Ok(StreamStudentsResponse { students: initial, sync_type: SyncType::Full as i32 }))
+        .chain(stream);
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))
@@ -270,7 +282,10 @@ impl TeamMemberService for TeamMemberApi {
       Ok(event) => match event {
         ChangeEvent::Record { id, data, .. } => data.and_then(|member| {
           if member.member_type == TeamMemberType::Mentor as i32 {
-            Some(Ok(StreamMentorsResponse { mentors: vec![TeamMemberResponse { id, team_member: Some(member) }] }))
+            Some(Ok(StreamMentorsResponse {
+              mentors: vec![TeamMemberResponse { id, team_member: Some(member) }],
+              sync_type: SyncType::Partial as i32,
+            }))
           } else {
             None
           }
@@ -278,7 +293,7 @@ impl TeamMemberService for TeamMemberApi {
         ChangeEvent::Table => match get_all_members() {
           Ok(members) => {
             let mentors = filter_by_type(members, TeamMemberType::Mentor);
-            Some(Ok(StreamMentorsResponse { mentors }))
+            Some(Ok(StreamMentorsResponse { mentors, sync_type: SyncType::Full as i32 }))
           }
           Err(e) => {
             log::error!("Failed to get mentors after table change: {}", e);
@@ -293,7 +308,9 @@ impl TeamMemberService for TeamMemberApi {
       }
     });
 
-    let full_stream = tokio_stream::once(Ok(StreamMentorsResponse { mentors: initial })).chain(stream);
+    let full_stream =
+      tokio_stream::once(Ok(StreamMentorsResponse { mentors: initial, sync_type: SyncType::Full as i32 }))
+        .chain(stream);
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))

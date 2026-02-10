@@ -6,7 +6,7 @@ part 'theme_provider.g.dart';
 
 ThemeMode get _defaultThemeMode => ThemeMode.system;
 
-@riverpod
+@Riverpod(keepAlive: true)
 class AppThemeMode extends _$AppThemeMode {
   final String _key = 'theme_mode';
 

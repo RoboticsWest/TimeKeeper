@@ -10,7 +10,7 @@ part of 'team_member_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(teamMemberService)
-const teamMemberServiceProvider = TeamMemberServiceProvider._();
+final teamMemberServiceProvider = TeamMemberServiceProvider._();
 
 final class TeamMemberServiceProvider
     extends
@@ -20,7 +20,7 @@ final class TeamMemberServiceProvider
           TeamMemberServiceClient
         >
     with $Provider<TeamMemberServiceClient> {
-  const TeamMemberServiceProvider._()
+  TeamMemberServiceProvider._()
     : super(
         from: null,
         argument: null,
@@ -57,7 +57,7 @@ final class TeamMemberServiceProvider
 String _$teamMemberServiceHash() => r'48972679a448b0913d9af3390c07705fdd11bc77';
 
 @ProviderFor(teamMembersStream)
-const teamMembersStreamProvider = TeamMembersStreamProvider._();
+final teamMembersStreamProvider = TeamMembersStreamProvider._();
 
 final class TeamMembersStreamProvider
     extends
@@ -69,13 +69,13 @@ final class TeamMembersStreamProvider
     with
         $FutureModifier<StreamTeamMembersResponse>,
         $StreamProvider<StreamTeamMembersResponse> {
-  const TeamMembersStreamProvider._()
+  TeamMembersStreamProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'teamMembersStreamProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -95,14 +95,14 @@ final class TeamMembersStreamProvider
   }
 }
 
-String _$teamMembersStreamHash() => r'e39aee18a610b3bc588fae24dfc7b50de8e75228';
+String _$teamMembersStreamHash() => r'849d90bf38645aae20189918c8f2280e2f0b7759';
 
 @ProviderFor(TeamMembers)
-const teamMembersProvider = TeamMembersProvider._();
+final teamMembersProvider = TeamMembersProvider._();
 
 final class TeamMembersProvider
     extends $NotifierProvider<TeamMembers, Map<String, TeamMember>> {
-  const TeamMembersProvider._()
+  TeamMembersProvider._()
     : super(
         from: null,
         argument: null,
@@ -129,14 +129,13 @@ final class TeamMembersProvider
   }
 }
 
-String _$teamMembersHash() => r'2567ddff27648f414e133678e4e6b8622ca5b830';
+String _$teamMembersHash() => r'1da976a7ba53d0dbdce124ceccdecbee079308e4';
 
 abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
   Map<String, TeamMember> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref =
         this.ref as $Ref<Map<String, TeamMember>, Map<String, TeamMember>>;
     final element =
@@ -147,12 +146,12 @@ abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(studentTeamMembers)
-const studentTeamMembersProvider = StudentTeamMembersProvider._();
+final studentTeamMembersProvider = StudentTeamMembersProvider._();
 
 final class StudentTeamMembersProvider
     extends
@@ -162,13 +161,13 @@ final class StudentTeamMembersProvider
           Map<String, TeamMember>
         >
     with $Provider<Map<String, TeamMember>> {
-  const StudentTeamMembersProvider._()
+  StudentTeamMembersProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'studentTeamMembersProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -197,10 +196,10 @@ final class StudentTeamMembersProvider
 }
 
 String _$studentTeamMembersHash() =>
-    r'195cd4e0554541f1ec5efe93bf8e05339364b91e';
+    r'b5f4bad9fcc8b430290ea1ba212df2de77d94f17';
 
 @ProviderFor(mentorTeamMembers)
-const mentorTeamMembersProvider = MentorTeamMembersProvider._();
+final mentorTeamMembersProvider = MentorTeamMembersProvider._();
 
 final class MentorTeamMembersProvider
     extends
@@ -210,13 +209,13 @@ final class MentorTeamMembersProvider
           Map<String, TeamMember>
         >
     with $Provider<Map<String, TeamMember>> {
-  const MentorTeamMembersProvider._()
+  MentorTeamMembersProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'mentorTeamMembersProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -244,4 +243,4 @@ final class MentorTeamMembersProvider
   }
 }
 
-String _$mentorTeamMembersHash() => r'60a9fa6af945f71d9e3d53043ded6353b1eae4e8';
+String _$mentorTeamMembersHash() => r'8d22e36a1b928df7955493ff033b95b0986340fe';

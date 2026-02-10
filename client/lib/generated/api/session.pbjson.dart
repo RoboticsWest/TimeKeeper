@@ -86,14 +86,22 @@ const StreamSessionsResponse$json = {
       '6': '.tk.api.SessionResponse',
       '10': 'sessions'
     },
+    {
+      '1': 'sync_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.common.SyncType',
+      '10': 'syncType'
+    },
   ],
 };
 
 /// Descriptor for `StreamSessionsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List streamSessionsResponseDescriptor =
-    $convert.base64Decode(
-        'ChZTdHJlYW1TZXNzaW9uc1Jlc3BvbnNlEjMKCHNlc3Npb25zGAEgAygLMhcudGsuYXBpLlNlc3'
-        'Npb25SZXNwb25zZVIIc2Vzc2lvbnM=');
+final $typed_data.Uint8List streamSessionsResponseDescriptor = $convert.base64Decode(
+    'ChZTdHJlYW1TZXNzaW9uc1Jlc3BvbnNlEjMKCHNlc3Npb25zGAEgAygLMhcudGsuYXBpLlNlc3'
+    'Npb25SZXNwb25zZVIIc2Vzc2lvbnMSMAoJc3luY190eXBlGAIgASgOMhMudGsuY29tbW9uLlN5'
+    'bmNUeXBlUghzeW5jVHlwZQ==');
 
 @$core.Deprecated('Use checkInOutRequestDescriptor instead')
 const CheckInOutRequest$json = {

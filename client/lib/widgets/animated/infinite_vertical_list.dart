@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-// Creates an animated infinite list which will scroll forever
-// Under the hood this creates 2 duplicate lists, one after the other
-// And animates the scroll to give the illusion of infinite scrolling
-// Once the second list is fully visible, the scroll position is reset to the start
+/// Creates an animated infinite list which scrolls forever vertically.
+///
+/// Uses a paint-only Transform.translate approach instead of scrollController.jumpTo()
+/// to avoid triggering expensive layout passes every frame.
 class AnimatedInfiniteVerticalList extends HookConsumerWidget {
   final List<Widget> children;
   final double childHeight;
@@ -39,70 +39,20 @@ class AnimatedInfiniteVerticalList extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _getChildren();
-    final scrollController = useScrollController();
-    final animationController = useAnimationController(
-      duration: Duration(
-        seconds: (items.isEmpty ? 1 : items.length) * scrollSpeed,
-      ),
-    );
-    final animationInitialized = useRef(false);
-
-    void initInfAni() {
-      if (animationInitialized.value) return;
-      if (items.isEmpty) return;
-
-      animationInitialized.value = true;
-      animationController.addListener(() {
-        final resetPosition = _getChildrenTotalHeight();
-        final currentScroll = animationController.value * resetPosition * 2;
-
-        if (currentScroll >= resetPosition &&
-            scrollController.hasClients &&
-            items.isNotEmpty) {
-          animationController.forward(from: 0.0);
-        } else {
-          if (scrollController.hasClients) {
-            scrollController.jumpTo(currentScroll);
-          }
-        }
-      });
-      animationController.repeat();
-    }
-
-    useEffect(() {
-      Future.delayed(const Duration(seconds: 2), () {
-        initInfAni();
-      });
-      return null;
-    }, [items.length]);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableHeight = constraints.maxHeight;
 
-        if (availableHeight < _getChildrenTotalHeight(actual: true)) {
-          // infinite list
-          return RepaintBoundary(
-            child: ScrollConfiguration(
-              behavior: ScrollConfiguration.of(
-                context,
-              ).copyWith(scrollbars: false),
-              child: CustomScrollView(
-                controller: scrollController,
-                slivers: [
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      return RepaintBoundary(
-                        child: items.elementAtOrNull(index % items.length),
-                      );
-                    }, childCount: items.length * 2),
-                  ),
-                ],
-              ),
-            ),
+        if (items.isNotEmpty &&
+            availableHeight < _getChildrenTotalHeight(actual: true)) {
+          return _InfiniteScrolling(
+            items: items,
+            childHeight: childHeight,
+            scrollSpeed: scrollSpeed,
           );
         } else {
-          // static normal list
+          // Static normal list — fits on screen
           return ScrollConfiguration(
             behavior: ScrollConfiguration.of(
               context,
@@ -121,6 +71,57 @@ class AnimatedInfiniteVerticalList extends HookConsumerWidget {
           );
         }
       },
+    );
+  }
+}
+
+class _InfiniteScrolling extends HookWidget {
+  final List<Widget> items;
+  final double childHeight;
+  final int scrollSpeed;
+
+  const _InfiniteScrolling({
+    required this.items,
+    required this.childHeight,
+    required this.scrollSpeed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final totalHeight = items.length * childHeight;
+    final duration = Duration(
+      seconds: (items.isEmpty ? 1 : items.length) * scrollSpeed,
+    );
+    final animationController = useAnimationController(duration: duration);
+
+    useEffect(() {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (context.mounted) {
+          animationController.repeat();
+        }
+      });
+      return null;
+    }, [items.length]);
+
+    // Build the item list once, wrap in RepaintBoundary
+    final column = RepaintBoundary(
+      child: Column(
+        children: [
+          for (final item in items) SizedBox(height: childHeight, child: item),
+          for (final item in items) SizedBox(height: childHeight, child: item),
+        ],
+      ),
+    );
+
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: animationController,
+        builder: (context, child) {
+          final offset = animationController.value * totalHeight;
+          return Transform.translate(offset: Offset(0, -offset), child: child);
+        },
+        child: column,
+      ),
     );
   }
 }

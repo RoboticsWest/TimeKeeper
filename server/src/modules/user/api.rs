@@ -23,7 +23,7 @@ use crate::{
       UpdateUserRequest, UpdateUserResponse, UserResponse, ValidateTokenRequest, ValidateTokenResponse,
       user_service_server::UserService,
     },
-    common::Role,
+    common::{Role, SyncType},
     db::User,
   },
   modules::user::UserRepository,
@@ -124,10 +124,13 @@ impl UserService for UserApi {
           if user.username == DEFAULT_ADMIN_USERNAME {
             return None;
           }
-          Some(Ok(StreamUsersResponse { users: vec![UserResponse { id, username: user.username, roles: user.roles }] }))
+          Some(Ok(StreamUsersResponse {
+            users: vec![UserResponse { id, username: user.username, roles: user.roles }],
+            sync_type: SyncType::Partial as i32,
+          }))
         }),
         ChangeEvent::Table => match get_all_users() {
-          Ok(users) => Some(Ok(StreamUsersResponse { users })),
+          Ok(users) => Some(Ok(StreamUsersResponse { users, sync_type: SyncType::Full as i32 })),
           Err(e) => {
             log::error!("Failed to get all users after table change: {}", e);
             None
@@ -141,7 +144,8 @@ impl UserService for UserApi {
       }
     });
 
-    let full_stream = tokio_stream::once(Ok(StreamUsersResponse { users: initial })).chain(stream);
+    let full_stream =
+      tokio_stream::once(Ok(StreamUsersResponse { users: initial, sync_type: SyncType::Full as i32 })).chain(stream);
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))

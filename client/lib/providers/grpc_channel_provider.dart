@@ -1,42 +1,16 @@
-import 'package:flutter/foundation.dart';
 import 'package:grpc/service_api.dart';
-import 'package:grpc/grpc_web.dart' as web_grpc;
-import 'package:grpc/grpc.dart' as grpc;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/providers/network_config_provider.dart';
 import 'package:time_keeper/utils/logger.dart';
 
+import 'grpc_channel_factory_stub.dart'
+    if (dart.library.io) 'grpc_channel_factory_native.dart'
+    if (dart.library.js_interop) 'grpc_channel_factory_web.dart';
+
 part 'grpc_channel_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class GrpcChannel extends _$GrpcChannel {
-  ClientChannel _createWebChannel(String host, int port, bool tls) {
-    final protocol = tls ? 'https' : 'http';
-    return web_grpc.GrpcWebClientChannel.xhr(
-      Uri.parse('$protocol://$host:$port'),
-    );
-  }
-
-  ClientChannel _createNativeChannel(String host, int port, bool tls) {
-    final credentials = tls
-        ? grpc.ChannelCredentials.secure()
-        : grpc.ChannelCredentials.insecure();
-
-    return grpc.ClientChannel(
-      host,
-      port: port,
-      options: grpc.ChannelOptions(
-        credentials: credentials,
-        keepAlive: grpc.ClientKeepAliveOptions(
-          timeout: Duration(seconds: 10),
-          pingInterval: Duration(seconds: 10),
-          permitWithoutCalls: true,
-        ),
-        connectionTimeout: Duration(seconds: 10),
-      ),
-    );
-  }
-
   void reconnect() {
     logger.i('Reconnecting gRPC channel on next access...');
     ref.invalidateSelf();
@@ -48,9 +22,7 @@ class GrpcChannel extends _$GrpcChannel {
     final apiPort = ref.watch(serverApiPortProvider);
     final tls = ref.watch(tlsProvider);
 
-    final channel = (kIsWeb || kIsWasm)
-        ? _createWebChannel(serverIp, apiPort, tls)
-        : _createNativeChannel(serverIp, apiPort, tls);
+    final channel = createChannel(host: serverIp, port: apiPort, tls: tls);
 
     ref.onDispose(() {
       channel.shutdown();

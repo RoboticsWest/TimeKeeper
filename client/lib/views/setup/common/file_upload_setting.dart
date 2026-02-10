@@ -33,6 +33,7 @@ class _FileUploadSettingState extends State<FileUploadSetting> {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: widget.allowedExtensions != null ? FileType.custom : FileType.any,
       allowedExtensions: widget.allowedExtensions,
+      withData: true,
     );
 
     if (result != null) {

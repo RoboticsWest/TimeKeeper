@@ -19,7 +19,7 @@ LocationServiceClient locationService(Ref ref) {
   return LocationServiceClient(channel, options: options);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<StreamLocationsResponse> locationsStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamLocationsResponse>(
     () async {
@@ -49,9 +49,11 @@ class Locations extends _$Locations {
       ref: ref,
       streamProvider: locationsStreamProvider,
       extractItems: (response) => response.locations,
+      getSyncType: (response) => response.syncType,
       hasItem: (item) => item.hasLocation(),
       getId: (item) => item.id,
       getItem: (item) => item.location,
+      onSync: (fullState) => state = fullState,
       onUpdate: (updates) => state = {...state, ...updates},
     );
 

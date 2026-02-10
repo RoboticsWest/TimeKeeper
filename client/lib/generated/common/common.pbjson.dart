@@ -30,6 +30,19 @@ const Role$json = {
 final $typed_data.Uint8List roleDescriptor = $convert.base64Decode(
     'CgRSb2xlEgkKBUFETUlOEAASCQoFS0lPU0sQARILCgdTVFVERU5UEAISCgoGTUVOVE9SEAM=');
 
+@$core.Deprecated('Use syncTypeDescriptor instead')
+const SyncType$json = {
+  '1': 'SyncType',
+  '2': [
+    {'1': 'FULL', '2': 0},
+    {'1': 'PARTIAL', '2': 1},
+  ],
+};
+
+/// Descriptor for `SyncType`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List syncTypeDescriptor =
+    $convert.base64Decode('CghTeW5jVHlwZRIICgRGVUxMEAASCwoHUEFSVElBTBAB');
+
 @$core.Deprecated('Use timestampDescriptor instead')
 const Timestamp$json = {
   '1': 'Timestamp',

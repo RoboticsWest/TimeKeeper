@@ -189,14 +189,22 @@ const StreamTeamMembersResponse$json = {
       '6': '.tk.api.TeamMemberResponse',
       '10': 'teamMembers'
     },
+    {
+      '1': 'sync_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.common.SyncType',
+      '10': 'syncType'
+    },
   ],
 };
 
 /// Descriptor for `StreamTeamMembersResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List streamTeamMembersResponseDescriptor =
-    $convert.base64Decode(
-        'ChlTdHJlYW1UZWFtTWVtYmVyc1Jlc3BvbnNlEj0KDHRlYW1fbWVtYmVycxgBIAMoCzIaLnRrLm'
-        'FwaS5UZWFtTWVtYmVyUmVzcG9uc2VSC3RlYW1NZW1iZXJz');
+final $typed_data.Uint8List streamTeamMembersResponseDescriptor = $convert.base64Decode(
+    'ChlTdHJlYW1UZWFtTWVtYmVyc1Jlc3BvbnNlEj0KDHRlYW1fbWVtYmVycxgBIAMoCzIaLnRrLm'
+    'FwaS5UZWFtTWVtYmVyUmVzcG9uc2VSC3RlYW1NZW1iZXJzEjAKCXN5bmNfdHlwZRgCIAEoDjIT'
+    'LnRrLmNvbW1vbi5TeW5jVHlwZVIIc3luY1R5cGU=');
 
 @$core.Deprecated('Use streamStudentsRequestDescriptor instead')
 const StreamStudentsRequest$json = {
@@ -219,14 +227,22 @@ const StreamStudentsResponse$json = {
       '6': '.tk.api.TeamMemberResponse',
       '10': 'students'
     },
+    {
+      '1': 'sync_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.common.SyncType',
+      '10': 'syncType'
+    },
   ],
 };
 
 /// Descriptor for `StreamStudentsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List streamStudentsResponseDescriptor =
-    $convert.base64Decode(
-        'ChZTdHJlYW1TdHVkZW50c1Jlc3BvbnNlEjYKCHN0dWRlbnRzGAEgAygLMhoudGsuYXBpLlRlYW'
-        '1NZW1iZXJSZXNwb25zZVIIc3R1ZGVudHM=');
+final $typed_data.Uint8List streamStudentsResponseDescriptor = $convert.base64Decode(
+    'ChZTdHJlYW1TdHVkZW50c1Jlc3BvbnNlEjYKCHN0dWRlbnRzGAEgAygLMhoudGsuYXBpLlRlYW'
+    '1NZW1iZXJSZXNwb25zZVIIc3R1ZGVudHMSMAoJc3luY190eXBlGAIgASgOMhMudGsuY29tbW9u'
+    'LlN5bmNUeXBlUghzeW5jVHlwZQ==');
 
 @$core.Deprecated('Use streamMentorsRequestDescriptor instead')
 const StreamMentorsRequest$json = {
@@ -249,13 +265,22 @@ const StreamMentorsResponse$json = {
       '6': '.tk.api.TeamMemberResponse',
       '10': 'mentors'
     },
+    {
+      '1': 'sync_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.common.SyncType',
+      '10': 'syncType'
+    },
   ],
 };
 
 /// Descriptor for `StreamMentorsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List streamMentorsResponseDescriptor = $convert.base64Decode(
     'ChVTdHJlYW1NZW50b3JzUmVzcG9uc2USNAoHbWVudG9ycxgBIAMoCzIaLnRrLmFwaS5UZWFtTW'
-    'VtYmVyUmVzcG9uc2VSB21lbnRvcnM=');
+    'VtYmVyUmVzcG9uc2VSB21lbnRvcnMSMAoJc3luY190eXBlGAIgASgOMhMudGsuY29tbW9uLlN5'
+    'bmNUeXBlUghzeW5jVHlwZQ==');
 
 @$core.Deprecated('Use createTeamMemberRequestDescriptor instead')
 const CreateTeamMemberRequest$json = {

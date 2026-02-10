@@ -10,7 +10,7 @@ part of 'settings_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(settingsService)
-const settingsServiceProvider = SettingsServiceProvider._();
+final settingsServiceProvider = SettingsServiceProvider._();
 
 final class SettingsServiceProvider
     extends
@@ -20,7 +20,7 @@ final class SettingsServiceProvider
           SettingsServiceClient
         >
     with $Provider<SettingsServiceClient> {
-  const SettingsServiceProvider._()
+  SettingsServiceProvider._()
     : super(
         from: null,
         argument: null,

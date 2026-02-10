@@ -35,5 +35,23 @@ class Role extends $pb.ProtobufEnum {
   const Role._(super.value, super.name);
 }
 
+class SyncType extends $pb.ProtobufEnum {
+  static const SyncType FULL = SyncType._(0, _omitEnumNames ? '' : 'FULL');
+  static const SyncType PARTIAL =
+      SyncType._(1, _omitEnumNames ? '' : 'PARTIAL');
+
+  static const $core.List<SyncType> values = <SyncType>[
+    FULL,
+    PARTIAL,
+  ];
+
+  static final $core.List<SyncType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static SyncType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const SyncType._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

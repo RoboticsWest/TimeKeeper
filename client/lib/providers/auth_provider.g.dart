@@ -10,10 +10,10 @@ part of 'auth_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(Token)
-const tokenProvider = TokenProvider._();
+final tokenProvider = TokenProvider._();
 
 final class TokenProvider extends $NotifierProvider<Token, String?> {
-  const TokenProvider._()
+  TokenProvider._()
     : super(
         from: null,
         argument: null,
@@ -47,7 +47,6 @@ abstract class _$Token extends $Notifier<String?> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<String?, String?>;
     final element =
         ref.element
@@ -57,15 +56,15 @@ abstract class _$Token extends $Notifier<String?> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(Username)
-const usernameProvider = UsernameProvider._();
+final usernameProvider = UsernameProvider._();
 
 final class UsernameProvider extends $NotifierProvider<Username, String?> {
-  const UsernameProvider._()
+  UsernameProvider._()
     : super(
         from: null,
         argument: null,
@@ -99,7 +98,6 @@ abstract class _$Username extends $Notifier<String?> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<String?, String?>;
     final element =
         ref.element
@@ -109,15 +107,15 @@ abstract class _$Username extends $Notifier<String?> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(Roles)
-const rolesProvider = RolesProvider._();
+final rolesProvider = RolesProvider._();
 
 final class RolesProvider extends $NotifierProvider<Roles, List<Role>> {
-  const RolesProvider._()
+  RolesProvider._()
     : super(
         from: null,
         argument: null,
@@ -151,7 +149,6 @@ abstract class _$Roles extends $Notifier<List<Role>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<List<Role>, List<Role>>;
     final element =
         ref.element
@@ -161,16 +158,16 @@ abstract class _$Roles extends $Notifier<List<Role>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(UserService)
-const userServiceProvider = UserServiceProvider._();
+final userServiceProvider = UserServiceProvider._();
 
 final class UserServiceProvider
     extends $NotifierProvider<UserService, UserServiceClient> {
-  const UserServiceProvider._()
+  UserServiceProvider._()
     : super(
         from: null,
         argument: null,
@@ -204,7 +201,6 @@ abstract class _$UserService extends $Notifier<UserServiceClient> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<UserServiceClient, UserServiceClient>;
     final element =
         ref.element
@@ -214,16 +210,16 @@ abstract class _$UserService extends $Notifier<UserServiceClient> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(isLoggedIn)
-const isLoggedInProvider = IsLoggedInProvider._();
+final isLoggedInProvider = IsLoggedInProvider._();
 
 final class IsLoggedInProvider extends $FunctionalProvider<bool, bool, bool>
     with $Provider<bool> {
-  const IsLoggedInProvider._()
+  IsLoggedInProvider._()
     : super(
         from: null,
         argument: null,

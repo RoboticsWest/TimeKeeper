@@ -4,7 +4,7 @@ import 'package:time_keeper/helpers/local_storage.dart';
 
 part 'network_config_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ServerIp extends _$ServerIp {
   static const String _key = 'server_address';
   static const String _defaultIp = '127.0.0.1';
@@ -39,7 +39,7 @@ class ServerIp extends _$ServerIp {
 }
 
 // Web Port
-@riverpod
+@Riverpod(keepAlive: true)
 class ServerWebPort extends _$ServerWebPort {
   static const String _key = 'server_web_port';
   static const int _defaultPort = 8080;
@@ -67,7 +67,7 @@ class ServerWebPort extends _$ServerWebPort {
 }
 
 // Api Port
-@riverpod
+@Riverpod(keepAlive: true)
 class ServerApiPort extends _$ServerApiPort {
   static const String _key = 'server_api_port';
   static const int _defaultPort = 50051;
@@ -95,7 +95,7 @@ class ServerApiPort extends _$ServerApiPort {
 }
 
 // TLS
-@riverpod
+@Riverpod(keepAlive: true)
 class Tls extends _$Tls {
   static const String _key = 'tls';
   static const bool _defaultTls = false;
@@ -122,7 +122,7 @@ class Tls extends _$Tls {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 String serverAddress(Ref ref) {
   final ip = ref.watch(serverIpProvider);
   final port = ref.watch(serverWebPortProvider);

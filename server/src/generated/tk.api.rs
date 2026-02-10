@@ -19,6 +19,8 @@ pub struct StreamLocationsRequest {}
 pub struct StreamLocationsResponse {
     #[prost(message, repeated, tag = "1")]
     pub locations: ::prost::alloc::vec::Vec<LocationResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
 }
 /// Generated client implementations.
 pub mod location_service_client {
@@ -815,6 +817,8 @@ pub struct StreamSessionsRequest {}
 pub struct StreamSessionsResponse {
     #[prost(message, repeated, tag = "1")]
     pub sessions: ::prost::alloc::vec::Vec<SessionResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CheckInOutRequest {
@@ -1725,6 +1729,8 @@ pub struct StreamTeamMembersRequest {}
 pub struct StreamTeamMembersResponse {
     #[prost(message, repeated, tag = "1")]
     pub team_members: ::prost::alloc::vec::Vec<TeamMemberResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct StreamStudentsRequest {}
@@ -1732,6 +1738,8 @@ pub struct StreamStudentsRequest {}
 pub struct StreamStudentsResponse {
     #[prost(message, repeated, tag = "1")]
     pub students: ::prost::alloc::vec::Vec<TeamMemberResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct StreamMentorsRequest {}
@@ -1739,6 +1747,8 @@ pub struct StreamMentorsRequest {}
 pub struct StreamMentorsResponse {
     #[prost(message, repeated, tag = "1")]
     pub mentors: ::prost::alloc::vec::Vec<TeamMemberResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CreateTeamMemberRequest {
@@ -2930,6 +2940,8 @@ pub struct StreamUsersRequest {}
 pub struct StreamUsersResponse {
     #[prost(message, repeated, tag = "1")]
     pub users: ::prost::alloc::vec::Vec<UserResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct CreateUserRequest {

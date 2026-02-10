@@ -437,9 +437,11 @@ class StreamUsersRequest extends $pb.GeneratedMessage {
 class StreamUsersResponse extends $pb.GeneratedMessage {
   factory StreamUsersResponse({
     $core.Iterable<UserResponse>? users,
+    $1.SyncType? syncType,
   }) {
     final result = create();
     if (users != null) result.users.addAll(users);
+    if (syncType != null) result.syncType = syncType;
     return result;
   }
 
@@ -458,6 +460,8 @@ class StreamUsersResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<UserResponse>(1, _omitFieldNames ? '' : 'users',
         subBuilder: UserResponse.create)
+    ..aE<$1.SyncType>(2, _omitFieldNames ? '' : 'syncType',
+        enumValues: $1.SyncType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -481,6 +485,15 @@ class StreamUsersResponse extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<UserResponse> get users => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $1.SyncType get syncType => $_getN(1);
+  @$pb.TagNumber(2)
+  set syncType($1.SyncType value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSyncType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSyncType() => $_clearField(2);
 }
 
 class CreateUserRequest extends $pb.GeneratedMessage {

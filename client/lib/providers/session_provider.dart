@@ -18,7 +18,7 @@ SessionServiceClient sessionService(Ref ref) {
   return SessionServiceClient(channel, options: options);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<StreamSessionsResponse> sessionsStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamSessionsResponse>(
     () async {
@@ -48,9 +48,11 @@ class Sessions extends _$Sessions {
       ref: ref,
       streamProvider: sessionsStreamProvider,
       extractItems: (response) => response.sessions,
+      getSyncType: (response) => response.syncType,
       hasItem: (item) => item.hasSession(),
       getId: (item) => item.id,
       getItem: (item) => item.session,
+      onSync: (fullState) => state = fullState,
       onUpdate: (updates) => state = {...state, ...updates},
     );
 

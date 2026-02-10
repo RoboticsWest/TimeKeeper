@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package tk.api;
 
+import "common/common.proto";
 import "db/db.proto";
 
 message LocationResponse {
@@ -17,6 +18,7 @@ message GetLocationsResponse {
 message StreamLocationsRequest {}
 message StreamLocationsResponse {
   repeated LocationResponse locations = 1;
+  common.SyncType sync_type = 2;
 }
 
 service LocationService {

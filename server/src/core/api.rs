@@ -37,13 +37,11 @@ impl Api {
     let router = Server::builder()
       // Enable HTTP/1.1 for gRPC-Web (browsers)
       .accept_http1(true)
-      // HTTP/2 Keepalive settings (for native clients)
+      // TCP Keepalive (detect broken connections at OS level)
+      .tcp_keepalive(Some(Duration::from_secs(60)))
+      // HTTP/2 keepalive (detect unresponsive clients)
       .http2_keepalive_interval(Some(Duration::from_secs(30)))
       .http2_keepalive_timeout(Some(Duration::from_secs(10)))
-      // TCP Keepalive (detect broken connections)
-      .tcp_keepalive(Some(Duration::from_secs(60)))
-      // Connection Timeout
-      .timeout(Duration::from_secs(30))
       // Max concurrent streams per connection
       .initial_stream_window_size(Some(1024 * 1024)) // 1MB
       .initial_connection_window_size(Some(1024 * 1024 * 2)) // 2MB

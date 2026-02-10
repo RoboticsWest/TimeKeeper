@@ -10,16 +10,16 @@ part of 'network_config_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(ServerIp)
-const serverIpProvider = ServerIpProvider._();
+final serverIpProvider = ServerIpProvider._();
 
 final class ServerIpProvider extends $NotifierProvider<ServerIp, String> {
-  const ServerIpProvider._()
+  ServerIpProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'serverIpProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -40,14 +40,13 @@ final class ServerIpProvider extends $NotifierProvider<ServerIp, String> {
   }
 }
 
-String _$serverIpHash() => r'e10458d370fbe4133d59044d5d0808a0ed79ea0d';
+String _$serverIpHash() => r'ffa9aa7115dd723fbe77c41e76b229e441a492d3';
 
 abstract class _$ServerIp extends $Notifier<String> {
   String build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<String, String>;
     final element =
         ref.element
@@ -57,22 +56,22 @@ abstract class _$ServerIp extends $Notifier<String> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(ServerWebPort)
-const serverWebPortProvider = ServerWebPortProvider._();
+final serverWebPortProvider = ServerWebPortProvider._();
 
 final class ServerWebPortProvider
     extends $NotifierProvider<ServerWebPort, int> {
-  const ServerWebPortProvider._()
+  ServerWebPortProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'serverWebPortProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -93,14 +92,13 @@ final class ServerWebPortProvider
   }
 }
 
-String _$serverWebPortHash() => r'f1e26a075463f206621e0628d4826a5536c47ead';
+String _$serverWebPortHash() => r'e02a0092c257c2f78e4085931dbebbab730055af';
 
 abstract class _$ServerWebPort extends $Notifier<int> {
   int build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<int, int>;
     final element =
         ref.element
@@ -110,22 +108,22 @@ abstract class _$ServerWebPort extends $Notifier<int> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(ServerApiPort)
-const serverApiPortProvider = ServerApiPortProvider._();
+final serverApiPortProvider = ServerApiPortProvider._();
 
 final class ServerApiPortProvider
     extends $NotifierProvider<ServerApiPort, int> {
-  const ServerApiPortProvider._()
+  ServerApiPortProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'serverApiPortProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -146,14 +144,13 @@ final class ServerApiPortProvider
   }
 }
 
-String _$serverApiPortHash() => r'3a4dcd4eb6eec881d32612abfd67f0a04c24246e';
+String _$serverApiPortHash() => r'a4326dfe367dad316d896915d0dd63d0eee0e811';
 
 abstract class _$ServerApiPort extends $Notifier<int> {
   int build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<int, int>;
     final element =
         ref.element
@@ -163,21 +160,21 @@ abstract class _$ServerApiPort extends $Notifier<int> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(Tls)
-const tlsProvider = TlsProvider._();
+final tlsProvider = TlsProvider._();
 
 final class TlsProvider extends $NotifierProvider<Tls, bool> {
-  const TlsProvider._()
+  TlsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'tlsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -198,14 +195,13 @@ final class TlsProvider extends $NotifierProvider<Tls, bool> {
   }
 }
 
-String _$tlsHash() => r'910879680948d51ce7d5070ce3f08786bd295571';
+String _$tlsHash() => r'2e9002931f0ac0fa0c66650f591b2f27a3e4dd14';
 
 abstract class _$Tls extends $Notifier<bool> {
   bool build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<bool, bool>;
     final element =
         ref.element
@@ -215,23 +211,23 @@ abstract class _$Tls extends $Notifier<bool> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(serverAddress)
-const serverAddressProvider = ServerAddressProvider._();
+final serverAddressProvider = ServerAddressProvider._();
 
 final class ServerAddressProvider
     extends $FunctionalProvider<String, String, String>
     with $Provider<String> {
-  const ServerAddressProvider._()
+  ServerAddressProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'serverAddressProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -258,4 +254,4 @@ final class ServerAddressProvider
   }
 }
 
-String _$serverAddressHash() => r'25f26a5b5ddb89fc56f847acf8dc1daa95a25d43';
+String _$serverAddressHash() => r'311e094b4a4621ed4f096a86a737331dacd6144f';

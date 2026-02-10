@@ -6,7 +6,7 @@ import 'package:time_keeper/providers/auth_provider.dart';
 
 part 'user_provider.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<StreamUsersResponse> usersStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamUsersResponse>(() async {
     final client = ref.read(userServiceProvider);
@@ -34,9 +34,11 @@ class Users extends _$Users {
       ref: ref,
       streamProvider: usersStreamProvider,
       extractItems: (response) => response.users,
+      getSyncType: (response) => response.syncType,
       hasItem: (item) => item.hasId(),
       getId: (item) => item.id,
       getItem: (item) => item,
+      onSync: (fullState) => state = fullState,
       onUpdate: (updates) => state = {...state, ...updates},
     );
 

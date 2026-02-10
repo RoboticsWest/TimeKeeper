@@ -90,7 +90,7 @@ CustomTransitionPage<void> _buildTransitionPage({
   );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 GoRouter router(Ref ref) {
   final isLoggedIn = ref.watch(isLoggedInProvider);
   final roles = ref.watch(rolesProvider);
