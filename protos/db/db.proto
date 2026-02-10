@@ -33,14 +33,18 @@ message Location {
 
 message TeamMemberSession {
   string team_member_id = 1;
-  common.TkDateTime check_in_time = 2;
-  optional common.TkDateTime check_out_time = 3;
+  common.Timestamp check_in_time = 2;
+  optional common.Timestamp check_out_time = 3;
 }
 
 message Session {
-  common.TkDateTime start_time = 1;
-  common.TkDateTime end_time = 2;
+  common.Timestamp start_time = 1;
+  common.Timestamp end_time = 2;
   string location_id = 3;
   repeated TeamMemberSession member_sessions = 4;
   bool finished = 5;
+}
+
+message Settings {
+  int64 next_session_threshold_secs = 1;
 }

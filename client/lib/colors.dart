@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-const _primaryColor = Colors.blue;
+// const _primaryColor = Colors.blue;
+// const _primaryColor = Colors.pink;
+const _primaryColor = Color(0xFF009485);
 const _secondaryColor = Color(0xFF005994);
 
 const _supportErrorColor = Color(0xFFD92B2B);

@@ -49,6 +49,30 @@ message StreamMentorsResponse {
   repeated TeamMemberResponse mentors = 1;
 }
 
+message CreateTeamMemberRequest {
+  string first_name = 1;
+  string last_name = 2;
+  db.TeamMemberType member_type = 3;
+  optional string alias = 4;
+  optional string secondary_alias = 5;
+}
+message CreateTeamMemberResponse {}
+
+message UpdateTeamMemberRequest {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  db.TeamMemberType member_type = 4;
+  optional string alias = 5;
+  optional string secondary_alias = 6;
+}
+message UpdateTeamMemberResponse {}
+
+message DeleteTeamMemberRequest {
+  string id = 1;
+}
+message DeleteTeamMemberResponse {}
+
 service TeamMemberService {
   rpc UploadStudentCsv(UploadStudentCsvRequest) returns (UploadStudentCsvResponse);
   rpc UploadMentorCsv(UploadMentorCsvRequest) returns (UploadMentorCsvResponse);
@@ -60,4 +84,8 @@ service TeamMemberService {
   rpc StreamTeamMembers(StreamTeamMembersRequest) returns (stream StreamTeamMembersResponse);
   rpc StreamStudents(StreamStudentsRequest) returns (stream StreamStudentsResponse);
   rpc StreamMentors(StreamMentorsRequest) returns (stream StreamMentorsResponse);
+
+  rpc CreateTeamMember(CreateTeamMemberRequest) returns (CreateTeamMemberResponse);
+  rpc UpdateTeamMember(UpdateTeamMemberRequest) returns (UpdateTeamMemberResponse);
+  rpc DeleteTeamMember(DeleteTeamMemberRequest) returns (DeleteTeamMemberResponse);
 }

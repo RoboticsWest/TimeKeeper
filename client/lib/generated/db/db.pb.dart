@@ -12,6 +12,7 @@
 
 import 'dart:core' as $core;
 
+import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import '../common/common.pb.dart' as $0;
@@ -307,8 +308,8 @@ class Location extends $pb.GeneratedMessage {
 class TeamMemberSession extends $pb.GeneratedMessage {
   factory TeamMemberSession({
     $core.String? teamMemberId,
-    $0.TkDateTime? checkInTime,
-    $0.TkDateTime? checkOutTime,
+    $0.Timestamp? checkInTime,
+    $0.Timestamp? checkOutTime,
   }) {
     final result = create();
     if (teamMemberId != null) result.teamMemberId = teamMemberId;
@@ -331,10 +332,10 @@ class TeamMemberSession extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'teamMemberId')
-    ..aOM<$0.TkDateTime>(2, _omitFieldNames ? '' : 'checkInTime',
-        subBuilder: $0.TkDateTime.create)
-    ..aOM<$0.TkDateTime>(3, _omitFieldNames ? '' : 'checkOutTime',
-        subBuilder: $0.TkDateTime.create)
+    ..aOM<$0.Timestamp>(2, _omitFieldNames ? '' : 'checkInTime',
+        subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'checkOutTime',
+        subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -366,32 +367,32 @@ class TeamMemberSession extends $pb.GeneratedMessage {
   void clearTeamMemberId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $0.TkDateTime get checkInTime => $_getN(1);
+  $0.Timestamp get checkInTime => $_getN(1);
   @$pb.TagNumber(2)
-  set checkInTime($0.TkDateTime value) => $_setField(2, value);
+  set checkInTime($0.Timestamp value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasCheckInTime() => $_has(1);
   @$pb.TagNumber(2)
   void clearCheckInTime() => $_clearField(2);
   @$pb.TagNumber(2)
-  $0.TkDateTime ensureCheckInTime() => $_ensure(1);
+  $0.Timestamp ensureCheckInTime() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $0.TkDateTime get checkOutTime => $_getN(2);
+  $0.Timestamp get checkOutTime => $_getN(2);
   @$pb.TagNumber(3)
-  set checkOutTime($0.TkDateTime value) => $_setField(3, value);
+  set checkOutTime($0.Timestamp value) => $_setField(3, value);
   @$pb.TagNumber(3)
   $core.bool hasCheckOutTime() => $_has(2);
   @$pb.TagNumber(3)
   void clearCheckOutTime() => $_clearField(3);
   @$pb.TagNumber(3)
-  $0.TkDateTime ensureCheckOutTime() => $_ensure(2);
+  $0.Timestamp ensureCheckOutTime() => $_ensure(2);
 }
 
 class Session extends $pb.GeneratedMessage {
   factory Session({
-    $0.TkDateTime? startTime,
-    $0.TkDateTime? endTime,
+    $0.Timestamp? startTime,
+    $0.Timestamp? endTime,
     $core.String? locationId,
     $core.Iterable<TeamMemberSession>? memberSessions,
     $core.bool? finished,
@@ -418,10 +419,10 @@ class Session extends $pb.GeneratedMessage {
       _omitMessageNames ? '' : 'Session',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
       createEmptyInstance: create)
-    ..aOM<$0.TkDateTime>(1, _omitFieldNames ? '' : 'startTime',
-        subBuilder: $0.TkDateTime.create)
-    ..aOM<$0.TkDateTime>(2, _omitFieldNames ? '' : 'endTime',
-        subBuilder: $0.TkDateTime.create)
+    ..aOM<$0.Timestamp>(1, _omitFieldNames ? '' : 'startTime',
+        subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(2, _omitFieldNames ? '' : 'endTime',
+        subBuilder: $0.Timestamp.create)
     ..aOS(3, _omitFieldNames ? '' : 'locationId')
     ..pPM<TeamMemberSession>(4, _omitFieldNames ? '' : 'memberSessions',
         subBuilder: TeamMemberSession.create)
@@ -447,26 +448,26 @@ class Session extends $pb.GeneratedMessage {
   static Session? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $0.TkDateTime get startTime => $_getN(0);
+  $0.Timestamp get startTime => $_getN(0);
   @$pb.TagNumber(1)
-  set startTime($0.TkDateTime value) => $_setField(1, value);
+  set startTime($0.Timestamp value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasStartTime() => $_has(0);
   @$pb.TagNumber(1)
   void clearStartTime() => $_clearField(1);
   @$pb.TagNumber(1)
-  $0.TkDateTime ensureStartTime() => $_ensure(0);
+  $0.Timestamp ensureStartTime() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  $0.TkDateTime get endTime => $_getN(1);
+  $0.Timestamp get endTime => $_getN(1);
   @$pb.TagNumber(2)
-  set endTime($0.TkDateTime value) => $_setField(2, value);
+  set endTime($0.Timestamp value) => $_setField(2, value);
   @$pb.TagNumber(2)
   $core.bool hasEndTime() => $_has(1);
   @$pb.TagNumber(2)
   void clearEndTime() => $_clearField(2);
   @$pb.TagNumber(2)
-  $0.TkDateTime ensureEndTime() => $_ensure(1);
+  $0.Timestamp ensureEndTime() => $_ensure(1);
 
   @$pb.TagNumber(3)
   $core.String get locationId => $_getSZ(2);
@@ -488,6 +489,60 @@ class Session extends $pb.GeneratedMessage {
   $core.bool hasFinished() => $_has(4);
   @$pb.TagNumber(5)
   void clearFinished() => $_clearField(5);
+}
+
+class Settings extends $pb.GeneratedMessage {
+  factory Settings({
+    $fixnum.Int64? nextSessionThresholdSecs,
+  }) {
+    final result = create();
+    if (nextSessionThresholdSecs != null)
+      result.nextSessionThresholdSecs = nextSessionThresholdSecs;
+    return result;
+  }
+
+  Settings._();
+
+  factory Settings.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Settings.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Settings',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'nextSessionThresholdSecs')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Settings clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Settings copyWith(void Function(Settings) updates) =>
+      super.copyWith((message) => updates(message as Settings)) as Settings;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Settings create() => Settings._();
+  @$core.override
+  Settings createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Settings getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Settings>(create);
+  static Settings? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get nextSessionThresholdSecs => $_getI64(0);
+  @$pb.TagNumber(1)
+  set nextSessionThresholdSecs($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNextSessionThresholdSecs() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNextSessionThresholdSecs() => $_clearField(1);
 }
 
 const $core.bool _omitFieldNames =

@@ -90,3 +90,140 @@ const UpdateAdminPasswordResponse$json = {
 /// Descriptor for `UpdateAdminPasswordResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateAdminPasswordResponseDescriptor =
     $convert.base64Decode('ChtVcGRhdGVBZG1pblBhc3N3b3JkUmVzcG9uc2U=');
+
+@$core.Deprecated('Use userResponseDescriptor instead')
+const UserResponse$json = {
+  '1': 'UserResponse',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'username', '3': 2, '4': 1, '5': 9, '10': 'username'},
+    {
+      '1': 'roles',
+      '3': 3,
+      '4': 3,
+      '5': 14,
+      '6': '.tk.common.Role',
+      '10': 'roles'
+    },
+  ],
+};
+
+/// Descriptor for `UserResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List userResponseDescriptor = $convert.base64Decode(
+    'CgxVc2VyUmVzcG9uc2USDgoCaWQYASABKAlSAmlkEhoKCHVzZXJuYW1lGAIgASgJUgh1c2Vybm'
+    'FtZRIlCgVyb2xlcxgDIAMoDjIPLnRrLmNvbW1vbi5Sb2xlUgVyb2xlcw==');
+
+@$core.Deprecated('Use streamUsersRequestDescriptor instead')
+const StreamUsersRequest$json = {
+  '1': 'StreamUsersRequest',
+};
+
+/// Descriptor for `StreamUsersRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List streamUsersRequestDescriptor =
+    $convert.base64Decode('ChJTdHJlYW1Vc2Vyc1JlcXVlc3Q=');
+
+@$core.Deprecated('Use streamUsersResponseDescriptor instead')
+const StreamUsersResponse$json = {
+  '1': 'StreamUsersResponse',
+  '2': [
+    {
+      '1': 'users',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.tk.api.UserResponse',
+      '10': 'users'
+    },
+  ],
+};
+
+/// Descriptor for `StreamUsersResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List streamUsersResponseDescriptor = $convert.base64Decode(
+    'ChNTdHJlYW1Vc2Vyc1Jlc3BvbnNlEioKBXVzZXJzGAEgAygLMhQudGsuYXBpLlVzZXJSZXNwb2'
+    '5zZVIFdXNlcnM=');
+
+@$core.Deprecated('Use createUserRequestDescriptor instead')
+const CreateUserRequest$json = {
+  '1': 'CreateUserRequest',
+  '2': [
+    {'1': 'username', '3': 1, '4': 1, '5': 9, '10': 'username'},
+    {'1': 'password', '3': 2, '4': 1, '5': 9, '10': 'password'},
+    {
+      '1': 'roles',
+      '3': 3,
+      '4': 3,
+      '5': 14,
+      '6': '.tk.common.Role',
+      '10': 'roles'
+    },
+  ],
+};
+
+/// Descriptor for `CreateUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createUserRequestDescriptor = $convert.base64Decode(
+    'ChFDcmVhdGVVc2VyUmVxdWVzdBIaCgh1c2VybmFtZRgBIAEoCVIIdXNlcm5hbWUSGgoIcGFzc3'
+    'dvcmQYAiABKAlSCHBhc3N3b3JkEiUKBXJvbGVzGAMgAygOMg8udGsuY29tbW9uLlJvbGVSBXJv'
+    'bGVz');
+
+@$core.Deprecated('Use createUserResponseDescriptor instead')
+const CreateUserResponse$json = {
+  '1': 'CreateUserResponse',
+};
+
+/// Descriptor for `CreateUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List createUserResponseDescriptor =
+    $convert.base64Decode('ChJDcmVhdGVVc2VyUmVzcG9uc2U=');
+
+@$core.Deprecated('Use updateUserRequestDescriptor instead')
+const UpdateUserRequest$json = {
+  '1': 'UpdateUserRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'username', '3': 2, '4': 1, '5': 9, '10': 'username'},
+    {'1': 'password', '3': 3, '4': 1, '5': 9, '10': 'password'},
+    {
+      '1': 'roles',
+      '3': 4,
+      '4': 3,
+      '5': 14,
+      '6': '.tk.common.Role',
+      '10': 'roles'
+    },
+  ],
+};
+
+/// Descriptor for `UpdateUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateUserRequestDescriptor = $convert.base64Decode(
+    'ChFVcGRhdGVVc2VyUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQSGgoIdXNlcm5hbWUYAiABKAlSCH'
+    'VzZXJuYW1lEhoKCHBhc3N3b3JkGAMgASgJUghwYXNzd29yZBIlCgVyb2xlcxgEIAMoDjIPLnRr'
+    'LmNvbW1vbi5Sb2xlUgVyb2xlcw==');
+
+@$core.Deprecated('Use updateUserResponseDescriptor instead')
+const UpdateUserResponse$json = {
+  '1': 'UpdateUserResponse',
+};
+
+/// Descriptor for `UpdateUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateUserResponseDescriptor =
+    $convert.base64Decode('ChJVcGRhdGVVc2VyUmVzcG9uc2U=');
+
+@$core.Deprecated('Use deleteUserRequestDescriptor instead')
+const DeleteUserRequest$json = {
+  '1': 'DeleteUserRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+  ],
+};
+
+/// Descriptor for `DeleteUserRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteUserRequestDescriptor =
+    $convert.base64Decode('ChFEZWxldGVVc2VyUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+
+@$core.Deprecated('Use deleteUserResponseDescriptor instead')
+const DeleteUserResponse$json = {
+  '1': 'DeleteUserResponse',
+};
+
+/// Descriptor for `DeleteUserResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteUserResponseDescriptor =
+    $convert.base64Decode('ChJEZWxldGVVc2VyUmVzcG9uc2U=');

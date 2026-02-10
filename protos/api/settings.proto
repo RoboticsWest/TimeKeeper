@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "db/db.proto";
+
+message GetSettingsRequest {}
+message GetSettingsResponse {
+  db.Settings settings = 1;
+}
+
+message UpdateSettingsRequest {
+  int64 next_session_threshold_secs = 1;
+}
+message UpdateSettingsResponse {}
+
+service SettingsService {
+  rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
+  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+}

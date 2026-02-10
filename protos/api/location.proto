@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "db/db.proto";
+
+message LocationResponse {
+  string id = 1;
+  db.Location location = 2;
+}
+
+message GetLocationsRequest {}
+message GetLocationsResponse {
+  repeated LocationResponse locations = 1;
+}
+
+message StreamLocationsRequest {}
+message StreamLocationsResponse {
+  repeated LocationResponse locations = 1;
+}
+
+service LocationService {
+  rpc GetLocations(GetLocationsRequest) returns (GetLocationsResponse);
+  rpc StreamLocations(StreamLocationsRequest) returns (stream StreamLocationsResponse);
+}

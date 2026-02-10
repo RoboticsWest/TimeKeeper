@@ -1,12 +1,26 @@
 use std::io::{BufRead, BufReader};
 
 use anyhow::{Result, anyhow};
-use chrono::{Datelike, Timelike};
+use chrono::DateTime;
 
 use crate::{
-  generated::common::{TkDate, TkDateTime, TkTime},
+  generated::common::Timestamp,
   modules::schedule::{Schedule, ScheduleSessionT},
 };
+
+/// Parse a datetime string into a Timestamp.
+/// Tries RFC 3339 first (with timezone offset or Z), then falls back to naive (treated as UTC).
+fn parse_datetime(s: &str) -> Result<Timestamp> {
+  if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
+    return Ok(Timestamp { seconds: dt.timestamp(), nanos: 0 });
+  }
+
+  if let Ok(naive) = s.parse::<chrono::NaiveDateTime>() {
+    return Ok(Timestamp { seconds: naive.and_utc().timestamp(), nanos: 0 });
+  }
+
+  Err(anyhow!("Could not parse datetime: {}", s))
+}
 
 pub struct CsvParser;
 
@@ -29,35 +43,21 @@ impl CsvParser {
       }
 
       // Location
-      let location: String = match fields.get(1) {
+      let location: String = match fields.first() {
         Some(location) => (*location).to_string(),
         None => return Err(anyhow!("Could not parse location")),
       };
       locations.push(location.clone());
 
       // Session
-      let start_time = match fields.get(2) {
-        Some(time) => (*time).to_string(),
+      let start_time = match fields.get(1) {
+        Some(time) => parse_datetime(time.trim())?,
         None => return Err(anyhow!("Could not parse start time")),
       };
-      let start_time = match start_time.parse::<chrono::NaiveDateTime>() {
-        Ok(time) => TkDateTime {
-          date: Some(TkDate { year: time.year(), month: time.month(), day: time.day() }),
-          time: Some(TkTime { hour: time.hour(), minute: time.minute(), second: time.second() }),
-        },
-        Err(_) => TkDateTime { date: None, time: None },
-      };
 
-      let end_time = match fields.get(3) {
-        Some(time) => (*time).to_string(),
-        None => "session_end_time".to_string(),
-      };
-      let end_time = match end_time.parse::<chrono::NaiveDateTime>() {
-        Ok(time) => TkDateTime {
-          date: Some(TkDate { year: time.year(), month: time.month(), day: time.day() }),
-          time: Some(TkTime { hour: time.hour(), minute: time.minute(), second: time.second() }),
-        },
-        Err(_) => TkDateTime { date: None, time: None },
+      let end_time = match fields.get(2) {
+        Some(time) => parse_datetime(time.trim())?,
+        None => return Err(anyhow!("Could not parse end time")),
       };
       sessions.push(ScheduleSessionT { start_time, end_time, location_name: location });
     }

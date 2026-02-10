@@ -14,11 +14,12 @@ use crate::{
   },
   generated::{
     api::{
+      CreateTeamMemberRequest, CreateTeamMemberResponse, DeleteTeamMemberRequest, DeleteTeamMemberResponse,
       GetMentorsRequest, GetMentorsResponse, GetStudentsRequest, GetStudentsResponse, GetTeamMembersRequest,
       GetTeamMembersResponse, StreamMentorsRequest, StreamMentorsResponse, StreamStudentsRequest,
       StreamStudentsResponse, StreamTeamMembersRequest, StreamTeamMembersResponse, TeamMemberResponse,
-      UploadMentorCsvRequest, UploadMentorCsvResponse, UploadStudentCsvRequest, UploadStudentCsvResponse,
-      team_member_service_server::TeamMemberService,
+      UpdateTeamMemberRequest, UpdateTeamMemberResponse, UploadMentorCsvRequest, UploadMentorCsvResponse,
+      UploadStudentCsvRequest, UploadStudentCsvResponse, team_member_service_server::TeamMemberService,
     },
     common::Role,
     db::{TeamMember, TeamMemberType},
@@ -296,5 +297,86 @@ impl TeamMemberService for TeamMemberApi {
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))
+  }
+
+  // Create / Update / Delete
+
+  async fn create_team_member(
+    &self,
+    request: Request<CreateTeamMemberRequest>,
+  ) -> Result<Response<CreateTeamMemberResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    if request.first_name.is_empty() || request.last_name.is_empty() {
+      return Err(Status::invalid_argument("First name and last name are required"));
+    }
+
+    let member = TeamMember {
+      first_name: request.first_name,
+      last_name: request.last_name,
+      member_type: request.member_type,
+      alias: request.alias,
+      secondary_alias: request.secondary_alias,
+    };
+
+    TeamMember::add(&member).map_err(|e| Status::internal(format!("Failed to create team member: {}", e)))?;
+
+    Ok(Response::new(CreateTeamMemberResponse {}))
+  }
+
+  async fn update_team_member(
+    &self,
+    request: Request<UpdateTeamMemberRequest>,
+  ) -> Result<Response<UpdateTeamMemberResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    if request.id.is_empty() {
+      return Err(Status::invalid_argument("Team member ID is required"));
+    }
+
+    let existing =
+      TeamMember::get(&request.id).map_err(|e| Status::internal(format!("Failed to get team member: {}", e)))?;
+
+    let Some(_) = existing else {
+      return Err(Status::not_found("Team member not found"));
+    };
+
+    let member = TeamMember {
+      first_name: request.first_name,
+      last_name: request.last_name,
+      member_type: request.member_type,
+      alias: request.alias,
+      secondary_alias: request.secondary_alias,
+    };
+
+    TeamMember::update(&request.id, &member)
+      .map_err(|e| Status::internal(format!("Failed to update team member: {}", e)))?;
+
+    Ok(Response::new(UpdateTeamMemberResponse {}))
+  }
+
+  async fn delete_team_member(
+    &self,
+    request: Request<DeleteTeamMemberRequest>,
+  ) -> Result<Response<DeleteTeamMemberResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    if request.id.is_empty() {
+      return Err(Status::invalid_argument("Team member ID is required"));
+    }
+
+    let existing =
+      TeamMember::get(&request.id).map_err(|e| Status::internal(format!("Failed to get team member: {}", e)))?;
+
+    if existing.is_none() {
+      return Err(Status::not_found("Team member not found"));
+    }
+
+    TeamMember::remove(&request.id).map_err(|e| Status::internal(format!("Failed to delete team member: {}", e)))?;
+
+    Ok(Response::new(DeleteTeamMemberResponse {}))
   }
 }

@@ -806,6 +806,398 @@ class StreamMentorsResponse extends $pb.GeneratedMessage {
   $pb.PbList<TeamMemberResponse> get mentors => $_getList(0);
 }
 
+class CreateTeamMemberRequest extends $pb.GeneratedMessage {
+  factory CreateTeamMemberRequest({
+    $core.String? firstName,
+    $core.String? lastName,
+    $1.TeamMemberType? memberType,
+    $core.String? alias,
+    $core.String? secondaryAlias,
+  }) {
+    final result = create();
+    if (firstName != null) result.firstName = firstName;
+    if (lastName != null) result.lastName = lastName;
+    if (memberType != null) result.memberType = memberType;
+    if (alias != null) result.alias = alias;
+    if (secondaryAlias != null) result.secondaryAlias = secondaryAlias;
+    return result;
+  }
+
+  CreateTeamMemberRequest._();
+
+  factory CreateTeamMemberRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateTeamMemberRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateTeamMemberRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'firstName')
+    ..aOS(2, _omitFieldNames ? '' : 'lastName')
+    ..aE<$1.TeamMemberType>(3, _omitFieldNames ? '' : 'memberType',
+        enumValues: $1.TeamMemberType.values)
+    ..aOS(4, _omitFieldNames ? '' : 'alias')
+    ..aOS(5, _omitFieldNames ? '' : 'secondaryAlias')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateTeamMemberRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateTeamMemberRequest copyWith(
+          void Function(CreateTeamMemberRequest) updates) =>
+      super.copyWith((message) => updates(message as CreateTeamMemberRequest))
+          as CreateTeamMemberRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateTeamMemberRequest create() => CreateTeamMemberRequest._();
+  @$core.override
+  CreateTeamMemberRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateTeamMemberRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateTeamMemberRequest>(create);
+  static CreateTeamMemberRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get firstName => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set firstName($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasFirstName() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearFirstName() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get lastName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set lastName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLastName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLastName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $1.TeamMemberType get memberType => $_getN(2);
+  @$pb.TagNumber(3)
+  set memberType($1.TeamMemberType value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasMemberType() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearMemberType() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get alias => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set alias($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAlias() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAlias() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get secondaryAlias => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set secondaryAlias($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasSecondaryAlias() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearSecondaryAlias() => $_clearField(5);
+}
+
+class CreateTeamMemberResponse extends $pb.GeneratedMessage {
+  factory CreateTeamMemberResponse() => create();
+
+  CreateTeamMemberResponse._();
+
+  factory CreateTeamMemberResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CreateTeamMemberResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CreateTeamMemberResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateTeamMemberResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CreateTeamMemberResponse copyWith(
+          void Function(CreateTeamMemberResponse) updates) =>
+      super.copyWith((message) => updates(message as CreateTeamMemberResponse))
+          as CreateTeamMemberResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CreateTeamMemberResponse create() => CreateTeamMemberResponse._();
+  @$core.override
+  CreateTeamMemberResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CreateTeamMemberResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CreateTeamMemberResponse>(create);
+  static CreateTeamMemberResponse? _defaultInstance;
+}
+
+class UpdateTeamMemberRequest extends $pb.GeneratedMessage {
+  factory UpdateTeamMemberRequest({
+    $core.String? id,
+    $core.String? firstName,
+    $core.String? lastName,
+    $1.TeamMemberType? memberType,
+    $core.String? alias,
+    $core.String? secondaryAlias,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (firstName != null) result.firstName = firstName;
+    if (lastName != null) result.lastName = lastName;
+    if (memberType != null) result.memberType = memberType;
+    if (alias != null) result.alias = alias;
+    if (secondaryAlias != null) result.secondaryAlias = secondaryAlias;
+    return result;
+  }
+
+  UpdateTeamMemberRequest._();
+
+  factory UpdateTeamMemberRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateTeamMemberRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateTeamMemberRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'firstName')
+    ..aOS(3, _omitFieldNames ? '' : 'lastName')
+    ..aE<$1.TeamMemberType>(4, _omitFieldNames ? '' : 'memberType',
+        enumValues: $1.TeamMemberType.values)
+    ..aOS(5, _omitFieldNames ? '' : 'alias')
+    ..aOS(6, _omitFieldNames ? '' : 'secondaryAlias')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateTeamMemberRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateTeamMemberRequest copyWith(
+          void Function(UpdateTeamMemberRequest) updates) =>
+      super.copyWith((message) => updates(message as UpdateTeamMemberRequest))
+          as UpdateTeamMemberRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateTeamMemberRequest create() => UpdateTeamMemberRequest._();
+  @$core.override
+  UpdateTeamMemberRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateTeamMemberRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateTeamMemberRequest>(create);
+  static UpdateTeamMemberRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get firstName => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set firstName($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasFirstName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFirstName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get lastName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set lastName($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasLastName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearLastName() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $1.TeamMemberType get memberType => $_getN(3);
+  @$pb.TagNumber(4)
+  set memberType($1.TeamMemberType value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasMemberType() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearMemberType() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get alias => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set alias($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasAlias() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearAlias() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get secondaryAlias => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set secondaryAlias($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasSecondaryAlias() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearSecondaryAlias() => $_clearField(6);
+}
+
+class UpdateTeamMemberResponse extends $pb.GeneratedMessage {
+  factory UpdateTeamMemberResponse() => create();
+
+  UpdateTeamMemberResponse._();
+
+  factory UpdateTeamMemberResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UpdateTeamMemberResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UpdateTeamMemberResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateTeamMemberResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UpdateTeamMemberResponse copyWith(
+          void Function(UpdateTeamMemberResponse) updates) =>
+      super.copyWith((message) => updates(message as UpdateTeamMemberResponse))
+          as UpdateTeamMemberResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UpdateTeamMemberResponse create() => UpdateTeamMemberResponse._();
+  @$core.override
+  UpdateTeamMemberResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UpdateTeamMemberResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UpdateTeamMemberResponse>(create);
+  static UpdateTeamMemberResponse? _defaultInstance;
+}
+
+class DeleteTeamMemberRequest extends $pb.GeneratedMessage {
+  factory DeleteTeamMemberRequest({
+    $core.String? id,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    return result;
+  }
+
+  DeleteTeamMemberRequest._();
+
+  factory DeleteTeamMemberRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteTeamMemberRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteTeamMemberRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTeamMemberRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTeamMemberRequest copyWith(
+          void Function(DeleteTeamMemberRequest) updates) =>
+      super.copyWith((message) => updates(message as DeleteTeamMemberRequest))
+          as DeleteTeamMemberRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteTeamMemberRequest create() => DeleteTeamMemberRequest._();
+  @$core.override
+  DeleteTeamMemberRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteTeamMemberRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteTeamMemberRequest>(create);
+  static DeleteTeamMemberRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+}
+
+class DeleteTeamMemberResponse extends $pb.GeneratedMessage {
+  factory DeleteTeamMemberResponse() => create();
+
+  DeleteTeamMemberResponse._();
+
+  factory DeleteTeamMemberResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DeleteTeamMemberResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DeleteTeamMemberResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTeamMemberResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DeleteTeamMemberResponse copyWith(
+          void Function(DeleteTeamMemberResponse) updates) =>
+      super.copyWith((message) => updates(message as DeleteTeamMemberResponse))
+          as DeleteTeamMemberResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DeleteTeamMemberResponse create() => DeleteTeamMemberResponse._();
+  @$core.override
+  DeleteTeamMemberResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DeleteTeamMemberResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DeleteTeamMemberResponse>(create);
+  static DeleteTeamMemberResponse? _defaultInstance;
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

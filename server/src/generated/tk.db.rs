@@ -36,22 +36,27 @@ pub struct TeamMemberSession {
     #[prost(string, tag = "1")]
     pub team_member_id: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "2")]
-    pub check_in_time: ::core::option::Option<super::common::TkDateTime>,
+    pub check_in_time: ::core::option::Option<super::common::Timestamp>,
     #[prost(message, optional, tag = "3")]
-    pub check_out_time: ::core::option::Option<super::common::TkDateTime>,
+    pub check_out_time: ::core::option::Option<super::common::Timestamp>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Session {
     #[prost(message, optional, tag = "1")]
-    pub start_time: ::core::option::Option<super::common::TkDateTime>,
+    pub start_time: ::core::option::Option<super::common::Timestamp>,
     #[prost(message, optional, tag = "2")]
-    pub end_time: ::core::option::Option<super::common::TkDateTime>,
+    pub end_time: ::core::option::Option<super::common::Timestamp>,
     #[prost(string, tag = "3")]
     pub location_id: ::prost::alloc::string::String,
     #[prost(message, repeated, tag = "4")]
     pub member_sessions: ::prost::alloc::vec::Vec<TeamMemberSession>,
     #[prost(bool, tag = "5")]
     pub finished: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Settings {
+    #[prost(int64, tag = "1")]
+    pub next_session_threshold_secs: i64,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

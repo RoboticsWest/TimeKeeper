@@ -22,8 +22,43 @@ message UpdateAdminPasswordRequest {
 }
 message UpdateAdminPasswordResponse {}
 
+message UserResponse {
+  string id = 1;
+  string username = 2;
+  repeated common.Role roles = 3;
+}
+
+message StreamUsersRequest {}
+message StreamUsersResponse {
+  repeated UserResponse users = 1;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string password = 2;
+  repeated common.Role roles = 3;
+}
+message CreateUserResponse {}
+
+message UpdateUserRequest {
+  string id = 1;
+  string username = 2;
+  string password = 3;
+  repeated common.Role roles = 4;
+}
+message UpdateUserResponse {}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+message DeleteUserResponse {}
+
 service UserService {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
   rpc UpdateAdminPassword(UpdateAdminPasswordRequest) returns (UpdateAdminPasswordResponse);
+  rpc StreamUsers(StreamUsersRequest) returns (stream StreamUsersResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
 }

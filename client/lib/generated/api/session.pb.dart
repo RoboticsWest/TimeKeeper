@@ -263,6 +263,129 @@ class StreamSessionsResponse extends $pb.GeneratedMessage {
   $pb.PbList<SessionResponse> get sessions => $_getList(0);
 }
 
+class CheckInOutRequest extends $pb.GeneratedMessage {
+  factory CheckInOutRequest({
+    $core.String? teamMemberId,
+    $1.Location? location,
+  }) {
+    final result = create();
+    if (teamMemberId != null) result.teamMemberId = teamMemberId;
+    if (location != null) result.location = location;
+    return result;
+  }
+
+  CheckInOutRequest._();
+
+  factory CheckInOutRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CheckInOutRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CheckInOutRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'teamMemberId')
+    ..aOM<$1.Location>(2, _omitFieldNames ? '' : 'location',
+        subBuilder: $1.Location.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CheckInOutRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CheckInOutRequest copyWith(void Function(CheckInOutRequest) updates) =>
+      super.copyWith((message) => updates(message as CheckInOutRequest))
+          as CheckInOutRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CheckInOutRequest create() => CheckInOutRequest._();
+  @$core.override
+  CheckInOutRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CheckInOutRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CheckInOutRequest>(create);
+  static CheckInOutRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get teamMemberId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set teamMemberId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTeamMemberId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTeamMemberId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $1.Location get location => $_getN(1);
+  @$pb.TagNumber(2)
+  set location($1.Location value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLocation() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLocation() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $1.Location ensureLocation() => $_ensure(1);
+}
+
+class CheckInOutResponse extends $pb.GeneratedMessage {
+  factory CheckInOutResponse({
+    $core.bool? checkedIn,
+  }) {
+    final result = create();
+    if (checkedIn != null) result.checkedIn = checkedIn;
+    return result;
+  }
+
+  CheckInOutResponse._();
+
+  factory CheckInOutResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory CheckInOutResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'CheckInOutResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'checkedIn')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CheckInOutResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  CheckInOutResponse copyWith(void Function(CheckInOutResponse) updates) =>
+      super.copyWith((message) => updates(message as CheckInOutResponse))
+          as CheckInOutResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static CheckInOutResponse create() => CheckInOutResponse._();
+  @$core.override
+  CheckInOutResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static CheckInOutResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<CheckInOutResponse>(create);
+  static CheckInOutResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get checkedIn => $_getBF(0);
+  @$pb.TagNumber(1)
+  set checkedIn($core.bool value) => $_setBool(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCheckedIn() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCheckedIn() => $_clearField(1);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =
