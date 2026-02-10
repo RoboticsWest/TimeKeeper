@@ -5,7 +5,7 @@
 NUL
 
 # Claude
-.claude
+.claude/
 
 # User Specific Ignore
 logs/
