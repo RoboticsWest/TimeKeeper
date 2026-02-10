@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package tk.api;
 
+import "common/common.proto";
 import "db/db.proto";
 
 message UploadStudentCsvRequest {
@@ -37,16 +38,19 @@ message GetMentorsResponse {
 message StreamTeamMembersRequest {}
 message StreamTeamMembersResponse {
   repeated TeamMemberResponse team_members = 1;
+  common.SyncType sync_type = 2;
 }
 
 message StreamStudentsRequest {}
 message StreamStudentsResponse {
   repeated TeamMemberResponse students = 1;
+  common.SyncType sync_type = 2;
 }
 
 message StreamMentorsRequest {}
 message StreamMentorsResponse {
   repeated TeamMemberResponse mentors = 1;
+  common.SyncType sync_type = 2;
 }
 
 message CreateTeamMemberRequest {

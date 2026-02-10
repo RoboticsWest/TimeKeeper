@@ -14,6 +14,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import '../common/common.pbenum.dart' as $2;
 import '../db/db.pb.dart' as $1;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -582,9 +583,11 @@ class StreamTeamMembersRequest extends $pb.GeneratedMessage {
 class StreamTeamMembersResponse extends $pb.GeneratedMessage {
   factory StreamTeamMembersResponse({
     $core.Iterable<TeamMemberResponse>? teamMembers,
+    $2.SyncType? syncType,
   }) {
     final result = create();
     if (teamMembers != null) result.teamMembers.addAll(teamMembers);
+    if (syncType != null) result.syncType = syncType;
     return result;
   }
 
@@ -603,6 +606,8 @@ class StreamTeamMembersResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<TeamMemberResponse>(1, _omitFieldNames ? '' : 'teamMembers',
         subBuilder: TeamMemberResponse.create)
+    ..aE<$2.SyncType>(2, _omitFieldNames ? '' : 'syncType',
+        enumValues: $2.SyncType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -627,6 +632,15 @@ class StreamTeamMembersResponse extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<TeamMemberResponse> get teamMembers => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $2.SyncType get syncType => $_getN(1);
+  @$pb.TagNumber(2)
+  set syncType($2.SyncType value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSyncType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSyncType() => $_clearField(2);
 }
 
 class StreamStudentsRequest extends $pb.GeneratedMessage {
@@ -671,9 +685,11 @@ class StreamStudentsRequest extends $pb.GeneratedMessage {
 class StreamStudentsResponse extends $pb.GeneratedMessage {
   factory StreamStudentsResponse({
     $core.Iterable<TeamMemberResponse>? students,
+    $2.SyncType? syncType,
   }) {
     final result = create();
     if (students != null) result.students.addAll(students);
+    if (syncType != null) result.syncType = syncType;
     return result;
   }
 
@@ -692,6 +708,8 @@ class StreamStudentsResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<TeamMemberResponse>(1, _omitFieldNames ? '' : 'students',
         subBuilder: TeamMemberResponse.create)
+    ..aE<$2.SyncType>(2, _omitFieldNames ? '' : 'syncType',
+        enumValues: $2.SyncType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -716,6 +734,15 @@ class StreamStudentsResponse extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<TeamMemberResponse> get students => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $2.SyncType get syncType => $_getN(1);
+  @$pb.TagNumber(2)
+  set syncType($2.SyncType value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSyncType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSyncType() => $_clearField(2);
 }
 
 class StreamMentorsRequest extends $pb.GeneratedMessage {
@@ -759,9 +786,11 @@ class StreamMentorsRequest extends $pb.GeneratedMessage {
 class StreamMentorsResponse extends $pb.GeneratedMessage {
   factory StreamMentorsResponse({
     $core.Iterable<TeamMemberResponse>? mentors,
+    $2.SyncType? syncType,
   }) {
     final result = create();
     if (mentors != null) result.mentors.addAll(mentors);
+    if (syncType != null) result.syncType = syncType;
     return result;
   }
 
@@ -780,6 +809,8 @@ class StreamMentorsResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<TeamMemberResponse>(1, _omitFieldNames ? '' : 'mentors',
         subBuilder: TeamMemberResponse.create)
+    ..aE<$2.SyncType>(2, _omitFieldNames ? '' : 'syncType',
+        enumValues: $2.SyncType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -804,6 +835,15 @@ class StreamMentorsResponse extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<TeamMemberResponse> get mentors => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $2.SyncType get syncType => $_getN(1);
+  @$pb.TagNumber(2)
+  set syncType($2.SyncType value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSyncType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSyncType() => $_clearField(2);
 }
 
 class CreateTeamMemberRequest extends $pb.GeneratedMessage {

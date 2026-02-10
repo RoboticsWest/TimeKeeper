@@ -1,5 +1,6 @@
 import 'package:protobuf/protobuf.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:time_keeper/generated/common/common.pbenum.dart';
 import 'package:time_keeper/helpers/local_storage.dart';
 import 'package:time_keeper/helpers/protobuf_helper.dart';
 
@@ -125,24 +126,66 @@ class CollectionStorage<T extends GeneratedMessage> {
     return updates;
   }
 
+  /// Replaces the entire collection with the given items.
+  ///
+  /// Clears stale entries that are not in [items] and saves the new data.
+  /// Returns the new full map.
+  Map<String, T> replaceAll<R>(
+    Iterable<R> responseItems,
+    (String, T)? Function(R) extractIdAndItem,
+  ) {
+    final incoming = <String, T>{};
+
+    for (final responseItem in responseItems) {
+      final result = extractIdAndItem(responseItem);
+      if (result != null) {
+        final (id, item) = result;
+        incoming[id] = item;
+      }
+    }
+
+    // Remove stale entries not present in the server snapshot
+    final existingIds = getIds();
+    for (final id in existingIds) {
+      if (!incoming.containsKey(id)) {
+        remove(id);
+      }
+    }
+
+    // Save all incoming items
+    for (final entry in incoming.entries) {
+      set(entry.key, entry.value);
+    }
+
+    return incoming;
+  }
+
   /// Sets up a listener for stream updates that automatically syncs with storage and state.
+  ///
+  /// Uses the server-provided [SyncType] to determine behavior:
+  /// - [SyncType.FULL]: Replace the entire local collection with the server snapshot.
+  /// - [SyncType.PARTIAL]: Merge incremental updates into the existing collection.
   ///
   /// Parameters:
   /// - ref: The Riverpod ref
   /// - streamProvider: The stream provider to listen to
   /// - extractItems: Function to extract the list of response items from the stream response
+  /// - getSyncType: Function to extract the SyncType from the stream response
   /// - hasItem: Function to check if a response item has the actual data (e.g., hasGameMatch())
   /// - getId: Function to extract the ID from a response item
   /// - getItem: Function to extract the actual item from a response item
-  /// - onUpdate: Optional callback when state should be updated with new items
+  /// - onSync: Callback when a full sync replaces local state
+  /// - onUpdate: Callback when incremental updates are merged
   /// - onError: Optional callback when an error occurs
   void bindToStream<StreamResponse, ResponseItem>({
     required Ref ref,
     required ProviderListenable<AsyncValue<StreamResponse>> streamProvider,
     required Iterable<ResponseItem> Function(StreamResponse) extractItems,
+    required SyncType Function(StreamResponse) getSyncType,
     required bool Function(ResponseItem) hasItem,
     required String Function(ResponseItem) getId,
     required T Function(ResponseItem) getItem,
+    void Function(Map<String, T> fullState)? onSync,
     void Function(Map<String, T> updates)? onUpdate,
     void Function(Object error, StackTrace stackTrace)? onError,
   }) {
@@ -150,15 +193,21 @@ class CollectionStorage<T extends GeneratedMessage> {
       next.when(
         data: (response) {
           final items = extractItems(response);
-          final updates = processStreamUpdates(
-            items,
-            (responseItem) => hasItem(responseItem)
-                ? (getId(responseItem), getItem(responseItem))
-                : null,
-          );
+          (String, T)? extractor(ResponseItem responseItem) =>
+              hasItem(responseItem)
+              ? (getId(responseItem), getItem(responseItem))
+              : null;
 
-          if (updates.isNotEmpty && onUpdate != null) {
-            onUpdate(updates);
+          final syncType = getSyncType(response);
+
+          if (syncType == SyncType.FULL) {
+            final fullState = replaceAll(items, extractor);
+            onSync?.call(fullState);
+          } else {
+            final updates = processStreamUpdates(items, extractor);
+            if (updates.isNotEmpty) {
+              onUpdate?.call(updates);
+            }
           }
         },
         loading: () {},
@@ -166,7 +215,6 @@ class CollectionStorage<T extends GeneratedMessage> {
           if (onError != null) {
             onError(error, stack);
           }
-          // On error, continue using local storage
         },
       );
     });

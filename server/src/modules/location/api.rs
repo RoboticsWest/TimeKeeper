@@ -16,6 +16,7 @@ use crate::{
       GetLocationsRequest, GetLocationsResponse, LocationResponse, StreamLocationsRequest, StreamLocationsResponse,
       location_service_server::LocationService,
     },
+    common::SyncType,
     db::Location,
   },
   modules::location::LocationRepository,
@@ -60,10 +61,13 @@ impl LocationService for LocationApi {
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
         ChangeEvent::Record { id, data, .. } => data.map(|location| {
-          Ok(StreamLocationsResponse { locations: vec![LocationResponse { id, location: Some(location) }] })
+          Ok(StreamLocationsResponse {
+            locations: vec![LocationResponse { id, location: Some(location) }],
+            sync_type: SyncType::Partial as i32,
+          })
         }),
         ChangeEvent::Table => match get_all_locations() {
-          Ok(locations) => Some(Ok(StreamLocationsResponse { locations })),
+          Ok(locations) => Some(Ok(StreamLocationsResponse { locations, sync_type: SyncType::Full as i32 })),
           Err(e) => {
             log::error!("Failed to get all locations after table change: {}", e);
             None
@@ -77,7 +81,9 @@ impl LocationService for LocationApi {
       }
     });
 
-    let full_stream = tokio_stream::once(Ok(StreamLocationsResponse { locations: initial })).chain(stream);
+    let full_stream =
+      tokio_stream::once(Ok(StreamLocationsResponse { locations: initial, sync_type: SyncType::Full as i32 }))
+        .chain(stream);
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))

@@ -10,7 +10,7 @@ part of 'location_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(locationService)
-const locationServiceProvider = LocationServiceProvider._();
+final locationServiceProvider = LocationServiceProvider._();
 
 final class LocationServiceProvider
     extends
@@ -20,7 +20,7 @@ final class LocationServiceProvider
           LocationServiceClient
         >
     with $Provider<LocationServiceClient> {
-  const LocationServiceProvider._()
+  LocationServiceProvider._()
     : super(
         from: null,
         argument: null,
@@ -57,7 +57,7 @@ final class LocationServiceProvider
 String _$locationServiceHash() => r'7c87fbb460cafb839977ed7c0e3206a9fc2bebab';
 
 @ProviderFor(locationsStream)
-const locationsStreamProvider = LocationsStreamProvider._();
+final locationsStreamProvider = LocationsStreamProvider._();
 
 final class LocationsStreamProvider
     extends
@@ -69,13 +69,13 @@ final class LocationsStreamProvider
     with
         $FutureModifier<StreamLocationsResponse>,
         $StreamProvider<StreamLocationsResponse> {
-  const LocationsStreamProvider._()
+  LocationsStreamProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'locationsStreamProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -95,14 +95,14 @@ final class LocationsStreamProvider
   }
 }
 
-String _$locationsStreamHash() => r'2d2c1bed2910f88823319959dcae6d02f831a2b3';
+String _$locationsStreamHash() => r'ed80c38db4fdb74855e7316cd049504fcd2beedf';
 
 @ProviderFor(Locations)
-const locationsProvider = LocationsProvider._();
+final locationsProvider = LocationsProvider._();
 
 final class LocationsProvider
     extends $NotifierProvider<Locations, Map<String, Location>> {
-  const LocationsProvider._()
+  LocationsProvider._()
     : super(
         from: null,
         argument: null,
@@ -129,14 +129,13 @@ final class LocationsProvider
   }
 }
 
-String _$locationsHash() => r'46ca22afd827e796af6dea17c5f22c7bd8bc1842';
+String _$locationsHash() => r'66ac65cc17afe87eb4b4cac70a90904f89db9364';
 
 abstract class _$Locations extends $Notifier<Map<String, Location>> {
   Map<String, Location> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<Map<String, Location>, Map<String, Location>>;
     final element =
         ref.element
@@ -146,16 +145,16 @@ abstract class _$Locations extends $Notifier<Map<String, Location>> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 @ProviderFor(CurrentLocation)
-const currentLocationProvider = CurrentLocationProvider._();
+final currentLocationProvider = CurrentLocationProvider._();
 
 final class CurrentLocationProvider
     extends $NotifierProvider<CurrentLocation, String?> {
-  const CurrentLocationProvider._()
+  CurrentLocationProvider._()
     : super(
         from: null,
         argument: null,
@@ -189,7 +188,6 @@ abstract class _$CurrentLocation extends $Notifier<String?> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<String?, String?>;
     final element =
         ref.element
@@ -199,6 +197,6 @@ abstract class _$CurrentLocation extends $Notifier<String?> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

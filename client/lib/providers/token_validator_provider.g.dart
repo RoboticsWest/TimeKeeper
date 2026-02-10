@@ -11,13 +11,13 @@ part of 'token_validator_provider.dart';
 /// Provider that monitors app lifecycle and validates token when app resumes
 
 @ProviderFor(TokenValidator)
-const tokenValidatorProvider = TokenValidatorProvider._();
+final tokenValidatorProvider = TokenValidatorProvider._();
 
 /// Provider that monitors app lifecycle and validates token when app resumes
 final class TokenValidatorProvider
     extends $NotifierProvider<TokenValidator, void> {
   /// Provider that monitors app lifecycle and validates token when app resumes
-  const TokenValidatorProvider._()
+  TokenValidatorProvider._()
     : super(
         from: null,
         argument: null,
@@ -53,7 +53,6 @@ abstract class _$TokenValidator extends $Notifier<void> {
   @$mustCallSuper
   @override
   void runBuild() {
-    build();
     final ref = this.ref as $Ref<void, void>;
     final element =
         ref.element
@@ -63,6 +62,6 @@ abstract class _$TokenValidator extends $Notifier<void> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, null);
+    element.handleCreate(ref, build);
   }
 }

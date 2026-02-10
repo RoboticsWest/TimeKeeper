@@ -14,6 +14,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import '../common/common.pbenum.dart' as $2;
 import '../db/db.pb.dart' as $1;
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -216,9 +217,11 @@ class StreamLocationsRequest extends $pb.GeneratedMessage {
 class StreamLocationsResponse extends $pb.GeneratedMessage {
   factory StreamLocationsResponse({
     $core.Iterable<LocationResponse>? locations,
+    $2.SyncType? syncType,
   }) {
     final result = create();
     if (locations != null) result.locations.addAll(locations);
+    if (syncType != null) result.syncType = syncType;
     return result;
   }
 
@@ -237,6 +240,8 @@ class StreamLocationsResponse extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..pPM<LocationResponse>(1, _omitFieldNames ? '' : 'locations',
         subBuilder: LocationResponse.create)
+    ..aE<$2.SyncType>(2, _omitFieldNames ? '' : 'syncType',
+        enumValues: $2.SyncType.values)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -261,6 +266,15 @@ class StreamLocationsResponse extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $pb.PbList<LocationResponse> get locations => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $2.SyncType get syncType => $_getN(1);
+  @$pb.TagNumber(2)
+  set syncType($2.SyncType value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSyncType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSyncType() => $_clearField(2);
 }
 
 const $core.bool _omitFieldNames =

@@ -9,7 +9,7 @@ class BaseRail extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Derive selected index from current route instead of local state
-    final selectedIndex = AppRoute.currentRailIndex(context) ?? 0;
+    final selectedIndex = AppRoute.currentRailIndex(context);
     final isExtended = useState(false);
     return Positioned(
       left: 0,

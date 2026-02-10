@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package tk.api;
 
+import "common/common.proto";
 import "db/db.proto";
 
 message SessionResponse {
@@ -17,6 +18,7 @@ message GetSessionsResponse {
 message StreamSessionsRequest {}
 message StreamSessionsResponse {
   repeated SessionResponse sessions = 1;
+  common.SyncType sync_type = 2;
 }
 
 message CheckInOutRequest {

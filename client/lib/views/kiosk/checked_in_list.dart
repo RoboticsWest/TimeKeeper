@@ -65,27 +65,27 @@ class CheckedInList extends ConsumerWidget {
             child: AnimatedInfiniteVerticalList(
               childHeight: childHeight,
               children: () {
-                int index = 0;
                 final isDark = Theme.of(context).brightness == Brightness.dark;
-                return checkedInList.map((member) {
-                  final i = index++;
-                  final rowColor = i % 2 == 0
-                      ? (isDark
-                            ? Colors.white.withValues(alpha: 0.03)
-                            : Colors.black.withValues(alpha: 0.02))
-                      : (isDark
-                            ? Colors.white.withValues(alpha: 0.07)
-                            : Colors.black.withValues(alpha: 0.05));
+                final evenColor = isDark
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : Colors.black.withValues(alpha: 0.02);
+                final oddColor = isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : Colors.black.withValues(alpha: 0.05);
+                return List.generate(checkedInList.length, (i) {
+                  final member = checkedInList[i];
                   return Container(
                     height: childHeight,
-                    decoration: BoxDecoration(color: rowColor),
+                    decoration: BoxDecoration(
+                      color: i % 2 == 0 ? evenColor : oddColor,
+                    ),
                     child: TeamMemberRow(
                       teamMember: member.teamMember,
                       location: member.location,
                       timeIn: member.timeIn,
                     ),
                   );
-                }).toList();
+                });
               }(),
             ),
           ),

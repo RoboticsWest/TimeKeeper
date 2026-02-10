@@ -18,7 +18,7 @@ TeamMemberServiceClient teamMemberService(Ref ref) {
   return TeamMemberServiceClient(channel, options: options);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<StreamTeamMembersResponse> teamMembersStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamTeamMembersResponse>(
     () async {
@@ -48,9 +48,11 @@ class TeamMembers extends _$TeamMembers {
       ref: ref,
       streamProvider: teamMembersStreamProvider,
       extractItems: (response) => response.teamMembers,
+      getSyncType: (response) => response.syncType,
       hasItem: (item) => item.hasTeamMember(),
       getId: (item) => item.id,
       getItem: (item) => item.teamMember,
+      onSync: (fullState) => state = fullState,
       onUpdate: (updates) => state = {...state, ...updates},
     );
 
@@ -58,7 +60,7 @@ class TeamMembers extends _$TeamMembers {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Map<String, TeamMember> studentTeamMembers(Ref ref) {
   final members = ref.watch(teamMembersProvider);
   return Map.fromEntries(
@@ -68,7 +70,7 @@ Map<String, TeamMember> studentTeamMembers(Ref ref) {
   );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Map<String, TeamMember> mentorTeamMembers(Ref ref) {
   final members = ref.watch(teamMembersProvider);
   return Map.fromEntries(

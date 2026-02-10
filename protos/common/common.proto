@@ -13,3 +13,8 @@ enum Role {
   STUDENT = 2;
   MENTOR = 3;
 }
+
+enum SyncType {
+  FULL = 0; // Complete snapshot — replace local state
+  PARTIAL = 1; // Incremental update — merge into local state
+}

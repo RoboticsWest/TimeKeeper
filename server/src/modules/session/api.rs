@@ -17,7 +17,7 @@ use crate::{
       CheckInOutRequest, CheckInOutResponse, GetSessionsRequest, GetSessionsResponse, SessionResponse,
       StreamSessionsRequest, StreamSessionsResponse, session_service_server::SessionService,
     },
-    common::Role,
+    common::{Role, SyncType},
     db::{Session, TeamMemberSession},
   },
   modules::session::{
@@ -68,10 +68,14 @@ impl SessionService for SessionApi {
 
     let stream = BroadcastStream::new(rx).filter_map(|result| match result {
       Ok(event) => match event {
-        ChangeEvent::Record { id, data, .. } => data
-          .map(|session| Ok(StreamSessionsResponse { sessions: vec![SessionResponse { id, session: Some(session) }] })),
+        ChangeEvent::Record { id, data, .. } => data.map(|session| {
+          Ok(StreamSessionsResponse {
+            sessions: vec![SessionResponse { id, session: Some(session) }],
+            sync_type: SyncType::Partial as i32,
+          })
+        }),
         ChangeEvent::Table => match get_all_sessions() {
-          Ok(sessions) => Some(Ok(StreamSessionsResponse { sessions })),
+          Ok(sessions) => Some(Ok(StreamSessionsResponse { sessions, sync_type: SyncType::Full as i32 })),
           Err(e) => {
             log::error!("Failed to get all sessions after table change: {}", e);
             None
@@ -85,7 +89,9 @@ impl SessionService for SessionApi {
       }
     });
 
-    let full_stream = tokio_stream::once(Ok(StreamSessionsResponse { sessions: initial })).chain(stream);
+    let full_stream =
+      tokio_stream::once(Ok(StreamSessionsResponse { sessions: initial, sync_type: SyncType::Full as i32 }))
+        .chain(stream);
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))

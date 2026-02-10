@@ -10,7 +10,7 @@ part of 'schedule_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(scheduleService)
-const scheduleServiceProvider = ScheduleServiceProvider._();
+final scheduleServiceProvider = ScheduleServiceProvider._();
 
 final class ScheduleServiceProvider
     extends
@@ -20,7 +20,7 @@ final class ScheduleServiceProvider
           ScheduleServiceClient
         >
     with $Provider<ScheduleServiceClient> {
-  const ScheduleServiceProvider._()
+  ScheduleServiceProvider._()
     : super(
         from: null,
         argument: null,

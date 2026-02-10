@@ -4,6 +4,9 @@
 # Windows NUL device artifact
 NUL
 
+# Claude
+.claude
+
 # User Specific Ignore
 logs/
 tk.db/

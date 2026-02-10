@@ -31,6 +31,7 @@ message UserResponse {
 message StreamUsersRequest {}
 message StreamUsersResponse {
   repeated UserResponse users = 1;
+  common.SyncType sync_type = 2;
 }
 
 message CreateUserRequest {

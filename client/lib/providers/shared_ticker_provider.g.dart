@@ -12,7 +12,7 @@ part of 'shared_ticker_provider.dart';
 /// Multiple widgets using the same interval will share the same ticker.
 
 @ProviderFor(sharedTicker)
-const sharedTickerProvider = SharedTickerFamily._();
+final sharedTickerProvider = SharedTickerFamily._();
 
 /// Shared ticker that emits the current DateTime at a configurable interval.
 /// Multiple widgets using the same interval will share the same ticker.
@@ -23,7 +23,7 @@ final class SharedTickerProvider
     with $FutureModifier<DateTime>, $StreamProvider<DateTime> {
   /// Shared ticker that emits the current DateTime at a configurable interval.
   /// Multiple widgets using the same interval will share the same ticker.
-  const SharedTickerProvider._({
+  SharedTickerProvider._({
     required SharedTickerFamily super.from,
     required Duration super.argument,
   }) : super(
@@ -73,7 +73,7 @@ String _$sharedTickerHash() => r'322b78d48060be660a5bc23f7a52707ea3ffffe6';
 
 final class SharedTickerFamily extends $Family
     with $FunctionalFamilyOverride<Stream<DateTime>, Duration> {
-  const SharedTickerFamily._()
+  SharedTickerFamily._()
     : super(
         retry: null,
         name: r'sharedTickerProvider',
