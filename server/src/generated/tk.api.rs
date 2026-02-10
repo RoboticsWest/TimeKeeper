@@ -2307,7 +2307,7 @@ pub struct GetLeaderboardResponse {
     pub entries: ::prost::alloc::vec::Vec<LeaderboardEntry>,
 }
 /// Generated client implementations.
-pub mod stats_service_client {
+pub mod statistics_service_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -2318,10 +2318,10 @@ pub mod stats_service_client {
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     #[derive(Debug, Clone)]
-    pub struct StatsServiceClient<T> {
+    pub struct StatisticsServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl StatsServiceClient<tonic::transport::Channel> {
+    impl StatisticsServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -2332,7 +2332,7 @@ pub mod stats_service_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> StatsServiceClient<T>
+    impl<T> StatisticsServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
@@ -2350,7 +2350,7 @@ pub mod stats_service_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> StatsServiceClient<InterceptedService<T, F>>
+        ) -> StatisticsServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -2364,7 +2364,7 @@ pub mod stats_service_client {
                 http::Request<tonic::body::Body>,
             >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            StatsServiceClient::new(InterceptedService::new(inner, interceptor))
+            StatisticsServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -2414,17 +2414,17 @@ pub mod stats_service_client {
                 })?;
             let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/tk.api.StatsService/GetLeaderboard",
+                "/tk.api.StatisticsService/GetLeaderboard",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("tk.api.StatsService", "GetLeaderboard"));
+                .insert(GrpcMethod::new("tk.api.StatisticsService", "GetLeaderboard"));
             self.inner.unary(req, path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod stats_service_server {
+pub mod statistics_service_server {
     #![allow(
         unused_variables,
         dead_code,
@@ -2433,9 +2433,9 @@ pub mod stats_service_server {
         clippy::let_unit_value,
     )]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with StatsServiceServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with StatisticsServiceServer.
     #[async_trait]
-    pub trait StatsService: std::marker::Send + std::marker::Sync + 'static {
+    pub trait StatisticsService: std::marker::Send + std::marker::Sync + 'static {
         async fn get_leaderboard(
             &self,
             request: tonic::Request<super::GetLeaderboardRequest>,
@@ -2445,14 +2445,14 @@ pub mod stats_service_server {
         >;
     }
     #[derive(Debug)]
-    pub struct StatsServiceServer<T> {
+    pub struct StatisticsServiceServer<T> {
         inner: Arc<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
         max_decoding_message_size: Option<usize>,
         max_encoding_message_size: Option<usize>,
     }
-    impl<T> StatsServiceServer<T> {
+    impl<T> StatisticsServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -2503,9 +2503,9 @@ pub mod stats_service_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for StatsServiceServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for StatisticsServiceServer<T>
     where
-        T: StatsService,
+        T: StatisticsService,
         B: Body + std::marker::Send + 'static,
         B::Error: Into<StdError> + std::marker::Send + 'static,
     {
@@ -2520,11 +2520,11 @@ pub mod stats_service_server {
         }
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             match req.uri().path() {
-                "/tk.api.StatsService/GetLeaderboard" => {
+                "/tk.api.StatisticsService/GetLeaderboard" => {
                     #[allow(non_camel_case_types)]
-                    struct GetLeaderboardSvc<T: StatsService>(pub Arc<T>);
+                    struct GetLeaderboardSvc<T: StatisticsService>(pub Arc<T>);
                     impl<
-                        T: StatsService,
+                        T: StatisticsService,
                     > tonic::server::UnaryService<super::GetLeaderboardRequest>
                     for GetLeaderboardSvc<T> {
                         type Response = super::GetLeaderboardResponse;
@@ -2538,7 +2538,8 @@ pub mod stats_service_server {
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as StatsService>::get_leaderboard(&inner, request).await
+                                <T as StatisticsService>::get_leaderboard(&inner, request)
+                                    .await
                             };
                             Box::pin(fut)
                         }
@@ -2587,7 +2588,7 @@ pub mod stats_service_server {
             }
         }
     }
-    impl<T> Clone for StatsServiceServer<T> {
+    impl<T> Clone for StatisticsServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -2600,8 +2601,8 @@ pub mod stats_service_server {
         }
     }
     /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "tk.api.StatsService";
-    impl<T> tonic::server::NamedService for StatsServiceServer<T> {
+    pub const SERVICE_NAME: &str = "tk.api.StatisticsService";
+    impl<T> tonic::server::NamedService for StatisticsServiceServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }
 }

@@ -4,8 +4,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/location.pbgrpc.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
 void showLocationDialog(
   BuildContext context,
@@ -18,7 +20,6 @@ void showLocationDialog(
   PopupDialog.info(
     title: isEdit ? 'Edit Location' : 'Add Location',
     message: _LocationForm(
-      ref: ref,
       isEdit: isEdit,
       locationId: id,
       initialName: existingName,
@@ -48,22 +49,21 @@ void showDeleteLocationDialog(
   ).show(context);
 }
 
-class _LocationForm extends HookWidget {
-  final WidgetRef ref;
+class _LocationForm extends HookConsumerWidget {
   final bool isEdit;
   final String? locationId;
   final String? initialName;
 
   const _LocationForm({
-    required this.ref,
     required this.isEdit,
     this.locationId,
     this.initialName,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final nameController = useTextEditingController(text: initialName ?? '');
+    final isLoading = useState(false);
 
     return SizedBox(
       width: 400,
@@ -83,51 +83,66 @@ class _LocationForm extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: isLoading.value
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
               FilledButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) return;
+                onPressed: isLoading.value
+                    ? null
+                    : () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) return;
 
-                  Navigator.of(context).pop();
+                        isLoading.value = true;
+                        try {
+                          final client = ref.read(locationServiceProvider);
+                          final GrpcResult<dynamic> result;
+                          if (isEdit) {
+                            result = await callGrpcEndpoint(
+                              () => client.updateLocation(
+                                UpdateLocationRequest(
+                                  id: locationId,
+                                  location: name,
+                                ),
+                              ),
+                            );
+                          } else {
+                            result = await callGrpcEndpoint(
+                              () => client.createLocation(
+                                CreateLocationRequest(location: name),
+                              ),
+                            );
+                          }
 
-                  ConfirmDialog.info(
-                    title: isEdit ? 'Update Location' : 'Create Location',
-                    message: isEdit
-                        ? Text('Save changes to "$name"?')
-                        : Text('Create location "$name"?'),
-                    confirmText: isEdit ? 'Save' : 'Create',
-                    onConfirmAsyncGrpc: () async {
-                      final client = ref.read(locationServiceProvider);
-                      if (isEdit) {
-                        return await callGrpcEndpoint(
-                          () => client.updateLocation(
-                            UpdateLocationRequest(
-                              id: locationId,
-                              location: name,
-                            ),
-                          ),
-                        );
-                      } else {
-                        return await callGrpcEndpoint(
-                          () => client.createLocation(
-                            CreateLocationRequest(location: name),
-                          ),
-                        );
-                      }
-                    },
-                    showResultDialog: true,
-                    successMessage: Text(
-                      isEdit
-                          ? '"$name" updated successfully'
-                          : '"$name" created successfully',
-                    ),
-                  ).show(context);
-                },
-                child: Text(isEdit ? 'Save' : 'Create'),
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            switch (result) {
+                              case GrpcSuccess():
+                                SnackBarDialog.success(
+                                  message: isEdit
+                                      ? '"$name" updated successfully'
+                                      : '"$name" created successfully',
+                                ).show(context);
+                              case GrpcFailure():
+                                SnackBarDialog.fromGrpcStatus(
+                                  result: result,
+                                ).show(context);
+                            }
+                          }
+                        } finally {
+                          isLoading.value = false;
+                        }
+                      },
+                child: isLoading.value
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],
           ),

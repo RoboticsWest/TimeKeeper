@@ -1,17 +1,17 @@
 import 'package:time_keeper/generated/db/db.pb.dart';
 
-/// Time range filter for the stats dashboard.
-enum StatsRange { day, week, month, all }
+/// Time range filter for the statistics dashboard.
+enum StatisticsRange { day, week, month, all }
 
-String statsRangeLabel(StatsRange range) {
+String statisticsRangeLabel(StatisticsRange range) {
   switch (range) {
-    case StatsRange.day:
+    case StatisticsRange.day:
       return 'Today';
-    case StatsRange.week:
+    case StatisticsRange.week:
       return 'This Week';
-    case StatsRange.month:
+    case StatisticsRange.month:
       return 'This Month';
-    case StatsRange.all:
+    case StatisticsRange.all:
       return 'All Time';
   }
 }

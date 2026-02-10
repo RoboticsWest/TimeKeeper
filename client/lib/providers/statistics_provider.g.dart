@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'stats_provider.dart';
+part of 'statistics_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,52 +9,52 @@ part of 'stats_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(statsService)
-final statsServiceProvider = StatsServiceProvider._();
+@ProviderFor(statisticsService)
+final statisticsServiceProvider = StatisticsServiceProvider._();
 
-final class StatsServiceProvider
+final class StatisticsServiceProvider
     extends
         $FunctionalProvider<
-          StatsServiceClient,
-          StatsServiceClient,
-          StatsServiceClient
+          StatisticsServiceClient,
+          StatisticsServiceClient,
+          StatisticsServiceClient
         >
-    with $Provider<StatsServiceClient> {
-  StatsServiceProvider._()
+    with $Provider<StatisticsServiceClient> {
+  StatisticsServiceProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'statsServiceProvider',
+        name: r'statisticsServiceProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$statsServiceHash();
+  String debugGetCreateSourceHash() => _$statisticsServiceHash();
 
   @$internal
   @override
-  $ProviderElement<StatsServiceClient> $createElement(
+  $ProviderElement<StatisticsServiceClient> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  StatsServiceClient create(Ref ref) {
-    return statsService(ref);
+  StatisticsServiceClient create(Ref ref) {
+    return statisticsService(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(StatsServiceClient value) {
+  Override overrideWithValue(StatisticsServiceClient value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<StatsServiceClient>(value),
+      providerOverride: $SyncValueProvider<StatisticsServiceClient>(value),
     );
   }
 }
 
-String _$statsServiceHash() => r'c44fcaa78d2b24b95e3f055bfb4a7906cf94f7ec';
+String _$statisticsServiceHash() => r'31e272fb381e3a6504e74ae2ff25b75fccf47364';
 
 @ProviderFor(leaderboard)
 final leaderboardProvider = LeaderboardProvider._();
@@ -95,4 +95,4 @@ final class LeaderboardProvider
   }
 }
 
-String _$leaderboardHash() => r'98e7c6033bc275fb745a458f3b2fba617455c888';
+String _$leaderboardHash() => r'654fe8fdaa27837695c270386b5da11dffa7552d';

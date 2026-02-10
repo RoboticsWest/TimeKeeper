@@ -1,14 +1,14 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/views/stats/stats_helpers.dart';
+import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 
-class StatsAttendanceChart extends StatelessWidget {
+class StatisticsAttendanceChart extends StatelessWidget {
   final List<DayAttendanceData> dailyAttendance;
   final DateTime? selectedDay;
   final ValueChanged<DateTime?> onDaySelected;
 
-  const StatsAttendanceChart({
+  const StatisticsAttendanceChart({
     super.key,
     required this.dailyAttendance,
     required this.selectedDay,

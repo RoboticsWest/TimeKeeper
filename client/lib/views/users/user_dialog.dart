@@ -5,8 +5,10 @@ import 'package:time_keeper/generated/api/user.pbgrpc.dart';
 import 'package:time_keeper/generated/common/common.pbenum.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
+import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
 void showUserDialog(
   BuildContext context,
@@ -20,7 +22,6 @@ void showUserDialog(
   PopupDialog.info(
     title: isEdit ? 'Edit User' : 'Add User',
     message: _UserForm(
-      ref: ref,
       isEdit: isEdit,
       userId: id,
       initialUsername: existingUsername,
@@ -51,15 +52,13 @@ void showDeleteUserDialog(
   ).show(context);
 }
 
-class _UserForm extends HookWidget {
-  final WidgetRef ref;
+class _UserForm extends HookConsumerWidget {
   final bool isEdit;
   final String? userId;
   final String? initialUsername;
   final List<Role>? initialRoles;
 
   const _UserForm({
-    required this.ref,
     required this.isEdit,
     this.userId,
     this.initialUsername,
@@ -67,12 +66,13 @@ class _UserForm extends HookWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final usernameController = useTextEditingController(
       text: initialUsername ?? '',
     );
     final passwordController = useTextEditingController();
     final selectedRoles = useState<Set<Role>>((initialRoles ?? []).toSet());
+    final isLoading = useState(false);
 
     return SizedBox(
       width: 400,
@@ -123,61 +123,76 @@ class _UserForm extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: isLoading.value
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
               FilledButton(
-                onPressed: () {
-                  final username = usernameController.text.trim();
-                  final password = passwordController.text;
-                  final roles = selectedRoles.value.toList();
+                onPressed: isLoading.value
+                    ? null
+                    : () async {
+                        final username = usernameController.text.trim();
+                        final password = passwordController.text;
+                        final roles = selectedRoles.value.toList();
 
-                  if (username.isEmpty) return;
-                  if (!isEdit && password.isEmpty) return;
+                        if (username.isEmpty) return;
+                        if (!isEdit && password.isEmpty) return;
 
-                  Navigator.of(context).pop();
+                        isLoading.value = true;
+                        try {
+                          final client = ref.read(userServiceProvider);
+                          final GrpcResult<dynamic> result;
+                          if (isEdit) {
+                            result = await callGrpcEndpoint(
+                              () => client.updateUser(
+                                UpdateUserRequest(
+                                  id: userId,
+                                  username: username,
+                                  password: password,
+                                  roles: roles,
+                                ),
+                              ),
+                            );
+                          } else {
+                            result = await callGrpcEndpoint(
+                              () => client.createUser(
+                                CreateUserRequest(
+                                  username: username,
+                                  password: password,
+                                  roles: roles,
+                                ),
+                              ),
+                            );
+                          }
 
-                  ConfirmDialog.info(
-                    title: isEdit ? 'Update User' : 'Create User',
-                    message: isEdit
-                        ? Text('Save changes to "$username"?')
-                        : Text('Create user "$username"?'),
-                    confirmText: isEdit ? 'Save' : 'Create',
-                    onConfirmAsyncGrpc: () async {
-                      final client = ref.read(userServiceProvider);
-                      if (isEdit) {
-                        return await callGrpcEndpoint(
-                          () => client.updateUser(
-                            UpdateUserRequest(
-                              id: userId,
-                              username: username,
-                              password: password,
-                              roles: roles,
-                            ),
-                          ),
-                        );
-                      } else {
-                        return await callGrpcEndpoint(
-                          () => client.createUser(
-                            CreateUserRequest(
-                              username: username,
-                              password: password,
-                              roles: roles,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    showResultDialog: true,
-                    successMessage: Text(
-                      isEdit
-                          ? '"$username" updated successfully'
-                          : '"$username" created successfully',
-                    ),
-                  ).show(context);
-                },
-                child: Text(isEdit ? 'Save' : 'Create'),
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            switch (result) {
+                              case GrpcSuccess():
+                                SnackBarDialog.success(
+                                  message: isEdit
+                                      ? '"$username" updated successfully'
+                                      : '"$username" created successfully',
+                                ).show(context);
+                              case GrpcFailure():
+                                SnackBarDialog.fromGrpcStatus(
+                                  result: result,
+                                ).show(context);
+                            }
+                          }
+                        } finally {
+                          isLoading.value = false;
+                        }
+                      },
+                child: isLoading.value
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],
           ),

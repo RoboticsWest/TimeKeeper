@@ -23,6 +23,6 @@ message GetLeaderboardResponse {
   repeated LeaderboardEntry entries = 1;
 }
 
-service StatsService {
+service StatisticsService {
   rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse);
 }

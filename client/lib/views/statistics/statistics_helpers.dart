@@ -1,9 +1,9 @@
 import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/models/stats_data.dart';
+import 'package:time_keeper/models/statistics_data.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/utils/time.dart';
 
-export 'package:time_keeper/models/stats_data.dart';
+export 'package:time_keeper/models/statistics_data.dart';
 export 'package:time_keeper/utils/formatting.dart'
     show formatSecsAsHoursMinutes;
 
@@ -303,26 +303,26 @@ AttendanceInsights computeInsights(
 /// Filter sessions by time range based on session start time.
 Map<String, Session> filterSessionsByRange(
   Map<String, Session> sessions,
-  StatsRange range,
+  StatisticsRange range,
 ) {
-  if (range == StatsRange.all) return sessions;
+  if (range == StatisticsRange.all) return sessions;
 
   final now = DateTime.now();
   late final DateTime start;
   late final DateTime end;
 
   switch (range) {
-    case StatsRange.day:
+    case StatisticsRange.day:
       start = DateTime(now.year, now.month, now.day);
       end = DateTime(now.year, now.month, now.day + 1);
-    case StatsRange.week:
+    case StatisticsRange.week:
       final monday = now.subtract(Duration(days: now.weekday - 1));
       start = DateTime(monday.year, monday.month, monday.day);
       end = DateTime(monday.year, monday.month, monday.day + 7);
-    case StatsRange.month:
+    case StatisticsRange.month:
       start = DateTime(now.year, now.month, 1);
       end = DateTime(now.year, now.month + 1, 1);
-    case StatsRange.all:
+    case StatisticsRange.all:
       return sessions;
   }
 

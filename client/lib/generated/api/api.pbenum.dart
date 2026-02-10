@@ -14,6 +14,6 @@ export 'location.pbenum.dart';
 export 'schedule.pbenum.dart';
 export 'session.pbenum.dart';
 export 'settings.pbenum.dart';
-export 'stats.pbenum.dart';
+export 'statistics.pbenum.dart';
 export 'team_member.pbenum.dart';
 export 'user.pbenum.dart';

@@ -5,8 +5,10 @@ import 'package:time_keeper/generated/api/team_member.pbgrpc.dart';
 import 'package:time_keeper/generated/db/db.pbenum.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
 void showTeamMemberDialog(
   BuildContext context,
@@ -23,7 +25,6 @@ void showTeamMemberDialog(
   PopupDialog.info(
     title: isEdit ? 'Edit Team Member' : 'Add Team Member',
     message: _TeamMemberForm(
-      ref: ref,
       isEdit: isEdit,
       memberId: id,
       initialFirstName: existingFirstName,
@@ -57,8 +58,7 @@ void showDeleteTeamMemberDialog(
   ).show(context);
 }
 
-class _TeamMemberForm extends HookWidget {
-  final WidgetRef ref;
+class _TeamMemberForm extends HookConsumerWidget {
   final bool isEdit;
   final String? memberId;
   final String? initialFirstName;
@@ -68,7 +68,6 @@ class _TeamMemberForm extends HookWidget {
   final String? initialSecondaryAlias;
 
   const _TeamMemberForm({
-    required this.ref,
     required this.isEdit,
     this.memberId,
     this.initialFirstName,
@@ -79,7 +78,7 @@ class _TeamMemberForm extends HookWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final firstNameController = useTextEditingController(
       text: initialFirstName ?? '',
     );
@@ -93,6 +92,7 @@ class _TeamMemberForm extends HookWidget {
     final memberType = useState<TeamMemberType>(
       initialMemberType ?? TeamMemberType.STUDENT,
     );
+    final isLoading = useState(false);
 
     return SizedBox(
       width: 400,
@@ -163,72 +163,85 @@ class _TeamMemberForm extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: isLoading.value
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
               FilledButton(
-                onPressed: () {
-                  final firstName = firstNameController.text.trim();
-                  final lastName = lastNameController.text.trim();
+                onPressed: isLoading.value
+                    ? null
+                    : () async {
+                        final firstName = firstNameController.text.trim();
+                        final lastName = lastNameController.text.trim();
+                        final alias = aliasController.text.trim();
+                        final secondaryAlias = secondaryAliasController.text
+                            .trim();
+                        final type = memberType.value;
+                        final displayName = '$firstName $lastName';
 
-                  if (firstName.isEmpty || lastName.isEmpty) return;
+                        isLoading.value = true;
+                        try {
+                          final client = ref.read(teamMemberServiceProvider);
+                          final GrpcResult<dynamic> result;
+                          if (isEdit) {
+                            result = await callGrpcEndpoint(
+                              () => client.updateTeamMember(
+                                UpdateTeamMemberRequest(
+                                  id: memberId,
+                                  firstName: firstName,
+                                  lastName: lastName,
+                                  memberType: type,
+                                  alias: alias.isNotEmpty ? alias : null,
+                                  secondaryAlias: secondaryAlias.isNotEmpty
+                                      ? secondaryAlias
+                                      : null,
+                                ),
+                              ),
+                            );
+                          } else {
+                            result = await callGrpcEndpoint(
+                              () => client.createTeamMember(
+                                CreateTeamMemberRequest(
+                                  firstName: firstName,
+                                  lastName: lastName,
+                                  memberType: type,
+                                  alias: alias.isNotEmpty ? alias : null,
+                                  secondaryAlias: secondaryAlias.isNotEmpty
+                                      ? secondaryAlias
+                                      : null,
+                                ),
+                              ),
+                            );
+                          }
 
-                  final alias = aliasController.text.trim();
-                  final secondaryAlias = secondaryAliasController.text.trim();
-                  final type = memberType.value;
-                  final displayName = '$firstName $lastName';
-
-                  Navigator.of(context).pop();
-
-                  ConfirmDialog.info(
-                    title: isEdit ? 'Update Team Member' : 'Create Team Member',
-                    message: isEdit
-                        ? Text('Save changes to "$displayName"?')
-                        : Text('Create team member "$displayName"?'),
-                    confirmText: isEdit ? 'Save' : 'Create',
-                    onConfirmAsyncGrpc: () async {
-                      final client = ref.read(teamMemberServiceProvider);
-                      if (isEdit) {
-                        return await callGrpcEndpoint(
-                          () => client.updateTeamMember(
-                            UpdateTeamMemberRequest(
-                              id: memberId,
-                              firstName: firstName,
-                              lastName: lastName,
-                              memberType: type,
-                              alias: alias.isNotEmpty ? alias : null,
-                              secondaryAlias: secondaryAlias.isNotEmpty
-                                  ? secondaryAlias
-                                  : null,
-                            ),
-                          ),
-                        );
-                      } else {
-                        return await callGrpcEndpoint(
-                          () => client.createTeamMember(
-                            CreateTeamMemberRequest(
-                              firstName: firstName,
-                              lastName: lastName,
-                              memberType: type,
-                              alias: alias.isNotEmpty ? alias : null,
-                              secondaryAlias: secondaryAlias.isNotEmpty
-                                  ? secondaryAlias
-                                  : null,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    showResultDialog: true,
-                    successMessage: Text(
-                      isEdit
-                          ? '"$displayName" updated successfully'
-                          : '"$displayName" created successfully',
-                    ),
-                  ).show(context);
-                },
-                child: Text(isEdit ? 'Save' : 'Create'),
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            switch (result) {
+                              case GrpcSuccess():
+                                SnackBarDialog.success(
+                                  message: isEdit
+                                      ? '"$displayName" updated successfully'
+                                      : '"$displayName" created successfully',
+                                ).show(context);
+                              case GrpcFailure():
+                                SnackBarDialog.fromGrpcStatus(
+                                  result: result,
+                                ).show(context);
+                            }
+                          }
+                        } finally {
+                          isLoading.value = false;
+                        }
+                      },
+                child: isLoading.value
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],
           ),

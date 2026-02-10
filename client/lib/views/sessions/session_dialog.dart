@@ -6,10 +6,12 @@ import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
+import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
 void showSessionDialog(
   BuildContext context,
@@ -22,7 +24,6 @@ void showSessionDialog(
   PopupDialog.info(
     title: isEdit ? 'Edit Session' : 'Create Session',
     message: _SessionForm(
-      ref: ref,
       isEdit: isEdit,
       sessionId: id,
       existingSession: existingSession,
@@ -55,21 +56,19 @@ void showDeleteSessionDialog(
   ).show(context);
 }
 
-class _SessionForm extends HookWidget {
-  final WidgetRef ref;
+class _SessionForm extends HookConsumerWidget {
   final bool isEdit;
   final String? sessionId;
   final Session? existingSession;
 
   const _SessionForm({
-    required this.ref,
     required this.isEdit,
     this.sessionId,
     this.existingSession,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final locations = ref.watch(locationsProvider);
 
     final now = DateTime.now();
@@ -84,6 +83,7 @@ class _SessionForm extends HookWidget {
     );
     final selectedLocationId = useState<String?>(existingSession?.locationId);
     final finished = useState(existingSession?.finished ?? false);
+    final isLoading = useState(false);
 
     final locationEntries = locations.entries.toList()
       ..sort((a, b) => a.value.location.compareTo(b.value.location));
@@ -182,86 +182,100 @@ class _SessionForm extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: isLoading.value
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
               FilledButton(
-                onPressed: () {
-                  final locationId = selectedLocationId.value;
-                  if (locationId == null) return;
+                onPressed: isLoading.value
+                    ? null
+                    : () async {
+                        final locationId = selectedLocationId.value;
+                        if (locationId == null) return;
 
-                  final startDt = DateTime(
-                    startDate.value.year,
-                    startDate.value.month,
-                    startDate.value.day,
-                    startTime.value.hour,
-                    startTime.value.minute,
-                  );
-                  final endDt = DateTime(
-                    endDate.value.year,
-                    endDate.value.month,
-                    endDate.value.day,
-                    endTime.value.hour,
-                    endTime.value.minute,
-                  );
-
-                  if (endDt.isBefore(startDt) ||
-                      endDt.isAtSameMomentAs(startDt)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('End time must be after start time'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  final label = '${formatDate(startDt)} ${formatTime(startDt)}';
-                  Navigator.of(context).pop();
-
-                  ConfirmDialog.info(
-                    title: isEdit ? 'Update Session' : 'Create Session',
-                    message: Text(
-                      isEdit
-                          ? 'Save changes to session on $label?'
-                          : 'Create session on $label?',
-                    ),
-                    confirmText: isEdit ? 'Save' : 'Create',
-                    onConfirmAsyncGrpc: () async {
-                      final client = ref.read(sessionServiceProvider);
-                      if (isEdit) {
-                        return await callGrpcEndpoint(
-                          () => client.updateSession(
-                            UpdateSessionRequest(
-                              id: sessionId,
-                              startTime: startDt.toTimestamp(),
-                              endTime: endDt.toTimestamp(),
-                              locationId: locationId,
-                              finished: finished.value,
-                            ),
-                          ),
+                        final startDt = DateTime(
+                          startDate.value.year,
+                          startDate.value.month,
+                          startDate.value.day,
+                          startTime.value.hour,
+                          startTime.value.minute,
                         );
-                      } else {
-                        return await callGrpcEndpoint(
-                          () => client.createSession(
-                            CreateSessionRequest(
-                              startTime: startDt.toTimestamp(),
-                              endTime: endDt.toTimestamp(),
-                              locationId: locationId,
-                            ),
-                          ),
+                        final endDt = DateTime(
+                          endDate.value.year,
+                          endDate.value.month,
+                          endDate.value.day,
+                          endTime.value.hour,
+                          endTime.value.minute,
                         );
-                      }
-                    },
-                    showResultDialog: true,
-                    successMessage: Text(
-                      isEdit
-                          ? 'Session updated successfully'
-                          : 'Session created successfully',
-                    ),
-                  ).show(context);
-                },
-                child: Text(isEdit ? 'Save' : 'Create'),
+
+                        if (endDt.isBefore(startDt) ||
+                            endDt.isAtSameMomentAs(startDt)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'End time must be after start time',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        isLoading.value = true;
+                        try {
+                          final client = ref.read(sessionServiceProvider);
+                          final GrpcResult<dynamic> result;
+                          if (isEdit) {
+                            result = await callGrpcEndpoint(
+                              () => client.updateSession(
+                                UpdateSessionRequest(
+                                  id: sessionId,
+                                  startTime: startDt.toTimestamp(),
+                                  endTime: endDt.toTimestamp(),
+                                  locationId: locationId,
+                                  finished: finished.value,
+                                ),
+                              ),
+                            );
+                          } else {
+                            result = await callGrpcEndpoint(
+                              () => client.createSession(
+                                CreateSessionRequest(
+                                  startTime: startDt.toTimestamp(),
+                                  endTime: endDt.toTimestamp(),
+                                  locationId: locationId,
+                                ),
+                              ),
+                            );
+                          }
+
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            switch (result) {
+                              case GrpcSuccess():
+                                SnackBarDialog.success(
+                                  message: isEdit
+                                      ? 'Session updated successfully'
+                                      : 'Session created successfully',
+                                ).show(context);
+                              case GrpcFailure():
+                                SnackBarDialog.fromGrpcStatus(
+                                  result: result,
+                                ).show(context);
+                            }
+                          }
+                        } finally {
+                          isLoading.value = false;
+                        }
+                      },
+                child: isLoading.value
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],
           ),
