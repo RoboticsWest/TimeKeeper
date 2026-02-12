@@ -13,26 +13,29 @@ import 'package:time_keeper/widgets/dialogs/toast_overlay.dart';
 
 final _log = Logger();
 
-/// Handles an RFID scan input by matching it against team members
+/// Handles a PCSC card scan by matching the UID against team members
 /// and checking them in/out.
 Future<void> handleKioskScan({
   required String input,
   required BuildContext context,
   required WidgetRef ref,
 }) async {
-  final trimmed = input.trim().toLowerCase();
+  final trimmed = input.trim();
   if (trimmed.isEmpty) return;
 
   final teamMembers = ref.read(teamMembersProvider);
-  final match = _findMember(trimmed, teamMembers);
+  final variants = _buildUidVariants(trimmed);
+  final match = _findMember(variants, teamMembers);
 
   if (match == null) {
-    _log.w('No member matched scan: $input');
+    _log.w(
+      'No member matched scan: $input (tried ${variants.length} variants)',
+    );
     if (context.mounted) {
       ToastOverlay.error(
         context,
         title: 'Unrecognized',
-        message: 'Unrecognized value "$input", contact admin.',
+        message: 'Unrecognized card "$input", contact admin.',
       );
     }
     return;
@@ -86,10 +89,114 @@ Future<void> handleKioskScan({
   }
 }
 
-/// Tries to match scan input against team member fields.
-/// Checks in order: first+last name, alias, secondary alias.
+/// Builds all reasonable representations of a scanned UID so we can
+/// match flexibly against however the user stored it.
+///
+/// From a colon-separated hex input like "89:02:9E:40" we produce:
+///   - 89:02:9e:40        (colon-separated, lowercase)
+///   - 89 02 9e 40        (space-separated)
+///   - 89029e40           (no separator)
+///   - decimal BE string  (e.g. "2299477568")
+///   - decimal LE string  (e.g. "1075381897")
+///
+/// If a user stored a decimal value in their alias, we also parse it
+/// to hex and generate the hex variants from that.
+Set<String> _buildUidVariants(String input) {
+  final variants = <String>{};
+  final normalized = input.trim().toLowerCase();
+
+  // Try to extract hex bytes from the input regardless of separator
+  final hexBytes = _parseHexBytes(normalized);
+
+  if (hexBytes != null && hexBytes.isNotEmpty) {
+    final hexParts = hexBytes
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .toList();
+
+    variants.add(hexParts.join(':')); // 89:02:9e:40
+    variants.add(hexParts.join(' ')); // 89 02 9e 40
+    variants.add(hexParts.join()); // 89029e40
+
+    // Decimal big-endian
+    var be = BigInt.zero;
+    for (final b in hexBytes) {
+      be = (be << 8) | BigInt.from(b);
+    }
+    variants.add(be.toString());
+
+    // Decimal little-endian
+    var le = BigInt.zero;
+    for (final b in hexBytes.reversed) {
+      le = (le << 8) | BigInt.from(b);
+    }
+    variants.add(le.toString());
+  }
+
+  // If input looks like a plain decimal number, parse it to hex bytes
+  // and add those variants too (in case user stored hex but card gave decimal)
+  final asInt = BigInt.tryParse(normalized);
+  if (asInt != null && asInt > BigInt.zero) {
+    final bytes = _bigIntToBytes(asInt);
+    if (bytes.isNotEmpty) {
+      final hexParts = bytes
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .toList();
+      variants.add(hexParts.join(':'));
+      variants.add(hexParts.join(' '));
+      variants.add(hexParts.join());
+    }
+  }
+
+  // Always include the raw input as-is
+  variants.add(normalized);
+
+  return variants;
+}
+
+/// Try to parse hex bytes from a string with any common separator
+/// (colon, space, dash, or no separator for even-length hex strings).
+List<int>? _parseHexBytes(String input) {
+  // Try colon, space, or dash separated
+  for (final sep in [':', ' ', '-']) {
+    if (input.contains(sep)) {
+      final parts = input.split(sep);
+      if (parts.every((p) => RegExp(r'^[0-9a-f]{1,2}$').hasMatch(p))) {
+        return parts.map((p) => int.parse(p, radix: 16)).toList();
+      }
+      return null; // has separator but not valid hex
+    }
+  }
+
+  // No separator — try as continuous hex (must be even length)
+  if (input.length.isEven &&
+      input.length >= 4 &&
+      RegExp(r'^[0-9a-f]+$').hasMatch(input)) {
+    final bytes = <int>[];
+    for (var i = 0; i < input.length; i += 2) {
+      bytes.add(int.parse(input.substring(i, i + 2), radix: 16));
+    }
+    return bytes;
+  }
+
+  return null;
+}
+
+/// Convert a BigInt to a list of bytes (big-endian, minimal length).
+List<int> _bigIntToBytes(BigInt value) {
+  if (value == BigInt.zero) return [0];
+  final bytes = <int>[];
+  var v = value;
+  while (v > BigInt.zero) {
+    bytes.add((v & BigInt.from(0xFF)).toInt());
+    v = v >> 8;
+  }
+  return bytes.reversed.toList();
+}
+
+/// Tries to match any of the UID [variants] against team member fields.
+/// Checks: first+last name, alias, secondary alias.
 MapEntry<String, TeamMember>? _findMember(
-  String input,
+  Set<String> variants,
   Map<String, TeamMember> teamMembers,
 ) {
   for (final entry in teamMembers.entries) {
@@ -98,18 +205,19 @@ MapEntry<String, TeamMember>? _findMember(
         .trim()
         .toLowerCase();
 
-    if (fullName == input) return entry;
+    if (variants.contains(fullName)) return entry;
   }
 
   for (final entry in teamMembers.entries) {
     final member = entry.value;
 
-    if (member.alias.isNotEmpty && member.alias.trim().toLowerCase() == input) {
+    if (member.alias.isNotEmpty &&
+        variants.contains(member.alias.trim().toLowerCase())) {
       return entry;
     }
 
     if (member.secondaryAlias.isNotEmpty &&
-        member.secondaryAlias.trim().toLowerCase() == input) {
+        variants.contains(member.secondaryAlias.trim().toLowerCase())) {
       return entry;
     }
   }
