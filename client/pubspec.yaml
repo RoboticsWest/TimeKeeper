@@ -24,6 +24,8 @@ dependencies:
   table_calendar: ^3.2.0
   fl_chart: ^1.1.1
   window_manager: ^0.4.3
+  async: ^2.8.2
+  dart_pcsc: ^2.0.2
 
 dev_dependencies:
   flutter_test:
