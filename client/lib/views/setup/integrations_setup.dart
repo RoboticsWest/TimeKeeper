@@ -202,7 +202,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 4),
         Text(
           'Configure when and what the bot posts before sessions start and end. '
-          'Use {mins} and {location} as placeholders in custom messages. Set minutes to 0 to disable.',
+          'Placeholders: {mins}, {location}, {date}, {start_time}, {end_time}. Set minutes to 0 to disable.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -222,9 +222,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         TextFieldSetting(
           label: 'Start Reminder Message',
           description:
-              'Custom message for the start reminder. Supports {mins} and {location} placeholders',
+              'Custom message for the start reminder. Supports {mins}, {location}, {date}, {start_time}, {end_time}',
           controller: startReminderMessageController,
-          hintText: '@here Session starting in ~{mins} minutes @ {location}!',
+          hintText:
+              '@here Session on {date} from {start_time} to {end_time} @ {location} starting in ~{mins} minutes!',
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 24),
@@ -242,7 +243,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         TextFieldSetting(
           label: 'End Reminder Message',
           description:
-              'Custom message for the end reminder. Supports {mins} and {location} placeholders',
+              'Custom message for the end reminder. Supports {mins}, {location}, {date}, {start_time}, {end_time}',
           controller: endReminderMessageController,
           hintText:
               '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',

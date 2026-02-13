@@ -24,11 +24,16 @@ pub struct TeamMember {
     #[prost(string, optional, tag = "4")]
     pub display_name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "5")]
-    pub rfid_tag: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "6")]
     pub mobile_number: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "7")]
+    #[prost(string, optional, tag = "6")]
     pub discord_username: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RfidTag {
+    #[prost(string, tag = "1")]
+    pub team_member_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub tag: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Location {

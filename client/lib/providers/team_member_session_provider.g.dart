@@ -78,7 +78,7 @@ final class TeamMemberSessionsStreamProvider
         argument: null,
         retry: null,
         name: r'teamMemberSessionsStreamProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -99,7 +99,7 @@ final class TeamMemberSessionsStreamProvider
 }
 
 String _$teamMemberSessionsStreamHash() =>
-    r'07e73983f07c956fc248416f2b037e46fb2e8bfe';
+    r'84cd5a8b6f32ecee0c19e38aba37408adb6546bc';
 
 @ProviderFor(TeamMemberSessions)
 final teamMemberSessionsProvider = TeamMemberSessionsProvider._();
@@ -137,7 +137,7 @@ final class TeamMemberSessionsProvider
 }
 
 String _$teamMemberSessionsHash() =>
-    r'42d6262fc87ca339197350edb75cc14d7cd313d8';
+    r'98e225bcadeb484c63da3030dbfca984a18a0381';
 
 abstract class _$TeamMemberSessions
     extends $Notifier<Map<String, TeamMemberSession>> {

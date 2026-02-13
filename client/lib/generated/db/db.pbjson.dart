@@ -86,36 +86,26 @@ const TeamMember$json = {
       '17': true
     },
     {
-      '1': 'rfid_tag',
+      '1': 'mobile_number',
       '3': 5,
       '4': 1,
       '5': 9,
       '9': 1,
-      '10': 'rfidTag',
-      '17': true
-    },
-    {
-      '1': 'mobile_number',
-      '3': 6,
-      '4': 1,
-      '5': 9,
-      '9': 2,
       '10': 'mobileNumber',
       '17': true
     },
     {
       '1': 'discord_username',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 9,
-      '9': 3,
+      '9': 2,
       '10': 'discordUsername',
       '17': true
     },
   ],
   '8': [
     {'1': '_display_name'},
-    {'1': '_rfid_tag'},
     {'1': '_mobile_number'},
     {'1': '_discord_username'},
   ],
@@ -126,10 +116,23 @@ final $typed_data.Uint8List teamMemberDescriptor = $convert.base64Decode(
     'CgpUZWFtTWVtYmVyEh0KCmZpcnN0X25hbWUYASABKAlSCWZpcnN0TmFtZRIbCglsYXN0X25hbW'
     'UYAiABKAlSCGxhc3ROYW1lEjYKC21lbWJlcl90eXBlGAMgASgOMhUudGsuZGIuVGVhbU1lbWJl'
     'clR5cGVSCm1lbWJlclR5cGUSJgoMZGlzcGxheV9uYW1lGAQgASgJSABSC2Rpc3BsYXlOYW1liA'
-    'EBEh4KCHJmaWRfdGFnGAUgASgJSAFSB3JmaWRUYWeIAQESKAoNbW9iaWxlX251bWJlchgGIAEo'
-    'CUgCUgxtb2JpbGVOdW1iZXKIAQESLgoQZGlzY29yZF91c2VybmFtZRgHIAEoCUgDUg9kaXNjb3'
-    'JkVXNlcm5hbWWIAQFCDwoNX2Rpc3BsYXlfbmFtZUILCglfcmZpZF90YWdCEAoOX21vYmlsZV9u'
-    'dW1iZXJCEwoRX2Rpc2NvcmRfdXNlcm5hbWU=');
+    'EBEigKDW1vYmlsZV9udW1iZXIYBSABKAlIAVIMbW9iaWxlTnVtYmVyiAEBEi4KEGRpc2NvcmRf'
+    'dXNlcm5hbWUYBiABKAlIAlIPZGlzY29yZFVzZXJuYW1liAEBQg8KDV9kaXNwbGF5X25hbWVCEA'
+    'oOX21vYmlsZV9udW1iZXJCEwoRX2Rpc2NvcmRfdXNlcm5hbWU=');
+
+@$core.Deprecated('Use rfidTagDescriptor instead')
+const RfidTag$json = {
+  '1': 'RfidTag',
+  '2': [
+    {'1': 'team_member_id', '3': 1, '4': 1, '5': 9, '10': 'teamMemberId'},
+    {'1': 'tag', '3': 2, '4': 1, '5': 9, '10': 'tag'},
+  ],
+};
+
+/// Descriptor for `RfidTag`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List rfidTagDescriptor = $convert.base64Decode(
+    'CgdSZmlkVGFnEiQKDnRlYW1fbWVtYmVyX2lkGAEgASgJUgx0ZWFtTWVtYmVySWQSEAoDdGFnGA'
+    'IgASgJUgN0YWc=');
 
 @$core.Deprecated('Use locationDescriptor instead')
 const Location$json = {

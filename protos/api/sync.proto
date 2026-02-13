@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "api/location.proto";
+import "api/rfid_tag.proto";
+import "api/session.proto";
+import "api/team_member.proto";
+import "api/team_member_session.proto";
+import "common/common.proto";
+
+message StreamEntitiesRequest {}
+
+message StreamEntitiesResponse {
+  common.SyncType sync_type = 1;
+  oneof payload {
+    StreamSessionsResponse sessions = 2;
+    StreamLocationsResponse locations = 3;
+    StreamTeamMembersResponse team_members = 4;
+    StreamTeamMemberSessionsResponse team_member_sessions = 5;
+    StreamRfidTagsResponse rfid_tags = 6;
+  }
+}
+
+service SyncService {
+  rpc StreamEntities(StreamEntitiesRequest) returns (stream StreamEntitiesResponse);
+}

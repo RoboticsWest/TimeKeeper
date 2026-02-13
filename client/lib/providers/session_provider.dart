@@ -18,7 +18,7 @@ SessionServiceClient sessionService(Ref ref) {
   return SessionServiceClient(channel, options: options);
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<StreamSessionsResponse> sessionsStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamSessionsResponse>(
     () async {
@@ -42,20 +42,18 @@ class Sessions extends _$Sessions {
       fromBuffer: Session.fromBuffer,
     );
 
-    final localSessions = _storage.getAll();
+    return _storage.getAll();
+  }
 
-    _storage.bindToStream(
-      ref: ref,
-      streamProvider: sessionsStreamProvider,
-      extractItems: (response) => response.sessions,
-      getSyncType: (response) => response.syncType,
+  void syncFromStream(StreamSessionsResponse response) {
+    _storage.syncResponse(
+      syncType: response.syncType,
+      items: response.sessions,
       hasItem: (item) => item.hasSession(),
       getId: (item) => item.id,
       getItem: (item) => item.session,
       getState: () => state,
       setState: (newState) => state = newState,
     );
-
-    return localSessions;
   }
 }

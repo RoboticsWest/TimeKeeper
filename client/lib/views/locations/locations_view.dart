@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/location.pbgrpc.dart';
+import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/views/locations/location_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
@@ -42,6 +43,7 @@ class LocationsView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(entitySyncProvider);
     final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
 

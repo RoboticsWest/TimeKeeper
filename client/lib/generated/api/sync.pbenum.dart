@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from api/api.proto.
+// Generated from api/sync.proto.
 
 // @dart = 3.3
 
@@ -9,14 +9,3 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
 // ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
 // ignore_for_file: non_constant_identifier_names, prefer_relative_imports
-
-export 'location.pbenum.dart';
-export 'rfid_tag.pbenum.dart';
-export 'schedule.pbenum.dart';
-export 'session.pbenum.dart';
-export 'settings.pbenum.dart';
-export 'statistics.pbenum.dart';
-export 'sync.pbenum.dart';
-export 'team_member.pbenum.dart';
-export 'team_member_session.pbenum.dart';
-export 'user.pbenum.dart';

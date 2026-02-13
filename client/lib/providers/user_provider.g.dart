@@ -28,7 +28,7 @@ final class UsersStreamProvider
         argument: null,
         retry: null,
         name: r'usersStreamProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -48,7 +48,7 @@ final class UsersStreamProvider
   }
 }
 
-String _$usersStreamHash() => r'01945443933ce7ff85de037f0dc72deb83afac9a';
+String _$usersStreamHash() => r'1572fee3a306bf9bebb41dd6912ce72a17bc9aa4';
 
 @ProviderFor(Users)
 final usersProvider = UsersProvider._();
@@ -82,7 +82,7 @@ final class UsersProvider
   }
 }
 
-String _$usersHash() => r'604435de91697b846079842eec1bd2887face6a7';
+String _$usersHash() => r'f14dd30823b21375fa560a263d674d5462e4eccb';
 
 abstract class _$Users extends $Notifier<Map<String, UserResponse>> {
   Map<String, UserResponse> build();
@@ -102,3 +102,51 @@ abstract class _$Users extends $Notifier<Map<String, UserResponse>> {
     element.handleCreate(ref, build);
   }
 }
+
+/// Auto-dispose provider that bridges [usersStreamProvider] to [usersProvider].
+/// Views watch this to activate the users stream.
+
+@ProviderFor(usersSync)
+final usersSyncProvider = UsersSyncProvider._();
+
+/// Auto-dispose provider that bridges [usersStreamProvider] to [usersProvider].
+/// Views watch this to activate the users stream.
+
+final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  /// Auto-dispose provider that bridges [usersStreamProvider] to [usersProvider].
+  /// Views watch this to activate the users stream.
+  UsersSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'usersSyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$usersSyncHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return usersSync(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$usersSyncHash() => r'0fd2f91dbdcab05d2b9f44e3a36361c854e0db52';

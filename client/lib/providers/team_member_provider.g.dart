@@ -75,7 +75,7 @@ final class TeamMembersStreamProvider
         argument: null,
         retry: null,
         name: r'teamMembersStreamProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -95,7 +95,7 @@ final class TeamMembersStreamProvider
   }
 }
 
-String _$teamMembersStreamHash() => r'849d90bf38645aae20189918c8f2280e2f0b7759';
+String _$teamMembersStreamHash() => r'e39aee18a610b3bc588fae24dfc7b50de8e75228';
 
 @ProviderFor(TeamMembers)
 final teamMembersProvider = TeamMembersProvider._();
@@ -129,7 +129,7 @@ final class TeamMembersProvider
   }
 }
 
-String _$teamMembersHash() => r'70ad01e4e81dce9053f8fb2480eace8dceddaed1';
+String _$teamMembersHash() => r'01fb493ba3a0a02a6f21cc6039d48b8e4a1df97f';
 
 abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
   Map<String, TeamMember> build();

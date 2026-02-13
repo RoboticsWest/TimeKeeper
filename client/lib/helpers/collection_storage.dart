@@ -1,5 +1,4 @@
 import 'package:protobuf/protobuf.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/generated/common/common.pbenum.dart';
 import 'package:time_keeper/helpers/local_storage.dart';
 import 'package:time_keeper/helpers/protobuf_helper.dart';
@@ -168,60 +167,42 @@ class CollectionStorage<T extends GeneratedMessage> {
     return incoming;
   }
 
-  /// Sets up a listener for stream updates that automatically syncs storage and provider state.
+  /// Processes a stream response and updates both local storage and provider state.
   ///
   /// Uses the server-provided [SyncType] to determine behavior:
   /// - [SyncType.FULL]: Replace the entire local collection with the server snapshot.
   /// - [SyncType.PARTIAL]: Merge incremental updates and remove deleted items.
   ///
-  /// State management is handled internally — callers just provide [getState] and [setState].
-  void bindToStream<StreamResponse, ResponseItem>({
-    required Ref ref,
-    required ProviderListenable<AsyncValue<StreamResponse>> streamProvider,
-    required Iterable<ResponseItem> Function(StreamResponse) extractItems,
-    required SyncType Function(StreamResponse) getSyncType,
+  /// Call this from notifier `syncFromStream` methods or from sync bridge providers.
+  void syncResponse<ResponseItem>({
+    required SyncType syncType,
+    required Iterable<ResponseItem> items,
     required bool Function(ResponseItem) hasItem,
     required String Function(ResponseItem) getId,
     required T Function(ResponseItem) getItem,
     required Map<String, T> Function() getState,
     required void Function(Map<String, T>) setState,
-    void Function(Object error, StackTrace stackTrace)? onError,
   }) {
-    ref.listen(streamProvider, (previous, next) {
-      next.when(
-        data: (response) {
-          final items = extractItems(response);
-          final syncType = getSyncType(response);
-
-          if (syncType == SyncType.FULL) {
-            final fullState = replaceAll(
-              items,
-              hasItem: hasItem,
-              getId: getId,
-              getItem: getItem,
-            );
-            setState(fullState);
-          } else {
-            final (:updates, :deletedIds) = processStreamUpdates(
-              items,
-              hasItem: hasItem,
-              getId: getId,
-              getItem: getItem,
-            );
-            if (updates.isNotEmpty || deletedIds.isNotEmpty) {
-              final newState = {...getState(), ...updates};
-              newState.removeWhere((id, _) => deletedIds.contains(id));
-              setState(newState);
-            }
-          }
-        },
-        loading: () {},
-        error: (error, stack) {
-          if (onError != null) {
-            onError(error, stack);
-          }
-        },
+    if (syncType == SyncType.FULL) {
+      final fullState = replaceAll(
+        items,
+        hasItem: hasItem,
+        getId: getId,
+        getItem: getItem,
       );
-    });
+      setState(fullState);
+    } else {
+      final (:updates, :deletedIds) = processStreamUpdates(
+        items,
+        hasItem: hasItem,
+        getId: getId,
+        getItem: getItem,
+      );
+      if (updates.isNotEmpty || deletedIds.isNotEmpty) {
+        final newState = {...getState(), ...updates};
+        newState.removeWhere((id, _) => deletedIds.contains(id));
+        setState(newState);
+      }
+    }
   }
 }

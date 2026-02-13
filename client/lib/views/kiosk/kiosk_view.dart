@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:time_keeper/generated/common/common.pbenum.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/utils/permissions.dart';
+import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/hooks/use_rfid_scanner.dart';
@@ -21,6 +22,7 @@ class HomeView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(entitySyncProvider);
     final sessionList = ref.watch(sessionsProvider);
     final deviceLocationId = ref.watch(currentLocationProvider);
     final locations = ref.watch(locationsProvider);

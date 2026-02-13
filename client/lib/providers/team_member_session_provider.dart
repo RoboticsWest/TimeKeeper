@@ -18,16 +18,15 @@ TeamMemberSessionServiceClient teamMemberSessionService(Ref ref) {
   return TeamMemberSessionServiceClient(channel, options: options);
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<StreamTeamMemberSessionsResponse> teamMemberSessionsStream(Ref ref) {
   final reconnectingStream =
-      ReconnectingStream<StreamTeamMemberSessionsResponse>(
-    () async {
-      final client = ref.read(teamMemberSessionServiceProvider);
-      return client
-          .streamTeamMemberSessions(StreamTeamMemberSessionsRequest());
-    },
-  );
+      ReconnectingStream<StreamTeamMemberSessionsResponse>(() async {
+        final client = ref.read(teamMemberSessionServiceProvider);
+        return client.streamTeamMemberSessions(
+          StreamTeamMemberSessionsRequest(),
+        );
+      });
 
   ref.onDispose(reconnectingStream.close);
   return reconnectingStream.stream;
@@ -44,20 +43,18 @@ class TeamMemberSessions extends _$TeamMemberSessions {
       fromBuffer: TeamMemberSession.fromBuffer,
     );
 
-    final localSessions = _storage.getAll();
+    return _storage.getAll();
+  }
 
-    _storage.bindToStream(
-      ref: ref,
-      streamProvider: teamMemberSessionsStreamProvider,
-      extractItems: (response) => response.teamMemberSessions,
-      getSyncType: (response) => response.syncType,
+  void syncFromStream(StreamTeamMemberSessionsResponse response) {
+    _storage.syncResponse(
+      syncType: response.syncType,
+      items: response.teamMemberSessions,
       hasItem: (item) => item.hasTeamMemberSession(),
       getId: (item) => item.id,
       getItem: (item) => item.teamMemberSession,
       getState: () => state,
       setState: (newState) => state = newState,
     );
-
-    return localSessions;
   }
 }

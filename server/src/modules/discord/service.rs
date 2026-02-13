@@ -1,6 +1,6 @@
 use std::{future::Future, time::Duration};
 
-use chrono::Utc;
+use chrono::{TimeZone, Utc};
 use serenity::all::{ChannelId, GuildId};
 use serenity::http::Http;
 
@@ -84,12 +84,25 @@ impl ScheduledService for DiscordNotificationService {
       let mut updated = false;
       let mut session = session.clone();
 
+      let start_dt = Utc.timestamp_opt(start_secs, 0).single();
+      let end_dt = Utc.timestamp_opt(end_secs, 0).single();
+      let date_str = start_dt.map_or("Unknown".to_string(), |dt| dt.format("%B %-d").to_string());
+      let start_time_str = start_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
+      let end_time_str = end_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
+
       // Session starting soon reminder
       if start_reminder_secs > 0 && !session.start_reminder_sent {
         let time_until_start = start_secs - now_secs;
         if time_until_start > 0 && time_until_start <= start_reminder_secs {
           let mins = time_until_start / 60;
-          messages.push(start_msg_template.replace("{mins}", &mins.to_string()).replace("{location}", location));
+          messages.push(
+            start_msg_template
+              .replace("{mins}", &mins.to_string())
+              .replace("{location}", location)
+              .replace("{date}", &date_str)
+              .replace("{start_time}", &start_time_str)
+              .replace("{end_time}", &end_time_str),
+          );
           session.start_reminder_sent = true;
           updated = true;
         }
@@ -100,7 +113,14 @@ impl ScheduledService for DiscordNotificationService {
         let time_until_end = end_secs - now_secs;
         if time_until_end > 0 && time_until_end <= end_reminder_secs && now_secs >= start_secs {
           let mins = time_until_end / 60;
-          messages.push(end_msg_template.replace("{mins}", &mins.to_string()).replace("{location}", location));
+          messages.push(
+            end_msg_template
+              .replace("{mins}", &mins.to_string())
+              .replace("{location}", location)
+              .replace("{date}", &date_str)
+              .replace("{start_time}", &start_time_str)
+              .replace("{end_time}", &end_time_str),
+          );
           session.end_reminder_sent = true;
           updated = true;
         }
