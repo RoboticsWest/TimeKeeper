@@ -320,7 +320,7 @@ jobs:
             [Service]
             Type=simple
             WorkingDirectory=/root
-            ExecStart=/root/server
+            ExecStart=/root/server --web-port 80
             Restart=always
             RestartSec=10
 
