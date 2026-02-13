@@ -12,7 +12,7 @@ impl TeamMemberCsvParser {
     let lines = reader.lines();
 
     // row format
-    // FIRST_NAME, LAST_NAME, ALIAS, SECONDARY_ALIAS
+    // FIRST_NAME, LAST_NAME, DISPLAY_NAME, RFID_TAG, DISCORD_USERNAME
     let mut members: Vec<TeamMemberT> = Vec::new();
 
     for line in lines {
@@ -33,10 +33,11 @@ impl TeamMemberCsvParser {
         None => return Err(anyhow!("Could not parse last name")),
       };
 
-      let alias = fields.get(2).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
-      let secondary_alias = fields.get(3).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
+      let display_name = fields.get(2).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
+      let rfid_tag = fields.get(3).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
+      let discord_username = fields.get(4).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
 
-      members.push(TeamMemberT { first_name, last_name, alias, secondary_alias });
+      members.push(TeamMemberT { first_name, last_name, display_name, rfid_tag, discord_username });
     }
 
     Ok(members)

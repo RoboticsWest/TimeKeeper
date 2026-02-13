@@ -2,4 +2,4 @@
 # I.e, version of the app, etc.
 variables:
   - name: tk_version
-    value: 1.0.1
+    value: 1.1.0

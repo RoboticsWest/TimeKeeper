@@ -8,7 +8,10 @@ use crate::{
   core::{
     api::Api, db::init_db, events::init_event_bus, scheduler::SchedulerPool, shutdown::ShutdownNotifier, web::Web,
   },
-  modules::session::SessionService,
+  modules::{
+    discord::{DiscordNotificationService, start_discord_bot},
+    session::SessionService,
+  },
 };
 
 pub struct Server {
@@ -38,6 +41,7 @@ impl Server {
 
     // Schedule background services
     self.scheduler.schedule(SessionService, shutdown_notifier);
+    self.scheduler.schedule(DiscordNotificationService::new(), shutdown_notifier);
 
     log::info!("Scheduled {} background service(s)", self.scheduler.count());
 
@@ -61,6 +65,11 @@ impl Server {
       }
     });
 
+    // Start Discord bot (if configured)
+    let mut discord_handle = tokio::spawn(async move {
+      start_discord_bot().await;
+    });
+
     // Wait for shutdown signal
     tokio::signal::ctrl_c().await.expect("Failed to listen for shutdown signal");
     log::warn!("Received shutdown signal, beginning graceful shutdown...");
@@ -70,8 +79,9 @@ impl Server {
 
     // Wait for services to shutdown gracefully with timeout
     let timeout_future = async {
-      let (api_result, web_result) = tokio::join!(&mut api_handle, &mut web_handle);
-      let combined_result = api_result.and(web_result);
+      let (api_result, web_result, discord_result) =
+        tokio::join!(&mut api_handle, &mut web_handle, &mut discord_handle);
+      let combined_result = api_result.and(web_result).and(discord_result);
 
       // Wait for scheduled services
       if let Err(e) = self.scheduler.wait_all().await {
@@ -89,6 +99,7 @@ impl Server {
         log::warn!("Shutdown timeout - force aborting...");
         api_handle.abort();
         web_handle.abort();
+        discord_handle.abort();
         self.scheduler.abort_all();
       }
     }

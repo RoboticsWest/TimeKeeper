@@ -7,33 +7,19 @@ import 'package:time_keeper/widgets/time_until.dart';
 class SessionInfoBar extends StatelessWidget {
   final Session? currentSession;
   final Session? nextSession;
+  final Map<String, Location> locations;
+  final String? deviceLocationName;
 
-  const SessionInfoBar({super.key, this.currentSession, this.nextSession});
+  const SessionInfoBar({
+    super.key,
+    this.currentSession,
+    this.nextSession,
+    this.locations = const {},
+    this.deviceLocationName,
+  });
 
-  Widget _sessionDateTime(Session session, Color color) {
-    final start = session.startTime.toDateTime();
-    final end = session.endTime.toDateTime();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          formatDate(start),
-          style: TextStyle(color: color, fontWeight: FontWeight.w500),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Container(
-            width: 1,
-            height: 16,
-            color: color.withValues(alpha: 0.3),
-          ),
-        ),
-        Text(
-          '${formatTime(start)} - ${formatTime(end)}',
-          style: TextStyle(color: color),
-        ),
-      ],
-    );
+  String _locationName(Session session) {
+    return locations[session.locationId]?.location ?? '';
   }
 
   @override
@@ -47,7 +33,7 @@ class SessionInfoBar extends StatelessWidget {
           // Current session
           Expanded(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: currentSession != null
                     ? theme.colorScheme.primaryContainer
@@ -55,129 +41,177 @@ class SessionInfoBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: currentSession != null
-                  ? Row(
-                      children: [
-                        Icon(
-                          Icons.play_circle_filled,
-                          color: theme.colorScheme.onPrimaryContainer,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Current Session',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        _sessionDateTime(
-                          currentSession!,
-                          theme.colorScheme.onPrimaryContainer,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Container(
-                            width: 1,
-                            height: 16,
-                            color: theme.colorScheme.onPrimaryContainer
-                                .withValues(alpha: 0.3),
-                          ),
-                        ),
-                        TimeUntil(
-                          time: currentSession!.endTime.toDateTime(),
-                          positiveLeader: '',
-                          positiveStyle: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          negativeLeader: 'OVERTIME ',
-                          negativeStyle: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.error,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        Icon(
-                          Icons.pause_circle_filled,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'No Active Session',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                  ? _buildCurrentSession(theme)
+                  : _buildNoSession(theme),
             ),
           ),
 
           const SizedBox(width: 12),
 
           // Next session
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.outlineVariant,
-                width: 1,
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant,
+                  width: 1,
+                ),
               ),
+              child: nextSession != null
+                  ? _buildNextSession(theme)
+                  : _buildNoUpcoming(theme),
             ),
-            child: nextSession != null
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.skip_next,
-                        color: theme.colorScheme.onSurfaceVariant,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Next',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      _sessionDateTime(
-                        nextSession!,
-                        theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.skip_next,
-                        color: theme.colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'No Upcoming Sessions',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCurrentSession(ThemeData theme) {
+    final color = theme.colorScheme.onPrimaryContainer;
+    final session = currentSession!;
+    final start = session.startTime.toDateTime();
+    final end = session.endTime.toDateTime();
+    final location = _locationName(session);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.play_circle_filled, color: color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Current Session',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (location.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '— $location',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: color.withValues(alpha: 0.7),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ] else
+              const Spacer(),
+            TimeUntil(
+              time: end,
+              positiveLeader: '',
+              positiveStyle: theme.textTheme.labelLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+              negativeLeader: 'OVERTIME ',
+              negativeStyle: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: color.withValues(alpha: 0.7),
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNoSession(ThemeData theme) {
+    final color = theme.colorScheme.onSurfaceVariant;
+    return Row(
+      children: [
+        Icon(Icons.pause_circle_filled, color: color, size: 18),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            deviceLocationName != null
+                ? 'No Active Session — $deviceLocationName'
+                : 'No Active Session',
+            style: theme.textTheme.labelLarge?.copyWith(color: color),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNextSession(ThemeData theme) {
+    final color = theme.colorScheme.onSurfaceVariant;
+    final session = nextSession!;
+    final start = session.startTime.toDateTime();
+    final end = session.endTime.toDateTime();
+    final location = _locationName(session);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.skip_next, color: color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Next',
+              style: theme.textTheme.labelLarge?.copyWith(color: color),
+            ),
+            if (location.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '— $location',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: color.withValues(alpha: 0.7),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: color.withValues(alpha: 0.7),
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNoUpcoming(ThemeData theme) {
+    final color = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5);
+    return Row(
+      children: [
+        Icon(Icons.skip_next, color: color, size: 18),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            deviceLocationName != null
+                ? 'No Upcoming Sessions — $deviceLocationName'
+                : 'No Upcoming Sessions',
+            style: theme.textTheme.labelLarge?.copyWith(color: color),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

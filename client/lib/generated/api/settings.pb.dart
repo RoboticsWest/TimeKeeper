@@ -117,10 +117,25 @@ class GetSettingsResponse extends $pb.GeneratedMessage {
 class UpdateSettingsRequest extends $pb.GeneratedMessage {
   factory UpdateSettingsRequest({
     $fixnum.Int64? nextSessionThresholdSecs,
+    $core.String? discordBotToken,
+    $core.String? discordGuildId,
+    $core.String? discordChannelId,
+    $fixnum.Int64? discordReminderMins,
+    $core.bool? discordSelfLinkEnabled,
+    $core.bool? discordNameSyncEnabled,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
       result.nextSessionThresholdSecs = nextSessionThresholdSecs;
+    if (discordBotToken != null) result.discordBotToken = discordBotToken;
+    if (discordGuildId != null) result.discordGuildId = discordGuildId;
+    if (discordChannelId != null) result.discordChannelId = discordChannelId;
+    if (discordReminderMins != null)
+      result.discordReminderMins = discordReminderMins;
+    if (discordSelfLinkEnabled != null)
+      result.discordSelfLinkEnabled = discordSelfLinkEnabled;
+    if (discordNameSyncEnabled != null)
+      result.discordNameSyncEnabled = discordNameSyncEnabled;
     return result;
   }
 
@@ -138,6 +153,12 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
       createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'nextSessionThresholdSecs')
+    ..aOS(2, _omitFieldNames ? '' : 'discordBotToken')
+    ..aOS(3, _omitFieldNames ? '' : 'discordGuildId')
+    ..aOS(4, _omitFieldNames ? '' : 'discordChannelId')
+    ..aInt64(5, _omitFieldNames ? '' : 'discordReminderMins')
+    ..aOB(6, _omitFieldNames ? '' : 'discordSelfLinkEnabled')
+    ..aOB(7, _omitFieldNames ? '' : 'discordNameSyncEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -168,6 +189,60 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
   $core.bool hasNextSessionThresholdSecs() => $_has(0);
   @$pb.TagNumber(1)
   void clearNextSessionThresholdSecs() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get discordBotToken => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set discordBotToken($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasDiscordBotToken() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDiscordBotToken() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get discordGuildId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set discordGuildId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasDiscordGuildId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearDiscordGuildId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get discordChannelId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set discordChannelId($core.String value) => $_setString(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasDiscordChannelId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearDiscordChannelId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get discordReminderMins => $_getI64(4);
+  @$pb.TagNumber(5)
+  set discordReminderMins($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDiscordReminderMins() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDiscordReminderMins() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get discordSelfLinkEnabled => $_getBF(5);
+  @$pb.TagNumber(6)
+  set discordSelfLinkEnabled($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDiscordSelfLinkEnabled() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDiscordSelfLinkEnabled() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.bool get discordNameSyncEnabled => $_getBF(6);
+  @$pb.TagNumber(7)
+  set discordNameSyncEnabled($core.bool value) => $_setBool(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasDiscordNameSyncEnabled() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearDiscordNameSyncEnabled() => $_clearField(7);
 }
 
 class UpdateSettingsResponse extends $pb.GeneratedMessage {
@@ -284,6 +359,312 @@ class PurgeDatabaseResponse extends $pb.GeneratedMessage {
   static PurgeDatabaseResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<PurgeDatabaseResponse>(create);
   static PurgeDatabaseResponse? _defaultInstance;
+}
+
+class DiscordRole extends $pb.GeneratedMessage {
+  factory DiscordRole({
+    $core.String? id,
+    $core.String? name,
+  }) {
+    final result = create();
+    if (id != null) result.id = id;
+    if (name != null) result.name = name;
+    return result;
+  }
+
+  DiscordRole._();
+
+  factory DiscordRole.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory DiscordRole.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'DiscordRole',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DiscordRole clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  DiscordRole copyWith(void Function(DiscordRole) updates) =>
+      super.copyWith((message) => updates(message as DiscordRole))
+          as DiscordRole;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DiscordRole create() => DiscordRole._();
+  @$core.override
+  DiscordRole createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static DiscordRole getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<DiscordRole>(create);
+  static DiscordRole? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+}
+
+class GetDiscordRolesRequest extends $pb.GeneratedMessage {
+  factory GetDiscordRolesRequest() => create();
+
+  GetDiscordRolesRequest._();
+
+  factory GetDiscordRolesRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetDiscordRolesRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetDiscordRolesRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetDiscordRolesRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetDiscordRolesRequest copyWith(
+          void Function(GetDiscordRolesRequest) updates) =>
+      super.copyWith((message) => updates(message as GetDiscordRolesRequest))
+          as GetDiscordRolesRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetDiscordRolesRequest create() => GetDiscordRolesRequest._();
+  @$core.override
+  GetDiscordRolesRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetDiscordRolesRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetDiscordRolesRequest>(create);
+  static GetDiscordRolesRequest? _defaultInstance;
+}
+
+class GetDiscordRolesResponse extends $pb.GeneratedMessage {
+  factory GetDiscordRolesResponse({
+    $core.Iterable<DiscordRole>? roles,
+  }) {
+    final result = create();
+    if (roles != null) result.roles.addAll(roles);
+    return result;
+  }
+
+  GetDiscordRolesResponse._();
+
+  factory GetDiscordRolesResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetDiscordRolesResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetDiscordRolesResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..pPM<DiscordRole>(1, _omitFieldNames ? '' : 'roles',
+        subBuilder: DiscordRole.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetDiscordRolesResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetDiscordRolesResponse copyWith(
+          void Function(GetDiscordRolesResponse) updates) =>
+      super.copyWith((message) => updates(message as GetDiscordRolesResponse))
+          as GetDiscordRolesResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetDiscordRolesResponse create() => GetDiscordRolesResponse._();
+  @$core.override
+  GetDiscordRolesResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetDiscordRolesResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetDiscordRolesResponse>(create);
+  static GetDiscordRolesResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<DiscordRole> get roles => $_getList(0);
+}
+
+class ImportDiscordMembersRequest extends $pb.GeneratedMessage {
+  factory ImportDiscordMembersRequest({
+    $core.String? roleId,
+    $1.TeamMemberType? memberType,
+  }) {
+    final result = create();
+    if (roleId != null) result.roleId = roleId;
+    if (memberType != null) result.memberType = memberType;
+    return result;
+  }
+
+  ImportDiscordMembersRequest._();
+
+  factory ImportDiscordMembersRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ImportDiscordMembersRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ImportDiscordMembersRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'roleId')
+    ..aE<$1.TeamMemberType>(2, _omitFieldNames ? '' : 'memberType',
+        enumValues: $1.TeamMemberType.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportDiscordMembersRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportDiscordMembersRequest copyWith(
+          void Function(ImportDiscordMembersRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ImportDiscordMembersRequest))
+          as ImportDiscordMembersRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ImportDiscordMembersRequest create() =>
+      ImportDiscordMembersRequest._();
+  @$core.override
+  ImportDiscordMembersRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ImportDiscordMembersRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ImportDiscordMembersRequest>(create);
+  static ImportDiscordMembersRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get roleId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set roleId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasRoleId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRoleId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $1.TeamMemberType get memberType => $_getN(1);
+  @$pb.TagNumber(2)
+  set memberType($1.TeamMemberType value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasMemberType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearMemberType() => $_clearField(2);
+}
+
+class ImportDiscordMembersResponse extends $pb.GeneratedMessage {
+  factory ImportDiscordMembersResponse({
+    $core.int? imported,
+    $core.int? linked,
+    $core.int? alreadyLinked,
+  }) {
+    final result = create();
+    if (imported != null) result.imported = imported;
+    if (linked != null) result.linked = linked;
+    if (alreadyLinked != null) result.alreadyLinked = alreadyLinked;
+    return result;
+  }
+
+  ImportDiscordMembersResponse._();
+
+  factory ImportDiscordMembersResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ImportDiscordMembersResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ImportDiscordMembersResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..aI(1, _omitFieldNames ? '' : 'imported')
+    ..aI(2, _omitFieldNames ? '' : 'linked')
+    ..aI(3, _omitFieldNames ? '' : 'alreadyLinked')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportDiscordMembersResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportDiscordMembersResponse copyWith(
+          void Function(ImportDiscordMembersResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ImportDiscordMembersResponse))
+          as ImportDiscordMembersResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ImportDiscordMembersResponse create() =>
+      ImportDiscordMembersResponse._();
+  @$core.override
+  ImportDiscordMembersResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ImportDiscordMembersResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ImportDiscordMembersResponse>(create);
+  static ImportDiscordMembersResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get imported => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set imported($core.int value) => $_setSignedInt32(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasImported() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearImported() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get linked => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set linked($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasLinked() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearLinked() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.int get alreadyLinked => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set alreadyLinked($core.int value) => $_setSignedInt32(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAlreadyLinked() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAlreadyLinked() => $_clearField(3);
 }
 
 const $core.bool _omitFieldNames =

@@ -296,20 +296,38 @@ const CreateTeamMemberRequest$json = {
       '6': '.tk.db.TeamMemberType',
       '10': 'memberType'
     },
-    {'1': 'alias', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'alias', '17': true},
     {
-      '1': 'secondary_alias',
+      '1': 'display_name',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'displayName',
+      '17': true
+    },
+    {
+      '1': 'rfid_tag',
       '3': 5,
       '4': 1,
       '5': 9,
       '9': 1,
-      '10': 'secondaryAlias',
+      '10': 'rfidTag',
+      '17': true
+    },
+    {
+      '1': 'discord_username',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'discordUsername',
       '17': true
     },
   ],
   '8': [
-    {'1': '_alias'},
-    {'1': '_secondary_alias'},
+    {'1': '_display_name'},
+    {'1': '_rfid_tag'},
+    {'1': '_discord_username'},
   ],
 };
 
@@ -317,9 +335,10 @@ const CreateTeamMemberRequest$json = {
 final $typed_data.Uint8List createTeamMemberRequestDescriptor = $convert.base64Decode(
     'ChdDcmVhdGVUZWFtTWVtYmVyUmVxdWVzdBIdCgpmaXJzdF9uYW1lGAEgASgJUglmaXJzdE5hbW'
     'USGwoJbGFzdF9uYW1lGAIgASgJUghsYXN0TmFtZRI2CgttZW1iZXJfdHlwZRgDIAEoDjIVLnRr'
-    'LmRiLlRlYW1NZW1iZXJUeXBlUgptZW1iZXJUeXBlEhkKBWFsaWFzGAQgASgJSABSBWFsaWFziA'
-    'EBEiwKD3NlY29uZGFyeV9hbGlhcxgFIAEoCUgBUg5zZWNvbmRhcnlBbGlhc4gBAUIICgZfYWxp'
-    'YXNCEgoQX3NlY29uZGFyeV9hbGlhcw==');
+    'LmRiLlRlYW1NZW1iZXJUeXBlUgptZW1iZXJUeXBlEiYKDGRpc3BsYXlfbmFtZRgEIAEoCUgAUg'
+    'tkaXNwbGF5TmFtZYgBARIeCghyZmlkX3RhZxgFIAEoCUgBUgdyZmlkVGFniAEBEi4KEGRpc2Nv'
+    'cmRfdXNlcm5hbWUYBiABKAlIAlIPZGlzY29yZFVzZXJuYW1liAEBQg8KDV9kaXNwbGF5X25hbW'
+    'VCCwoJX3JmaWRfdGFnQhMKEV9kaXNjb3JkX3VzZXJuYW1l');
 
 @$core.Deprecated('Use createTeamMemberResponseDescriptor instead')
 const CreateTeamMemberResponse$json = {
@@ -345,20 +364,38 @@ const UpdateTeamMemberRequest$json = {
       '6': '.tk.db.TeamMemberType',
       '10': 'memberType'
     },
-    {'1': 'alias', '3': 5, '4': 1, '5': 9, '9': 0, '10': 'alias', '17': true},
     {
-      '1': 'secondary_alias',
+      '1': 'display_name',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'displayName',
+      '17': true
+    },
+    {
+      '1': 'rfid_tag',
       '3': 6,
       '4': 1,
       '5': 9,
       '9': 1,
-      '10': 'secondaryAlias',
+      '10': 'rfidTag',
+      '17': true
+    },
+    {
+      '1': 'discord_username',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'discordUsername',
       '17': true
     },
   ],
   '8': [
-    {'1': '_alias'},
-    {'1': '_secondary_alias'},
+    {'1': '_display_name'},
+    {'1': '_rfid_tag'},
+    {'1': '_discord_username'},
   ],
 };
 
@@ -366,9 +403,10 @@ const UpdateTeamMemberRequest$json = {
 final $typed_data.Uint8List updateTeamMemberRequestDescriptor = $convert.base64Decode(
     'ChdVcGRhdGVUZWFtTWVtYmVyUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQSHQoKZmlyc3RfbmFtZR'
     'gCIAEoCVIJZmlyc3ROYW1lEhsKCWxhc3RfbmFtZRgDIAEoCVIIbGFzdE5hbWUSNgoLbWVtYmVy'
-    'X3R5cGUYBCABKA4yFS50ay5kYi5UZWFtTWVtYmVyVHlwZVIKbWVtYmVyVHlwZRIZCgVhbGlhcx'
-    'gFIAEoCUgAUgVhbGlhc4gBARIsCg9zZWNvbmRhcnlfYWxpYXMYBiABKAlIAVIOc2Vjb25kYXJ5'
-    'QWxpYXOIAQFCCAoGX2FsaWFzQhIKEF9zZWNvbmRhcnlfYWxpYXM=');
+    'X3R5cGUYBCABKA4yFS50ay5kYi5UZWFtTWVtYmVyVHlwZVIKbWVtYmVyVHlwZRImCgxkaXNwbG'
+    'F5X25hbWUYBSABKAlIAFILZGlzcGxheU5hbWWIAQESHgoIcmZpZF90YWcYBiABKAlIAVIHcmZp'
+    'ZFRhZ4gBARIuChBkaXNjb3JkX3VzZXJuYW1lGAcgASgJSAJSD2Rpc2NvcmRVc2VybmFtZYgBAU'
+    'IPCg1fZGlzcGxheV9uYW1lQgsKCV9yZmlkX3RhZ0ITChFfZGlzY29yZF91c2VybmFtZQ==');
 
 @$core.Deprecated('Use updateTeamMemberResponseDescriptor instead')
 const UpdateTeamMemberResponse$json = {

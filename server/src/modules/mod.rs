@@ -1,3 +1,4 @@
+pub mod discord;
 pub mod health;
 pub mod location;
 pub mod schedule;
@@ -6,4 +7,5 @@ pub mod session;
 pub mod settings;
 pub mod statistics;
 pub mod team_member;
+pub mod team_member_session;
 pub mod user;

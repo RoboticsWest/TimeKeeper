@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "common/common.proto";
+import "db/db.proto";
+
+message TeamMemberSessionResponse {
+  string id = 1;
+  db.TeamMemberSession team_member_session = 2;
+}
+
+message GetTeamMemberSessionsRequest {}
+message GetTeamMemberSessionsResponse {
+  repeated TeamMemberSessionResponse team_member_sessions = 1;
+}
+
+message StreamTeamMemberSessionsRequest {}
+message StreamTeamMemberSessionsResponse {
+  repeated TeamMemberSessionResponse team_member_sessions = 1;
+  common.SyncType sync_type = 2;
+}
+
+service TeamMemberSessionService {
+  rpc GetTeamMemberSessions(GetTeamMemberSessionsRequest) returns (GetTeamMemberSessionsResponse);
+  rpc StreamTeamMemberSessions(StreamTeamMemberSessionsRequest) returns (stream StreamTeamMemberSessionsResponse);
+}

@@ -84,7 +84,25 @@ class PcscScanner {
             Protocol.any,
           );
 
-          final response = await card.transmit(_getUidCommand);
+          var response = await card.transmit(_getUidCommand);
+
+          // Retry once on bad status — the reader may not be fully
+          // ready on the first scan after launch.
+          if (response.length >= 2) {
+            final sw1 = response[response.length - 2];
+            if (sw1 != 0x90) {
+              _log.w('[PCSC] Bad status on first attempt, retrying...');
+              await card.disconnect(Disposition.resetCard);
+              card = null;
+              await Future<void>.delayed(const Duration(milliseconds: 200));
+              card = await context.connect(
+                readersWithCard.first,
+                ShareMode.shared,
+                Protocol.any,
+              );
+              response = await card.transmit(_getUidCommand);
+            }
+          }
 
           if (response.length >= 2) {
             final sw1 = response[response.length - 2];
@@ -111,6 +129,7 @@ class PcscScanner {
                 '${sw1.toRadixString(16).padLeft(2, '0')} '
                 '${sw2.toRadixString(16).padLeft(2, '0')}',
               );
+              onError?.call('Could not read card. Please try again.');
             }
           }
         } catch (e) {
@@ -137,13 +156,18 @@ class PcscScanner {
   }
 
   void dispose() {
+    _log.i('[PCSC] Scanner disposing');
     _running = false;
-    _pendingWait?.cancel();
+    try {
+      _pendingWait?.cancel();
+    } catch (_) {}
     _pendingWait = null;
     final ctx = _context;
+    _context = null;
     if (ctx != null) {
-      ctx.release().catchError((_) {});
-      _context = null;
+      try {
+        ctx.release().catchError((_) {});
+      } catch (_) {}
     }
   }
 }

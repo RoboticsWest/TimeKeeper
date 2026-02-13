@@ -73,8 +73,10 @@ impl TeamMemberService for TeamMemberApi {
         first_name: member.first_name,
         last_name: member.last_name,
         member_type: TeamMemberType::Student as i32,
-        alias: member.alias,
-        secondary_alias: member.secondary_alias,
+        display_name: member.display_name,
+        rfid_tag: member.rfid_tag,
+        mobile_number: None,
+        discord_username: member.discord_username,
       };
 
       match TeamMember::add(&new_member) {
@@ -119,8 +121,10 @@ impl TeamMemberService for TeamMemberApi {
         first_name: member.first_name,
         last_name: member.last_name,
         member_type: TeamMemberType::Mentor as i32,
-        alias: member.alias,
-        secondary_alias: member.secondary_alias,
+        display_name: member.display_name,
+        rfid_tag: member.rfid_tag,
+        mobile_number: None,
+        discord_username: member.discord_username,
       };
 
       match TeamMember::add(&new_member) {
@@ -325,16 +329,14 @@ impl TeamMemberService for TeamMemberApi {
     require_permission(&request, Role::Admin)?;
     let request = request.into_inner();
 
-    if request.first_name.is_empty() || request.last_name.is_empty() {
-      return Err(Status::invalid_argument("First name and last name are required"));
-    }
-
     let member = TeamMember {
       first_name: request.first_name,
       last_name: request.last_name,
       member_type: request.member_type,
-      alias: request.alias,
-      secondary_alias: request.secondary_alias,
+      display_name: request.display_name,
+      rfid_tag: request.rfid_tag,
+      mobile_number: None,
+      discord_username: request.discord_username,
     };
 
     TeamMember::add(&member).map_err(|e| Status::internal(format!("Failed to create team member: {}", e)))?;
@@ -364,8 +366,10 @@ impl TeamMemberService for TeamMemberApi {
       first_name: request.first_name,
       last_name: request.last_name,
       member_type: request.member_type,
-      alias: request.alias,
-      secondary_alias: request.secondary_alias,
+      display_name: request.display_name,
+      rfid_tag: request.rfid_tag,
+      mobile_number: None,
+      discord_username: request.discord_username,
     };
 
     TeamMember::update(&request.id, &member)

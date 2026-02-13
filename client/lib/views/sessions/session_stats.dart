@@ -6,8 +6,13 @@ import 'package:time_keeper/widgets/stat_card.dart';
 
 class SessionStats extends StatelessWidget {
   final Map<String, Session> sessions;
+  final Map<String, TeamMemberSession> teamMemberSessions;
 
-  const SessionStats({super.key, required this.sessions});
+  const SessionStats({
+    super.key,
+    required this.sessions,
+    required this.teamMemberSessions,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +33,8 @@ class SessionStats extends StatelessWidget {
     }).length;
 
     final uniqueMembers = <String>{};
-    for (final session in sessions.values) {
-      for (final ms in session.memberSessions) {
-        uniqueMembers.add(ms.teamMemberId);
-      }
+    for (final ms in teamMemberSessions.values) {
+      uniqueMembers.add(ms.teamMemberId);
     }
 
     return Row(

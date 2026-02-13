@@ -8,6 +8,7 @@ import public "api/session.proto";
 import public "api/settings.proto";
 import public "api/statistics.proto";
 import public "api/team_member.proto";
+import public "api/team_member_session.proto";
 import public "api/user.proto";
 
 message GetHealthRequest {}

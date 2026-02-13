@@ -16,4 +16,5 @@ export 'session.pbenum.dart';
 export 'settings.pbenum.dart';
 export 'statistics.pbenum.dart';
 export 'team_member.pbenum.dart';
+export 'team_member_session.pbenum.dart';
 export 'user.pbenum.dart';

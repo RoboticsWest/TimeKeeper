@@ -139,8 +139,7 @@ class _LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final member = entry.teamMember;
-    final alias = member.alias.isNotEmpty ? ' (${member.alias})' : '';
-    final name = '${member.firstName}$alias';
+    final name = member.displayName;
     final memberType = member.memberType == TeamMemberType.STUDENT
         ? 'Student'
         : 'Mentor';

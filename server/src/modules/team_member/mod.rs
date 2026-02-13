@@ -12,8 +12,9 @@ use crate::modules::team_member::csv_parser::TeamMemberCsvParser;
 pub struct TeamMemberT {
   pub first_name: String,
   pub last_name: String,
-  pub alias: Option<String>,
-  pub secondary_alias: Option<String>,
+  pub display_name: Option<String>,
+  pub rfid_tag: Option<String>,
+  pub discord_username: Option<String>,
 }
 
 pub struct TeamMemberImportList {

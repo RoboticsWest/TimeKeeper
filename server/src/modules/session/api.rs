@@ -23,12 +23,11 @@ use crate::{
   },
   modules::session::{
     SessionRepository,
-    helpers::{
-      find_check_in_target_index, get_next_session_threshold_secs, get_unfinished_sessions_sorted,
-      is_member_checked_in, now_timestamp,
-    },
+    helpers::{find_session_for_location, get_next_session_threshold_secs, is_member_checked_in, now_timestamp},
   },
 };
+
+use crate::modules::team_member_session::TeamMemberSessionRepository;
 
 pub struct SessionApi;
 
@@ -109,7 +108,6 @@ impl SessionService for SessionApi {
       start_time: request.start_time,
       end_time: request.end_time,
       location_id: request.location_id,
-      member_sessions: vec![],
       finished: false,
     };
 
@@ -131,15 +129,14 @@ impl SessionService for SessionApi {
 
     let existing = Session::get(&request.id).map_err(|e| Status::internal(format!("Failed to get session: {}", e)))?;
 
-    let Some(existing) = existing else {
+    if existing.is_none() {
       return Err(Status::not_found("Session not found"));
-    };
+    }
 
     let session = Session {
       start_time: request.start_time,
       end_time: request.end_time,
       location_id: request.location_id,
-      member_sessions: existing.member_sessions,
       finished: request.finished,
     };
 
@@ -174,37 +171,36 @@ impl SessionService for SessionApi {
 
   async fn check_in_out(&self, request: Request<CheckInOutRequest>) -> Result<Response<CheckInOutResponse>, Status> {
     require_permission(&request, Role::Kiosk)?;
-    let team_member_id = request.into_inner().team_member_id;
+    let req = request.into_inner();
+    let team_member_id = req.team_member_id;
+    let location_id = req.location_id;
     let now = now_timestamp();
 
-    let mut unfinished =
-      get_unfinished_sessions_sorted().map_err(|e| Status::internal(format!("Failed to get sessions: {}", e)))?;
-
     // Check if the member is already checked in to any session — if so, check them out
-    for (id, session) in &mut unfinished {
-      for ms in &mut session.member_sessions {
-        if ms.team_member_id == team_member_id && is_member_checked_in(ms) {
-          ms.check_out_time = Some(now);
-          Session::update(id, session).map_err(|e| Status::internal(format!("Failed to update session: {}", e)))?;
-          return Ok(Response::new(CheckInOutResponse { checked_in: false }));
-        }
+    let member_sessions = TeamMemberSession::get_by_member_id(&team_member_id)
+      .map_err(|e| Status::internal(format!("Failed to get member sessions: {}", e)))?;
+
+    for (id, mut ms) in member_sessions {
+      if is_member_checked_in(&ms) {
+        ms.check_out_time = Some(now);
+        TeamMemberSession::update(&id, &ms)
+          .map_err(|e| Status::internal(format!("Failed to update member session: {}", e)))?;
+        return Ok(Response::new(CheckInOutResponse { checked_in: false }));
       }
     }
 
-    // Not checked in — find the right session to check into
-    if unfinished.is_empty() {
-      return Err(Status::not_found("No active sessions available"));
-    }
-
+    // Not checked in — find the right session at this location
     let threshold = get_next_session_threshold_secs();
-    let target_index = find_check_in_target_index(&unfinished, &now, threshold);
+    let target = find_session_for_location(&location_id, &now, threshold)
+      .map_err(|e| Status::internal(format!("Failed to find session: {}", e)))?;
 
-    let (id, session) =
-      unfinished.get_mut(target_index).ok_or_else(|| Status::internal("Failed to resolve target session"))?;
+    let Some((session_id, _)) = target else {
+      return Err(Status::not_found("No active session at this location"));
+    };
 
-    session.member_sessions.push(TeamMemberSession { team_member_id, check_in_time: Some(now), check_out_time: None });
+    let new_ms = TeamMemberSession { team_member_id, session_id, check_in_time: Some(now), check_out_time: None };
 
-    Session::update(id, session).map_err(|e| Status::internal(format!("Failed to update session: {}", e)))?;
+    TeamMemberSession::add(&new_ms).map_err(|e| Status::internal(format!("Failed to create member session: {}", e)))?;
 
     Ok(Response::new(CheckInOutResponse { checked_in: true }))
   }

@@ -5,19 +5,19 @@ import 'package:time_keeper/models/session_status.dart';
 class MemberCount extends StatelessWidget {
   final int total;
   final SessionStatus status;
-  final Session session;
+  final List<TeamMemberSession> sessionMemberSessions;
 
   const MemberCount({
     super.key,
     required this.total,
     required this.status,
-    required this.session,
+    required this.sessionMemberSessions,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final activeCount = session.memberSessions
+    final activeCount = sessionMemberSessions
         .where((ms) => ms.hasCheckInTime() && !ms.hasCheckOutTime())
         .length;
     final text =
