@@ -36,13 +36,3 @@ repos:
       # Git
       - id: check-symlinks
       - id: destroyed-symlinks
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.40.0
-    hooks:
-      - id: typos
-        args: []
-        stages: [pre-commit]
-        exclude: ^client/(ios|macos|android|windows|linux)/|client/lib/generated/.*\.(pb|pbjson)\.dart$
-      - id: typos
-        name: commit-msg-typos
-        stages: [commit-msg]

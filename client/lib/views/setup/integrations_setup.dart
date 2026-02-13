@@ -22,7 +22,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     final botTokenController = useTextEditingController();
     final guildIdController = useTextEditingController();
     final channelIdController = useTextEditingController();
-    final reminderMinsController = useTextEditingController();
+    final startReminderMinsController = useTextEditingController();
+    final endReminderMinsController = useTextEditingController();
+    final startReminderMessageController = useTextEditingController();
+    final endReminderMessageController = useTextEditingController();
     final selfLinkEnabled = useState(false);
     final nameSyncEnabled = useState(true);
     final discordRoles = useState<List<DiscordRole>>([]);
@@ -39,13 +42,22 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               .getSettings(GetSettingsRequest()),
         );
         if (result is GrpcSuccess<GetSettingsResponse>) {
-          botTokenController.text = result.data.settings.discordBotToken;
-          guildIdController.text = result.data.settings.discordGuildId;
-          channelIdController.text = result.data.settings.discordChannelId;
-          final mins = result.data.settings.discordReminderMins;
-          reminderMinsController.text = mins > 0 ? mins.toString() : '10';
-          selfLinkEnabled.value = result.data.settings.discordSelfLinkEnabled;
-          nameSyncEnabled.value = result.data.settings.discordNameSyncEnabled;
+          final s = result.data.settings;
+          botTokenController.text = s.discordBotToken;
+          guildIdController.text = s.discordGuildId;
+          channelIdController.text = s.discordChannelId;
+          final startMins = s.discordStartReminderMins;
+          startReminderMinsController.text = startMins > 0
+              ? startMins.toString()
+              : '1440';
+          final endMins = s.discordEndReminderMins;
+          endReminderMinsController.text = endMins > 0
+              ? endMins.toString()
+              : '15';
+          startReminderMessageController.text = s.discordStartReminderMessage;
+          endReminderMessageController.text = s.discordEndReminderMessage;
+          selfLinkEnabled.value = s.discordSelfLinkEnabled;
+          nameSyncEnabled.value = s.discordNameSyncEnabled;
         }
       }
 
@@ -77,9 +89,15 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 discordBotToken: botTokenController.text,
                 discordGuildId: guildIdController.text,
                 discordChannelId: channelIdController.text,
-                discordReminderMins: Int64(
-                  int.tryParse(reminderMinsController.text) ?? 10,
+                discordStartReminderMins: Int64(
+                  int.tryParse(startReminderMinsController.text) ?? 1440,
                 ),
+                discordEndReminderMins: Int64(
+                  int.tryParse(endReminderMinsController.text) ?? 15,
+                ),
+                discordStartReminderMessage:
+                    startReminderMessageController.text,
+                discordEndReminderMessage: endReminderMessageController.text,
                 discordSelfLinkEnabled: selfLinkEnabled.value,
                 discordNameSyncEnabled: nameSyncEnabled.value,
               ),
@@ -177,15 +195,57 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText: 'Enter channel ID',
           onUpdate: updateDiscordSettings,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
+        const Divider(),
+        const SizedBox(height: 16),
+        Text('Reminders', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          'Configure when and what the bot posts before sessions start and end. '
+          'Use {mins} and {location} as placeholders in custom messages. Set minutes to 0 to disable.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
         TextFieldSetting(
-          label: 'Reminder Minutes',
+          label: 'Start Reminder (minutes before)',
           description:
-              'How many minutes before a session starts to send a reminder notification',
-          controller: reminderMinsController,
-          hintText: '10',
+              'How many minutes before a session starts to send a reminder (default: 1440 = 24 hours)',
+          controller: startReminderMinsController,
+          hintText: '1440',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Start Reminder Message',
+          description:
+              'Custom message for the start reminder. Supports {mins} and {location} placeholders',
+          controller: startReminderMessageController,
+          hintText: '@here Session starting in ~{mins} minutes @ {location}!',
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'End Reminder (minutes before)',
+          description:
+              'How many minutes before a session ends to send a reminder (default: 15)',
+          controller: endReminderMinsController,
+          hintText: '15',
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'End Reminder Message',
+          description:
+              'Custom message for the end reminder. Supports {mins} and {location} placeholders',
+          controller: endReminderMessageController,
+          hintText:
+              '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 24),

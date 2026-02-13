@@ -119,8 +119,8 @@ jobs:
         if: matrix.archive == 'tar.gz'
         run: |
           mkdir -p staging
-          cp target/${{ matrix.target }}/release/main staging/timekeeper-server
-          chmod +x staging/timekeeper-server
+          cp target/${{ matrix.target }}/release/main staging/server
+          chmod +x staging/server
           cd staging
           tar -czf ../${{ matrix.artifact }}.tar.gz .
 
@@ -128,7 +128,7 @@ jobs:
         if: matrix.archive == 'zip'
         run: |
           mkdir -p staging
-          cp target/${{ matrix.target }}/release/main.exe staging/timekeeper-server.exe
+          cp target/${{ matrix.target }}/release/main.exe staging/server.exe
           cd staging
           zip -r ../${{ matrix.artifact }}.zip .
 
@@ -244,6 +244,94 @@ jobs:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact-path }}
           retention-days: 5
+
+  # ── Deploy to production server ──────────────────────────────────────
+  deploy:
+    name: Deploy
+    needs: [build-server, build-web-client]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/ci-cd')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Download server artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: timekeeper-server-linux-x86_64
+
+      - name: Extract server binary
+        run: |
+          tar -xzf timekeeper-server-linux-x86_64.tar.gz
+          ls -la
+
+      - name: Download web client
+        uses: actions/download-artifact@v4
+        with:
+          name: web-client
+          path: client/build/web
+
+      - name: Display downloaded files
+        run: |
+          ls -la
+          ls -la client/build/web
+
+      # Join Tailscale network
+      - name: Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.GRIM_TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.GRIM_TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Stop server service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            systemctl stop server
+
+      - name: Deploy to server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "server,client"
+          target: "/root/"
+          overwrite: true
+
+      - name: Configure and restart server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            chmod +x /root/server
+            cat > /etc/systemd/system/server.service << 'SVCEOF'
+            [Unit]
+            Description=TimeKeeper Server
+            After=network.target
+
+            [Service]
+            Type=simple
+            WorkingDirectory=/root
+            ExecStart=/root/server
+            Restart=always
+            RestartSec=10
+
+            Environment="RUST_LOG=info"
+
+            [Install]
+            WantedBy=default.target
+            SVCEOF
+            systemctl daemon-reload
+            systemctl restart server
+            systemctl status server
 
   # ── Create GitHub Release ───────────────────────────────────────────
   release:

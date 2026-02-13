@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# =============================================================================
+# ACR122U RFID Reader Bootstrap Script
+# Supports: Fedora, Ubuntu/Debian, Arch Linux
+# =============================================================================
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log()    { echo -e "${GREEN}[INFO]${NC}  $*"; }
+warn()   { echo -e "${YELLOW}[WARN]${NC}  $*"; }
+error()  { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
+
+# =============================================================================
+# Root check
+# =============================================================================
+if [[ $EUID -ne 0 ]]; then
+  error "Please run as root: sudo bash setup-rfid.sh"
+fi
+
+REAL_USER="${SUDO_USER:-$USER}"
+
+# =============================================================================
+# Detect distro
+# =============================================================================
+detect_distro() {
+  if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    echo "${ID}"
+  else
+    error "Cannot detect Linux distribution (no /etc/os-release)"
+  fi
+}
+
+DISTRO=$(detect_distro)
+log "Detected distro: ${DISTRO}"
+
+# =============================================================================
+# Install packages
+# =============================================================================
+install_packages() {
+  case "${DISTRO}" in
+    fedora|rhel|centos)
+      log "Installing packages via dnf..."
+      dnf install -y pcsc-lite pcsc-lite-devel pcsc-lite-ccid pcsc-tools
+      ;;
+    ubuntu|debian|linuxmint|pop)
+      log "Installing packages via apt..."
+      apt-get update -y
+      apt-get install -y pcscd pcsc-tools libpcsclite-dev libccid
+      ;;
+    arch|manjaro|endeavouros)
+      log "Installing packages via pacman..."
+      pacman -Sy --noconfirm pcsclite ccid pcsc-tools
+      ;;
+    *)
+      warn "Unrecognised distro '${DISTRO}'. Skipping package install."
+      warn "Please manually install: pcscd, ccid, pcsc-tools, libpcsclite-dev"
+      ;;
+  esac
+}
+
+install_packages
+
+# =============================================================================
+# Blacklist conflicting kernel modules (pn533 / nfc grab device before pcscd)
+# =============================================================================
+BLACKLIST_FILE="/etc/modprobe.d/blacklist-pn533.conf"
+
+log "Writing kernel module blacklist to ${BLACKLIST_FILE}..."
+cat > "${BLACKLIST_FILE}" <<'EOF'
+# ACR122U fix: prevent kernel nfc/pn533 modules from claiming the device
+# before pcscd (PC/SC daemon) can use it.
+blacklist pn533
+blacklist pn533_usb
+blacklist nfc
+EOF
+
+log "Unloading conflicting modules (if loaded)..."
+for mod in pn533_usb pn533 nfc; do
+  if lsmod | grep -q "^${mod}"; then
+    modprobe -r "${mod}" && log "  Unloaded: ${mod}" || warn "  Could not unload: ${mod} (may need reboot)"
+  else
+    log "  Not loaded: ${mod} (nothing to do)"
+  fi
+done
+
+# =============================================================================
+# udev rule for ACR122U (idVendor=072f, idProduct=2200)
+# =============================================================================
+UDEV_FILE="/etc/udev/rules.d/99-acr122u.rules"
+
+log "Writing udev rule to ${UDEV_FILE}..."
+cat > "${UDEV_FILE}" <<'EOF'
+# ACR122U USB NFC Reader
+SUBSYSTEM=="usb", ATTRS{idVendor}=="072f", ATTRS{idProduct}=="2200", MODE="0666", GROUP="plugdev"
+EOF
+
+log "Reloading udev rules..."
+udevadm control --reload-rules
+udevadm trigger
+
+# =============================================================================
+# Ensure the real user is in the plugdev group
+# =============================================================================
+if ! getent group plugdev > /dev/null 2>&1; then
+  log "Creating plugdev group..."
+  groupadd plugdev
+fi
+
+if id -nG "${REAL_USER}" | grep -qw plugdev; then
+  log "User '${REAL_USER}' is already in plugdev."
+else
+  log "Adding '${REAL_USER}' to plugdev group..."
+  usermod -aG plugdev "${REAL_USER}"
+  warn "Group change requires logout/login to take effect for '${REAL_USER}'."
+fi
+
+# =============================================================================
+# Enable and restart pcscd
+# =============================================================================
+log "Enabling and restarting pcscd..."
+systemctl enable pcscd
+systemctl restart pcscd
+
+# =============================================================================
+# Verify
+# =============================================================================
+echo ""
+log "==============================="
+log "Setup complete. Verification:"
+log "==============================="
+
+if systemctl is-active --quiet pcscd; then
+  log "pcscd is running."
+else
+  warn "pcscd does not appear to be running. Check: sudo systemctl status pcscd"
+fi
+
+if lsmod | grep -q pn533; then
+  warn "pn533 module is still loaded. A reboot may be required to fully apply the blacklist."
+else
+  log "pn533/nfc modules are not loaded."
+fi
+
+echo ""
+log "Plug in your ACR122U and run:  pcsc_scan"
+log "You should see the reader listed and ATR data when a card is tapped."
+echo ""
+warn "If you were just added to 'plugdev', please log out and back in."

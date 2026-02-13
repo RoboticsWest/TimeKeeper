@@ -72,6 +72,8 @@ impl ScheduleService for ScheduleApi {
         end_time: Some(session.end_time),
         location_id,
         finished: false,
+        start_reminder_sent: false,
+        end_reminder_sent: false,
       };
 
       match Session::add(&new_session) {
@@ -137,6 +139,8 @@ impl ScheduleService for ScheduleApi {
         end_time: Some(session.end_time),
         location_id,
         finished: false,
+        start_reminder_sent: false,
+        end_reminder_sent: false,
       };
 
       match Session::add(&new_session) {

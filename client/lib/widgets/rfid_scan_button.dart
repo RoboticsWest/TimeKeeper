@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:time_keeper/hooks/use_pcsc_scanner.dart';
+import 'package:time_keeper/hooks/use_rfid_scanner.dart';
 
 /// A button that listens for an RFID card scan and writes the UID
 /// into the provided [controller].
@@ -16,14 +16,27 @@ class RfidScanButton extends HookWidget {
   Widget build(BuildContext context) {
     final listening = useState(false);
     final timerRef = useRef<Timer?>(null);
+    final mounted = useRef(true);
+
+    // Cancel the timer on dispose to prevent writing to a disposed notifier
+    useEffect(() {
+      mounted.value = true;
+      return () {
+        mounted.value = false;
+        timerRef.value?.cancel();
+        timerRef.value = null;
+      };
+    }, const []);
 
     void stopListening() {
       timerRef.value?.cancel();
       timerRef.value = null;
-      listening.value = false;
+      if (mounted.value) {
+        listening.value = false;
+      }
     }
 
-    usePcscScanner(
+    useRfidScanner(
       enabled: listening.value,
       onScan: (uid) {
         controller.text = uid;
@@ -47,10 +60,7 @@ class RfidScanButton extends HookWidget {
     return OutlinedButton.icon(
       onPressed: () {
         listening.value = true;
-        timerRef.value = Timer(_timeoutDuration, () {
-          listening.value = false;
-          timerRef.value = null;
-        });
+        timerRef.value = Timer(_timeoutDuration, stopListening);
       },
       icon: const Icon(Icons.contactless),
       label: const Text('Scan RFID Card'),

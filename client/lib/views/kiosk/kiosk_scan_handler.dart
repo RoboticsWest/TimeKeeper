@@ -113,11 +113,13 @@ Future<void> handleKioskScan({
 ///   - 89:02:9e:40        (colon-separated, lowercase)
 ///   - 89 02 9e 40        (space-separated)
 ///   - 89029e40           (no separator)
-///   - decimal BE string  (e.g. "2299477568")
-///   - decimal LE string  (e.g. "1075381897")
+///   - decimal BE string  (e.g. "2298650176")
+///   - decimal LE string  (e.g. "1084097161")
 ///
-/// If a user stored a decimal value in their alias, we also parse it
-/// to hex and generate the hex variants from that.
+/// From a decimal input like "1084097161" (keyboard RFID reader) we produce:
+///   - BE hex: 40:9e:02:89  (direct byte conversion)
+///   - LE hex: 89:02:9e:40  (reversed — matches PCSC format)
+///   - plus space-separated and no-separator variants of both
 Set<String> _buildUidVariants(String input) {
   final variants = <String>{};
   final normalized = input.trim().toLowerCase();
@@ -150,17 +152,28 @@ Set<String> _buildUidVariants(String input) {
   }
 
   // If input looks like a plain decimal number, parse it to hex bytes
-  // and add those variants too (in case user stored hex but card gave decimal)
+  // and add those variants too (in case user stored hex but card gave decimal).
+  // We generate both BE and LE byte orders because keyboard RFID readers
+  // typically output the LE decimal of the UID bytes.
   final asInt = BigInt.tryParse(normalized);
   if (asInt != null && asInt > BigInt.zero) {
     final bytes = _bigIntToBytes(asInt);
     if (bytes.isNotEmpty) {
-      final hexParts = bytes
+      // Big-endian interpretation
+      final hexBe = bytes
           .map((b) => b.toRadixString(16).padLeft(2, '0'))
           .toList();
-      variants.add(hexParts.join(':'));
-      variants.add(hexParts.join(' '));
-      variants.add(hexParts.join());
+      variants.add(hexBe.join(':'));
+      variants.add(hexBe.join(' '));
+      variants.add(hexBe.join());
+
+      // Little-endian (reversed) interpretation
+      final hexLe = bytes.reversed
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .toList();
+      variants.add(hexLe.join(':'));
+      variants.add(hexLe.join(' '));
+      variants.add(hexLe.join());
     }
   }
 

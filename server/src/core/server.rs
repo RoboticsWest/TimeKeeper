@@ -9,7 +9,7 @@ use crate::{
     api::Api, db::init_db, events::init_event_bus, scheduler::SchedulerPool, shutdown::ShutdownNotifier, web::Web,
   },
   modules::{
-    discord::{DiscordNotificationService, start_discord_bot},
+    discord::{DiscordNotificationService, discord_bot_service},
     session::SessionService,
   },
 };
@@ -65,9 +65,9 @@ impl Server {
       }
     });
 
-    // Start Discord bot (if configured)
+    // Start Discord bot service (reacts to settings changes)
     let mut discord_handle = tokio::spawn(async move {
-      start_discord_bot().await;
+      discord_bot_service(shutdown_notifier).await;
     });
 
     // Wait for shutdown signal
