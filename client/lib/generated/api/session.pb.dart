@@ -643,11 +643,11 @@ class DeleteSessionResponse extends $pb.GeneratedMessage {
 class CheckInOutRequest extends $pb.GeneratedMessage {
   factory CheckInOutRequest({
     $core.String? teamMemberId,
-    $1.Location? location,
+    $core.String? locationId,
   }) {
     final result = create();
     if (teamMemberId != null) result.teamMemberId = teamMemberId;
-    if (location != null) result.location = location;
+    if (locationId != null) result.locationId = locationId;
     return result;
   }
 
@@ -665,8 +665,7 @@ class CheckInOutRequest extends $pb.GeneratedMessage {
       package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
       createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'teamMemberId')
-    ..aOM<$1.Location>(2, _omitFieldNames ? '' : 'location',
-        subBuilder: $1.Location.create)
+    ..aOS(2, _omitFieldNames ? '' : 'locationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -698,15 +697,13 @@ class CheckInOutRequest extends $pb.GeneratedMessage {
   void clearTeamMemberId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.Location get location => $_getN(1);
+  $core.String get locationId => $_getSZ(1);
   @$pb.TagNumber(2)
-  set location($1.Location value) => $_setField(2, value);
+  set locationId($core.String value) => $_setString(1, value);
   @$pb.TagNumber(2)
-  $core.bool hasLocation() => $_has(1);
+  $core.bool hasLocationId() => $_has(1);
   @$pb.TagNumber(2)
-  void clearLocation() => $_clearField(2);
-  @$pb.TagNumber(2)
-  $1.Location ensureLocation() => $_ensure(1);
+  void clearLocationId() => $_clearField(2);
 }
 
 class CheckInOutResponse extends $pb.GeneratedMessage {

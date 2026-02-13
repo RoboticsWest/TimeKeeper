@@ -12,11 +12,12 @@ use crate::{
     health_service_server::HealthServiceServer, location_service_server::LocationServiceServer,
     schedule_service_server::ScheduleServiceServer, session_service_server::SessionServiceServer,
     settings_service_server::SettingsServiceServer, statistics_service_server::StatisticsServiceServer,
-    team_member_service_server::TeamMemberServiceServer, user_service_server::UserServiceServer,
+    team_member_service_server::TeamMemberServiceServer,
+    team_member_session_service_server::TeamMemberSessionServiceServer, user_service_server::UserServiceServer,
   },
   modules::{
     health::HealthApi, location::LocationApi, schedule::ScheduleApi, session::SessionApi, settings::SettingsApi,
-    statistics::StatisticsApi, team_member::TeamMemberApi, user::UserApi,
+    statistics::StatisticsApi, team_member::TeamMemberApi, team_member_session::TeamMemberSessionApi, user::UserApi,
   },
 };
 
@@ -57,7 +58,8 @@ impl Api {
       .add_service(SessionServiceServer::with_interceptor(SessionApi {}, auth_interceptor))
       .add_service(SettingsServiceServer::with_interceptor(SettingsApi {}, auth_interceptor))
       .add_service(LocationServiceServer::with_interceptor(LocationApi {}, auth_interceptor))
-      .add_service(StatisticsServiceServer::with_interceptor(StatisticsApi {}, auth_interceptor));
+      .add_service(StatisticsServiceServer::with_interceptor(StatisticsApi {}, auth_interceptor))
+      .add_service(TeamMemberSessionServiceServer::with_interceptor(TeamMemberSessionApi {}, auth_interceptor));
 
     match router
       .serve_with_shutdown(self.addr, async move {

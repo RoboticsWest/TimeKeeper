@@ -11,7 +11,9 @@ use crate::{
     },
     db::{Session, TeamMember, TeamMemberSession},
   },
-  modules::{session::SessionRepository, team_member::TeamMemberRepository},
+  modules::{
+    session::SessionRepository, team_member::TeamMemberRepository, team_member_session::TeamMemberSessionRepository,
+  },
 };
 
 pub struct StatisticsApi;
@@ -100,6 +102,8 @@ impl StatisticsService for StatisticsApi {
     let sessions = Session::get_all().map_err(|e| Status::internal(format!("Failed to get sessions: {}", e)))?;
     let team_members =
       TeamMember::get_all().map_err(|e| Status::internal(format!("Failed to get team members: {}", e)))?;
+    let member_sessions = TeamMemberSession::get_all()
+      .map_err(|e| Status::internal(format!("Failed to get team member sessions: {}", e)))?;
 
     let now_secs = Utc::now().timestamp();
     let week_start = week_start_secs();
@@ -107,7 +111,15 @@ impl StatisticsService for StatisticsApi {
 
     let mut accumulators: HashMap<String, MemberAccumulator> = HashMap::new();
 
-    for session in sessions.values() {
+    for ms in member_sessions.values() {
+      if ms.check_in_time.is_none() {
+        continue;
+      }
+
+      let Some(session) = sessions.get(&ms.session_id) else {
+        continue;
+      };
+
       if session.start_time.is_none() || session.end_time.is_none() {
         continue;
       }
@@ -116,20 +128,14 @@ impl StatisticsService for StatisticsApi {
       let is_active = !session.finished;
       let is_this_week = session_start_secs >= week_start && session_start_secs < week_end;
 
-      for ms in &session.member_sessions {
-        if ms.check_in_time.is_none() {
-          continue;
-        }
+      let (regular, overtime) = compute_hours(ms, session, now_secs);
 
-        let (regular, overtime) = compute_hours(ms, session, now_secs);
-
-        accumulators.entry(ms.team_member_id.clone()).or_insert_with(MemberAccumulator::new).add(
-          regular,
-          overtime,
-          is_active,
-          is_this_week,
-        );
-      }
+      accumulators.entry(ms.team_member_id.clone()).or_insert_with(MemberAccumulator::new).add(
+        regular,
+        overtime,
+        is_active,
+        is_this_week,
+      );
     }
 
     let mut entries: Vec<LeaderboardEntry> = accumulators

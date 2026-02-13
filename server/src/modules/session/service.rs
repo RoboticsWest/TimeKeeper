@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::{
   core::scheduler::ScheduledService,
-  generated::db::Session,
+  generated::{common::Timestamp, db::Session},
   modules::session::{
     SessionRepository,
     helpers::{
@@ -45,7 +45,10 @@ impl ScheduledService for SessionService {
         continue;
       }
 
-      if has_checked_in_members(&unfinished[i].1) {
+      let session_id = &unfinished[i].0;
+      let has_members = has_checked_in_members(session_id)?;
+
+      if has_members {
         // Has lingering members — check if next session is within threshold
         let next_start_secs = unfinished.get(i + 1).and_then(|(_, next)| next.start_time.as_ref().map(|t| t.seconds));
 
@@ -58,8 +61,11 @@ impl ScheduledService for SessionService {
         };
 
         if should_force_finish {
+          // Check out all members with the session's end time, not now
+          let end_time = Timestamp { seconds: end_secs, nanos: 0 };
+          check_out_all_members(session_id, &end_time)?;
+
           let (id, session) = &mut unfinished[i];
-          check_out_all_members(session, &now);
           session.finished = true;
           Session::update(id, session)?;
           log::info!(

@@ -4,6 +4,7 @@ import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/sessions/session_detail_dialog.dart';
@@ -22,6 +23,7 @@ class SessionTable extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locations = ref.watch(locationsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
+    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final theme = Theme.of(context);
 
     return EditTable(
@@ -63,7 +65,10 @@ class SessionTable extends ConsumerWidget {
         final duration = end.difference(start);
         final locationName =
             locations[session.locationId]?.location ?? session.locationId;
-        final memberCount = session.memberSessions.length;
+        final sessionMemberSessions = teamMemberSessions.values
+            .where((ms) => ms.sessionId == id)
+            .toList();
+        final memberCount = sessionMemberSessions.length;
         final status = getSessionStatus(session);
 
         return EditTableRow(
@@ -84,7 +89,7 @@ class SessionTable extends ConsumerWidget {
               child: MemberCount(
                 total: memberCount,
                 status: status,
-                session: session,
+                sessionMemberSessions: sessionMemberSessions,
               ),
             ),
             BaseTableCell(child: SessionStatusChip(status: status)),
@@ -103,6 +108,7 @@ class SessionTable extends ConsumerWidget {
                   session: session,
                   locations: locations,
                   teamMembers: teamMembers,
+                  teamMemberSessions: teamMemberSessions,
                 ),
               ),
             ),

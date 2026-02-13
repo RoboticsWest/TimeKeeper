@@ -22,9 +22,13 @@ pub struct TeamMember {
     #[prost(enumeration = "TeamMemberType", tag = "3")]
     pub member_type: i32,
     #[prost(string, optional, tag = "4")]
-    pub alias: ::core::option::Option<::prost::alloc::string::String>,
+    pub display_name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "5")]
-    pub secondary_alias: ::core::option::Option<::prost::alloc::string::String>,
+    pub rfid_tag: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "6")]
+    pub mobile_number: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "7")]
+    pub discord_username: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Location {
@@ -35,12 +39,14 @@ pub struct Location {
 pub struct TeamMemberSession {
     #[prost(string, tag = "1")]
     pub team_member_id: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "2")]
-    pub check_in_time: ::core::option::Option<super::common::Timestamp>,
+    #[prost(string, tag = "2")]
+    pub session_id: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "3")]
+    pub check_in_time: ::core::option::Option<super::common::Timestamp>,
+    #[prost(message, optional, tag = "4")]
     pub check_out_time: ::core::option::Option<super::common::Timestamp>,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Session {
     #[prost(message, optional, tag = "1")]
     pub start_time: ::core::option::Option<super::common::Timestamp>,
@@ -48,15 +54,25 @@ pub struct Session {
     pub end_time: ::core::option::Option<super::common::Timestamp>,
     #[prost(string, tag = "3")]
     pub location_id: ::prost::alloc::string::String,
-    #[prost(message, repeated, tag = "4")]
-    pub member_sessions: ::prost::alloc::vec::Vec<TeamMemberSession>,
-    #[prost(bool, tag = "5")]
+    #[prost(bool, tag = "4")]
     pub finished: bool,
 }
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Settings {
     #[prost(int64, tag = "1")]
     pub next_session_threshold_secs: i64,
+    #[prost(string, tag = "2")]
+    pub discord_bot_token: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub discord_guild_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub discord_channel_id: ::prost::alloc::string::String,
+    #[prost(int64, tag = "5")]
+    pub discord_reminder_mins: i64,
+    #[prost(bool, tag = "6")]
+    pub discord_self_link_enabled: bool,
+    #[prost(bool, tag = "7")]
+    pub discord_name_sync_enabled: bool,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

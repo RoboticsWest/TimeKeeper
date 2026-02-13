@@ -44,7 +44,7 @@ message DeleteSessionResponse {}
 
 message CheckInOutRequest {
   string team_member_id = 1;
-  db.Location location = 2;
+  string location_id = 2;
 }
 
 message CheckInOutResponse {

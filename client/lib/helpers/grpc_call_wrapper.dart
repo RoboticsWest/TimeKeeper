@@ -10,7 +10,7 @@ Future<GrpcResult<T>> callGrpcEndpoint<T>(Future<T> Function() fn) async {
   } on GrpcError catch (e) {
     logger.e('gRPC Error: [${e.code}:${e.codeName}] ${e.message}');
 
-    final userMessage = StatusCode.name(e.code) ?? 'An error occurred';
+    final userMessage = e.message ?? StatusCode.name(e.code) ?? 'An error occurred';
 
     return GrpcFailure(
       userMessage: userMessage,

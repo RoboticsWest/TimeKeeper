@@ -210,21 +210,14 @@ const CheckInOutRequest$json = {
   '1': 'CheckInOutRequest',
   '2': [
     {'1': 'team_member_id', '3': 1, '4': 1, '5': 9, '10': 'teamMemberId'},
-    {
-      '1': 'location',
-      '3': 2,
-      '4': 1,
-      '5': 11,
-      '6': '.tk.db.Location',
-      '10': 'location'
-    },
+    {'1': 'location_id', '3': 2, '4': 1, '5': 9, '10': 'locationId'},
   ],
 };
 
 /// Descriptor for `CheckInOutRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List checkInOutRequestDescriptor = $convert.base64Decode(
     'ChFDaGVja0luT3V0UmVxdWVzdBIkCg50ZWFtX21lbWJlcl9pZBgBIAEoCVIMdGVhbU1lbWJlck'
-    'lkEisKCGxvY2F0aW9uGAIgASgLMg8udGsuZGIuTG9jYXRpb25SCGxvY2F0aW9u');
+    'lkEh8KC2xvY2F0aW9uX2lkGAIgASgJUgpsb2NhdGlvbklk');
 
 @$core.Deprecated('Use checkInOutResponseDescriptor instead')
 const CheckInOutResponse$json = {

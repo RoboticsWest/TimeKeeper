@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/session.pbgrpc.dart';
 import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/providers/session_provider.dart';
+import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/sessions/session_calendar.dart';
@@ -47,6 +48,7 @@ class SessionView extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(sessionsProvider);
+    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final theme = Theme.of(context);
 
     final showCalendar = useState(true);
@@ -143,7 +145,10 @@ class SessionView extends HookConsumerWidget {
           ],
 
           // Stats
-          SessionStats(sessions: sessions),
+          SessionStats(
+            sessions: sessions,
+            teamMemberSessions: teamMemberSessions,
+          ),
           const SizedBox(height: 16),
 
           // Table

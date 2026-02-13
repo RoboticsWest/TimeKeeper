@@ -34,81 +34,87 @@ export 'package:time_keeper/utils/formatting.dart'
 Map<String, MemberHoursData> computeMemberHours(
   Map<String, Session> sessions,
   Map<String, TeamMember> teamMembers,
+  Map<String, TeamMemberSession> teamMemberSessions,
 ) {
   final result = <String, MemberHoursData>{};
 
-  for (final session in sessions.values) {
-    if (!session.hasStartTime() || !session.hasEndTime()) continue;
-    for (final ms in session.memberSessions) {
-      if (!ms.hasCheckInTime()) continue;
-      final member = teamMembers[ms.teamMemberId];
-      final name = member != null
-          ? '${member.firstName} ${member.lastName}'
-          : ms.teamMemberId;
-      final memberType = member?.memberType ?? TeamMemberType.STUDENT;
-
-      final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
-        ms,
-        session,
-      );
-
-      final entry = result.putIfAbsent(
-        ms.teamMemberId,
-        () => MemberHoursData(
-          memberId: ms.teamMemberId,
-          name: name,
-          memberType: memberType,
-        ),
-      );
-      entry.regularSecs += regularSecs;
-      entry.overtimeSecs += overtimeSecs;
+  for (final ms in teamMemberSessions.values) {
+    if (!ms.hasCheckInTime()) continue;
+    final session = sessions[ms.sessionId];
+    if (session == null || !session.hasStartTime() || !session.hasEndTime()) {
+      continue;
     }
+
+    final member = teamMembers[ms.teamMemberId];
+    final name = member?.displayName ?? ms.teamMemberId;
+    final memberType = member?.memberType ?? TeamMemberType.STUDENT;
+
+    final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
+      ms,
+      session,
+    );
+
+    final entry = result.putIfAbsent(
+      ms.teamMemberId,
+      () => MemberHoursData(
+        memberId: ms.teamMemberId,
+        name: name,
+        memberType: memberType,
+      ),
+    );
+    entry.regularSecs += regularSecs;
+    entry.overtimeSecs += overtimeSecs;
   }
 
   return result;
 }
 
-List<DayHoursData> computeDailyHours(Map<String, Session> sessions) {
+List<DayHoursData> computeDailyHours(
+  Map<String, Session> sessions,
+  Map<String, TeamMemberSession> teamMemberSessions,
+) {
   final byDay = <String, DayHoursData>{};
 
-  for (final session in sessions.values) {
-    if (!session.hasStartTime() || !session.hasEndTime()) continue;
-    for (final ms in session.memberSessions) {
-      if (!ms.hasCheckInTime()) continue;
-      final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
-        ms,
-        session,
-      );
-      final date = ms.checkInTime.toDateTime();
-      final key =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-
-      byDay.putIfAbsent(
-        key,
-        () => DayHoursData(date: DateTime(date.year, date.month, date.day)),
-      );
-      byDay[key]!.regularSecs += regularSecs;
-      byDay[key]!.overtimeSecs += overtimeSecs;
+  for (final ms in teamMemberSessions.values) {
+    if (!ms.hasCheckInTime()) continue;
+    final session = sessions[ms.sessionId];
+    if (session == null || !session.hasStartTime() || !session.hasEndTime()) {
+      continue;
     }
+
+    final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
+      ms,
+      session,
+    );
+    final date = ms.checkInTime.toDateTime();
+    final key =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+    byDay.putIfAbsent(
+      key,
+      () => DayHoursData(date: DateTime(date.year, date.month, date.day)),
+    );
+    byDay[key]!.regularSecs += regularSecs;
+    byDay[key]!.overtimeSecs += overtimeSecs;
   }
 
   return byDay.values.toList()..sort((a, b) => a.date.compareTo(b.date));
 }
 
-List<DayAttendanceData> computeDailyAttendance(Map<String, Session> sessions) {
+List<DayAttendanceData> computeDailyAttendance(
+  Map<String, TeamMemberSession> teamMemberSessions,
+) {
   final byDay = <String, Set<String>>{};
   final dates = <String, DateTime>{};
 
-  for (final session in sessions.values) {
-    for (final ms in session.memberSessions) {
-      if (!ms.hasCheckInTime()) continue;
-      final date = ms.checkInTime.toDateTime();
-      final key =
-          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      byDay.putIfAbsent(key, () => <String>{});
-      byDay[key]!.add(ms.teamMemberId);
-      dates.putIfAbsent(key, () => DateTime(date.year, date.month, date.day));
-    }
+  for (final ms in teamMemberSessions.values) {
+    if (!ms.hasCheckInTime()) continue;
+    final date = ms.checkInTime.toDateTime();
+    final key =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    byDay.putIfAbsent(key, () => <String>{});
+    byDay[key]!.add(ms.teamMemberId);
+    dates.putIfAbsent(key, () => DateTime(date.year, date.month, date.day));
   }
 
   final result =
@@ -128,48 +134,49 @@ List<DayMemberDetail> computeDayMemberDetails(
   DateTime day,
   Map<String, Session> sessions,
   Map<String, TeamMember> teamMembers,
+  Map<String, TeamMemberSession> teamMemberSessions,
 ) {
   final accum = <String, DayMemberDetail>{};
 
-  for (final session in sessions.values) {
-    if (!session.hasStartTime() || !session.hasEndTime()) continue;
-    for (final ms in session.memberSessions) {
-      if (!ms.hasCheckInTime()) continue;
-      final checkInDate = ms.checkInTime.toDateTime();
-      if (checkInDate.year != day.year ||
-          checkInDate.month != day.month ||
-          checkInDate.day != day.day) {
-        continue;
-      }
+  for (final ms in teamMemberSessions.values) {
+    if (!ms.hasCheckInTime()) continue;
+    final checkInDate = ms.checkInTime.toDateTime();
+    if (checkInDate.year != day.year ||
+        checkInDate.month != day.month ||
+        checkInDate.day != day.day) {
+      continue;
+    }
 
-      final member = teamMembers[ms.teamMemberId];
-      final name = member != null
-          ? '${member.firstName} ${member.lastName}'
-          : ms.teamMemberId;
-      final memberType = member?.memberType ?? TeamMemberType.STUDENT;
-      final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
-        ms,
-        session,
+    final session = sessions[ms.sessionId];
+    if (session == null || !session.hasStartTime() || !session.hasEndTime()) {
+      continue;
+    }
+
+    final member = teamMembers[ms.teamMemberId];
+    final name = member?.displayName ?? ms.teamMemberId;
+    final memberType = member?.memberType ?? TeamMemberType.STUDENT;
+    final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
+      ms,
+      session,
+    );
+
+    final existing = accum[ms.teamMemberId];
+    if (existing != null) {
+      accum[ms.teamMemberId] = DayMemberDetail(
+        memberId: ms.teamMemberId,
+        name: name,
+        memberType: memberType,
+        regularSecs: existing.regularSecs + regularSecs,
+        overtimeSecs: existing.overtimeSecs + overtimeSecs,
       );
-
-      final existing = accum[ms.teamMemberId];
-      if (existing != null) {
-        accum[ms.teamMemberId] = DayMemberDetail(
-          memberId: ms.teamMemberId,
-          name: name,
-          memberType: memberType,
-          regularSecs: existing.regularSecs + regularSecs,
-          overtimeSecs: existing.overtimeSecs + overtimeSecs,
-        );
-      } else {
-        accum[ms.teamMemberId] = DayMemberDetail(
-          memberId: ms.teamMemberId,
-          name: name,
-          memberType: memberType,
-          regularSecs: regularSecs,
-          overtimeSecs: overtimeSecs,
-        );
-      }
+    } else {
+      accum[ms.teamMemberId] = DayMemberDetail(
+        memberId: ms.teamMemberId,
+        name: name,
+        memberType: memberType,
+        regularSecs: regularSecs,
+        overtimeSecs: overtimeSecs,
+      );
     }
   }
 
@@ -180,22 +187,23 @@ List<DayMemberDetail> computeDayMemberDetails(
 List<LocationAttendanceData> computeLocationAttendance(
   Map<String, Session> sessions,
   Map<String, Location> locations,
+  Map<String, TeamMemberSession> teamMemberSessions,
 ) {
   final byLocation = <String, LocationAttendanceData>{};
 
-  for (final session in sessions.values) {
+  for (final ms in teamMemberSessions.values) {
+    if (!ms.hasCheckInTime()) continue;
+    final session = sessions[ms.sessionId];
+    if (session == null) continue;
+
     final locId = session.locationId;
     final locName = locations[locId]?.location ?? locId;
-    final count = session.memberSessions
-        .where((ms) => ms.hasCheckInTime())
-        .length;
-    if (count == 0) continue;
 
     byLocation.putIfAbsent(
       locId,
       () => LocationAttendanceData(locationId: locId, locationName: locName),
     );
-    byLocation[locId]!.checkInCount += count;
+    byLocation[locId]!.checkInCount += 1;
   }
 
   return byLocation.values.toList()
@@ -205,6 +213,7 @@ List<LocationAttendanceData> computeLocationAttendance(
 AttendanceInsights computeInsights(
   Map<String, Session> sessions,
   Map<String, Location> locations,
+  Map<String, TeamMemberSession> teamMemberSessions,
 ) {
   int totalCheckInMinutes = 0;
   int totalCheckOutMinutes = 0;
@@ -216,27 +225,25 @@ AttendanceInsights computeInsights(
   final dayOfWeekCounts = <int, int>{};
   int totalAttendance = 0;
 
-  for (final session in sessions.values) {
-    for (final ms in session.memberSessions) {
-      if (!ms.hasCheckInTime()) continue;
-      memberIds.add(ms.teamMemberId);
-      totalAttendance++;
+  for (final ms in teamMemberSessions.values) {
+    if (!ms.hasCheckInTime()) continue;
+    memberIds.add(ms.teamMemberId);
+    totalAttendance++;
 
-      final checkIn = ms.checkInTime.toDateTime();
-      totalCheckInMinutes += checkIn.hour * 60 + checkIn.minute;
-      checkInCount++;
+    final checkIn = ms.checkInTime.toDateTime();
+    totalCheckInMinutes += checkIn.hour * 60 + checkIn.minute;
+    checkInCount++;
 
-      dayOfWeekCounts[checkIn.weekday] =
-          (dayOfWeekCounts[checkIn.weekday] ?? 0) + 1;
+    dayOfWeekCounts[checkIn.weekday] =
+        (dayOfWeekCounts[checkIn.weekday] ?? 0) + 1;
 
-      if (ms.hasCheckOutTime()) {
-        final checkOut = ms.checkOutTime.toDateTime();
-        totalCheckOutMinutes += checkOut.hour * 60 + checkOut.minute;
-        checkOutCount++;
+    if (ms.hasCheckOutTime()) {
+      final checkOut = ms.checkOutTime.toDateTime();
+      totalCheckOutMinutes += checkOut.hour * 60 + checkOut.minute;
+      checkOutCount++;
 
-        totalVisitSecs += checkOut.difference(checkIn).inSeconds;
-        visitCount++;
-      }
+      totalVisitSecs += checkOut.difference(checkIn).inSeconds;
+      visitCount++;
     }
   }
 
@@ -258,16 +265,13 @@ AttendanceInsights computeInsights(
   }
 
   String mostActive = '-';
-  if (sessions.isNotEmpty) {
+  if (teamMemberSessions.isNotEmpty) {
     final locCounts = <String, int>{};
-    for (final session in sessions.values) {
-      final count = session.memberSessions
-          .where((ms) => ms.hasCheckInTime())
-          .length;
-      if (count > 0) {
-        locCounts[session.locationId] =
-            (locCounts[session.locationId] ?? 0) + count;
-      }
+    for (final ms in teamMemberSessions.values) {
+      if (!ms.hasCheckInTime()) continue;
+      final session = sessions[ms.sessionId];
+      if (session == null) continue;
+      locCounts[session.locationId] = (locCounts[session.locationId] ?? 0) + 1;
     }
     if (locCounts.isNotEmpty) {
       final topLocId = locCounts.entries

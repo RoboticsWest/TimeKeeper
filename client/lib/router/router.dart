@@ -117,6 +117,18 @@ GoRouter router(Ref ref) {
         },
         routes: [
           GoRoute(
+            name: AppRoute.leaderboard.name,
+            path: AppRoute.leaderboard.path,
+            pageBuilder: (context, state) => _buildTransitionPage(
+              key: state.pageKey,
+              child: DeferredWidget(
+                libraryKey: AppRoute.leaderboard.path,
+                libraryLoader: leaderboard.loadLibrary,
+                builder: (context) => leaderboard.LeaderboardView(),
+              ),
+            ),
+          ),
+          GoRoute(
             name: AppRoute.calendar.name,
             path: AppRoute.calendar.path,
             pageBuilder: (context, state) => _buildTransitionPage(
@@ -151,19 +163,6 @@ GoRouter router(Ref ref) {
               return null;
             },
             routes: [
-              GoRoute(
-                name: AppRoute.leaderboard.name,
-                path: AppRoute.leaderboard.path,
-                pageBuilder: (context, state) => _buildTransitionPage(
-                  key: state.pageKey,
-                  child: DeferredWidget(
-                    libraryKey: AppRoute.leaderboard.path,
-                    libraryLoader: leaderboard.loadLibrary,
-                    builder: (context) => leaderboard.LeaderboardView(),
-                  ),
-                ),
-              ),
-
               // Protected Admin routes
               GoRoute(
                 path: '/admin',

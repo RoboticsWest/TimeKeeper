@@ -22,6 +22,7 @@ export 'session.pb.dart';
 export 'settings.pb.dart';
 export 'statistics.pb.dart';
 export 'team_member.pb.dart';
+export 'team_member_session.pb.dart';
 export 'user.pb.dart';
 
 class GetHealthRequest extends $pb.GeneratedMessage {

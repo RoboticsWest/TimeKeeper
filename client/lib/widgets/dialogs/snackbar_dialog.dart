@@ -29,9 +29,8 @@ class SnackBarDialog extends BaseDialog {
     switch (result) {
       case GrpcSuccess():
         return SnackBarDialog.success(message: 'Success');
-      case GrpcFailure(userMessage: final msg, statusCode: final code):
-        String errorMessage = 'Failed: [$msg] With status: $code';
-        return SnackBarDialog.error(message: errorMessage);
+      case GrpcFailure(userMessage: final msg):
+        return SnackBarDialog.error(message: msg);
     }
   }
 

@@ -53,6 +53,20 @@ class SettingsServiceClient extends $grpc.Client {
     return $createUnaryCall(_$purgeDatabase, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.GetDiscordRolesResponse> getDiscordRoles(
+    $0.GetDiscordRolesRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$getDiscordRoles, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.ImportDiscordMembersResponse> importDiscordMembers(
+    $0.ImportDiscordMembersRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$importDiscordMembers, request, options: options);
+  }
+
   // method descriptors
 
   static final _$getSettings =
@@ -70,6 +84,16 @@ class SettingsServiceClient extends $grpc.Client {
           '/tk.api.SettingsService/PurgeDatabase',
           ($0.PurgeDatabaseRequest value) => value.writeToBuffer(),
           $0.PurgeDatabaseResponse.fromBuffer);
+  static final _$getDiscordRoles =
+      $grpc.ClientMethod<$0.GetDiscordRolesRequest, $0.GetDiscordRolesResponse>(
+          '/tk.api.SettingsService/GetDiscordRoles',
+          ($0.GetDiscordRolesRequest value) => value.writeToBuffer(),
+          $0.GetDiscordRolesResponse.fromBuffer);
+  static final _$importDiscordMembers = $grpc.ClientMethod<
+          $0.ImportDiscordMembersRequest, $0.ImportDiscordMembersResponse>(
+      '/tk.api.SettingsService/ImportDiscordMembers',
+      ($0.ImportDiscordMembersRequest value) => value.writeToBuffer(),
+      $0.ImportDiscordMembersResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('tk.api.SettingsService')
@@ -104,6 +128,24 @@ abstract class SettingsServiceBase extends $grpc.Service {
             ($core.List<$core.int> value) =>
                 $0.PurgeDatabaseRequest.fromBuffer(value),
             ($0.PurgeDatabaseResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetDiscordRolesRequest,
+            $0.GetDiscordRolesResponse>(
+        'GetDiscordRoles',
+        getDiscordRoles_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.GetDiscordRolesRequest.fromBuffer(value),
+        ($0.GetDiscordRolesResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.ImportDiscordMembersRequest,
+            $0.ImportDiscordMembersResponse>(
+        'ImportDiscordMembers',
+        importDiscordMembers_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.ImportDiscordMembersRequest.fromBuffer(value),
+        ($0.ImportDiscordMembersResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.GetSettingsResponse> getSettings_Pre($grpc.ServiceCall $call,
@@ -131,4 +173,22 @@ abstract class SettingsServiceBase extends $grpc.Service {
 
   $async.Future<$0.PurgeDatabaseResponse> purgeDatabase(
       $grpc.ServiceCall call, $0.PurgeDatabaseRequest request);
+
+  $async.Future<$0.GetDiscordRolesResponse> getDiscordRoles_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.GetDiscordRolesRequest> $request) async {
+    return getDiscordRoles($call, await $request);
+  }
+
+  $async.Future<$0.GetDiscordRolesResponse> getDiscordRoles(
+      $grpc.ServiceCall call, $0.GetDiscordRolesRequest request);
+
+  $async.Future<$0.ImportDiscordMembersResponse> importDiscordMembers_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.ImportDiscordMembersRequest> $request) async {
+    return importDiscordMembers($call, await $request);
+  }
+
+  $async.Future<$0.ImportDiscordMembersResponse> importDiscordMembers(
+      $grpc.ServiceCall call, $0.ImportDiscordMembersRequest request);
 }

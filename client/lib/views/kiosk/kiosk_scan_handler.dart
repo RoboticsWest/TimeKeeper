@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:grpc/grpc.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:time_keeper/generated/api/api.pbgrpc.dart';
+import 'package:time_keeper/generated/common/common.pbenum.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/permissions.dart';
+import 'package:time_keeper/views/kiosk/link_card_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/toast_overlay.dart';
 
 final _log = Logger();
@@ -32,19 +37,23 @@ Future<void> handleKioskScan({
       'No member matched scan: $input (tried ${variants.length} variants)',
     );
     if (context.mounted) {
-      ToastOverlay.error(
-        context,
-        title: 'Unrecognized',
-        message: 'Unrecognized card "$input", contact admin.',
-      );
+      final isAdmin = ref.read(rolesProvider).hasPermission(Role.ADMIN);
+      if (isAdmin) {
+        showLinkCardDialog(context, ref, trimmed);
+      } else {
+        ToastOverlay.error(
+          context,
+          title: 'Unrecognized',
+          message: 'Unrecognized card "$trimmed", contact admin.',
+        );
+      }
     }
     return;
   }
 
   final memberId = match.key;
   final member = match.value;
-  final alias = member.alias.isNotEmpty ? ' (${member.alias})' : '';
-  final name = '${member.firstName} ${member.lastName}$alias';
+  final name = member.displayName;
 
   _log.i('Scan matched member: $name');
 
@@ -55,7 +64,7 @@ Future<void> handleKioskScan({
         .checkInOut(
           CheckInOutRequest(
             teamMemberId: memberId,
-            location: Location(location: currentLocation),
+            locationId: currentLocation,
           ),
         ),
   );
@@ -80,12 +89,20 @@ Future<void> handleKioskScan({
           message: '$name\n$timeStr',
         );
       }
-    case GrpcFailure(userMessage: final msg):
-      ToastOverlay.error(
-        context,
-        title: 'Check In Failed',
-        message: 'Failed for $name: $msg',
-      );
+    case GrpcFailure(userMessage: final msg, statusCode: final code):
+      if (code == StatusCode.notFound) {
+        ToastOverlay.warn(
+          context,
+          title: 'No Session',
+          message: '$name\nNo active session at this location.',
+        );
+      } else {
+        ToastOverlay.error(
+          context,
+          title: 'Check In Failed',
+          message: '$name\n$msg',
+        );
+      }
   }
 }
 
@@ -193,34 +210,16 @@ List<int> _bigIntToBytes(BigInt value) {
   return bytes.reversed.toList();
 }
 
-/// Tries to match any of the UID [variants] against team member fields.
-/// Checks: first+last name, alias, secondary alias.
+/// Tries to match any of the UID [variants] against team member RFID tags.
 MapEntry<String, TeamMember>? _findMember(
   Set<String> variants,
   Map<String, TeamMember> teamMembers,
 ) {
   for (final entry in teamMembers.entries) {
-    final member = entry.value;
-    final fullName = '${member.firstName} ${member.lastName}'
-        .trim()
-        .toLowerCase();
-
-    if (variants.contains(fullName)) return entry;
-  }
-
-  for (final entry in teamMembers.entries) {
-    final member = entry.value;
-
-    if (member.alias.isNotEmpty &&
-        variants.contains(member.alias.trim().toLowerCase())) {
-      return entry;
-    }
-
-    if (member.secondaryAlias.isNotEmpty &&
-        variants.contains(member.secondaryAlias.trim().toLowerCase())) {
+    final rfid = entry.value.rfidTag;
+    if (rfid.isNotEmpty && variants.contains(rfid.trim().toLowerCase())) {
       return entry;
     }
   }
-
   return null;
 }

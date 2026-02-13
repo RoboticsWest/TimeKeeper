@@ -71,7 +71,6 @@ impl ScheduleService for ScheduleApi {
         start_time: Some(session.start_time),
         end_time: Some(session.end_time),
         location_id,
-        member_sessions: vec![],
         finished: false,
       };
 
@@ -137,7 +136,6 @@ impl ScheduleService for ScheduleApi {
         start_time: Some(session.start_time),
         end_time: Some(session.end_time),
         location_id,
-        member_sessions: vec![],
         finished: false,
       };
 

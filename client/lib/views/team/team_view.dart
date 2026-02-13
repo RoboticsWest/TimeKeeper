@@ -6,6 +6,7 @@ import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/helpers/session_helper.dart';
 import 'package:time_keeper/views/team/check_in_out_button.dart';
 import 'package:time_keeper/views/team/member_type_chip.dart';
@@ -51,7 +52,7 @@ class TeamView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teamMembers = ref.watch(teamMembersProvider);
-    final sessions = ref.watch(sessionsProvider);
+    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final currentLocation = ref.watch(currentLocationProvider) ?? '';
     final theme = Theme.of(context);
 
@@ -140,13 +141,19 @@ class TeamView extends ConsumerWidget {
                   child: Text('Type', style: TextStyle(color: Colors.white)),
                 ),
                 BaseTableCell(
-                  child: Text('Alias', style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    'Display Name',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
                 BaseTableCell(
                   child: Text(
-                    'Secondary Alias',
+                    'RFID Tag',
                     style: TextStyle(color: Colors.white),
                   ),
+                ),
+                BaseTableCell(
+                  child: Text('Discord', style: TextStyle(color: Colors.white)),
                 ),
                 BaseTableCell(
                   child: Text('Status', style: TextStyle(color: Colors.white)),
@@ -161,7 +168,10 @@ class TeamView extends ConsumerWidget {
               editRows: sorted.map((entry) {
                 final id = entry.key;
                 final member = entry.value;
-                final checkedIn = isMemberCheckedIn(id, sessions.values);
+                final checkedIn = isMemberCheckedIn(
+                  id,
+                  teamMemberSessions.values,
+                );
 
                 return EditTableRow(
                   key: ValueKey(id),
@@ -172,18 +182,21 @@ class TeamView extends ConsumerWidget {
                     existingFirstName: member.firstName,
                     existingLastName: member.lastName,
                     existingMemberType: member.memberType,
-                    existingAlias: member.alias.isNotEmpty
-                        ? member.alias
+                    existingDisplayName: member.displayName.isNotEmpty
+                        ? member.displayName
                         : null,
-                    existingSecondaryAlias: member.secondaryAlias.isNotEmpty
-                        ? member.secondaryAlias
+                    existingRfidTag: member.rfidTag.isNotEmpty
+                        ? member.rfidTag
+                        : null,
+                    existingDiscordUsername: member.discordUsername.isNotEmpty
+                        ? member.discordUsername
                         : null,
                   ),
                   onDelete: () => showDeleteTeamMemberDialog(
                     context,
                     ref,
                     id: id,
-                    name: '${member.firstName} ${member.lastName}',
+                    name: member.displayName,
                   ),
                   cells: [
                     BaseTableCell(child: Text(member.firstName)),
@@ -192,12 +205,21 @@ class TeamView extends ConsumerWidget {
                       child: MemberTypeChip(memberType: member.memberType),
                     ),
                     BaseTableCell(
-                      child: Text(member.alias.isNotEmpty ? member.alias : '—'),
+                      child: Text(
+                        member.displayName.isNotEmpty
+                            ? member.displayName
+                            : '—',
+                      ),
                     ),
                     BaseTableCell(
                       child: Text(
-                        member.secondaryAlias.isNotEmpty
-                            ? member.secondaryAlias
+                        member.rfidTag.isNotEmpty ? member.rfidTag : '—',
+                      ),
+                    ),
+                    BaseTableCell(
+                      child: Text(
+                        member.discordUsername.isNotEmpty
+                            ? member.discordUsername
                             : '—',
                       ),
                     ),
@@ -207,7 +229,7 @@ class TeamView extends ConsumerWidget {
                         onPressed: () async {
                           final req = CheckInOutRequest(
                             teamMemberId: id,
-                            location: Location(location: currentLocation),
+                            locationId: currentLocation,
                           );
                           final result = await callGrpcEndpoint(
                             () => ref

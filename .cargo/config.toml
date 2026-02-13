@@ -13,6 +13,7 @@ rustflags = [
   "-Aclippy::doc_markdown",
   "-Aclippy::default_trait_access",
   "-Aclippy::too_many_lines",
+  "-Aclippy::similar_names",
   # Enable specific nursery lints
   "-Wclippy::suboptimal_flops",
   "-Wclippy::imprecise_flops",

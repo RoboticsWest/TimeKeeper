@@ -3,7 +3,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/common/common.pb.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/views/kiosk/team_member_header.dart';
 import 'package:time_keeper/views/kiosk/team_member_row.dart';
 import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
@@ -21,37 +23,36 @@ class CheckedInMember {
 }
 
 class CheckedInList extends ConsumerWidget {
-  final List<Session> sessions;
-  const CheckedInList({super.key, required this.sessions});
+  const CheckedInList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teamMembers = ref.watch(teamMembersProvider);
     final locations = ref.watch(locationsProvider);
+    final sessions = ref.watch(sessionsProvider);
+    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
 
     final List<CheckedInMember> checkedInList = [];
 
-    for (final session in sessions) {
-      final location = locations[session.locationId];
+    for (final ms in teamMemberSessions.values) {
+      if (!ms.hasCheckInTime() || ms.hasCheckOutTime()) {
+        continue;
+      }
+
+      final teamMember = teamMembers[ms.teamMemberId];
+      if (teamMember == null) continue;
+
+      final session = sessions[ms.sessionId];
+      final location = session != null ? locations[session.locationId] : null;
       if (location == null) continue;
 
-      for (final memberSession in session.memberSessions) {
-        if (!memberSession.hasCheckInTime() ||
-            memberSession.hasCheckOutTime()) {
-          continue;
-        }
-
-        final teamMember = teamMembers[memberSession.teamMemberId];
-        if (teamMember == null) continue;
-
-        checkedInList.add(
-          CheckedInMember(
-            location: location,
-            timeIn: memberSession.checkInTime,
-            teamMember: teamMember,
-          ),
-        );
-      }
+      checkedInList.add(
+        CheckedInMember(
+          location: location,
+          timeIn: ms.checkInTime,
+          teamMember: teamMember,
+        ),
+      );
     }
 
     double childHeight = 40;

@@ -23,8 +23,10 @@ message TeamMember {
   string first_name = 1;
   string last_name = 2;
   TeamMemberType member_type = 3;
-  optional string alias = 4;
-  optional string secondary_alias = 5;
+  optional string display_name = 4;
+  optional string rfid_tag = 5;
+  optional string mobile_number = 6;
+  optional string discord_username = 7;
 }
 
 message Location {
@@ -33,18 +35,24 @@ message Location {
 
 message TeamMemberSession {
   string team_member_id = 1;
-  common.Timestamp check_in_time = 2;
-  optional common.Timestamp check_out_time = 3;
+  string session_id = 2;
+  common.Timestamp check_in_time = 3;
+  optional common.Timestamp check_out_time = 4;
 }
 
 message Session {
   common.Timestamp start_time = 1;
   common.Timestamp end_time = 2;
   string location_id = 3;
-  repeated TeamMemberSession member_sessions = 4;
-  bool finished = 5;
+  bool finished = 4;
 }
 
 message Settings {
   int64 next_session_threshold_secs = 1;
+  string discord_bot_token = 2;
+  string discord_guild_id = 3;
+  string discord_channel_id = 4;
+  int64 discord_reminder_mins = 5;
+  bool discord_self_link_enabled = 6;
+  bool discord_name_sync_enabled = 7;
 }

@@ -6,7 +6,9 @@ use crate::{
     common::Timestamp,
     db::{Session, Settings, TeamMemberSession},
   },
-  modules::{session::SessionRepository, settings::SettingsRepository},
+  modules::{
+    session::SessionRepository, settings::SettingsRepository, team_member_session::TeamMemberSessionRepository,
+  },
 };
 
 /// Get the current time as a protobuf Timestamp.
@@ -35,30 +37,63 @@ pub fn is_member_checked_in(ms: &TeamMemberSession) -> bool {
 }
 
 /// Check if a session has any members still checked in.
-pub fn has_checked_in_members(session: &Session) -> bool {
-  session.member_sessions.iter().any(is_member_checked_in)
+pub fn has_checked_in_members(session_id: &str) -> Result<bool> {
+  let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
+  Ok(member_sessions.values().any(is_member_checked_in))
 }
 
 /// Check out all lingering members in a session with the given timestamp.
-pub fn check_out_all_members(session: &mut Session, now: &Timestamp) {
-  for ms in &mut session.member_sessions {
-    if is_member_checked_in(ms) {
+pub fn check_out_all_members(session_id: &str, now: &Timestamp) -> Result<()> {
+  let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
+  for (id, mut ms) in member_sessions {
+    if is_member_checked_in(&ms) {
       ms.check_out_time = Some(*now);
+      TeamMemberSession::update(&id, &ms)?;
     }
   }
+  Ok(())
 }
 
-/// Find the index of the session a member should check into.
-/// If the next session's start time is within `threshold_secs` of now, prefer it over the current one.
-pub fn find_check_in_target_index(unfinished: &[(String, Session)], now: &Timestamp, threshold_secs: i64) -> usize {
-  match unfinished.get(1) {
-    Some((_, next_session)) => match &next_session.start_time {
-      Some(next_start) => {
-        let time_until_next = next_start.seconds - now.seconds;
-        usize::from(time_until_next > 0 && time_until_next <= threshold_secs)
-      }
-      None => 0,
-    },
-    None => 0,
+/// Find the best session at a given location within the threshold window.
+///
+/// A session is eligible if `now` falls within `[start_time - threshold, end_time + threshold]`.
+/// Among eligible sessions, the one whose time window is closest to `now` is preferred.
+pub fn find_session_for_location(
+  location_id: &str,
+  now: &Timestamp,
+  threshold_secs: i64,
+) -> Result<Option<(String, Session)>> {
+  let unfinished = get_unfinished_sessions_sorted()?;
+  let now_secs = now.seconds;
+
+  let mut best: Option<(String, Session, i64)> = None;
+
+  for (id, session) in unfinished {
+    if session.location_id != location_id {
+      continue;
+    }
+
+    let start_secs = session.start_time.as_ref().map_or(0, |t| t.seconds);
+    let end_secs = session.end_time.as_ref().map_or(0, |t| t.seconds);
+
+    // Check if now is within the threshold window
+    if now_secs < start_secs - threshold_secs || now_secs > end_secs + threshold_secs {
+      continue;
+    }
+
+    // Distance: 0 if within session window, otherwise distance to nearest edge
+    let distance = if now_secs >= start_secs && now_secs <= end_secs {
+      0
+    } else if now_secs < start_secs {
+      start_secs - now_secs
+    } else {
+      now_secs - end_secs
+    };
+
+    if best.as_ref().is_none_or(|(_, _, d)| distance < *d) {
+      best = Some((id, session, distance));
+    }
   }
+
+  Ok(best.map(|(id, session, _)| (id, session)))
 }

@@ -22,6 +22,8 @@ regex = "1.12.3"
 serde = "1.0.228"
 thiserror = "2.0.18"
 tokio = { version = "1.49.0", features = ["rt-multi-thread", "macros", "signal"] }
+serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "model", "rustls_backend", "http"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio-stream = { version = "0.1.18", features = ["sync"] }
 tonic = "0.14.3"
 tonic-prost = "0.14.3"

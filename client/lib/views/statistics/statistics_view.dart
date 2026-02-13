@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/views/statistics/statistics_attendance_chart.dart';
 import 'package:time_keeper/views/statistics/statistics_day_detail.dart';
 import 'package:time_keeper/views/statistics/statistics_helpers.dart';
@@ -21,20 +22,21 @@ class StatisticsView extends HookConsumerWidget {
     final sessions = ref.watch(sessionsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final locations = ref.watch(locationsProvider);
+    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final theme = Theme.of(context);
 
     final selectedRange = useState(StatisticsRange.week);
     final selectedDay = useState<DateTime?>(null);
 
     final filtered = filterSessionsByRange(sessions, selectedRange.value);
-    final memberHours = computeMemberHours(filtered, teamMembers);
-    final dailyHours = computeDailyHours(filtered);
-    final dailyAttendance = computeDailyAttendance(filtered);
-    final locationAttendance = computeLocationAttendance(filtered, locations);
-    final insights = computeInsights(filtered, locations);
+    final memberHours = computeMemberHours(filtered, teamMembers, teamMemberSessions);
+    final dailyHours = computeDailyHours(filtered, teamMemberSessions);
+    final dailyAttendance = computeDailyAttendance(teamMemberSessions);
+    final locationAttendance = computeLocationAttendance(filtered, locations, teamMemberSessions);
+    final insights = computeInsights(filtered, locations, teamMemberSessions);
 
     final dayMemberDetails = selectedDay.value != null
-        ? computeDayMemberDetails(selectedDay.value!, filtered, teamMembers)
+        ? computeDayMemberDetails(selectedDay.value!, filtered, teamMembers, teamMemberSessions)
         : <DayMemberDetail>[];
 
     void onDaySelected(DateTime? day) {

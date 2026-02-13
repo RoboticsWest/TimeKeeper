@@ -11,14 +11,42 @@ message GetSettingsResponse {
 
 message UpdateSettingsRequest {
   int64 next_session_threshold_secs = 1;
+  string discord_bot_token = 2;
+  string discord_guild_id = 3;
+  string discord_channel_id = 4;
+  int64 discord_reminder_mins = 5;
+  bool discord_self_link_enabled = 6;
+  bool discord_name_sync_enabled = 7;
 }
 message UpdateSettingsResponse {}
 
 message PurgeDatabaseRequest {}
 message PurgeDatabaseResponse {}
 
+message DiscordRole {
+  string id = 1;
+  string name = 2;
+}
+
+message GetDiscordRolesRequest {}
+message GetDiscordRolesResponse {
+  repeated DiscordRole roles = 1;
+}
+
+message ImportDiscordMembersRequest {
+  string role_id = 1;
+  db.TeamMemberType member_type = 2;
+}
+message ImportDiscordMembersResponse {
+  int32 imported = 1;
+  int32 linked = 2;
+  int32 already_linked = 3;
+}
+
 service SettingsService {
   rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
   rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
   rpc PurgeDatabase(PurgeDatabaseRequest) returns (PurgeDatabaseResponse);
+  rpc GetDiscordRoles(GetDiscordRolesRequest) returns (GetDiscordRolesResponse);
+  rpc ImportDiscordMembers(ImportDiscordMembersRequest) returns (ImportDiscordMembersResponse);
 }
