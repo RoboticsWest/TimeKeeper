@@ -6,7 +6,7 @@ import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/utils/permissions.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
-import 'package:time_keeper/hooks/use_pcsc_scanner.dart';
+import 'package:time_keeper/hooks/use_rfid_scanner.dart';
 import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/kiosk/checked_in_list.dart';
 import 'package:time_keeper/views/kiosk/kiosk_dialog.dart';
@@ -51,11 +51,11 @@ class HomeView extends HookConsumerWidget {
     final roles = ref.watch(rolesProvider);
     final hasKiosk = roles.any((role) => role.hasPermission(Role.KIOSK));
 
-    // PCSC RFID reader - only active when user has KIOSK permission
-    usePcscScanner(
+    // RFID scanning (PCSC + keyboard) - only active when user has KIOSK permission
+    useRfidScanner(
       enabled: hasKiosk,
       onScan: (uid) {
-        _log.i('PCSC card UID: $uid');
+        _log.i('RFID scan: $uid');
         if (context.mounted) {
           handleKioskScan(input: uid, context: context, ref: ref);
         }

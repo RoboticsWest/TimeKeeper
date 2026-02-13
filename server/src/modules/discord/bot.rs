@@ -7,7 +7,11 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::UserId;
 use serenity::prelude::*;
 
-use crate::{core::shutdown::ShutdownNotifier, generated::db::Settings, modules::settings::SettingsRepository};
+use crate::{
+  core::{events::EVENT_BUS, shutdown::ShutdownNotifier},
+  generated::db::Settings,
+  modules::settings::SettingsRepository,
+};
 
 use super::commands;
 
@@ -41,40 +45,37 @@ impl EventHandler for Handler {
   }
 }
 
-/// Starts the Discord bot using the token from settings.
-/// Returns early if no token is configured.
-/// Automatically reconnects on disconnect until a shutdown signal is received.
-pub async fn start_discord_bot() {
-  let token = match Settings::get() {
-    Ok(settings) if !settings.discord_bot_token.is_empty() => settings.discord_bot_token,
-    Ok(_) => {
-      log::warn!("Discord bot token not configured, skipping bot startup");
-      return;
-    }
-    Err(e) => {
-      log::error!("Failed to read settings for Discord bot: {e}");
-      return;
-    }
-  };
-
-  let mut shutdown_rx = ShutdownNotifier::get().subscribe();
+/// Runs the Discord bot connection loop with a specific token.
+/// Returns when the bot is intentionally shut down (via shutdown signal or token change event).
+/// Returns `true` if a settings change triggered the return (caller should re-evaluate token),
+/// or `false` if it was a shutdown signal.
+async fn run_bot(token: &str, shutdown: &'static ShutdownNotifier) -> bool {
+  let mut shutdown_rx = shutdown.subscribe();
+  let mut settings_rx =
+    EVENT_BUS.get().and_then(|bus| bus.subscribe::<Settings>().ok()).expect("Event bus not initialized");
 
   loop {
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
 
-    let mut client = match Client::builder(&token, intents).event_handler(Handler).await {
+    let mut client = match Client::builder(token, intents).event_handler(Handler).await {
       Ok(client) => client,
       Err(e) => {
         log::error!("Failed to create Discord client: {e}");
-        return;
+        return false;
       }
     };
 
     let shard_manager = client.shard_manager.clone();
-    let mut shutdown_for_shard = ShutdownNotifier::get().subscribe();
+    let mut shutdown_for_shard = shutdown.subscribe();
+    let mut settings_for_shard =
+      EVENT_BUS.get().and_then(|bus| bus.subscribe::<Settings>().ok()).expect("Event bus not initialized");
 
+    // Shut down shards if we receive a shutdown signal or settings change
     tokio::spawn(async move {
-      let _ = shutdown_for_shard.recv().await;
+      tokio::select! {
+        _ = shutdown_for_shard.recv() => {}
+        _ = settings_for_shard.recv() => {}
+      }
       shard_manager.shutdown_all().await;
     });
 
@@ -82,12 +83,60 @@ pub async fn start_discord_bot() {
       log::error!("Discord bot error: {e}");
     }
 
-    // Check if we should reconnect or shut down
+    // Determine why we disconnected
+    // Check settings change first (higher priority — we want to re-evaluate the token)
+    if settings_rx.try_recv().is_ok() {
+      log::info!("Discord bot restarting due to settings change");
+      return true;
+    }
+
     if let Err(tokio::sync::broadcast::error::TryRecvError::Empty) = shutdown_rx.try_recv() {
+      // Neither settings nor shutdown — unexpected disconnect, reconnect
       log::warn!("Discord bot disconnected, reconnecting in {}s...", RECONNECT_DELAY.as_secs());
       tokio::time::sleep(RECONNECT_DELAY).await;
     } else {
       log::info!("Discord bot shutting down");
+      return false;
+    }
+  }
+}
+
+/// Long-lived task that manages the Discord bot lifecycle.
+/// Reacts to settings changes via the event bus — starts, stops, or restarts
+/// the bot as the token is added, removed, or changed.
+pub async fn discord_bot_service(shutdown: &'static ShutdownNotifier) {
+  let mut shutdown_rx = shutdown.subscribe();
+
+  loop {
+    // Read current token
+    let token = match Settings::get() {
+      Ok(settings) if !settings.discord_bot_token.is_empty() => settings.discord_bot_token,
+      Ok(_) => {
+        log::info!("Discord bot token not configured, waiting for settings update...");
+
+        // Wait for either a settings change or shutdown
+        let mut settings_rx =
+          EVENT_BUS.get().and_then(|bus| bus.subscribe::<Settings>().ok()).expect("Event bus not initialized");
+
+        tokio::select! {
+          _ = settings_rx.recv() => {
+            log::info!("Settings changed, re-checking Discord bot token...");
+            continue;
+          }
+          _ = shutdown_rx.recv() => {
+            log::info!("Discord bot service shutting down (no token was configured)");
+            return;
+          }
+        }
+      }
+      Err(e) => {
+        log::error!("Failed to read settings for Discord bot: {e}");
+        return;
+      }
+    };
+
+    // Run the bot — returns true if settings changed, false if shutting down
+    if !run_bot(&token, shutdown).await {
       return;
     }
   }

@@ -1823,12 +1823,21 @@ pub struct UpdateSettingsRequest {
     pub discord_guild_id: ::prost::alloc::string::String,
     #[prost(string, tag = "4")]
     pub discord_channel_id: ::prost::alloc::string::String,
+    #[deprecated]
     #[prost(int64, tag = "5")]
     pub discord_reminder_mins: i64,
     #[prost(bool, tag = "6")]
     pub discord_self_link_enabled: bool,
     #[prost(bool, tag = "7")]
     pub discord_name_sync_enabled: bool,
+    #[prost(int64, tag = "8")]
+    pub discord_start_reminder_mins: i64,
+    #[prost(int64, tag = "9")]
+    pub discord_end_reminder_mins: i64,
+    #[prost(string, tag = "10")]
+    pub discord_start_reminder_message: ::prost::alloc::string::String,
+    #[prost(string, tag = "11")]
+    pub discord_end_reminder_message: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateSettingsResponse {}

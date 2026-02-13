@@ -109,6 +109,8 @@ impl SessionService for SessionApi {
       end_time: request.end_time,
       location_id: request.location_id,
       finished: false,
+      start_reminder_sent: false,
+      end_reminder_sent: false,
     };
 
     Session::add(&session).map_err(|e| Status::internal(format!("Failed to create session: {}", e)))?;
@@ -129,15 +131,17 @@ impl SessionService for SessionApi {
 
     let existing = Session::get(&request.id).map_err(|e| Status::internal(format!("Failed to get session: {}", e)))?;
 
-    if existing.is_none() {
+    let Some(existing) = existing else {
       return Err(Status::not_found("Session not found"));
-    }
+    };
 
     let session = Session {
       start_time: request.start_time,
       end_time: request.end_time,
       location_id: request.location_id,
       finished: request.finished,
+      start_reminder_sent: existing.start_reminder_sent,
+      end_reminder_sent: existing.end_reminder_sent,
     };
 
     Session::update(&request.id, &session).map_err(|e| Status::internal(format!("Failed to update session: {}", e)))?;

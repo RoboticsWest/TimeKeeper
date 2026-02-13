@@ -45,6 +45,8 @@ message Session {
   common.Timestamp end_time = 2;
   string location_id = 3;
   bool finished = 4;
+  bool start_reminder_sent = 5;
+  bool end_reminder_sent = 6;
 }
 
 message Settings {
@@ -52,7 +54,11 @@ message Settings {
   string discord_bot_token = 2;
   string discord_guild_id = 3;
   string discord_channel_id = 4;
-  int64 discord_reminder_mins = 5;
+  int64 discord_reminder_mins = 5 [deprecated = true];
   bool discord_self_link_enabled = 6;
   bool discord_name_sync_enabled = 7;
+  int64 discord_start_reminder_mins = 8;
+  int64 discord_end_reminder_mins = 9;
+  string discord_start_reminder_message = 10;
+  string discord_end_reminder_message = 11;
 }
