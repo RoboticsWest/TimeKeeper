@@ -18,7 +18,7 @@ TeamMemberServiceClient teamMemberService(Ref ref) {
   return TeamMemberServiceClient(channel, options: options);
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<StreamTeamMembersResponse> teamMembersStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamTeamMembersResponse>(
     () async {
@@ -42,21 +42,19 @@ class TeamMembers extends _$TeamMembers {
       fromBuffer: TeamMember.fromBuffer,
     );
 
-    final localMembers = _storage.getAll();
+    return _storage.getAll();
+  }
 
-    _storage.bindToStream(
-      ref: ref,
-      streamProvider: teamMembersStreamProvider,
-      extractItems: (response) => response.teamMembers,
-      getSyncType: (response) => response.syncType,
+  void syncFromStream(StreamTeamMembersResponse response) {
+    _storage.syncResponse(
+      syncType: response.syncType,
+      items: response.teamMembers,
       hasItem: (item) => item.hasTeamMember(),
       getId: (item) => item.id,
       getItem: (item) => item.teamMember,
       getState: () => state,
       setState: (newState) => state = newState,
     );
-
-    return localMembers;
   }
 }
 

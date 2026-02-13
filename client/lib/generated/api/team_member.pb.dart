@@ -852,7 +852,6 @@ class CreateTeamMemberRequest extends $pb.GeneratedMessage {
     $core.String? lastName,
     $1.TeamMemberType? memberType,
     $core.String? displayName,
-    $core.String? rfidTag,
     $core.String? discordUsername,
   }) {
     final result = create();
@@ -860,7 +859,6 @@ class CreateTeamMemberRequest extends $pb.GeneratedMessage {
     if (lastName != null) result.lastName = lastName;
     if (memberType != null) result.memberType = memberType;
     if (displayName != null) result.displayName = displayName;
-    if (rfidTag != null) result.rfidTag = rfidTag;
     if (discordUsername != null) result.discordUsername = discordUsername;
     return result;
   }
@@ -883,8 +881,7 @@ class CreateTeamMemberRequest extends $pb.GeneratedMessage {
     ..aE<$1.TeamMemberType>(3, _omitFieldNames ? '' : 'memberType',
         enumValues: $1.TeamMemberType.values)
     ..aOS(4, _omitFieldNames ? '' : 'displayName')
-    ..aOS(5, _omitFieldNames ? '' : 'rfidTag')
-    ..aOS(6, _omitFieldNames ? '' : 'discordUsername')
+    ..aOS(5, _omitFieldNames ? '' : 'discordUsername')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -944,22 +941,13 @@ class CreateTeamMemberRequest extends $pb.GeneratedMessage {
   void clearDisplayName() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get rfidTag => $_getSZ(4);
+  $core.String get discordUsername => $_getSZ(4);
   @$pb.TagNumber(5)
-  set rfidTag($core.String value) => $_setString(4, value);
+  set discordUsername($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasRfidTag() => $_has(4);
+  $core.bool hasDiscordUsername() => $_has(4);
   @$pb.TagNumber(5)
-  void clearRfidTag() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.String get discordUsername => $_getSZ(5);
-  @$pb.TagNumber(6)
-  set discordUsername($core.String value) => $_setString(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasDiscordUsername() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearDiscordUsername() => $_clearField(6);
+  void clearDiscordUsername() => $_clearField(5);
 }
 
 class CreateTeamMemberResponse extends $pb.GeneratedMessage {
@@ -1008,7 +996,6 @@ class UpdateTeamMemberRequest extends $pb.GeneratedMessage {
     $core.String? lastName,
     $1.TeamMemberType? memberType,
     $core.String? displayName,
-    $core.String? rfidTag,
     $core.String? discordUsername,
   }) {
     final result = create();
@@ -1017,7 +1004,6 @@ class UpdateTeamMemberRequest extends $pb.GeneratedMessage {
     if (lastName != null) result.lastName = lastName;
     if (memberType != null) result.memberType = memberType;
     if (displayName != null) result.displayName = displayName;
-    if (rfidTag != null) result.rfidTag = rfidTag;
     if (discordUsername != null) result.discordUsername = discordUsername;
     return result;
   }
@@ -1041,8 +1027,7 @@ class UpdateTeamMemberRequest extends $pb.GeneratedMessage {
     ..aE<$1.TeamMemberType>(4, _omitFieldNames ? '' : 'memberType',
         enumValues: $1.TeamMemberType.values)
     ..aOS(5, _omitFieldNames ? '' : 'displayName')
-    ..aOS(6, _omitFieldNames ? '' : 'rfidTag')
-    ..aOS(7, _omitFieldNames ? '' : 'discordUsername')
+    ..aOS(6, _omitFieldNames ? '' : 'discordUsername')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1111,22 +1096,13 @@ class UpdateTeamMemberRequest extends $pb.GeneratedMessage {
   void clearDisplayName() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.String get rfidTag => $_getSZ(5);
+  $core.String get discordUsername => $_getSZ(5);
   @$pb.TagNumber(6)
-  set rfidTag($core.String value) => $_setString(5, value);
+  set discordUsername($core.String value) => $_setString(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasRfidTag() => $_has(5);
+  $core.bool hasDiscordUsername() => $_has(5);
   @$pb.TagNumber(6)
-  void clearRfidTag() => $_clearField(6);
-
-  @$pb.TagNumber(7)
-  $core.String get discordUsername => $_getSZ(6);
-  @$pb.TagNumber(7)
-  set discordUsername($core.String value) => $_setString(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasDiscordUsername() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearDiscordUsername() => $_clearField(7);
+  void clearDiscordUsername() => $_clearField(6);
 }
 
 class UpdateTeamMemberResponse extends $pb.GeneratedMessage {

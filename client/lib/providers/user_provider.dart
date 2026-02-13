@@ -6,7 +6,7 @@ import 'package:time_keeper/providers/auth_provider.dart';
 
 part 'user_provider.g.dart';
 
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<StreamUsersResponse> usersStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamUsersResponse>(() async {
     final client = ref.read(userServiceProvider);
@@ -28,20 +28,29 @@ class Users extends _$Users {
       fromBuffer: UserResponse.fromBuffer,
     );
 
-    final localUsers = _storage.getAll();
+    return _storage.getAll();
+  }
 
-    _storage.bindToStream(
-      ref: ref,
-      streamProvider: usersStreamProvider,
-      extractItems: (response) => response.users,
-      getSyncType: (response) => response.syncType,
+  void syncFromStream(StreamUsersResponse response) {
+    _storage.syncResponse(
+      syncType: response.syncType,
+      items: response.users,
       hasItem: (item) => item.username.isNotEmpty,
       getId: (item) => item.id,
       getItem: (item) => item,
       getState: () => state,
       setState: (newState) => state = newState,
     );
-
-    return localUsers;
   }
+}
+
+/// Auto-dispose provider that bridges [usersStreamProvider] to [usersProvider].
+/// Views watch this to activate the users stream.
+@riverpod
+void usersSync(Ref ref) {
+  ref.listen(usersStreamProvider, (previous, next) {
+    next.whenData((response) {
+      ref.read(usersProvider.notifier).syncFromStream(response);
+    });
+  });
 }

@@ -156,7 +156,6 @@ class TeamMember extends $pb.GeneratedMessage {
     $core.String? lastName,
     TeamMemberType? memberType,
     $core.String? displayName,
-    $core.String? rfidTag,
     $core.String? mobileNumber,
     $core.String? discordUsername,
   }) {
@@ -165,7 +164,6 @@ class TeamMember extends $pb.GeneratedMessage {
     if (lastName != null) result.lastName = lastName;
     if (memberType != null) result.memberType = memberType;
     if (displayName != null) result.displayName = displayName;
-    if (rfidTag != null) result.rfidTag = rfidTag;
     if (mobileNumber != null) result.mobileNumber = mobileNumber;
     if (discordUsername != null) result.discordUsername = discordUsername;
     return result;
@@ -189,9 +187,8 @@ class TeamMember extends $pb.GeneratedMessage {
     ..aE<TeamMemberType>(3, _omitFieldNames ? '' : 'memberType',
         enumValues: TeamMemberType.values)
     ..aOS(4, _omitFieldNames ? '' : 'displayName')
-    ..aOS(5, _omitFieldNames ? '' : 'rfidTag')
-    ..aOS(6, _omitFieldNames ? '' : 'mobileNumber')
-    ..aOS(7, _omitFieldNames ? '' : 'discordUsername')
+    ..aOS(5, _omitFieldNames ? '' : 'mobileNumber')
+    ..aOS(6, _omitFieldNames ? '' : 'discordUsername')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -249,31 +246,87 @@ class TeamMember extends $pb.GeneratedMessage {
   void clearDisplayName() => $_clearField(4);
 
   @$pb.TagNumber(5)
-  $core.String get rfidTag => $_getSZ(4);
+  $core.String get mobileNumber => $_getSZ(4);
   @$pb.TagNumber(5)
-  set rfidTag($core.String value) => $_setString(4, value);
+  set mobileNumber($core.String value) => $_setString(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasRfidTag() => $_has(4);
+  $core.bool hasMobileNumber() => $_has(4);
   @$pb.TagNumber(5)
-  void clearRfidTag() => $_clearField(5);
+  void clearMobileNumber() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.String get mobileNumber => $_getSZ(5);
+  $core.String get discordUsername => $_getSZ(5);
   @$pb.TagNumber(6)
-  set mobileNumber($core.String value) => $_setString(5, value);
+  set discordUsername($core.String value) => $_setString(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasMobileNumber() => $_has(5);
+  $core.bool hasDiscordUsername() => $_has(5);
   @$pb.TagNumber(6)
-  void clearMobileNumber() => $_clearField(6);
+  void clearDiscordUsername() => $_clearField(6);
+}
 
-  @$pb.TagNumber(7)
-  $core.String get discordUsername => $_getSZ(6);
-  @$pb.TagNumber(7)
-  set discordUsername($core.String value) => $_setString(6, value);
-  @$pb.TagNumber(7)
-  $core.bool hasDiscordUsername() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearDiscordUsername() => $_clearField(7);
+class RfidTag extends $pb.GeneratedMessage {
+  factory RfidTag({
+    $core.String? teamMemberId,
+    $core.String? tag,
+  }) {
+    final result = create();
+    if (teamMemberId != null) result.teamMemberId = teamMemberId;
+    if (tag != null) result.tag = tag;
+    return result;
+  }
+
+  RfidTag._();
+
+  factory RfidTag.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory RfidTag.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'RfidTag',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'teamMemberId')
+    ..aOS(2, _omitFieldNames ? '' : 'tag')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RfidTag clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  RfidTag copyWith(void Function(RfidTag) updates) =>
+      super.copyWith((message) => updates(message as RfidTag)) as RfidTag;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static RfidTag create() => RfidTag._();
+  @$core.override
+  RfidTag createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static RfidTag getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<RfidTag>(create);
+  static RfidTag? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get teamMemberId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set teamMemberId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasTeamMemberId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearTeamMemberId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get tag => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set tag($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTag() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTag() => $_clearField(2);
 }
 
 class Location extends $pb.GeneratedMessage {

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/team_member.pbgrpc.dart';
+import 'package:time_keeper/generated/api/rfid_tag.pbgrpc.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
@@ -60,18 +61,12 @@ class _LinkCardContent extends ConsumerWidget {
                     style: TextStyle(color: Colors.white),
                   ),
                   onPressed: () async {
-                    final client = ref.read(teamMemberServiceProvider);
+                    final client = ref.read(rfidTagServiceProvider);
                     final result = await callGrpcEndpoint(
-                      () => client.updateTeamMember(
-                        UpdateTeamMemberRequest(
-                          id: memberId,
-                          firstName: member.firstName,
-                          lastName: member.lastName,
-                          memberType: member.memberType,
-                          displayName: member.displayName.isNotEmpty
-                              ? member.displayName
-                              : null,
-                          rfidTag: scannedUid,
+                      () => client.createRfidTag(
+                        CreateRfidTagRequest(
+                          teamMemberId: memberId,
+                          tag: scannedUid,
                         ),
                       ),
                     );

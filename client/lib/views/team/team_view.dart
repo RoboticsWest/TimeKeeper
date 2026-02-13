@@ -3,7 +3,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/api.pbgrpc.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
@@ -51,6 +53,7 @@ class TeamView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(entitySyncProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final currentLocation = ref.watch(currentLocationProvider) ?? '';
@@ -148,7 +151,7 @@ class TeamView extends ConsumerWidget {
                 ),
                 BaseTableCell(
                   child: Text(
-                    'RFID Tag',
+                    'RFID Tags',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -172,6 +175,10 @@ class TeamView extends ConsumerWidget {
                   id,
                   teamMemberSessions.values,
                 );
+                final memberTags = ref.watch(rfidTagsByMemberProvider(id));
+                final tagDisplay = memberTags.isEmpty
+                    ? '—'
+                    : memberTags.values.map((t) => t.tag).join(', ');
 
                 return EditTableRow(
                   key: ValueKey(id),
@@ -184,9 +191,6 @@ class TeamView extends ConsumerWidget {
                     existingMemberType: member.memberType,
                     existingDisplayName: member.displayName.isNotEmpty
                         ? member.displayName
-                        : null,
-                    existingRfidTag: member.rfidTag.isNotEmpty
-                        ? member.rfidTag
                         : null,
                     existingDiscordUsername: member.discordUsername.isNotEmpty
                         ? member.discordUsername
@@ -211,11 +215,7 @@ class TeamView extends ConsumerWidget {
                             : '—',
                       ),
                     ),
-                    BaseTableCell(
-                      child: Text(
-                        member.rfidTag.isNotEmpty ? member.rfidTag : '—',
-                      ),
-                    ),
+                    BaseTableCell(child: Text(tagDisplay)),
                     BaseTableCell(
                       child: Text(
                         member.discordUsername.isNotEmpty

@@ -11,6 +11,7 @@ class UsersView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(usersSyncProvider);
     final users = ref.watch(usersProvider);
     final theme = Theme.of(context);
 

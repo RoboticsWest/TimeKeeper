@@ -22,9 +22,12 @@ use crate::{
       UploadStudentCsvRequest, UploadStudentCsvResponse, team_member_service_server::TeamMemberService,
     },
     common::{Role, SyncType},
-    db::{TeamMember, TeamMemberType},
+    db::{RfidTag, TeamMember, TeamMemberType},
   },
-  modules::team_member::{TeamMemberImportList, TeamMemberRepository},
+  modules::{
+    rfid_tag::RfidTagRepository,
+    team_member::{TeamMemberImportList, TeamMemberRepository},
+  },
 };
 
 pub struct TeamMemberApi;
@@ -70,19 +73,24 @@ impl TeamMemberService for TeamMemberApi {
       }
 
       let new_member = TeamMember {
-        first_name: member.first_name,
-        last_name: member.last_name,
+        first_name: member.first_name.clone(),
+        last_name: member.last_name.clone(),
         member_type: TeamMemberType::Student as i32,
         display_name: member.display_name,
-        rfid_tag: member.rfid_tag,
         mobile_number: None,
         discord_username: member.discord_username,
       };
 
       match TeamMember::add(&new_member) {
-        Ok(_) => {}
+        Ok((member_id, _)) => {
+          if let Some(tag) = member.rfid_tag
+            && let Err(err) = RfidTag::add(&RfidTag { team_member_id: member_id, tag })
+          {
+            log::error!("Database error adding RFID tag for {} {}: {}", member.first_name, member.last_name, err);
+          }
+        }
         Err(err) => {
-          log::error!("Database error adding team member {} {}: {}", new_member.first_name, new_member.last_name, err);
+          log::error!("Database error adding team member {} {}: {}", member.first_name, member.last_name, err);
           return Err(Status::internal(err.to_string()));
         }
       }
@@ -118,19 +126,24 @@ impl TeamMemberService for TeamMemberApi {
       }
 
       let new_member = TeamMember {
-        first_name: member.first_name,
-        last_name: member.last_name,
+        first_name: member.first_name.clone(),
+        last_name: member.last_name.clone(),
         member_type: TeamMemberType::Mentor as i32,
         display_name: member.display_name,
-        rfid_tag: member.rfid_tag,
         mobile_number: None,
         discord_username: member.discord_username,
       };
 
       match TeamMember::add(&new_member) {
-        Ok(_) => {}
+        Ok((member_id, _)) => {
+          if let Some(tag) = member.rfid_tag
+            && let Err(err) = RfidTag::add(&RfidTag { team_member_id: member_id, tag })
+          {
+            log::error!("Database error adding RFID tag for {} {}: {}", member.first_name, member.last_name, err);
+          }
+        }
         Err(err) => {
-          log::error!("Database error adding team member {} {}: {}", new_member.first_name, new_member.last_name, err);
+          log::error!("Database error adding team member {} {}: {}", member.first_name, member.last_name, err);
           return Err(Status::internal(err.to_string()));
         }
       }
@@ -334,7 +347,6 @@ impl TeamMemberService for TeamMemberApi {
       last_name: request.last_name,
       member_type: request.member_type,
       display_name: request.display_name,
-      rfid_tag: request.rfid_tag,
       mobile_number: None,
       discord_username: request.discord_username,
     };
@@ -367,7 +379,6 @@ impl TeamMemberService for TeamMemberApi {
       last_name: request.last_name,
       member_type: request.member_type,
       display_name: request.display_name,
-      rfid_tag: request.rfid_tag,
       mobile_number: None,
       discord_username: request.discord_username,
     };
@@ -394,6 +405,13 @@ impl TeamMemberService for TeamMemberApi {
 
     if existing.is_none() {
       return Err(Status::not_found("Team member not found"));
+    }
+
+    // Cascade delete associated RFID tags
+    let rfid_tags = RfidTag::get_by_member_id(&request.id)
+      .map_err(|e| Status::internal(format!("Failed to get RFID tags: {}", e)))?;
+    for (tag_id, _) in rfid_tags {
+      RfidTag::remove(&tag_id).map_err(|e| Status::internal(format!("Failed to delete RFID tag: {}", e)))?;
     }
 
     TeamMember::remove(&request.id).map_err(|e| Status::internal(format!("Failed to delete team member: {}", e)))?;

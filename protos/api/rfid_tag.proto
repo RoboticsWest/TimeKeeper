@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "common/common.proto";
+import "db/db.proto";
+
+message RfidTagResponse {
+  string id = 1;
+  db.RfidTag rfid_tag = 2;
+}
+
+message GetRfidTagsRequest {}
+message GetRfidTagsResponse {
+  repeated RfidTagResponse rfid_tags = 1;
+}
+
+message StreamRfidTagsRequest {}
+message StreamRfidTagsResponse {
+  repeated RfidTagResponse rfid_tags = 1;
+  common.SyncType sync_type = 2;
+}
+
+message CreateRfidTagRequest {
+  string team_member_id = 1;
+  string tag = 2;
+}
+message CreateRfidTagResponse {}
+
+message DeleteRfidTagRequest {
+  string id = 1;
+}
+message DeleteRfidTagResponse {}
+
+message DeleteRfidTagsByMemberRequest {
+  string team_member_id = 1;
+}
+message DeleteRfidTagsByMemberResponse {}
+
+service RfidTagService {
+  rpc GetRfidTags(GetRfidTagsRequest) returns (GetRfidTagsResponse);
+  rpc StreamRfidTags(StreamRfidTagsRequest) returns (stream StreamRfidTagsResponse);
+  rpc CreateRfidTag(CreateRfidTagRequest) returns (CreateRfidTagResponse);
+  rpc DeleteRfidTag(DeleteRfidTagRequest) returns (DeleteRfidTagResponse);
+  rpc DeleteRfidTagsByMember(DeleteRfidTagsByMemberRequest) returns (DeleteRfidTagsByMemberResponse);
+}

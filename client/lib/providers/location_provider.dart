@@ -19,7 +19,7 @@ LocationServiceClient locationService(Ref ref) {
   return LocationServiceClient(channel, options: options);
 }
 
-@Riverpod(keepAlive: true)
+@riverpod
 Stream<StreamLocationsResponse> locationsStream(Ref ref) {
   final reconnectingStream = ReconnectingStream<StreamLocationsResponse>(
     () async {
@@ -43,21 +43,19 @@ class Locations extends _$Locations {
       fromBuffer: Location.fromBuffer,
     );
 
-    final localLocations = _storage.getAll();
+    return _storage.getAll();
+  }
 
-    _storage.bindToStream(
-      ref: ref,
-      streamProvider: locationsStreamProvider,
-      extractItems: (response) => response.locations,
-      getSyncType: (response) => response.syncType,
+  void syncFromStream(StreamLocationsResponse response) {
+    _storage.syncResponse(
+      syncType: response.syncType,
+      items: response.locations,
       hasItem: (item) => item.hasLocation(),
       getId: (item) => item.id,
       getItem: (item) => item.location,
       getState: () => state,
       setState: (newState) => state = newState,
     );
-
-    return localLocations;
   }
 }
 

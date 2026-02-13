@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/session.pbgrpc.dart';
 import 'package:time_keeper/models/session_status.dart';
+import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
@@ -47,6 +48,7 @@ class SessionView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(entitySyncProvider);
     final sessions = ref.watch(sessionsProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final theme = Theme.of(context);

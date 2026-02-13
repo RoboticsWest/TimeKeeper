@@ -191,7 +191,6 @@ impl SettingsService for SettingsApi {
           last_name: String::new(),
           member_type: member_type as i32,
           display_name: Some(display_name),
-          rfid_tag: None,
           mobile_number: None,
           discord_username: Some(discord_username),
         };

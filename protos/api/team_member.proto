@@ -58,8 +58,7 @@ message CreateTeamMemberRequest {
   string last_name = 2;
   db.TeamMemberType member_type = 3;
   optional string display_name = 4;
-  optional string rfid_tag = 5;
-  optional string discord_username = 6;
+  optional string discord_username = 5;
 }
 message CreateTeamMemberResponse {}
 
@@ -69,8 +68,7 @@ message UpdateTeamMemberRequest {
   string last_name = 3;
   db.TeamMemberType member_type = 4;
   optional string display_name = 5;
-  optional string rfid_tag = 6;
-  optional string discord_username = 7;
+  optional string discord_username = 6;
 }
 message UpdateTeamMemberResponse {}
 

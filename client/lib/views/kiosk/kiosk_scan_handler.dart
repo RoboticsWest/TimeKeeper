@@ -8,6 +8,7 @@ import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
@@ -29,8 +30,9 @@ Future<void> handleKioskScan({
   if (trimmed.isEmpty) return;
 
   final teamMembers = ref.read(teamMembersProvider);
+  final rfidTags = ref.read(rfidTagsProvider);
   final variants = _buildUidVariants(trimmed);
-  final match = _findMember(variants, teamMembers);
+  final match = _findMember(variants, teamMembers, rfidTags);
 
   if (match == null) {
     _log.w(
@@ -223,15 +225,21 @@ List<int> _bigIntToBytes(BigInt value) {
   return bytes.reversed.toList();
 }
 
-/// Tries to match any of the UID [variants] against team member RFID tags.
+/// Tries to match any of the UID [variants] against RFID tags, returning the
+/// corresponding team member.
 MapEntry<String, TeamMember>? _findMember(
   Set<String> variants,
   Map<String, TeamMember> teamMembers,
+  Map<String, RfidTag> rfidTags,
 ) {
-  for (final entry in teamMembers.entries) {
-    final rfid = entry.value.rfidTag;
-    if (rfid.isNotEmpty && variants.contains(rfid.trim().toLowerCase())) {
-      return entry;
+  for (final rfidEntry in rfidTags.values) {
+    final tag = rfidEntry.tag;
+    if (tag.isNotEmpty && variants.contains(tag.trim().toLowerCase())) {
+      final memberId = rfidEntry.teamMemberId;
+      final member = teamMembers[memberId];
+      if (member != null) {
+        return MapEntry(memberId, member);
+      }
     }
   }
   return null;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
@@ -19,6 +20,7 @@ class StatisticsView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(entitySyncProvider);
     final sessions = ref.watch(sessionsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final locations = ref.watch(locationsProvider);
@@ -29,14 +31,27 @@ class StatisticsView extends HookConsumerWidget {
     final selectedDay = useState<DateTime?>(null);
 
     final filtered = filterSessionsByRange(sessions, selectedRange.value);
-    final memberHours = computeMemberHours(filtered, teamMembers, teamMemberSessions);
+    final memberHours = computeMemberHours(
+      filtered,
+      teamMembers,
+      teamMemberSessions,
+    );
     final dailyHours = computeDailyHours(filtered, teamMemberSessions);
     final dailyAttendance = computeDailyAttendance(teamMemberSessions);
-    final locationAttendance = computeLocationAttendance(filtered, locations, teamMemberSessions);
+    final locationAttendance = computeLocationAttendance(
+      filtered,
+      locations,
+      teamMemberSessions,
+    );
     final insights = computeInsights(filtered, locations, teamMemberSessions);
 
     final dayMemberDetails = selectedDay.value != null
-        ? computeDayMemberDetails(selectedDay.value!, filtered, teamMembers, teamMemberSessions)
+        ? computeDayMemberDetails(
+            selectedDay.value!,
+            filtered,
+            teamMembers,
+            teamMemberSessions,
+          )
         : <DayMemberDetail>[];
 
     void onDaySelected(DateTime? day) {
