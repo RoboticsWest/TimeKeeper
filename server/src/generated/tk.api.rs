@@ -4723,6 +4723,24 @@ pub struct StreamTeamMemberSessionsResponse {
     #[prost(enumeration = "super::common::SyncType", tag = "2")]
     pub sync_type: i32,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateTeamMemberSessionRequest {
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub check_in_time: ::core::option::Option<super::common::Timestamp>,
+    #[prost(message, optional, tag = "3")]
+    pub check_out_time: ::core::option::Option<super::common::Timestamp>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateTeamMemberSessionResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteTeamMemberSessionRequest {
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteTeamMemberSessionResponse {}
 /// Generated client implementations.
 pub mod team_member_session_service_client {
     #![allow(
@@ -4876,6 +4894,64 @@ pub mod team_member_session_service_client {
                 );
             self.inner.server_streaming(req, path, codec).await
         }
+        pub async fn update_team_member_session(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateTeamMemberSessionRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateTeamMemberSessionResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.TeamMemberSessionService/UpdateTeamMemberSession",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "tk.api.TeamMemberSessionService",
+                        "UpdateTeamMemberSession",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn delete_team_member_session(
+            &mut self,
+            request: impl tonic::IntoRequest<super::DeleteTeamMemberSessionRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::DeleteTeamMemberSessionResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.TeamMemberSessionService/DeleteTeamMemberSession",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "tk.api.TeamMemberSessionService",
+                        "DeleteTeamMemberSession",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -4912,6 +4988,20 @@ pub mod team_member_session_service_server {
             request: tonic::Request<super::StreamTeamMemberSessionsRequest>,
         ) -> std::result::Result<
             tonic::Response<Self::StreamTeamMemberSessionsStream>,
+            tonic::Status,
+        >;
+        async fn update_team_member_session(
+            &self,
+            request: tonic::Request<super::UpdateTeamMemberSessionRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateTeamMemberSessionResponse>,
+            tonic::Status,
+        >;
+        async fn delete_team_member_session(
+            &self,
+            request: tonic::Request<super::DeleteTeamMemberSessionRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::DeleteTeamMemberSessionResponse>,
             tonic::Status,
         >;
     }
@@ -5094,6 +5184,112 @@ pub mod team_member_session_service_server {
                                 max_encoding_message_size,
                             );
                         let res = grpc.server_streaming(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.TeamMemberSessionService/UpdateTeamMemberSession" => {
+                    #[allow(non_camel_case_types)]
+                    struct UpdateTeamMemberSessionSvc<T: TeamMemberSessionService>(
+                        pub Arc<T>,
+                    );
+                    impl<
+                        T: TeamMemberSessionService,
+                    > tonic::server::UnaryService<super::UpdateTeamMemberSessionRequest>
+                    for UpdateTeamMemberSessionSvc<T> {
+                        type Response = super::UpdateTeamMemberSessionResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::UpdateTeamMemberSessionRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as TeamMemberSessionService>::update_team_member_session(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UpdateTeamMemberSessionSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.TeamMemberSessionService/DeleteTeamMemberSession" => {
+                    #[allow(non_camel_case_types)]
+                    struct DeleteTeamMemberSessionSvc<T: TeamMemberSessionService>(
+                        pub Arc<T>,
+                    );
+                    impl<
+                        T: TeamMemberSessionService,
+                    > tonic::server::UnaryService<super::DeleteTeamMemberSessionRequest>
+                    for DeleteTeamMemberSessionSvc<T> {
+                        type Response = super::DeleteTeamMemberSessionResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::DeleteTeamMemberSessionRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as TeamMemberSessionService>::delete_team_member_session(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = DeleteTeamMemberSessionSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
                         Ok(res)
                     };
                     Box::pin(fut)

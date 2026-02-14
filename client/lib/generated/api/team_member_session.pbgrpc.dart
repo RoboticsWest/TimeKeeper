@@ -50,6 +50,24 @@ class TeamMemberSessionServiceClient extends $grpc.Client {
         options: options);
   }
 
+  $grpc.ResponseFuture<$0.UpdateTeamMemberSessionResponse>
+      updateTeamMemberSession(
+    $0.UpdateTeamMemberSessionRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$updateTeamMemberSession, request,
+        options: options);
+  }
+
+  $grpc.ResponseFuture<$0.DeleteTeamMemberSessionResponse>
+      deleteTeamMemberSession(
+    $0.DeleteTeamMemberSessionRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$deleteTeamMemberSession, request,
+        options: options);
+  }
+
   // method descriptors
 
   static final _$getTeamMemberSessions = $grpc.ClientMethod<
@@ -63,6 +81,18 @@ class TeamMemberSessionServiceClient extends $grpc.Client {
       '/tk.api.TeamMemberSessionService/StreamTeamMemberSessions',
       ($0.StreamTeamMemberSessionsRequest value) => value.writeToBuffer(),
       $0.StreamTeamMemberSessionsResponse.fromBuffer);
+  static final _$updateTeamMemberSession = $grpc.ClientMethod<
+          $0.UpdateTeamMemberSessionRequest,
+          $0.UpdateTeamMemberSessionResponse>(
+      '/tk.api.TeamMemberSessionService/UpdateTeamMemberSession',
+      ($0.UpdateTeamMemberSessionRequest value) => value.writeToBuffer(),
+      $0.UpdateTeamMemberSessionResponse.fromBuffer);
+  static final _$deleteTeamMemberSession = $grpc.ClientMethod<
+          $0.DeleteTeamMemberSessionRequest,
+          $0.DeleteTeamMemberSessionResponse>(
+      '/tk.api.TeamMemberSessionService/DeleteTeamMemberSession',
+      ($0.DeleteTeamMemberSessionRequest value) => value.writeToBuffer(),
+      $0.DeleteTeamMemberSessionResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('tk.api.TeamMemberSessionService')
@@ -88,6 +118,24 @@ abstract class TeamMemberSessionServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.StreamTeamMemberSessionsRequest.fromBuffer(value),
         ($0.StreamTeamMemberSessionsResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UpdateTeamMemberSessionRequest,
+            $0.UpdateTeamMemberSessionResponse>(
+        'UpdateTeamMemberSession',
+        updateTeamMemberSession_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.UpdateTeamMemberSessionRequest.fromBuffer(value),
+        ($0.UpdateTeamMemberSessionResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.DeleteTeamMemberSessionRequest,
+            $0.DeleteTeamMemberSessionResponse>(
+        'DeleteTeamMemberSession',
+        deleteTeamMemberSession_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.DeleteTeamMemberSessionRequest.fromBuffer(value),
+        ($0.DeleteTeamMemberSessionResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.GetTeamMemberSessionsResponse> getTeamMemberSessions_Pre(
@@ -107,4 +155,22 @@ abstract class TeamMemberSessionServiceBase extends $grpc.Service {
 
   $async.Stream<$0.StreamTeamMemberSessionsResponse> streamTeamMemberSessions(
       $grpc.ServiceCall call, $0.StreamTeamMemberSessionsRequest request);
+
+  $async.Future<$0.UpdateTeamMemberSessionResponse> updateTeamMemberSession_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.UpdateTeamMemberSessionRequest> $request) async {
+    return updateTeamMemberSession($call, await $request);
+  }
+
+  $async.Future<$0.UpdateTeamMemberSessionResponse> updateTeamMemberSession(
+      $grpc.ServiceCall call, $0.UpdateTeamMemberSessionRequest request);
+
+  $async.Future<$0.DeleteTeamMemberSessionResponse> deleteTeamMemberSession_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.DeleteTeamMemberSessionRequest> $request) async {
+    return deleteTeamMemberSession($call, await $request);
+  }
+
+  $async.Future<$0.DeleteTeamMemberSessionResponse> deleteTeamMemberSession(
+      $grpc.ServiceCall call, $0.DeleteTeamMemberSessionRequest request);
 }

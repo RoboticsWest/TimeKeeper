@@ -9,14 +9,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 class AnimatedInfiniteVerticalList extends HookConsumerWidget {
   final List<Widget> children;
   final double childHeight;
-  final int scrollSpeed;
+  final int scrollSpeedMs;
   final bool duplicateWhenChildrenOdd;
 
   const AnimatedInfiniteVerticalList({
     super.key,
     required this.children,
     required this.childHeight,
-    this.scrollSpeed = 5,
+    this.scrollSpeedMs = 2000,
     this.duplicateWhenChildrenOdd = true,
   });
 
@@ -49,7 +49,7 @@ class AnimatedInfiniteVerticalList extends HookConsumerWidget {
           return _InfiniteScrolling(
             items: items,
             childHeight: childHeight,
-            scrollSpeed: scrollSpeed,
+            scrollSpeedMs: scrollSpeedMs,
           );
         } else {
           // Static normal list — fits on screen
@@ -78,19 +78,19 @@ class AnimatedInfiniteVerticalList extends HookConsumerWidget {
 class _InfiniteScrolling extends HookWidget {
   final List<Widget> items;
   final double childHeight;
-  final int scrollSpeed;
+  final int scrollSpeedMs;
 
   const _InfiniteScrolling({
     required this.items,
     required this.childHeight,
-    required this.scrollSpeed,
+    required this.scrollSpeedMs,
   });
 
   @override
   Widget build(BuildContext context) {
     final totalHeight = items.length * childHeight;
     final duration = Duration(
-      seconds: (items.isEmpty ? 1 : items.length) * scrollSpeed,
+      milliseconds: (items.isEmpty ? 1 : items.length) * scrollSpeedMs,
     );
     final animationController = useAnimationController(duration: duration);
 

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/providers/user_provider.dart';
 import 'package:time_keeper/views/users/role_chip.dart';
 import 'package:time_keeper/views/users/user_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/table_filter.dart';
 
-class UsersView extends ConsumerWidget {
+class UsersView extends HookConsumerWidget {
   const UsersView({super.key});
 
   @override
@@ -15,8 +17,19 @@ class UsersView extends ConsumerWidget {
     final users = ref.watch(usersProvider);
     final theme = Theme.of(context);
 
+    final filterController = useTextEditingController();
+    final filterText = useValueListenable(filterController).text.toLowerCase();
+
     final sorted = users.entries.toList()
       ..sort((a, b) => a.value.username.compareTo(b.value.username));
+
+    final filtered = sorted.where((entry) {
+      if (filterText.isEmpty) return true;
+      final user = entry.value;
+      final roleStr = user.roles.map((r) => r.name.toLowerCase()).join(' ');
+      return user.username.toLowerCase().contains(filterText) ||
+          roleStr.contains(filterText);
+    }).toList();
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -24,7 +37,9 @@ class UsersView extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Users', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          TableFilter(controller: filterController),
+          const SizedBox(height: 12),
           Expanded(
             child: EditTable(
               alternatingRows: true,
@@ -46,7 +61,7 @@ class UsersView extends ConsumerWidget {
                   top: Radius.circular(8),
                 ),
               ),
-              editRows: sorted.map((entry) {
+              editRows: filtered.map((entry) {
                 final id = entry.key;
                 final user = entry.value;
                 return EditTableRow(

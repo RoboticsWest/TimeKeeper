@@ -192,7 +192,7 @@ fn sessions() -> String {
   if !active.is_empty() {
     lines.push("**Active Sessions**".to_string());
     for (_, start, end, loc) in &active {
-      lines.push(format!("  {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
+      lines.push(format!("- {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
     }
   }
 
@@ -200,7 +200,7 @@ fn sessions() -> String {
     upcoming.sort_by_key(|(_, start, _, _)| *start);
     lines.push("**Upcoming Sessions**".to_string());
     for (_, start, end, loc) in upcoming.iter().take(5) {
-      lines.push(format!("  {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
+      lines.push(format!("- {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
     }
   }
 
@@ -251,7 +251,7 @@ fn checked_in() -> String {
 
   let mut lines = vec![format!("**Currently Checked In ({}):**", checked_in_names.len())];
   for name in &checked_in_names {
-    lines.push(format!("  - {name}"));
+    lines.push(format!("- {name}"));
   }
   lines.join("\n")
 }
@@ -271,7 +271,7 @@ fn locations() -> String {
 
   let mut lines = vec!["**Locations**".to_string()];
   for name in names {
-    lines.push(format!("  - {name}"));
+    lines.push(format!("- {name}"));
   }
   lines.join("\n")
 }

@@ -7,17 +7,19 @@ use tokio_stream::{
 use tonic::{Request, Response, Result, Status};
 
 use crate::{
+  auth::auth_helpers::require_permission,
   core::{
     events::{ChangeEvent, EVENT_BUS},
     shutdown::with_shutdown,
   },
   generated::{
     api::{
-      GetTeamMemberSessionsRequest, GetTeamMemberSessionsResponse, StreamTeamMemberSessionsRequest,
-      StreamTeamMemberSessionsResponse, TeamMemberSessionResponse,
+      DeleteTeamMemberSessionRequest, DeleteTeamMemberSessionResponse, GetTeamMemberSessionsRequest,
+      GetTeamMemberSessionsResponse, StreamTeamMemberSessionsRequest, StreamTeamMemberSessionsResponse,
+      TeamMemberSessionResponse, UpdateTeamMemberSessionRequest, UpdateTeamMemberSessionResponse,
       team_member_session_service_server::TeamMemberSessionService,
     },
-    common::SyncType,
+    common::{Role, SyncType},
     db::TeamMemberSession,
   },
   modules::team_member_session::TeamMemberSessionRepository,
@@ -93,5 +95,60 @@ impl TeamMemberSessionService for TeamMemberSessionApi {
     let full_stream = with_shutdown(full_stream);
 
     Ok(Response::new(Box::pin(full_stream)))
+  }
+
+  async fn update_team_member_session(
+    &self,
+    request: Request<UpdateTeamMemberSessionRequest>,
+  ) -> Result<Response<UpdateTeamMemberSessionResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    if request.id.is_empty() {
+      return Err(Status::invalid_argument("Team member session ID is required"));
+    }
+
+    let existing = TeamMemberSession::get(&request.id)
+      .map_err(|e| Status::internal(format!("Failed to get team member session: {}", e)))?;
+
+    let Some(existing) = existing else {
+      return Err(Status::not_found("Team member session not found"));
+    };
+
+    let updated = TeamMemberSession {
+      team_member_id: existing.team_member_id,
+      session_id: existing.session_id,
+      check_in_time: request.check_in_time,
+      check_out_time: request.check_out_time,
+    };
+
+    TeamMemberSession::update(&request.id, &updated)
+      .map_err(|e| Status::internal(format!("Failed to update team member session: {}", e)))?;
+
+    Ok(Response::new(UpdateTeamMemberSessionResponse {}))
+  }
+
+  async fn delete_team_member_session(
+    &self,
+    request: Request<DeleteTeamMemberSessionRequest>,
+  ) -> Result<Response<DeleteTeamMemberSessionResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let request = request.into_inner();
+
+    if request.id.is_empty() {
+      return Err(Status::invalid_argument("Team member session ID is required"));
+    }
+
+    let existing = TeamMemberSession::get(&request.id)
+      .map_err(|e| Status::internal(format!("Failed to get team member session: {}", e)))?;
+
+    if existing.is_none() {
+      return Err(Status::not_found("Team member session not found"));
+    }
+
+    TeamMemberSession::remove(&request.id)
+      .map_err(|e| Status::internal(format!("Failed to delete team member session: {}", e)))?;
+
+    Ok(Response::new(DeleteTeamMemberSessionResponse {}))
   }
 }
