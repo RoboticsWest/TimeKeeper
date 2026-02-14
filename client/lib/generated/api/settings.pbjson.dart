@@ -135,15 +135,8 @@ const UpdateSettingsRequest$json = {
       '10': 'discordAutoCheckoutDmEnabled'
     },
     {
-      '1': 'discord_auto_checkout_dm_mins',
-      '3': 15,
-      '4': 1,
-      '5': 3,
-      '10': 'discordAutoCheckoutDmMins'
-    },
-    {
       '1': 'discord_auto_checkout_dm_message',
-      '3': 16,
+      '3': 15,
       '4': 1,
       '5': 9,
       '10': 'discordAutoCheckoutDmMessage'
@@ -168,9 +161,8 @@ final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Dec
     'X292ZXJ0aW1lX2RtX21pbnMYDCABKANSFWRpc2NvcmRPdmVydGltZURtTWlucxI9ChtkaXNjb3'
     'JkX292ZXJ0aW1lX2RtX21lc3NhZ2UYDSABKAlSGGRpc2NvcmRPdmVydGltZURtTWVzc2FnZRJG'
     'CiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fZW5hYmxlZBgOIAEoCFIcZGlzY29yZEF1dG9DaG'
-    'Vja291dERtRW5hYmxlZBJACh1kaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbWlucxgPIAEoA1IZ'
-    'ZGlzY29yZEF1dG9DaGVja291dERtTWlucxJGCiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbW'
-    'Vzc2FnZRgQIAEoCVIcZGlzY29yZEF1dG9DaGVja291dERtTWVzc2FnZQ==');
+    'Vja291dERtRW5hYmxlZBJGCiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbWVzc2FnZRgPIAEo'
+    'CVIcZGlzY29yZEF1dG9DaGVja291dERtTWVzc2FnZQ==');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {

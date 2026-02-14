@@ -21,8 +21,7 @@ pub const DEFAULT_END_REMINDER_MESSAGE: &str =
   "@here Session at {location} is ending in ~{mins} minutes \u{2014} don't forget to sign out!";
 pub const DEFAULT_OVERTIME_DM_MINS: i64 = 10;
 pub const DEFAULT_OVERTIME_DM_MESSAGE: &str = "Hey {username}, you're now in overtime for the session at **{location}**. The session ended at **{end_time}**. Don't forget to check out!";
-pub const DEFAULT_AUTO_CHECKOUT_DM_MINS: i64 = 30;
-pub const DEFAULT_AUTO_CHECKOUT_DM_MESSAGE: &str = "Heads up {username} \u{2014} you're about to be auto-checked-out from the session at **{location}**. A new session is starting soon.";
+pub const DEFAULT_AUTO_CHECKOUT_DM_MESSAGE: &str = "Hey {username}, you've been auto-checked-out from the session at **{location}** (ended at **{end_time}**) because a new session is starting soon.";
 
 pub trait SettingsRepository {
   fn set(record: &Settings) -> Result<()>;
@@ -70,7 +69,6 @@ impl SettingsRepository for Settings {
       discord_overtime_dm_mins: DEFAULT_OVERTIME_DM_MINS,
       discord_overtime_dm_message: DEFAULT_OVERTIME_DM_MESSAGE.to_string(),
       discord_auto_checkout_dm_enabled: true,
-      discord_auto_checkout_dm_mins: DEFAULT_AUTO_CHECKOUT_DM_MINS,
       discord_auto_checkout_dm_message: DEFAULT_AUTO_CHECKOUT_DM_MESSAGE.to_string(),
     };
 

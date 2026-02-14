@@ -130,7 +130,6 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? discordOvertimeDmMins,
     $core.String? discordOvertimeDmMessage,
     $core.bool? discordAutoCheckoutDmEnabled,
-    $fixnum.Int64? discordAutoCheckoutDmMins,
     $core.String? discordAutoCheckoutDmMessage,
   }) {
     final result = create();
@@ -159,8 +158,6 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
       result.discordOvertimeDmMessage = discordOvertimeDmMessage;
     if (discordAutoCheckoutDmEnabled != null)
       result.discordAutoCheckoutDmEnabled = discordAutoCheckoutDmEnabled;
-    if (discordAutoCheckoutDmMins != null)
-      result.discordAutoCheckoutDmMins = discordAutoCheckoutDmMins;
     if (discordAutoCheckoutDmMessage != null)
       result.discordAutoCheckoutDmMessage = discordAutoCheckoutDmMessage;
     return result;
@@ -193,8 +190,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     ..aInt64(12, _omitFieldNames ? '' : 'discordOvertimeDmMins')
     ..aOS(13, _omitFieldNames ? '' : 'discordOvertimeDmMessage')
     ..aOB(14, _omitFieldNames ? '' : 'discordAutoCheckoutDmEnabled')
-    ..aInt64(15, _omitFieldNames ? '' : 'discordAutoCheckoutDmMins')
-    ..aOS(16, _omitFieldNames ? '' : 'discordAutoCheckoutDmMessage')
+    ..aOS(15, _omitFieldNames ? '' : 'discordAutoCheckoutDmMessage')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -344,23 +340,14 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
   void clearDiscordAutoCheckoutDmEnabled() => $_clearField(14);
 
   @$pb.TagNumber(15)
-  $fixnum.Int64 get discordAutoCheckoutDmMins => $_getI64(14);
+  $core.String get discordAutoCheckoutDmMessage => $_getSZ(14);
   @$pb.TagNumber(15)
-  set discordAutoCheckoutDmMins($fixnum.Int64 value) => $_setInt64(14, value);
-  @$pb.TagNumber(15)
-  $core.bool hasDiscordAutoCheckoutDmMins() => $_has(14);
-  @$pb.TagNumber(15)
-  void clearDiscordAutoCheckoutDmMins() => $_clearField(15);
-
-  @$pb.TagNumber(16)
-  $core.String get discordAutoCheckoutDmMessage => $_getSZ(15);
-  @$pb.TagNumber(16)
   set discordAutoCheckoutDmMessage($core.String value) =>
-      $_setString(15, value);
-  @$pb.TagNumber(16)
-  $core.bool hasDiscordAutoCheckoutDmMessage() => $_has(15);
-  @$pb.TagNumber(16)
-  void clearDiscordAutoCheckoutDmMessage() => $_clearField(16);
+      $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasDiscordAutoCheckoutDmMessage() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearDiscordAutoCheckoutDmMessage() => $_clearField(15);
 }
 
 class UpdateSettingsResponse extends $pb.GeneratedMessage {

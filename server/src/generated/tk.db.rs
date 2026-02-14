@@ -100,9 +100,7 @@ pub struct Settings {
     pub discord_overtime_dm_message: ::prost::alloc::string::String,
     #[prost(bool, tag = "14")]
     pub discord_auto_checkout_dm_enabled: bool,
-    #[prost(int64, tag = "15")]
-    pub discord_auto_checkout_dm_mins: i64,
-    #[prost(string, tag = "16")]
+    #[prost(string, tag = "15")]
     pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]

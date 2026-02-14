@@ -52,7 +52,6 @@ impl SettingsService for SettingsApi {
       discord_overtime_dm_mins: req.discord_overtime_dm_mins,
       discord_overtime_dm_message: req.discord_overtime_dm_message,
       discord_auto_checkout_dm_enabled: req.discord_auto_checkout_dm_enabled,
-      discord_auto_checkout_dm_mins: req.discord_auto_checkout_dm_mins,
       discord_auto_checkout_dm_message: req.discord_auto_checkout_dm_message,
     };
     Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;

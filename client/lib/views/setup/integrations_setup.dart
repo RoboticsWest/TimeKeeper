@@ -32,7 +32,6 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     final overtimeDmMinsController = useTextEditingController();
     final overtimeDmMessageController = useTextEditingController();
     final autoCheckoutDmEnabled = useState(true);
-    final autoCheckoutDmMinsController = useTextEditingController();
     final autoCheckoutDmMessageController = useTextEditingController();
     final discordRoles = useState<List<DiscordRole>>([]);
     final selectedRoleId = useState<String?>(null);
@@ -71,10 +70,6 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               : '10';
           overtimeDmMessageController.text = s.discordOvertimeDmMessage;
           autoCheckoutDmEnabled.value = s.discordAutoCheckoutDmEnabled;
-          final autoCheckoutMins = s.discordAutoCheckoutDmMins;
-          autoCheckoutDmMinsController.text = autoCheckoutMins > 0
-              ? autoCheckoutMins.toString()
-              : '30';
           autoCheckoutDmMessageController.text = s.discordAutoCheckoutDmMessage;
         }
       }
@@ -124,9 +119,6 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 ),
                 discordOvertimeDmMessage: overtimeDmMessageController.text,
                 discordAutoCheckoutDmEnabled: autoCheckoutDmEnabled.value,
-                discordAutoCheckoutDmMins: Int64(
-                  int.tryParse(autoCheckoutDmMinsController.text) ?? 30,
-                ),
                 discordAutoCheckoutDmMessage:
                     autoCheckoutDmMessageController.text,
               ),
@@ -373,7 +365,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         SettingRow(
           label: 'Auto-Checkout DM',
           description:
-              'DM members when they are about to be auto-checked-out before a new session starts',
+              'DM members when they have been auto-checked-out because a new session is starting',
           child: Row(
             children: [
               Switch(
@@ -390,23 +382,12 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'Auto-Checkout DM (minutes before next session)',
-          description:
-              'How many minutes before the next session starts to send the warning DM (default: 30)',
-          controller: autoCheckoutDmMinsController,
-          hintText: '30',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onUpdate: updateDiscordSettings,
-        ),
-        const SizedBox(height: 24),
-        TextFieldSetting(
           label: 'Auto-Checkout DM Message',
           description:
-              'Custom message for auto-checkout DMs. Supports {username}, {name}, {location}, {end_time}',
+              'Message sent when a member is auto-checked-out. Supports {username}, {name}, {location}, {end_time}',
           controller: autoCheckoutDmMessageController,
           hintText:
-              'Heads up {username} \u2014 you\'re about to be auto-checked-out from the session at {location}. A new session is starting soon.',
+              'Hey {username}, you\'ve been auto-checked-out from the session at {location} (ended at {end_time}) because a new session is starting soon.',
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 32),

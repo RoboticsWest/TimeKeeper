@@ -17,7 +17,7 @@ use crate::{
     location::LocationRepository,
     session::{
       SessionRepository,
-      helpers::{get_past_end_sessions, is_auto_checkout_imminent},
+      helpers::{get_auto_checked_out_members, get_past_end_sessions},
     },
     settings::{
       DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_END_REMINDER_MESSAGE, DEFAULT_OVERTIME_DM_MESSAGE,
@@ -170,88 +170,87 @@ impl ScheduledService for DiscordNotificationService {
       }
     };
 
-    // Per-user DM notifications (overtime + auto-checkout warnings)
+    // Per-user DM notifications
     if (settings.discord_overtime_dm_enabled || settings.discord_auto_checkout_dm_enabled)
       && let Some(ref guild_members) = guild_members
     {
       let team_members = TeamMember::get_all()?;
-      let past_end_sessions = get_past_end_sessions()?;
 
-      let overtime_msg_template = if settings.discord_overtime_dm_message.is_empty() {
-        DEFAULT_OVERTIME_DM_MESSAGE
-      } else {
-        &settings.discord_overtime_dm_message
-      };
-      let auto_checkout_msg_template = if settings.discord_auto_checkout_dm_message.is_empty() {
-        DEFAULT_AUTO_CHECKOUT_DM_MESSAGE
-      } else {
-        &settings.discord_auto_checkout_dm_message
-      };
+      // --- Overtime DMs: members still checked in past session end + threshold ---
+      if settings.discord_overtime_dm_enabled {
+        let overtime_msg_template = if settings.discord_overtime_dm_message.is_empty() {
+          DEFAULT_OVERTIME_DM_MESSAGE
+        } else {
+          &settings.discord_overtime_dm_message
+        };
+        let overtime_threshold_secs = settings.discord_overtime_dm_mins * 60;
 
-      for pes in &past_end_sessions {
-        if pes.checked_in.is_empty() {
-          continue;
-        }
-
-        let location = locations.get(&pes.session.location_id).map_or("Unknown", |l| l.location.as_str());
-        let end_dt = Utc.timestamp_opt(pes.end_secs, 0).single();
-        let end_time_str = end_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
-
-        // --- Overtime notification: configurable minutes after session end ---
-        if settings.discord_overtime_dm_enabled {
-          let overtime_threshold_secs = settings.discord_overtime_dm_mins * 60;
-          if now_secs > pes.end_secs + overtime_threshold_secs {
-            for (ms_id, ms) in &pes.checked_in {
-              if ms.overtime_notified {
-                continue;
-              }
-
-              let Some(member) = team_members.get(&ms.team_member_id) else { continue };
-              let username = member.discord_username.as_deref().unwrap_or("");
-              let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
-
-              let msg = overtime_msg_template
-                .replace("{username}", username)
-                .replace("{name}", member_name)
-                .replace("{location}", location)
-                .replace("{end_time}", &end_time_str);
-
-              if Self::send_dm_to_member(&http, guild_members, member, &msg) {
-                let mut ms = ms.clone();
-                ms.overtime_notified = true;
-                if let Err(e) = TeamMemberSession::update(ms_id, &ms) {
-                  log::error!("[DiscordNotificationService] Failed to persist overtime_notified for {ms_id}: {e}");
-                }
-              }
-            }
+        for pes in &get_past_end_sessions()? {
+          if pes.checked_in.is_empty() || now_secs <= pes.end_secs + overtime_threshold_secs {
+            continue;
           }
-        }
 
-        // --- Auto-checkout warning: detection via shared helper, timing owned by Discord ---
-        if settings.discord_auto_checkout_dm_enabled
-          && is_auto_checkout_imminent(pes.next_start_secs, now_secs, settings.discord_auto_checkout_dm_mins * 60)
-        {
+          let location = locations.get(&pes.session.location_id).map_or("Unknown", |l| l.location.as_str());
+          let end_dt = Utc.timestamp_opt(pes.end_secs, 0).single();
+          let end_time_str = end_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
+
           for (ms_id, ms) in &pes.checked_in {
-            if ms.auto_checkout_notified {
+            if ms.overtime_notified {
               continue;
             }
 
             let Some(member) = team_members.get(&ms.team_member_id) else { continue };
-            let username = member.discord_username.as_deref().unwrap_or("");
+            let Some(mention) = Self::resolve_mention(guild_members, member) else { continue };
             let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
 
-            let msg = auto_checkout_msg_template
-              .replace("{username}", username)
+            let msg = overtime_msg_template
+              .replace("{username}", &mention)
               .replace("{name}", member_name)
               .replace("{location}", location)
               .replace("{end_time}", &end_time_str);
 
-            if Self::send_dm_to_member(&http, guild_members, member, &msg) {
+            if Self::send_member_notification(&http, channel, &msg) {
               let mut ms = ms.clone();
-              ms.auto_checkout_notified = true;
+              ms.overtime_notified = true;
               if let Err(e) = TeamMemberSession::update(ms_id, &ms) {
-                log::error!("[DiscordNotificationService] Failed to persist auto_checkout_notified for {ms_id}: {e}");
+                log::error!("[DiscordNotificationService] Failed to persist overtime_notified for {ms_id}: {e}");
               }
+            }
+          }
+        }
+      }
+
+      // --- Auto-checkout DMs: members already checked out by SessionService ---
+      if settings.discord_auto_checkout_dm_enabled {
+        let auto_checkout_msg_template = if settings.discord_auto_checkout_dm_message.is_empty() {
+          DEFAULT_AUTO_CHECKOUT_DM_MESSAGE
+        } else {
+          &settings.discord_auto_checkout_dm_message
+        };
+
+        for acm in &get_auto_checked_out_members()? {
+          let Some(member) = team_members.get(&acm.member_session.team_member_id) else { continue };
+          let Some(mention) = Self::resolve_mention(guild_members, member) else { continue };
+          let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
+          let location = locations.get(&acm.session.location_id).map_or("Unknown", |l| l.location.as_str());
+          let end_secs = acm.session.end_time.as_ref().map_or(0, |t| t.seconds);
+          let end_dt = Utc.timestamp_opt(end_secs, 0).single();
+          let end_time_str = end_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
+
+          let msg = auto_checkout_msg_template
+            .replace("{username}", &mention)
+            .replace("{name}", member_name)
+            .replace("{location}", location)
+            .replace("{end_time}", &end_time_str);
+
+          if Self::send_member_notification(&http, channel, &msg) {
+            let mut ms = acm.member_session.clone();
+            ms.auto_checkout_notified = true;
+            if let Err(e) = TeamMemberSession::update(&acm.ms_id, &ms) {
+              log::error!(
+                "[DiscordNotificationService] Failed to persist auto_checkout_notified for {}: {e}",
+                acm.ms_id
+              );
             }
           }
         }
@@ -271,34 +270,23 @@ impl ScheduledService for DiscordNotificationService {
 }
 
 impl DiscordNotificationService {
-  /// Send a DM to a team member by finding their Discord user in the guild.
-  /// Returns `true` if the DM was sent successfully, `false` otherwise.
-  fn send_dm_to_member(http: &Http, guild_members: &[GuildMember], team_member: &TeamMember, message: &str) -> bool {
-    let Some(discord_username) = team_member.discord_username.as_deref() else {
-      return false;
-    };
-    if discord_username.is_empty() {
-      return false;
-    }
+  /// Resolve a team member's Discord mention string (`<@USER_ID>`).
+  /// Returns None if the member has no Discord username or isn't found in the guild.
+  fn resolve_mention(guild_members: &[GuildMember], team_member: &TeamMember) -> Option<String> {
+    let discord_username = team_member.discord_username.as_deref().filter(|u| !u.is_empty())?;
+    let guild_member = guild_members.iter().find(|gm| gm.user.name == discord_username)?;
+    Some(format!("<@{}>", guild_member.user.id))
+  }
 
-    let Some(guild_member) = guild_members.iter().find(|gm| gm.user.name == discord_username) else {
-      log::debug!("[DiscordNotificationService] Discord user '{discord_username}' not found in guild");
-      return false;
-    };
-
-    let result = block_on(async {
-      let dm_channel = guild_member.user.create_dm_channel(http).await?;
-      dm_channel.say(http, message).await?;
-      Ok::<_, serenity::Error>(())
-    });
+  /// Send a notification to the channel mentioning a specific team member.
+  /// Returns `true` if the message was sent successfully, `false` otherwise.
+  fn send_member_notification(http: &Http, channel: ChannelId, message: &str) -> bool {
+    let result = block_on(async { channel.say(http, message).await });
 
     match result {
-      Ok(()) => {
-        log::info!("[DiscordNotificationService] Sent DM to '{discord_username}'");
-        true
-      }
+      Ok(_) => true,
       Err(e) => {
-        log::error!("[DiscordNotificationService] Failed to send DM to '{discord_username}': {e}");
+        log::error!("[DiscordNotificationService] Failed to send notification: {e}");
         false
       }
     }
