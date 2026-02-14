@@ -6,6 +6,7 @@ import 'package:time_keeper/widgets/time_until.dart';
 
 class SessionInfoBar extends StatelessWidget {
   final Session? currentSession;
+  final bool isUpcoming;
   final Session? nextSession;
   final Map<String, Location> locations;
   final String? deviceLocationName;
@@ -15,6 +16,7 @@ class SessionInfoBar extends StatelessWidget {
   const SessionInfoBar({
     super.key,
     this.currentSession,
+    this.isUpcoming = false,
     this.nextSession,
     this.locations = const {},
     this.deviceLocationName,
@@ -34,18 +36,26 @@ class SessionInfoBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
       child: Row(
         children: [
-          // Current session
+          // Current / upcoming session
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: currentSession != null
+                color: currentSession != null && !isUpcoming
                     ? theme.colorScheme.primaryContainer
                     : theme.colorScheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(12),
+                border: currentSession == null || isUpcoming
+                    ? Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                        width: 1,
+                      )
+                    : null,
               ),
               child: currentSession != null
-                  ? _buildCurrentSession(theme)
+                  ? (isUpcoming
+                        ? _buildUpcomingSession(theme)
+                        : _buildCurrentSession(theme))
                   : _buildNoSession(theme),
             ),
           ),
@@ -111,7 +121,7 @@ class SessionInfoBar extends StatelessWidget {
               const Spacer(),
             TimeUntil(
               time: end,
-              positiveLeader: '',
+              positiveLeader: 'Ends in ',
               positiveStyle: theme.textTheme.labelLarge?.copyWith(
                 color: color,
                 fontWeight: FontWeight.bold,
@@ -145,6 +155,68 @@ class SessionInfoBar extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUpcomingSession(ThemeData theme) {
+    final color = theme.colorScheme.onSurfaceVariant;
+    final session = currentSession!;
+    final start = session.startTime.toDateTime();
+    final end = session.endTime.toDateTime();
+    final location = _locationName(session);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.schedule, color: color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Upcoming Session',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (location.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '— $location',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: color.withValues(alpha: 0.7),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ] else
+              const Spacer(),
+            TimeUntil(
+              time: start,
+              positiveLeader: 'Starts in ',
+              positiveStyle: theme.textTheme.labelLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+              negativeLeader: '',
+              negativeStyle: theme.textTheme.labelLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: color.withValues(alpha: 0.7),
+          ),
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

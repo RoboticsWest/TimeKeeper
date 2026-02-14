@@ -13,17 +13,17 @@ use crate::{
   },
   generated::{
     api::{
-      LocationResponse, RfidTagResponse, SessionResponse, StreamEntitiesRequest, StreamEntitiesResponse,
-      StreamLocationsResponse, StreamRfidTagsResponse, StreamSessionsResponse, StreamTeamMemberSessionsResponse,
-      StreamTeamMembersResponse, TeamMemberResponse, TeamMemberSessionResponse, stream_entities_response::Payload,
-      sync_service_server::SyncService,
+      LocationResponse, NotificationResponse, RfidTagResponse, SessionResponse, StreamEntitiesRequest,
+      StreamEntitiesResponse, StreamLocationsResponse, StreamNotificationsResponse, StreamRfidTagsResponse,
+      StreamSessionsResponse, StreamTeamMemberSessionsResponse, StreamTeamMembersResponse, TeamMemberResponse,
+      TeamMemberSessionResponse, stream_entities_response::Payload, sync_service_server::SyncService,
     },
     common::SyncType,
-    db::{Location, RfidTag, Session, TeamMember, TeamMemberSession},
+    db::{Location, Notification, RfidTag, Session, TeamMember, TeamMemberSession},
   },
   modules::{
-    location::LocationRepository, rfid_tag::RfidTagRepository, session::SessionRepository,
-    team_member::TeamMemberRepository, team_member_session::TeamMemberSessionRepository,
+    location::LocationRepository, notification::NotificationRepository, rfid_tag::RfidTagRepository,
+    session::SessionRepository, team_member::TeamMemberRepository, team_member_session::TeamMemberSessionRepository,
   },
 };
 
@@ -63,6 +63,14 @@ fn get_all_rfid_tags() -> std::result::Result<Vec<RfidTagResponse>, Status> {
     .collect()
 }
 
+fn get_all_notifications() -> std::result::Result<Vec<NotificationResponse>, Status> {
+  Notification::get_all()
+    .map_err(|e| Status::internal(format!("Failed to get notifications: {e}")))?
+    .into_iter()
+    .map(|(id, notification)| Ok(NotificationResponse { id, notification: Some(notification) }))
+    .collect()
+}
+
 fn get_all_team_member_sessions() -> std::result::Result<Vec<TeamMemberSessionResponse>, Status> {
   TeamMemberSession::get_all()
     .map_err(|e| Status::internal(format!("Failed to get team member sessions: {e}")))?
@@ -81,6 +89,7 @@ enum EntityEvent {
   TeamMembers(StreamTeamMembersResponse),
   TeamMemberSessions(StreamTeamMemberSessionsResponse),
   RfidTags(StreamRfidTagsResponse),
+  Notifications(StreamNotificationsResponse),
 }
 
 impl EntityEvent {
@@ -94,6 +103,7 @@ impl EntityEvent {
         StreamEntitiesResponse { sync_type: st, payload: Some(Payload::TeamMemberSessions(t)) }
       }
       Self::RfidTags(r) => StreamEntitiesResponse { sync_type: st, payload: Some(Payload::RfidTags(r)) },
+      Self::Notifications(n) => StreamEntitiesResponse { sync_type: st, payload: Some(Payload::Notifications(n)) },
     }
   }
 }
@@ -117,6 +127,7 @@ impl SyncService for SyncApi {
     let initial_members = get_all_members()?;
     let initial_member_sessions = get_all_team_member_sessions()?;
     let initial_rfid_tags = get_all_rfid_tags()?;
+    let initial_notifications = get_all_notifications()?;
 
     let initial = vec![
       Ok(
@@ -151,6 +162,13 @@ impl SyncService for SyncApi {
         })
         .into_response(SyncType::Full),
       ),
+      Ok(
+        EntityEvent::Notifications(StreamNotificationsResponse {
+          notifications: initial_notifications,
+          sync_type: SyncType::Full as i32,
+        })
+        .into_response(SyncType::Full),
+      ),
     ];
 
     // ── Subscribe to all entity event bus channels ──────────────────
@@ -174,6 +192,10 @@ impl SyncService for SyncApi {
     let rfid_tag_rx = event_bus
       .subscribe::<RfidTag>()
       .map_err(|e| Status::internal(format!("Failed to subscribe to RFID tag events: {e}")))?;
+
+    let notification_rx = event_bus
+      .subscribe::<Notification>()
+      .map_err(|e| Status::internal(format!("Failed to subscribe to notification events: {e}")))?;
 
     // ── Map each broadcast stream to EntityEvent ────────────────────
 
@@ -315,10 +337,41 @@ impl SyncService for SyncApi {
       }
     });
 
+    let notification_stream = BroadcastStream::new(notification_rx).filter_map(|result| match result {
+      Ok(event) => match event {
+        ChangeEvent::Record { id, data, .. } => Some(Ok(
+          EntityEvent::Notifications(StreamNotificationsResponse {
+            notifications: vec![NotificationResponse { id, notification: data }],
+            sync_type: SyncType::Partial as i32,
+          })
+          .into_response(SyncType::Partial),
+        )),
+        ChangeEvent::Table => match get_all_notifications() {
+          Ok(notifications) => Some(Ok(
+            EntityEvent::Notifications(StreamNotificationsResponse { notifications, sync_type: SyncType::Full as i32 })
+              .into_response(SyncType::Full),
+          )),
+          Err(e) => {
+            log::error!("Failed to get notifications after table change: {e}");
+            None
+          }
+        },
+        _ => None,
+      },
+      Err(BroadcastStreamRecvError::Lagged(n)) => {
+        log::warn!("Entity notification stream lagged by {n} messages");
+        None
+      }
+    });
+
     // ── Merge all streams ───────────────────────────────────────────
 
-    let merged =
-      session_stream.merge(location_stream).merge(member_stream).merge(member_session_stream).merge(rfid_tag_stream);
+    let merged = session_stream
+      .merge(location_stream)
+      .merge(member_stream)
+      .merge(member_session_stream)
+      .merge(rfid_tag_stream)
+      .merge(notification_stream);
 
     // Prepend initial snapshots, then chain live updates
     let full_stream = tokio_stream::iter(initial).chain(merged);

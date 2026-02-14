@@ -3,6 +3,7 @@ syntax = "proto3";
 package tk.api;
 
 import "api/location.proto";
+import "api/notification.proto";
 import "api/rfid_tag.proto";
 import "api/session.proto";
 import "api/team_member.proto";
@@ -19,6 +20,7 @@ message StreamEntitiesResponse {
     StreamTeamMembersResponse team_members = 4;
     StreamTeamMemberSessionsResponse team_member_sessions = 5;
     StreamRfidTagsResponse rfid_tags = 6;
+    StreamNotificationsResponse notifications = 7;
   }
 }
 

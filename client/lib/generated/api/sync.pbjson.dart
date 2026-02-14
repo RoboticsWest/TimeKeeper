@@ -81,6 +81,15 @@ const StreamEntitiesResponse$json = {
       '9': 0,
       '10': 'rfidTags'
     },
+    {
+      '1': 'notifications',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.api.StreamNotificationsResponse',
+      '9': 0,
+      '10': 'notifications'
+    },
   ],
   '8': [
     {'1': 'payload'},
@@ -96,4 +105,6 @@ final $typed_data.Uint8List streamEntitiesResponseDescriptor = $convert.base64De
     'CzIhLnRrLmFwaS5TdHJlYW1UZWFtTWVtYmVyc1Jlc3BvbnNlSABSC3RlYW1NZW1iZXJzElwKFH'
     'RlYW1fbWVtYmVyX3Nlc3Npb25zGAUgASgLMigudGsuYXBpLlN0cmVhbVRlYW1NZW1iZXJTZXNz'
     'aW9uc1Jlc3BvbnNlSABSEnRlYW1NZW1iZXJTZXNzaW9ucxI9CglyZmlkX3RhZ3MYBiABKAsyHi'
-    '50ay5hcGkuU3RyZWFtUmZpZFRhZ3NSZXNwb25zZUgAUghyZmlkVGFnc0IJCgdwYXlsb2Fk');
+    '50ay5hcGkuU3RyZWFtUmZpZFRhZ3NSZXNwb25zZUgAUghyZmlkVGFncxJLCg1ub3RpZmljYXRp'
+    'b25zGAcgASgLMiMudGsuYXBpLlN0cmVhbU5vdGlmaWNhdGlvbnNSZXNwb25zZUgAUg1ub3RpZm'
+    'ljYXRpb25zQgkKB3BheWxvYWQ=');

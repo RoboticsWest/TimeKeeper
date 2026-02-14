@@ -38,34 +38,6 @@ class ServerIp extends _$ServerIp {
   }
 }
 
-// Web Port
-@Riverpod(keepAlive: true)
-class ServerWebPort extends _$ServerWebPort {
-  static const String _key = 'server_web_port';
-  static const int _defaultPort = 8080;
-  void setPort(int port) {
-    localStorage.setInt(_key, port);
-    state = port;
-  }
-
-  int getPort() {
-    return state;
-  }
-
-  int _getStoredPort() {
-    int port = _defaultPort;
-    if (localStorage.containsKey(_key)) {
-      port = localStorage.getInt(_key) ?? _defaultPort;
-    }
-    return port;
-  }
-
-  @override
-  int build() {
-    return _getStoredPort();
-  }
-}
-
 // Api Port
 @Riverpod(keepAlive: true)
 class ServerApiPort extends _$ServerApiPort {
@@ -120,14 +92,4 @@ class Tls extends _$Tls {
   bool build() {
     return _getStoredTls();
   }
-}
-
-@Riverpod(keepAlive: true)
-String serverAddress(Ref ref) {
-  final ip = ref.watch(serverIpProvider);
-  final port = ref.watch(serverWebPortProvider);
-  final tls = ref.watch(tlsProvider);
-
-  final protocol = tls ? 'https' : 'http';
-  return '$protocol://$ip:$port';
 }

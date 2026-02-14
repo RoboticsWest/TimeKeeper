@@ -10,16 +10,16 @@ use crate::{
   core::shutdown::ShutdownNotifier,
   generated::api::{
     health_service_server::HealthServiceServer, location_service_server::LocationServiceServer,
-    rfid_tag_service_server::RfidTagServiceServer, schedule_service_server::ScheduleServiceServer,
-    session_service_server::SessionServiceServer, settings_service_server::SettingsServiceServer,
-    statistics_service_server::StatisticsServiceServer, sync_service_server::SyncServiceServer,
-    team_member_service_server::TeamMemberServiceServer,
+    notification_service_server::NotificationServiceServer, rfid_tag_service_server::RfidTagServiceServer,
+    schedule_service_server::ScheduleServiceServer, session_service_server::SessionServiceServer,
+    settings_service_server::SettingsServiceServer, statistics_service_server::StatisticsServiceServer,
+    sync_service_server::SyncServiceServer, team_member_service_server::TeamMemberServiceServer,
     team_member_session_service_server::TeamMemberSessionServiceServer, user_service_server::UserServiceServer,
   },
   modules::{
-    health::HealthApi, location::LocationApi, rfid_tag::api::RfidTagApi, schedule::ScheduleApi, session::SessionApi,
-    settings::SettingsApi, statistics::StatisticsApi, sync::api::SyncApi, team_member::TeamMemberApi,
-    team_member_session::TeamMemberSessionApi, user::UserApi,
+    health::HealthApi, location::LocationApi, notification::api::NotificationApi, rfid_tag::api::RfidTagApi,
+    schedule::ScheduleApi, session::SessionApi, settings::SettingsApi, statistics::StatisticsApi, sync::api::SyncApi,
+    team_member::TeamMemberApi, team_member_session::TeamMemberSessionApi, user::UserApi,
   },
 };
 
@@ -60,6 +60,7 @@ impl Api {
       .add_service(SessionServiceServer::with_interceptor(SessionApi {}, auth_interceptor))
       .add_service(SettingsServiceServer::with_interceptor(SettingsApi {}, auth_interceptor))
       .add_service(LocationServiceServer::with_interceptor(LocationApi {}, auth_interceptor))
+      .add_service(NotificationServiceServer::with_interceptor(NotificationApi, auth_interceptor))
       .add_service(RfidTagServiceServer::with_interceptor(RfidTagApi, auth_interceptor))
       .add_service(StatisticsServiceServer::with_interceptor(StatisticsApi {}, auth_interceptor))
       .add_service(TeamMemberSessionServiceServer::with_interceptor(TeamMemberSessionApi {}, auth_interceptor))

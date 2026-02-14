@@ -143,4 +143,4 @@ final class EntitySyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$entitySyncHash() => r'3c2312d17af906c514b61b0274fd53ec63505565';
+String _$entitySyncHash() => r'3569581c274b3bad1d997f7ab76e089e8fab3442';

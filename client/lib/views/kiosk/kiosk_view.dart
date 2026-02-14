@@ -47,9 +47,14 @@ class HomeView extends HookConsumerWidget {
                 a.startTime.toDateTime().compareTo(b.startTime.toDateTime()),
           );
 
+    final now = DateTime.now();
+
     final currentSession = unfinishedSessions.isNotEmpty
         ? unfinishedSessions.first
         : null;
+    final isUpcoming =
+        currentSession != null &&
+        currentSession.startTime.toDateTime().isAfter(now);
     final nextSession = unfinishedSessions.length > 1
         ? unfinishedSessions[1]
         : null;
@@ -113,6 +118,7 @@ class HomeView extends HookConsumerWidget {
           ),
         SessionInfoBar(
           currentSession: currentSession,
+          isUpcoming: isUpcoming,
           nextSession: nextSession,
           locations: locations,
           deviceLocationName: deviceLocationId != null
