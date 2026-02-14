@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/api.pbgrpc.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
@@ -17,8 +18,9 @@ import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/table_filter.dart';
 
-class TeamView extends ConsumerWidget {
+class TeamView extends HookConsumerWidget {
   const TeamView({super.key});
 
   void _showClearDialog(
@@ -59,12 +61,28 @@ class TeamView extends ConsumerWidget {
     final currentLocation = ref.watch(currentLocationProvider) ?? '';
     final theme = Theme.of(context);
 
+    final filterController = useTextEditingController();
+    final filterText = useValueListenable(filterController).text.toLowerCase();
+
     final sorted = teamMembers.entries.toList()
       ..sort((a, b) {
         final lastCmp = a.value.lastName.compareTo(b.value.lastName);
         if (lastCmp != 0) return lastCmp;
         return a.value.firstName.compareTo(b.value.firstName);
       });
+
+    final filtered = sorted.where((entry) {
+      if (filterText.isEmpty) return true;
+      final m = entry.value;
+      final type = m.memberType == TeamMemberType.STUDENT
+          ? 'student'
+          : 'mentor';
+      return m.firstName.toLowerCase().contains(filterText) ||
+          m.lastName.toLowerCase().contains(filterText) ||
+          m.displayName.toLowerCase().contains(filterText) ||
+          m.discordUsername.toLowerCase().contains(filterText) ||
+          type.contains(filterText);
+    }).toList();
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -123,7 +141,9 @@ class TeamView extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          TableFilter(controller: filterController),
+          const SizedBox(height: 12),
           Expanded(
             child: EditTable(
               alternatingRows: true,
@@ -168,7 +188,7 @@ class TeamView extends ConsumerWidget {
                   top: Radius.circular(8),
                 ),
               ),
-              editRows: sorted.map((entry) {
+              editRows: filtered.map((entry) {
                 final id = entry.key;
                 final member = entry.value;
                 final checkedIn = isMemberCheckedIn(

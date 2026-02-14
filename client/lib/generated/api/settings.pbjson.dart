@@ -65,54 +65,81 @@ const UpdateSettingsRequest$json = {
       '10': 'discordChannelId'
     },
     {
-      '1': 'discord_reminder_mins',
-      '3': 5,
-      '4': 1,
-      '5': 3,
-      '8': {'3': true},
-      '10': 'discordReminderMins',
-    },
-    {
       '1': 'discord_self_link_enabled',
-      '3': 6,
+      '3': 5,
       '4': 1,
       '5': 8,
       '10': 'discordSelfLinkEnabled'
     },
     {
       '1': 'discord_name_sync_enabled',
-      '3': 7,
+      '3': 6,
       '4': 1,
       '5': 8,
       '10': 'discordNameSyncEnabled'
     },
     {
       '1': 'discord_start_reminder_mins',
-      '3': 8,
+      '3': 7,
       '4': 1,
       '5': 3,
       '10': 'discordStartReminderMins'
     },
     {
       '1': 'discord_end_reminder_mins',
-      '3': 9,
+      '3': 8,
       '4': 1,
       '5': 3,
       '10': 'discordEndReminderMins'
     },
     {
       '1': 'discord_start_reminder_message',
-      '3': 10,
+      '3': 9,
       '4': 1,
       '5': 9,
       '10': 'discordStartReminderMessage'
     },
     {
       '1': 'discord_end_reminder_message',
-      '3': 11,
+      '3': 10,
       '4': 1,
       '5': 9,
       '10': 'discordEndReminderMessage'
+    },
+    {
+      '1': 'discord_overtime_dm_enabled',
+      '3': 11,
+      '4': 1,
+      '5': 8,
+      '10': 'discordOvertimeDmEnabled'
+    },
+    {
+      '1': 'discord_overtime_dm_mins',
+      '3': 12,
+      '4': 1,
+      '5': 3,
+      '10': 'discordOvertimeDmMins'
+    },
+    {
+      '1': 'discord_overtime_dm_message',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '10': 'discordOvertimeDmMessage'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_enabled',
+      '3': 14,
+      '4': 1,
+      '5': 8,
+      '10': 'discordAutoCheckoutDmEnabled'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_message',
+      '3': 15,
+      '4': 1,
+      '5': 9,
+      '10': 'discordAutoCheckoutDmMessage'
     },
   ],
 };
@@ -122,15 +149,20 @@ final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Dec
     'ChVVcGRhdGVTZXR0aW5nc1JlcXVlc3QSPQobbmV4dF9zZXNzaW9uX3RocmVzaG9sZF9zZWNzGA'
     'EgASgDUhhuZXh0U2Vzc2lvblRocmVzaG9sZFNlY3MSKgoRZGlzY29yZF9ib3RfdG9rZW4YAiAB'
     'KAlSD2Rpc2NvcmRCb3RUb2tlbhIoChBkaXNjb3JkX2d1aWxkX2lkGAMgASgJUg5kaXNjb3JkR3'
-    'VpbGRJZBIsChJkaXNjb3JkX2NoYW5uZWxfaWQYBCABKAlSEGRpc2NvcmRDaGFubmVsSWQSNgoV'
-    'ZGlzY29yZF9yZW1pbmRlcl9taW5zGAUgASgDQgIYAVITZGlzY29yZFJlbWluZGVyTWlucxI5Ch'
-    'lkaXNjb3JkX3NlbGZfbGlua19lbmFibGVkGAYgASgIUhZkaXNjb3JkU2VsZkxpbmtFbmFibGVk'
-    'EjkKGWRpc2NvcmRfbmFtZV9zeW5jX2VuYWJsZWQYByABKAhSFmRpc2NvcmROYW1lU3luY0VuYW'
-    'JsZWQSPQobZGlzY29yZF9zdGFydF9yZW1pbmRlcl9taW5zGAggASgDUhhkaXNjb3JkU3RhcnRS'
-    'ZW1pbmRlck1pbnMSOQoZZGlzY29yZF9lbmRfcmVtaW5kZXJfbWlucxgJIAEoA1IWZGlzY29yZE'
-    'VuZFJlbWluZGVyTWlucxJDCh5kaXNjb3JkX3N0YXJ0X3JlbWluZGVyX21lc3NhZ2UYCiABKAlS'
-    'G2Rpc2NvcmRTdGFydFJlbWluZGVyTWVzc2FnZRI/ChxkaXNjb3JkX2VuZF9yZW1pbmRlcl9tZX'
-    'NzYWdlGAsgASgJUhlkaXNjb3JkRW5kUmVtaW5kZXJNZXNzYWdl');
+    'VpbGRJZBIsChJkaXNjb3JkX2NoYW5uZWxfaWQYBCABKAlSEGRpc2NvcmRDaGFubmVsSWQSOQoZ'
+    'ZGlzY29yZF9zZWxmX2xpbmtfZW5hYmxlZBgFIAEoCFIWZGlzY29yZFNlbGZMaW5rRW5hYmxlZB'
+    'I5ChlkaXNjb3JkX25hbWVfc3luY19lbmFibGVkGAYgASgIUhZkaXNjb3JkTmFtZVN5bmNFbmFi'
+    'bGVkEj0KG2Rpc2NvcmRfc3RhcnRfcmVtaW5kZXJfbWlucxgHIAEoA1IYZGlzY29yZFN0YXJ0Um'
+    'VtaW5kZXJNaW5zEjkKGWRpc2NvcmRfZW5kX3JlbWluZGVyX21pbnMYCCABKANSFmRpc2NvcmRF'
+    'bmRSZW1pbmRlck1pbnMSQwoeZGlzY29yZF9zdGFydF9yZW1pbmRlcl9tZXNzYWdlGAkgASgJUh'
+    'tkaXNjb3JkU3RhcnRSZW1pbmRlck1lc3NhZ2USPwocZGlzY29yZF9lbmRfcmVtaW5kZXJfbWVz'
+    'c2FnZRgKIAEoCVIZZGlzY29yZEVuZFJlbWluZGVyTWVzc2FnZRI9ChtkaXNjb3JkX292ZXJ0aW'
+    '1lX2RtX2VuYWJsZWQYCyABKAhSGGRpc2NvcmRPdmVydGltZURtRW5hYmxlZBI3ChhkaXNjb3Jk'
+    'X292ZXJ0aW1lX2RtX21pbnMYDCABKANSFWRpc2NvcmRPdmVydGltZURtTWlucxI9ChtkaXNjb3'
+    'JkX292ZXJ0aW1lX2RtX21lc3NhZ2UYDSABKAlSGGRpc2NvcmRPdmVydGltZURtTWVzc2FnZRJG'
+    'CiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fZW5hYmxlZBgOIAEoCFIcZGlzY29yZEF1dG9DaG'
+    'Vja291dERtRW5hYmxlZBJGCiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbWVzc2FnZRgPIAEo'
+    'CVIcZGlzY29yZEF1dG9DaGVja291dERtTWVzc2FnZQ==');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {

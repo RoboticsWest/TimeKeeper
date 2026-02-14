@@ -37,19 +37,22 @@ impl SettingsService for SettingsApi {
     require_permission(&request, Role::Admin)?;
     let req = request.into_inner();
 
-    #[allow(deprecated)]
     let settings = Settings {
       next_session_threshold_secs: req.next_session_threshold_secs,
       discord_bot_token: req.discord_bot_token,
       discord_guild_id: req.discord_guild_id,
       discord_channel_id: req.discord_channel_id,
-      discord_reminder_mins: 0,
       discord_self_link_enabled: req.discord_self_link_enabled,
       discord_name_sync_enabled: req.discord_name_sync_enabled,
       discord_start_reminder_mins: req.discord_start_reminder_mins,
       discord_end_reminder_mins: req.discord_end_reminder_mins,
       discord_start_reminder_message: req.discord_start_reminder_message,
       discord_end_reminder_message: req.discord_end_reminder_message,
+      discord_overtime_dm_enabled: req.discord_overtime_dm_enabled,
+      discord_overtime_dm_mins: req.discord_overtime_dm_mins,
+      discord_overtime_dm_message: req.discord_overtime_dm_message,
+      discord_auto_checkout_dm_enabled: req.discord_auto_checkout_dm_enabled,
+      discord_auto_checkout_dm_message: req.discord_auto_checkout_dm_message,
     };
     Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;
 

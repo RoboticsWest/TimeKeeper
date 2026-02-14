@@ -202,7 +202,14 @@ impl SessionService for SessionApi {
       return Err(Status::not_found("No active session at this location"));
     };
 
-    let new_ms = TeamMemberSession { team_member_id, session_id, check_in_time: Some(now), check_out_time: None };
+    let new_ms = TeamMemberSession {
+      team_member_id,
+      session_id,
+      check_in_time: Some(now),
+      check_out_time: None,
+      overtime_notified: false,
+      auto_checkout_notified: false,
+    };
 
     TeamMemberSession::add(&new_ms).map_err(|e| Status::internal(format!("Failed to create member session: {}", e)))?;
 

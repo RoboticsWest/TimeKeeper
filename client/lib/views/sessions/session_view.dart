@@ -13,6 +13,8 @@ import 'package:time_keeper/views/sessions/session_stats.dart';
 import 'package:time_keeper/views/sessions/session_table.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
+import 'package:time_keeper/widgets/tables/table_filter.dart';
+import 'package:time_keeper/providers/location_provider.dart';
 
 class SessionView extends HookConsumerWidget {
   const SessionView({super.key});
@@ -51,16 +53,19 @@ class SessionView extends HookConsumerWidget {
     ref.watch(entitySyncProvider);
     final sessions = ref.watch(sessionsProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
+    final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
 
     final showCalendar = useState(true);
     final selectedDate = useState<DateTime?>(null);
+    final filterController = useTextEditingController();
+    final filterText = useValueListenable(filterController).text.toLowerCase();
 
     // Sort: current first, then upcoming, then passed
     final sorted = sessions.entries.toList()..sort(compareSessionEntries);
 
     // Filter by selected calendar date
-    final filtered = selectedDate.value != null
+    final dateFiltered = selectedDate.value != null
         ? sorted.where((entry) {
             final dt = entry.value.startTime.toDateTime();
             final sel = selectedDate.value!;
@@ -69,6 +74,19 @@ class SessionView extends HookConsumerWidget {
                 dt.day == sel.day;
           }).toList()
         : sorted;
+
+    // Filter by text
+    final filtered = dateFiltered.where((entry) {
+      if (filterText.isEmpty) return true;
+      final session = entry.value;
+      final start = session.startTime.toDateTime();
+      final locationName = locations[session.locationId]?.location ?? '';
+      final status = getSessionStatus(session).name.toLowerCase();
+      final dateStr = formatDate(start).toLowerCase();
+      return dateStr.contains(filterText) ||
+          locationName.toLowerCase().contains(filterText) ||
+          status.contains(filterText);
+    }).toList();
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -152,6 +170,10 @@ class SessionView extends HookConsumerWidget {
             teamMemberSessions: teamMemberSessions,
           ),
           const SizedBox(height: 16),
+
+          // Filter
+          TableFilter(controller: filterController),
+          const SizedBox(height: 12),
 
           // Table
           Expanded(child: SessionTable(sessions: filtered)),

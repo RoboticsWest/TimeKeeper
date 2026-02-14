@@ -50,6 +50,10 @@ pub struct TeamMemberSession {
     pub check_in_time: ::core::option::Option<super::common::Timestamp>,
     #[prost(message, optional, tag = "4")]
     pub check_out_time: ::core::option::Option<super::common::Timestamp>,
+    #[prost(bool, tag = "5")]
+    pub overtime_notified: bool,
+    #[prost(bool, tag = "6")]
+    pub auto_checkout_notified: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Session {
@@ -76,21 +80,28 @@ pub struct Settings {
     pub discord_guild_id: ::prost::alloc::string::String,
     #[prost(string, tag = "4")]
     pub discord_channel_id: ::prost::alloc::string::String,
-    #[deprecated]
-    #[prost(int64, tag = "5")]
-    pub discord_reminder_mins: i64,
-    #[prost(bool, tag = "6")]
+    #[prost(bool, tag = "5")]
     pub discord_self_link_enabled: bool,
-    #[prost(bool, tag = "7")]
+    #[prost(bool, tag = "6")]
     pub discord_name_sync_enabled: bool,
-    #[prost(int64, tag = "8")]
+    #[prost(int64, tag = "7")]
     pub discord_start_reminder_mins: i64,
-    #[prost(int64, tag = "9")]
+    #[prost(int64, tag = "8")]
     pub discord_end_reminder_mins: i64,
-    #[prost(string, tag = "10")]
+    #[prost(string, tag = "9")]
     pub discord_start_reminder_message: ::prost::alloc::string::String,
-    #[prost(string, tag = "11")]
+    #[prost(string, tag = "10")]
     pub discord_end_reminder_message: ::prost::alloc::string::String,
+    #[prost(bool, tag = "11")]
+    pub discord_overtime_dm_enabled: bool,
+    #[prost(int64, tag = "12")]
+    pub discord_overtime_dm_mins: i64,
+    #[prost(string, tag = "13")]
+    pub discord_overtime_dm_message: ::prost::alloc::string::String,
+    #[prost(bool, tag = "14")]
+    pub discord_auto_checkout_dm_enabled: bool,
+    #[prost(string, tag = "15")]
+    pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
