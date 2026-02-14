@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/team_member.pbgrpc.dart';
+import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/views/setup/common/file_upload_setting.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
@@ -75,6 +77,36 @@ class MemberSetupTab extends HookConsumerWidget {
                 },
                 showResultDialog: true,
                 successMessage: const Text('Mentors uploaded successfully!'),
+              ).show(context);
+            }
+          },
+        ),
+        const SizedBox(height: 24),
+        FileUploadSetting(
+          label: 'Import Attendance',
+          description:
+              'Upload a CSV file containing attendance records '
+              '(FIRST_NAME, LAST_NAME, LOCATION, CHECK_IN_TIME, CHECK_OUT_TIME)',
+          allowedExtensions: ['csv'],
+          uploadButtonLabel: 'Import',
+          onUpload: (file) async {
+            if (file.bytes != null) {
+              ConfirmDialog.warn(
+                title: 'Confirm Import',
+                message: const Text(
+                  'Importing attendance can have impacts on existing data integrity. '
+                  'Duplicate records (same member + session) will be skipped.',
+                ),
+                onConfirmAsyncGrpc: () async {
+                  final req = ImportAttendanceCsvRequest(csvData: file.bytes!);
+                  return await callGrpcEndpoint(
+                    () => ref
+                        .read(teamMemberSessionServiceProvider)
+                        .importAttendanceCsv(req),
+                  );
+                },
+                showResultDialog: true,
+                successMessage: const Text('Attendance imported successfully!'),
               ).show(context);
             }
           },
