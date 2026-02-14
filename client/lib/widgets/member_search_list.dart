@@ -19,15 +19,21 @@ class MemberSearchList extends HookWidget {
     final searchController = useTextEditingController();
     final searchText = useState('');
 
-    final filteredMembers = searchText.value.isEmpty
-        ? <MapEntry<String, TeamMember>>[]
-        : teamMembers.entries.where((entry) {
-            final member = entry.value;
-            final query = searchText.value.toLowerCase();
-            return member.firstName.toLowerCase().contains(query) ||
-                member.lastName.toLowerCase().contains(query) ||
-                member.displayName.toLowerCase().contains(query);
-          }).toList();
+    final filteredMembers =
+        searchText.value.isEmpty
+              ? <MapEntry<String, TeamMember>>[]
+              : teamMembers.entries.where((entry) {
+                  final member = entry.value;
+                  final query = searchText.value.toLowerCase();
+                  return member.firstName.toLowerCase().contains(query) ||
+                      member.lastName.toLowerCase().contains(query) ||
+                      member.displayName.toLowerCase().contains(query);
+                }).toList()
+          ..sort(
+            (a, b) => a.value.displayName.toLowerCase().compareTo(
+              b.value.displayName.toLowerCase(),
+            ),
+          );
 
     return Column(
       mainAxisSize: MainAxisSize.min,

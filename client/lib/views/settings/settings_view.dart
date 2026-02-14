@@ -26,15 +26,11 @@ class SettingsView extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(entitySyncProvider);
     final serverIp = ref.watch(serverIpProvider);
-    final webPort = ref.watch(serverWebPortProvider);
     final apiPort = ref.watch(serverApiPortProvider);
     final locations = ref.watch(locationsProvider);
     final currentLocationId = ref.watch(currentLocationProvider);
 
     final addressController = useTextEditingController(text: serverIp);
-    final webPortController = useTextEditingController(
-      text: webPort.toString(),
-    );
     final apiPortController = useTextEditingController(
       text: apiPort.toString(),
     );
@@ -113,22 +109,6 @@ class SettingsView extends HookConsumerWidget {
           onUpdate: () {
             ref.read(serverIpProvider.notifier).setIp(addressController.text);
             _showConfirmation(context, 'Server address updated');
-          },
-        ),
-        const SizedBox(height: 24),
-        TextFieldSetting(
-          label: 'Web Port',
-          description: 'The port used for web connections',
-          controller: webPortController,
-          hintText: '8080',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onUpdate: () {
-            final port = int.tryParse(webPortController.text);
-            if (port != null) {
-              ref.read(serverWebPortProvider.notifier).setPort(port);
-              _showConfirmation(context, 'Web port updated');
-            }
           },
         ),
         const SizedBox(height: 24),
