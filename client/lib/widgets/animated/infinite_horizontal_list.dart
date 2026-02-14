@@ -89,6 +89,7 @@ class _InfiniteScrolling extends HookWidget {
 
     final row = RepaintBoundary(
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           for (final item in items) SizedBox(width: childWidth, child: item),
           for (final item in items) SizedBox(width: childWidth, child: item),
@@ -96,15 +97,29 @@ class _InfiniteScrolling extends HookWidget {
       ),
     );
 
-    return ClipRect(
-      child: AnimatedBuilder(
-        animation: animationController,
-        builder: (context, child) {
-          final offset = animationController.value * totalWidth;
-          return Transform.translate(offset: Offset(-offset, 0), child: child);
-        },
-        child: row,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: ClipRect(
+            child: OverflowBox(
+              maxWidth: totalWidth * 2,
+              alignment: Alignment.centerLeft,
+              child: AnimatedBuilder(
+                animation: animationController,
+                builder: (context, child) {
+                  final offset = animationController.value * totalWidth;
+                  return Transform.translate(
+                    offset: Offset(-offset, 0),
+                    child: child,
+                  );
+                },
+                child: row,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

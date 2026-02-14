@@ -37,13 +37,11 @@ impl SettingsService for SettingsApi {
     require_permission(&request, Role::Admin)?;
     let req = request.into_inner();
 
-    #[allow(deprecated)]
     let settings = Settings {
       next_session_threshold_secs: req.next_session_threshold_secs,
       discord_bot_token: req.discord_bot_token,
       discord_guild_id: req.discord_guild_id,
       discord_channel_id: req.discord_channel_id,
-      discord_reminder_mins: 0,
       discord_self_link_enabled: req.discord_self_link_enabled,
       discord_name_sync_enabled: req.discord_name_sync_enabled,
       discord_start_reminder_mins: req.discord_start_reminder_mins,
