@@ -107,3 +107,71 @@ final $typed_data.Uint8List streamTeamMemberSessionsResponseDescriptor =
         '9ucxgBIAMoCzIhLnRrLmFwaS5UZWFtTWVtYmVyU2Vzc2lvblJlc3BvbnNlUhJ0ZWFtTWVtYmVy'
         'U2Vzc2lvbnMSMAoJc3luY190eXBlGAIgASgOMhMudGsuY29tbW9uLlN5bmNUeXBlUghzeW5jVH'
         'lwZQ==');
+
+@$core.Deprecated('Use updateTeamMemberSessionRequestDescriptor instead')
+const UpdateTeamMemberSessionRequest$json = {
+  '1': 'UpdateTeamMemberSessionRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {
+      '1': 'check_in_time',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.common.Timestamp',
+      '10': 'checkInTime'
+    },
+    {
+      '1': 'check_out_time',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.common.Timestamp',
+      '9': 0,
+      '10': 'checkOutTime',
+      '17': true
+    },
+  ],
+  '8': [
+    {'1': '_check_out_time'},
+  ],
+};
+
+/// Descriptor for `UpdateTeamMemberSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateTeamMemberSessionRequestDescriptor =
+    $convert.base64Decode(
+        'Ch5VcGRhdGVUZWFtTWVtYmVyU2Vzc2lvblJlcXVlc3QSDgoCaWQYASABKAlSAmlkEjgKDWNoZW'
+        'NrX2luX3RpbWUYAiABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUgtjaGVja0luVGltZRI/Cg5j'
+        'aGVja19vdXRfdGltZRgDIAEoCzIULnRrLmNvbW1vbi5UaW1lc3RhbXBIAFIMY2hlY2tPdXRUaW'
+        '1liAEBQhEKD19jaGVja19vdXRfdGltZQ==');
+
+@$core.Deprecated('Use updateTeamMemberSessionResponseDescriptor instead')
+const UpdateTeamMemberSessionResponse$json = {
+  '1': 'UpdateTeamMemberSessionResponse',
+};
+
+/// Descriptor for `UpdateTeamMemberSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List updateTeamMemberSessionResponseDescriptor =
+    $convert.base64Decode('Ch9VcGRhdGVUZWFtTWVtYmVyU2Vzc2lvblJlc3BvbnNl');
+
+@$core.Deprecated('Use deleteTeamMemberSessionRequestDescriptor instead')
+const DeleteTeamMemberSessionRequest$json = {
+  '1': 'DeleteTeamMemberSessionRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+  ],
+};
+
+/// Descriptor for `DeleteTeamMemberSessionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteTeamMemberSessionRequestDescriptor =
+    $convert.base64Decode(
+        'Ch5EZWxldGVUZWFtTWVtYmVyU2Vzc2lvblJlcXVlc3QSDgoCaWQYASABKAlSAmlk');
+
+@$core.Deprecated('Use deleteTeamMemberSessionResponseDescriptor instead')
+const DeleteTeamMemberSessionResponse$json = {
+  '1': 'DeleteTeamMemberSessionResponse',
+};
+
+/// Descriptor for `DeleteTeamMemberSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List deleteTeamMemberSessionResponseDescriptor =
+    $convert.base64Decode('Ch9EZWxldGVUZWFtTWVtYmVyU2Vzc2lvblJlc3BvbnNl');
