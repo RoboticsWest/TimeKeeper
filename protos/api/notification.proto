@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "common/common.proto";
+import "db/db.proto";
+
+message NotificationResponse {
+  string id = 1;
+  db.Notification notification = 2;
+}
+
+message GetNotificationsRequest {}
+message GetNotificationsResponse {
+  repeated NotificationResponse notifications = 1;
+}
+
+message StreamNotificationsRequest {}
+message StreamNotificationsResponse {
+  repeated NotificationResponse notifications = 1;
+  common.SyncType sync_type = 2;
+}
+
+message CreateNotificationRequest {
+  db.NotificationType notification_type = 1;
+  string session_id = 2;
+  optional string team_member_id = 3;
+  bool sent = 4;
+}
+message CreateNotificationResponse {}
+
+message UpdateNotificationRequest {
+  string id = 1;
+  db.NotificationType notification_type = 2;
+  string session_id = 3;
+  optional string team_member_id = 4;
+  bool sent = 5;
+}
+message UpdateNotificationResponse {}
+
+message DeleteNotificationRequest {
+  string id = 1;
+}
+message DeleteNotificationResponse {}
+
+service NotificationService {
+  rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc StreamNotifications(StreamNotificationsRequest) returns (stream StreamNotificationsResponse);
+  rpc CreateNotification(CreateNotificationRequest) returns (CreateNotificationResponse);
+  rpc UpdateNotification(UpdateNotificationRequest) returns (UpdateNotificationResponse);
+  rpc DeleteNotification(DeleteNotificationRequest) returns (DeleteNotificationResponse);
+}

@@ -125,7 +125,7 @@ Future<void> handleKioskScan({
           message: '$name\n$timeStr',
         );
       } else {
-        ToastOverlay.warn(
+        ToastOverlay.info(
           context,
           title: 'Checked Out',
           message: '$name\n$timeStr',
@@ -133,7 +133,7 @@ Future<void> handleKioskScan({
       }
     case GrpcFailure(userMessage: final msg, statusCode: final code):
       if (code == StatusCode.notFound) {
-        ToastOverlay.warn(
+        ToastOverlay.info(
           context,
           title: 'No Session',
           message: '$name\nNo active session at this location.',

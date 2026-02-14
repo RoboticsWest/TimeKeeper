@@ -661,6 +661,708 @@ pub mod location_service_server {
     }
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct NotificationResponse {
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub notification: ::core::option::Option<super::db::Notification>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetNotificationsRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetNotificationsResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub notifications: ::prost::alloc::vec::Vec<NotificationResponse>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamNotificationsRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamNotificationsResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub notifications: ::prost::alloc::vec::Vec<NotificationResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CreateNotificationRequest {
+    #[prost(enumeration = "super::db::NotificationType", tag = "1")]
+    pub notification_type: i32,
+    #[prost(string, tag = "2")]
+    pub session_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub team_member_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, tag = "4")]
+    pub sent: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CreateNotificationResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateNotificationRequest {
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(enumeration = "super::db::NotificationType", tag = "2")]
+    pub notification_type: i32,
+    #[prost(string, tag = "3")]
+    pub session_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "4")]
+    pub team_member_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, tag = "5")]
+    pub sent: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateNotificationResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteNotificationRequest {
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeleteNotificationResponse {}
+/// Generated client implementations.
+pub mod notification_service_client {
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
+    use tonic::codegen::*;
+    use tonic::codegen::http::Uri;
+    #[derive(Debug, Clone)]
+    pub struct NotificationServiceClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl NotificationServiceClient<tonic::transport::Channel> {
+        /// Attempt to create a new client by connecting to a given endpoint.
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> NotificationServiceClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::Body>,
+        T::Error: Into<StdError>,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
+            let inner = tonic::client::Grpc::with_origin(inner, origin);
+            Self { inner }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> NotificationServiceClient<InterceptedService<T, F>>
+        where
+            F: tonic::service::Interceptor,
+            T::ResponseBody: Default,
+            T: tonic::codegen::Service<
+                http::Request<tonic::body::Body>,
+                Response = http::Response<
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
+                >,
+            >,
+            <T as tonic::codegen::Service<
+                http::Request<tonic::body::Body>,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
+        {
+            NotificationServiceClient::new(InterceptedService::new(inner, interceptor))
+        }
+        /// Compress requests with the given encoding.
+        ///
+        /// This requires the server to support it otherwise it might respond with an
+        /// error.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.send_compressed(encoding);
+            self
+        }
+        /// Enable decompressing responses.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.accept_compressed(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_decoding_message_size(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_encoding_message_size(limit);
+            self
+        }
+        pub async fn get_notifications(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetNotificationsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetNotificationsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.NotificationService/GetNotifications",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("tk.api.NotificationService", "GetNotifications"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn stream_notifications(
+            &mut self,
+            request: impl tonic::IntoRequest<super::StreamNotificationsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<tonic::codec::Streaming<super::StreamNotificationsResponse>>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.NotificationService/StreamNotifications",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("tk.api.NotificationService", "StreamNotifications"),
+                );
+            self.inner.server_streaming(req, path, codec).await
+        }
+        pub async fn create_notification(
+            &mut self,
+            request: impl tonic::IntoRequest<super::CreateNotificationRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::CreateNotificationResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.NotificationService/CreateNotification",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("tk.api.NotificationService", "CreateNotification"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn update_notification(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateNotificationRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateNotificationResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.NotificationService/UpdateNotification",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("tk.api.NotificationService", "UpdateNotification"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn delete_notification(
+            &mut self,
+            request: impl tonic::IntoRequest<super::DeleteNotificationRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::DeleteNotificationResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.NotificationService/DeleteNotification",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("tk.api.NotificationService", "DeleteNotification"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+    }
+}
+/// Generated server implementations.
+pub mod notification_service_server {
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
+    use tonic::codegen::*;
+    /// Generated trait containing gRPC methods that should be implemented for use with NotificationServiceServer.
+    #[async_trait]
+    pub trait NotificationService: std::marker::Send + std::marker::Sync + 'static {
+        async fn get_notifications(
+            &self,
+            request: tonic::Request<super::GetNotificationsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetNotificationsResponse>,
+            tonic::Status,
+        >;
+        /// Server streaming response type for the StreamNotifications method.
+        type StreamNotificationsStream: tonic::codegen::tokio_stream::Stream<
+                Item = std::result::Result<
+                    super::StreamNotificationsResponse,
+                    tonic::Status,
+                >,
+            >
+            + std::marker::Send
+            + 'static;
+        async fn stream_notifications(
+            &self,
+            request: tonic::Request<super::StreamNotificationsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<Self::StreamNotificationsStream>,
+            tonic::Status,
+        >;
+        async fn create_notification(
+            &self,
+            request: tonic::Request<super::CreateNotificationRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::CreateNotificationResponse>,
+            tonic::Status,
+        >;
+        async fn update_notification(
+            &self,
+            request: tonic::Request<super::UpdateNotificationRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateNotificationResponse>,
+            tonic::Status,
+        >;
+        async fn delete_notification(
+            &self,
+            request: tonic::Request<super::DeleteNotificationRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::DeleteNotificationResponse>,
+            tonic::Status,
+        >;
+    }
+    #[derive(Debug)]
+    pub struct NotificationServiceServer<T> {
+        inner: Arc<T>,
+        accept_compression_encodings: EnabledCompressionEncodings,
+        send_compression_encodings: EnabledCompressionEncodings,
+        max_decoding_message_size: Option<usize>,
+        max_encoding_message_size: Option<usize>,
+    }
+    impl<T> NotificationServiceServer<T> {
+        pub fn new(inner: T) -> Self {
+            Self::from_arc(Arc::new(inner))
+        }
+        pub fn from_arc(inner: Arc<T>) -> Self {
+            Self {
+                inner,
+                accept_compression_encodings: Default::default(),
+                send_compression_encodings: Default::default(),
+                max_decoding_message_size: None,
+                max_encoding_message_size: None,
+            }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> InterceptedService<Self, F>
+        where
+            F: tonic::service::Interceptor,
+        {
+            InterceptedService::new(Self::new(inner), interceptor)
+        }
+        /// Enable decompressing requests with the given encoding.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.accept_compression_encodings.enable(encoding);
+            self
+        }
+        /// Compress responses with the given encoding, if the client supports it.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.send_compression_encodings.enable(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.max_decoding_message_size = Some(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.max_encoding_message_size = Some(limit);
+            self
+        }
+    }
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for NotificationServiceServer<T>
+    where
+        T: NotificationService,
+        B: Body + std::marker::Send + 'static,
+        B::Error: Into<StdError> + std::marker::Send + 'static,
+    {
+        type Response = http::Response<tonic::body::Body>;
+        type Error = std::convert::Infallible;
+        type Future = BoxFuture<Self::Response, Self::Error>;
+        fn poll_ready(
+            &mut self,
+            _cx: &mut Context<'_>,
+        ) -> Poll<std::result::Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+            match req.uri().path() {
+                "/tk.api.NotificationService/GetNotifications" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetNotificationsSvc<T: NotificationService>(pub Arc<T>);
+                    impl<
+                        T: NotificationService,
+                    > tonic::server::UnaryService<super::GetNotificationsRequest>
+                    for GetNotificationsSvc<T> {
+                        type Response = super::GetNotificationsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::GetNotificationsRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as NotificationService>::get_notifications(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = GetNotificationsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.NotificationService/StreamNotifications" => {
+                    #[allow(non_camel_case_types)]
+                    struct StreamNotificationsSvc<T: NotificationService>(pub Arc<T>);
+                    impl<
+                        T: NotificationService,
+                    > tonic::server::ServerStreamingService<
+                        super::StreamNotificationsRequest,
+                    > for StreamNotificationsSvc<T> {
+                        type Response = super::StreamNotificationsResponse;
+                        type ResponseStream = T::StreamNotificationsStream;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::ResponseStream>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::StreamNotificationsRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as NotificationService>::stream_notifications(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = StreamNotificationsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.server_streaming(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.NotificationService/CreateNotification" => {
+                    #[allow(non_camel_case_types)]
+                    struct CreateNotificationSvc<T: NotificationService>(pub Arc<T>);
+                    impl<
+                        T: NotificationService,
+                    > tonic::server::UnaryService<super::CreateNotificationRequest>
+                    for CreateNotificationSvc<T> {
+                        type Response = super::CreateNotificationResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::CreateNotificationRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as NotificationService>::create_notification(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = CreateNotificationSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.NotificationService/UpdateNotification" => {
+                    #[allow(non_camel_case_types)]
+                    struct UpdateNotificationSvc<T: NotificationService>(pub Arc<T>);
+                    impl<
+                        T: NotificationService,
+                    > tonic::server::UnaryService<super::UpdateNotificationRequest>
+                    for UpdateNotificationSvc<T> {
+                        type Response = super::UpdateNotificationResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::UpdateNotificationRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as NotificationService>::update_notification(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UpdateNotificationSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.NotificationService/DeleteNotification" => {
+                    #[allow(non_camel_case_types)]
+                    struct DeleteNotificationSvc<T: NotificationService>(pub Arc<T>);
+                    impl<
+                        T: NotificationService,
+                    > tonic::server::UnaryService<super::DeleteNotificationRequest>
+                    for DeleteNotificationSvc<T> {
+                        type Response = super::DeleteNotificationResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::DeleteNotificationRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as NotificationService>::delete_notification(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = DeleteNotificationSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                _ => {
+                    Box::pin(async move {
+                        let mut response = http::Response::new(
+                            tonic::body::Body::default(),
+                        );
+                        let headers = response.headers_mut();
+                        headers
+                            .insert(
+                                tonic::Status::GRPC_STATUS,
+                                (tonic::Code::Unimplemented as i32).into(),
+                            );
+                        headers
+                            .insert(
+                                http::header::CONTENT_TYPE,
+                                tonic::metadata::GRPC_CONTENT_TYPE,
+                            );
+                        Ok(response)
+                    })
+                }
+            }
+        }
+    }
+    impl<T> Clone for NotificationServiceServer<T> {
+        fn clone(&self) -> Self {
+            let inner = self.inner.clone();
+            Self {
+                inner,
+                accept_compression_encodings: self.accept_compression_encodings,
+                send_compression_encodings: self.send_compression_encodings,
+                max_decoding_message_size: self.max_decoding_message_size,
+                max_encoding_message_size: self.max_encoding_message_size,
+            }
+        }
+    }
+    /// Generated gRPC service name
+    pub const SERVICE_NAME: &str = "tk.api.NotificationService";
+    impl<T> tonic::server::NamedService for NotificationServiceServer<T> {
+        const NAME: &'static str = SERVICE_NAME;
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct RfidTagResponse {
     #[prost(string, tag = "1")]
     pub id: ::prost::alloc::string::String,
@@ -5447,7 +6149,7 @@ pub struct StreamEntitiesRequest {}
 pub struct StreamEntitiesResponse {
     #[prost(enumeration = "super::common::SyncType", tag = "1")]
     pub sync_type: i32,
-    #[prost(oneof = "stream_entities_response::Payload", tags = "2, 3, 4, 5, 6")]
+    #[prost(oneof = "stream_entities_response::Payload", tags = "2, 3, 4, 5, 6, 7")]
     pub payload: ::core::option::Option<stream_entities_response::Payload>,
 }
 /// Nested message and enum types in `StreamEntitiesResponse`.
@@ -5464,6 +6166,8 @@ pub mod stream_entities_response {
         TeamMemberSessions(super::StreamTeamMemberSessionsResponse),
         #[prost(message, tag = "6")]
         RfidTags(super::StreamRfidTagsResponse),
+        #[prost(message, tag = "7")]
+        Notifications(super::StreamNotificationsResponse),
     }
 }
 /// Generated client implementations.

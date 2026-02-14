@@ -3,6 +3,7 @@ syntax = "proto3";
 package tk.api;
 
 import public "api/location.proto";
+import public "api/notification.proto";
 import public "api/rfid_tag.proto";
 import public "api/schedule.proto";
 import public "api/session.proto";
