@@ -60,58 +60,6 @@ abstract class _$ServerIp extends $Notifier<String> {
   }
 }
 
-@ProviderFor(ServerWebPort)
-final serverWebPortProvider = ServerWebPortProvider._();
-
-final class ServerWebPortProvider
-    extends $NotifierProvider<ServerWebPort, int> {
-  ServerWebPortProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'serverWebPortProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$serverWebPortHash();
-
-  @$internal
-  @override
-  ServerWebPort create() => ServerWebPort();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(int value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<int>(value),
-    );
-  }
-}
-
-String _$serverWebPortHash() => r'e02a0092c257c2f78e4085931dbebbab730055af';
-
-abstract class _$ServerWebPort extends $Notifier<int> {
-  int build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final ref = this.ref as $Ref<int, int>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<int, int>,
-              int,
-              Object?,
-              Object?
-            >;
-    element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(ServerApiPort)
 final serverApiPortProvider = ServerApiPortProvider._();
 
@@ -214,44 +162,3 @@ abstract class _$Tls extends $Notifier<bool> {
     element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(serverAddress)
-final serverAddressProvider = ServerAddressProvider._();
-
-final class ServerAddressProvider
-    extends $FunctionalProvider<String, String, String>
-    with $Provider<String> {
-  ServerAddressProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'serverAddressProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$serverAddressHash();
-
-  @$internal
-  @override
-  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  String create(Ref ref) {
-    return serverAddress(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String>(value),
-    );
-  }
-}
-
-String _$serverAddressHash() => r'311e094b4a4621ed4f096a86a737331dacd6144f';

@@ -55,6 +55,12 @@ class CheckedInList extends ConsumerWidget {
       );
     }
 
+    checkedInList.sort(
+      (a, b) => a.teamMember.displayName.toLowerCase().compareTo(
+        b.teamMember.displayName.toLowerCase(),
+      ),
+    );
+
     double childHeight = 40;
 
     return Padding(

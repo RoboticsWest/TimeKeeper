@@ -5,6 +5,7 @@ import 'package:time_keeper/helpers/reconnecting_stream.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/grpc_channel_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/providers/notification_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
@@ -57,6 +58,10 @@ void entitySync(Ref ref) {
               .syncFromStream(response.teamMemberSessions);
         case StreamEntitiesResponse_Payload.rfidTags:
           ref.read(rfidTagsProvider.notifier).syncFromStream(response.rfidTags);
+        case StreamEntitiesResponse_Payload.notifications:
+          ref
+              .read(notificationsProvider.notifier)
+              .syncFromStream(response.notifications);
         case StreamEntitiesResponse_Payload.notSet:
           break;
       }
