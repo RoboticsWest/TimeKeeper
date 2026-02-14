@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
+import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
@@ -12,6 +13,7 @@ import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/attendance/attendance_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
+import 'package:time_keeper/widgets/searchable_dropdown.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
@@ -63,6 +65,32 @@ class AttendanceView extends HookConsumerWidget {
 
     final filterController = useTextEditingController();
     final filterText = useValueListenable(filterController).text.toLowerCase();
+    final selectedSessionId = useState<String?>(null);
+    final selectedLocationId = useState<String?>(null);
+
+    // Build session dropdown items sorted like session view (current first, then upcoming, then finished)
+    final sessionItems = sessions.entries.toList()..sort(compareSessionEntries);
+    final sessionDropdownItems = sessionItems.map((entry) {
+      final session = entry.value;
+      final location = locations[session.locationId];
+      final locationName = location?.location ?? 'Unknown';
+      final dateStr = session.hasStartTime()
+          ? formatDate(session.startTime.toDateTime())
+          : 'Unknown date';
+      final status = statusLabel(getSessionStatus(session));
+      return (key: entry.key, label: '$dateStr @ $locationName ($status)');
+    }).toList();
+
+    // Build location dropdown items sorted alphabetically
+    final locationItems = locations.entries.toList()
+      ..sort(
+        (a, b) => a.value.location.toLowerCase().compareTo(
+          b.value.location.toLowerCase(),
+        ),
+      );
+    final locationDropdownItems = locationItems
+        .map((entry) => (key: entry.key, label: entry.value.location))
+        .toList();
 
     // Sort by check-in time descending (most recent first)
     final sorted = teamMemberSessions.entries.toList()
@@ -76,8 +104,25 @@ class AttendanceView extends HookConsumerWidget {
         return bTime.compareTo(aTime);
       });
 
+    // Apply session filter
+    final sessionFiltered = selectedSessionId.value != null
+        ? sorted
+              .where(
+                (entry) => entry.value.sessionId == selectedSessionId.value,
+              )
+              .toList()
+        : sorted;
+
+    // Apply location filter
+    final locationFiltered = selectedLocationId.value != null
+        ? sessionFiltered.where((entry) {
+            final session = sessions[entry.value.sessionId];
+            return session?.locationId == selectedLocationId.value;
+          }).toList()
+        : sessionFiltered;
+
     // Apply text filter
-    final filtered = sorted.where((entry) {
+    final filtered = locationFiltered.where((entry) {
       if (filterText.isEmpty) return true;
       final ms = entry.value;
 
@@ -104,6 +149,9 @@ class AttendanceView extends HookConsumerWidget {
           status.contains(filterText);
     }).toList();
 
+    final hasActiveFilters =
+        selectedSessionId.value != null || selectedLocationId.value != null;
+
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -125,8 +173,63 @@ class AttendanceView extends HookConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
+
+          // Dropdown filters
+          Row(
+            children: [
+              Expanded(
+                child: SearchableDropdown(
+                  label: 'Session',
+                  items: sessionDropdownItems,
+                  selectedKey: selectedSessionId.value,
+                  onSelected: (key) {
+                    selectedSessionId.value = key == selectedSessionId.value
+                        ? null
+                        : key;
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SearchableDropdown(
+                  label: 'Location',
+                  items: locationDropdownItems,
+                  selectedKey: selectedLocationId.value,
+                  onSelected: (key) {
+                    selectedLocationId.value = key == selectedLocationId.value
+                        ? null
+                        : key;
+                  },
+                ),
+              ),
+              if (hasActiveFilters) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () {
+                    selectedSessionId.value = null;
+                    selectedLocationId.value = null;
+                  },
+                  icon: const Icon(Icons.clear),
+                  tooltip: 'Clear filters',
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Text filter
           TableFilter(controller: filterController),
           const SizedBox(height: 12),
+
+          // Results count
+          Text(
+            '${filtered.length} ${filtered.length == 1 ? 'record' : 'records'}',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+
           Expanded(
             child: EditTable(
               alternatingRows: true,
