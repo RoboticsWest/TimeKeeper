@@ -106,6 +106,48 @@ const UpdateSettingsRequest$json = {
       '5': 9,
       '10': 'discordEndReminderMessage'
     },
+    {
+      '1': 'discord_overtime_dm_enabled',
+      '3': 11,
+      '4': 1,
+      '5': 8,
+      '10': 'discordOvertimeDmEnabled'
+    },
+    {
+      '1': 'discord_overtime_dm_mins',
+      '3': 12,
+      '4': 1,
+      '5': 3,
+      '10': 'discordOvertimeDmMins'
+    },
+    {
+      '1': 'discord_overtime_dm_message',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '10': 'discordOvertimeDmMessage'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_enabled',
+      '3': 14,
+      '4': 1,
+      '5': 8,
+      '10': 'discordAutoCheckoutDmEnabled'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_mins',
+      '3': 15,
+      '4': 1,
+      '5': 3,
+      '10': 'discordAutoCheckoutDmMins'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_message',
+      '3': 16,
+      '4': 1,
+      '5': 9,
+      '10': 'discordAutoCheckoutDmMessage'
+    },
   ],
 };
 
@@ -121,7 +163,14 @@ final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Dec
     'VtaW5kZXJNaW5zEjkKGWRpc2NvcmRfZW5kX3JlbWluZGVyX21pbnMYCCABKANSFmRpc2NvcmRF'
     'bmRSZW1pbmRlck1pbnMSQwoeZGlzY29yZF9zdGFydF9yZW1pbmRlcl9tZXNzYWdlGAkgASgJUh'
     'tkaXNjb3JkU3RhcnRSZW1pbmRlck1lc3NhZ2USPwocZGlzY29yZF9lbmRfcmVtaW5kZXJfbWVz'
-    'c2FnZRgKIAEoCVIZZGlzY29yZEVuZFJlbWluZGVyTWVzc2FnZQ==');
+    'c2FnZRgKIAEoCVIZZGlzY29yZEVuZFJlbWluZGVyTWVzc2FnZRI9ChtkaXNjb3JkX292ZXJ0aW'
+    '1lX2RtX2VuYWJsZWQYCyABKAhSGGRpc2NvcmRPdmVydGltZURtRW5hYmxlZBI3ChhkaXNjb3Jk'
+    'X292ZXJ0aW1lX2RtX21pbnMYDCABKANSFWRpc2NvcmRPdmVydGltZURtTWlucxI9ChtkaXNjb3'
+    'JkX292ZXJ0aW1lX2RtX21lc3NhZ2UYDSABKAlSGGRpc2NvcmRPdmVydGltZURtTWVzc2FnZRJG'
+    'CiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fZW5hYmxlZBgOIAEoCFIcZGlzY29yZEF1dG9DaG'
+    'Vja291dERtRW5hYmxlZBJACh1kaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbWlucxgPIAEoA1IZ'
+    'ZGlzY29yZEF1dG9DaGVja291dERtTWlucxJGCiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbW'
+    'Vzc2FnZRgQIAEoCVIcZGlzY29yZEF1dG9DaGVja291dERtTWVzc2FnZQ==');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {

@@ -20,6 +20,12 @@ message UpdateSettingsRequest {
   int64 discord_end_reminder_mins = 8;
   string discord_start_reminder_message = 9;
   string discord_end_reminder_message = 10;
+  bool discord_overtime_dm_enabled = 11;
+  int64 discord_overtime_dm_mins = 12;
+  string discord_overtime_dm_message = 13;
+  bool discord_auto_checkout_dm_enabled = 14;
+  int64 discord_auto_checkout_dm_mins = 15;
+  string discord_auto_checkout_dm_message = 16;
 }
 message UpdateSettingsResponse {}
 
