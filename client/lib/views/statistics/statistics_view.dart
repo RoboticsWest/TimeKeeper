@@ -101,6 +101,7 @@ class StatisticsView extends HookConsumerWidget {
                   // Overview cards
                   StatisticsOverviewCards(
                     filteredSessions: filtered,
+                    teamMemberSessions: teamMemberSessions,
                     memberHours: memberHours,
                     insights: insights,
                   ),

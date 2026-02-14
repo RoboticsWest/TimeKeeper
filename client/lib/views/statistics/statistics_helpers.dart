@@ -223,12 +223,20 @@ AttendanceInsights computeInsights(
   int visitCount = 0;
   final memberIds = <String>{};
   final dayOfWeekCounts = <int, int>{};
-  int totalAttendance = 0;
+  // Track unique members per session for accurate avg attendance
+  final uniqueMembersPerSession = <String, Set<String>>{};
 
   for (final ms in teamMemberSessions.values) {
     if (!ms.hasCheckInTime()) continue;
+    // Only count member sessions that belong to a filtered session
+    if (!sessions.containsKey(ms.sessionId)) continue;
+
     memberIds.add(ms.teamMemberId);
-    totalAttendance++;
+
+    // Track unique attendance per session
+    uniqueMembersPerSession
+        .putIfAbsent(ms.sessionId, () => <String>{})
+        .add(ms.teamMemberId);
 
     final checkIn = ms.checkInTime.toDateTime();
     totalCheckInMinutes += checkIn.hour * 60 + checkIn.minute;
@@ -289,9 +297,15 @@ AttendanceInsights computeInsights(
     busiest = weekdayFull[topDay - 1];
   }
 
-  final avgAttendance = sessions.isNotEmpty
-      ? totalAttendance / sessions.length
-      : 0.0;
+  // Average attendance = sum of unique members per session / number of sessions
+  double avgAttendance = 0;
+  if (sessions.isNotEmpty) {
+    int totalUniqueAttendance = 0;
+    for (final members in uniqueMembersPerSession.values) {
+      totalUniqueAttendance += members.length;
+    }
+    avgAttendance = totalUniqueAttendance / sessions.length;
+  }
 
   return AttendanceInsights(
     avgCheckInTime: avgCheckIn,
