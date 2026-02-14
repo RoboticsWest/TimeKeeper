@@ -2,12 +2,18 @@ use std::time::Duration;
 
 use crate::{
   core::scheduler::ScheduledService,
-  generated::{common::Timestamp, db::Session},
-  modules::session::{
-    SessionRepository,
-    helpers::{
-      check_out_all_members, get_next_session_threshold_secs, get_past_end_sessions, is_auto_checkout_imminent,
-      now_timestamp,
+  generated::{
+    common::Timestamp,
+    db::{Notification, NotificationType, Session},
+  },
+  modules::{
+    notification::NotificationRepository,
+    session::{
+      SessionRepository,
+      helpers::{
+        check_out_all_members, get_next_session_threshold_secs, get_past_end_sessions, is_auto_checkout_imminent,
+        now_timestamp,
+      },
     },
   },
 };
@@ -43,13 +49,30 @@ impl ScheduledService for SessionService {
       } else if is_auto_checkout_imminent(pes.next_start_secs, now_secs, threshold) {
         // Has lingering members and next session approaching — force-finish
         let end_time = Timestamp { seconds: pes.end_secs, nanos: 0 };
-        check_out_all_members(&pes.session_id, &end_time)?;
+        let checked_out = check_out_all_members(&pes.session_id, &end_time)?;
+
+        // Enqueue auto-checkout notifications for each member
+        for (_, ms) in &checked_out {
+          let notification = Notification {
+            notification_type: NotificationType::AutoCheckout as i32,
+            session_id: pes.session_id.clone(),
+            team_member_id: Some(ms.team_member_id.clone()),
+            sent: false,
+          };
+          if let Err(e) = Notification::add(&notification) {
+            log::error!(
+              "[SessionService] Failed to enqueue auto-checkout notification for member {}: {e}",
+              ms.team_member_id
+            );
+          }
+        }
 
         pes.session.finished = true;
         Session::update(&pes.session_id, &pes.session)?;
         log::info!(
-          "[SessionService] Force-finished session {} (checked out lingering members, next session approaching)",
-          pes.session_id
+          "[SessionService] Force-finished session {} (checked out {} members, next session approaching)",
+          pes.session_id,
+          checked_out.len()
         );
       }
     }

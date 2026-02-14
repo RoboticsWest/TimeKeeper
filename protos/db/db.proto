@@ -42,8 +42,6 @@ message TeamMemberSession {
   string session_id = 2;
   common.Timestamp check_in_time = 3;
   optional common.Timestamp check_out_time = 4;
-  bool overtime_notified = 5;
-  bool auto_checkout_notified = 6;
 }
 
 message Session {
@@ -51,8 +49,20 @@ message Session {
   common.Timestamp end_time = 2;
   string location_id = 3;
   bool finished = 4;
-  bool start_reminder_sent = 5;
-  bool end_reminder_sent = 6;
+}
+
+enum NotificationType {
+  SESSION_START_REMINDER = 0;
+  SESSION_END_REMINDER = 1;
+  OVERTIME = 2;
+  AUTO_CHECKOUT = 3;
+}
+
+message Notification {
+  NotificationType notification_type = 1;
+  string session_id = 2;
+  optional string team_member_id = 3;
+  bool sent = 4;
 }
 
 message Settings {
@@ -71,4 +81,7 @@ message Settings {
   string discord_overtime_dm_message = 13;
   bool discord_auto_checkout_dm_enabled = 14;
   string discord_auto_checkout_dm_message = 15;
+  bool discord_checkout_enabled = 16;
+  bool discord_enabled = 17;
+  string timezone = 18;
 }

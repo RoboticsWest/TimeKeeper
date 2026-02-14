@@ -21,13 +21,6 @@ pub struct PastEndSession {
   pub next_start_secs: Option<i64>,
 }
 
-/// A member who was auto-checked-out by the SessionService but hasn't been notified yet.
-pub struct AutoCheckedOutMember {
-  pub ms_id: String,
-  pub member_session: TeamMemberSession,
-  pub session: Session,
-}
-
 /// Get the current time as a protobuf Timestamp.
 pub fn now_timestamp() -> Timestamp {
   let now = Utc::now();
@@ -66,15 +59,18 @@ pub fn get_checked_in_members(session_id: &str) -> Result<Vec<(String, TeamMembe
 }
 
 /// Check out all lingering members in a session with the given timestamp.
-pub fn check_out_all_members(session_id: &str, now: &Timestamp) -> Result<()> {
+/// Returns the list of member sessions that were checked out.
+pub fn check_out_all_members(session_id: &str, now: &Timestamp) -> Result<Vec<(String, TeamMemberSession)>> {
   let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
+  let mut checked_out = Vec::new();
   for (id, mut ms) in member_sessions {
     if is_member_checked_in(&ms) {
       ms.check_out_time = Some(*now);
       TeamMemberSession::update(&id, &ms)?;
+      checked_out.push((id, ms));
     }
   }
-  Ok(())
+  Ok(checked_out)
 }
 
 /// Find the best session at a given location within the threshold window.
@@ -164,26 +160,4 @@ pub fn is_auto_checkout_imminent(next_start_secs: Option<i64>, now_secs: i64, th
     Some(next_start) => (next_start - now_secs) <= threshold_secs,
     None => false,
   }
-}
-
-/// Get all members who were auto-checked-out (session finished, has check_out_time)
-/// but haven't been notified yet (auto_checkout_notified == false).
-pub fn get_auto_checked_out_members() -> Result<Vec<AutoCheckedOutMember>> {
-  let all_sessions = Session::get_all()?;
-  let mut results = Vec::new();
-
-  for (session_id, session) in &all_sessions {
-    if !session.finished {
-      continue;
-    }
-
-    let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
-    for (ms_id, ms) in member_sessions {
-      if ms.check_out_time.is_some() && !ms.auto_checkout_notified {
-        results.push(AutoCheckedOutMember { ms_id, member_session: ms, session: session.clone() });
-      }
-    }
-  }
-
-  Ok(results)
 }
