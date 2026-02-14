@@ -216,15 +216,15 @@ AttendanceInsights computeInsights(
   Map<String, TeamMemberSession> teamMemberSessions,
 ) {
   int totalCheckInMinutes = 0;
-  int totalCheckOutMinutes = 0;
   int checkInCount = 0;
-  int checkOutCount = 0;
   double totalVisitSecs = 0;
   int visitCount = 0;
   final memberIds = <String>{};
   final dayOfWeekCounts = <int, int>{};
   // Track unique members per session for accurate avg attendance
   final uniqueMembersPerSession = <String, Set<String>>{};
+  // Track the final (latest) checkout per member per day
+  final finalCheckouts = <String, DateTime>{};
 
   for (final ms in teamMemberSessions.values) {
     if (!ms.hasCheckInTime()) continue;
@@ -247,11 +247,17 @@ AttendanceInsights computeInsights(
 
     if (ms.hasCheckOutTime()) {
       final checkOut = ms.checkOutTime.toDateTime();
-      totalCheckOutMinutes += checkOut.hour * 60 + checkOut.minute;
-      checkOutCount++;
 
       totalVisitSecs += checkOut.difference(checkIn).inSeconds;
       visitCount++;
+
+      // Keep only the latest checkout per member per day
+      final key =
+          '${ms.teamMemberId}_${checkOut.year}-${checkOut.month}-${checkOut.day}';
+      final existing = finalCheckouts[key];
+      if (existing == null || checkOut.isAfter(existing)) {
+        finalCheckouts[key] = checkOut;
+      }
     }
   }
 
@@ -261,9 +267,14 @@ AttendanceInsights computeInsights(
     avgCheckIn = formatTimeOfDay(avgMins ~/ 60, avgMins % 60);
   }
 
+  // Average checkout time based on final checkout per member per day
   String avgCheckOut = '-';
-  if (checkOutCount > 0) {
-    final avgMins = totalCheckOutMinutes ~/ checkOutCount;
+  if (finalCheckouts.isNotEmpty) {
+    int totalCheckOutMinutes = 0;
+    for (final checkOut in finalCheckouts.values) {
+      totalCheckOutMinutes += checkOut.hour * 60 + checkOut.minute;
+    }
+    final avgMins = totalCheckOutMinutes ~/ finalCheckouts.length;
     avgCheckOut = formatTimeOfDay(avgMins ~/ 60, avgMins % 60);
   }
 

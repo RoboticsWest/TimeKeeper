@@ -311,10 +311,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text('DM Notifications', style: Theme.of(context).textTheme.titleLarge),
+        Text('Notifications', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(
-          'Send direct messages to team members for overtime and auto-checkout warnings. '
+          'Send notifications to team members for overtime and auto-checkout warnings. '
           'Members must have a linked Discord account. '
           'Placeholders: {username}, {name}, {location}, {end_time}.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -323,9 +323,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 16),
         SettingRow(
-          label: 'Overtime DM',
+          label: 'Overtime Notification',
           description:
-              'DM members who are still checked in after a session ends',
+              'Notify members who are still checked in after a session ends',
           child: Row(
             children: [
               Switch(
@@ -342,9 +342,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'Overtime DM (minutes after session end)',
+          label: 'Overtime Notification (minutes after session end)',
           description:
-              'How many minutes after a session ends to send the overtime DM (default: 10)',
+              'How many minutes after a session ends to send the overtime notification (default: 10)',
           controller: overtimeDmMinsController,
           hintText: '10',
           keyboardType: TextInputType.number,
@@ -353,9 +353,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'Overtime DM Message',
+          label: 'Overtime Notification Message',
           description:
-              'Custom message for overtime DMs. Supports {username}, {name}, {location}, {end_time}',
+              'Custom message for overtime notifications. Supports {username}, {name}, {location}, {end_time}',
           controller: overtimeDmMessageController,
           hintText:
               'Hey {username}, you\'re now in overtime for the session at {location}. The session ended at {end_time}. Don\'t forget to check out!',
@@ -363,9 +363,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         SettingRow(
-          label: 'Auto-Checkout DM',
+          label: 'Auto-Checkout Notification',
           description:
-              'DM members when they have been auto-checked-out because a new session is starting',
+              'Notify members when they have been auto-checked-out because a new session is starting',
           child: Row(
             children: [
               Switch(
@@ -382,7 +382,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'Auto-Checkout DM Message',
+          label: 'Auto-Checkout Notification Message',
           description:
               'Message sent when a member is auto-checked-out. Supports {username}, {name}, {location}, {end_time}',
           controller: autoCheckoutDmMessageController,
