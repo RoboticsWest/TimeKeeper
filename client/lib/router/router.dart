@@ -23,6 +23,8 @@ import 'package:time_keeper/views/locations/locations_view.dart'
 import 'package:time_keeper/views/users/users_view.dart' deferred as users;
 import 'package:time_keeper/views/leaderboard/leaderboard_view.dart'
     deferred as leaderboard;
+import 'package:time_keeper/views/attendance/attendance_view.dart'
+    deferred as attendance;
 import 'package:time_keeper/views/statistics/statistics_view.dart'
     deferred as statistics;
 import 'package:time_keeper/views/calendar/calendar_view.dart'
@@ -230,6 +232,18 @@ GoRouter router(Ref ref) {
                         libraryKey: AppRoute.locations.path,
                         libraryLoader: locations.loadLibrary,
                         builder: (context) => locations.LocationsView(),
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    name: AppRoute.attendance.name,
+                    path: AppRoute.attendance.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.attendance.path,
+                        libraryLoader: attendance.loadLibrary,
+                        builder: (context) => attendance.AttendanceView(),
                       ),
                     ),
                   ),

@@ -9,6 +9,8 @@ class SessionInfoBar extends StatelessWidget {
   final Session? nextSession;
   final Map<String, Location> locations;
   final String? deviceLocationName;
+  final int checkedInCount;
+  final int totalMembers;
 
   const SessionInfoBar({
     super.key,
@@ -16,6 +18,8 @@ class SessionInfoBar extends StatelessWidget {
     this.nextSession,
     this.locations = const {},
     this.deviceLocationName,
+    this.checkedInCount = 0,
+    this.totalMembers = 0,
   });
 
   String _locationName(Session session) {
@@ -121,12 +125,26 @@ class SessionInfoBar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 4),
-        Text(
-          '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: color.withValues(alpha: 0.7),
-          ),
-          overflow: TextOverflow.ellipsis,
+        Row(
+          children: [
+            Text(
+              '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color.withValues(alpha: 0.7),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 12),
+            Icon(Icons.people, size: 14, color: color.withValues(alpha: 0.7)),
+            const SizedBox(width: 4),
+            Text(
+              '$checkedInCount / $totalMembers',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -21,7 +21,27 @@ message StreamTeamMemberSessionsResponse {
   common.SyncType sync_type = 2;
 }
 
+message UpdateTeamMemberSessionRequest {
+  string id = 1;
+  common.Timestamp check_in_time = 2;
+  optional common.Timestamp check_out_time = 3;
+}
+message UpdateTeamMemberSessionResponse {}
+
+message DeleteTeamMemberSessionRequest {
+  string id = 1;
+}
+message DeleteTeamMemberSessionResponse {}
+
+message ImportAttendanceCsvRequest {
+  bytes csv_data = 1;
+}
+message ImportAttendanceCsvResponse {}
+
 service TeamMemberSessionService {
   rpc GetTeamMemberSessions(GetTeamMemberSessionsRequest) returns (GetTeamMemberSessionsResponse);
   rpc StreamTeamMemberSessions(StreamTeamMemberSessionsRequest) returns (stream StreamTeamMemberSessionsResponse);
+  rpc UpdateTeamMemberSession(UpdateTeamMemberSessionRequest) returns (UpdateTeamMemberSessionResponse);
+  rpc DeleteTeamMemberSession(DeleteTeamMemberSessionRequest) returns (DeleteTeamMemberSessionResponse);
+  rpc ImportAttendanceCsv(ImportAttendanceCsvRequest) returns (ImportAttendanceCsvResponse);
 }

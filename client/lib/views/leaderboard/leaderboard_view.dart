@@ -4,6 +4,7 @@ import 'package:time_keeper/generated/api/statistics.pb.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/providers/statistics_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
+import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
 
 class LeaderboardView extends ConsumerWidget {
   const LeaderboardView({super.key});
@@ -90,9 +91,9 @@ class _LeaderboardTable extends StatelessWidget {
                       ),
                     ),
                   )
-                : ListView.builder(
-                    itemCount: entries.length,
-                    itemBuilder: (context, i) {
+                : AnimatedInfiniteVerticalList(
+                    childHeight: 40,
+                    children: List.generate(entries.length, (i) {
                       return Container(
                         height: 40,
                         decoration: BoxDecoration(
@@ -100,7 +101,7 @@ class _LeaderboardTable extends StatelessWidget {
                         ),
                         child: _LeaderboardRow(rank: i + 1, entry: entries[i]),
                       );
-                    },
+                    }),
                   ),
           ),
         ],

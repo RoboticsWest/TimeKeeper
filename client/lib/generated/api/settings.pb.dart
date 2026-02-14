@@ -120,14 +120,17 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     $core.String? discordBotToken,
     $core.String? discordGuildId,
     $core.String? discordChannelId,
-    @$core.Deprecated('This field is deprecated.')
-    $fixnum.Int64? discordReminderMins,
     $core.bool? discordSelfLinkEnabled,
     $core.bool? discordNameSyncEnabled,
     $fixnum.Int64? discordStartReminderMins,
     $fixnum.Int64? discordEndReminderMins,
     $core.String? discordStartReminderMessage,
     $core.String? discordEndReminderMessage,
+    $core.bool? discordOvertimeDmEnabled,
+    $fixnum.Int64? discordOvertimeDmMins,
+    $core.String? discordOvertimeDmMessage,
+    $core.bool? discordAutoCheckoutDmEnabled,
+    $core.String? discordAutoCheckoutDmMessage,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -135,8 +138,6 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     if (discordBotToken != null) result.discordBotToken = discordBotToken;
     if (discordGuildId != null) result.discordGuildId = discordGuildId;
     if (discordChannelId != null) result.discordChannelId = discordChannelId;
-    if (discordReminderMins != null)
-      result.discordReminderMins = discordReminderMins;
     if (discordSelfLinkEnabled != null)
       result.discordSelfLinkEnabled = discordSelfLinkEnabled;
     if (discordNameSyncEnabled != null)
@@ -149,6 +150,16 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
       result.discordStartReminderMessage = discordStartReminderMessage;
     if (discordEndReminderMessage != null)
       result.discordEndReminderMessage = discordEndReminderMessage;
+    if (discordOvertimeDmEnabled != null)
+      result.discordOvertimeDmEnabled = discordOvertimeDmEnabled;
+    if (discordOvertimeDmMins != null)
+      result.discordOvertimeDmMins = discordOvertimeDmMins;
+    if (discordOvertimeDmMessage != null)
+      result.discordOvertimeDmMessage = discordOvertimeDmMessage;
+    if (discordAutoCheckoutDmEnabled != null)
+      result.discordAutoCheckoutDmEnabled = discordAutoCheckoutDmEnabled;
+    if (discordAutoCheckoutDmMessage != null)
+      result.discordAutoCheckoutDmMessage = discordAutoCheckoutDmMessage;
     return result;
   }
 
@@ -169,13 +180,17 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'discordBotToken')
     ..aOS(3, _omitFieldNames ? '' : 'discordGuildId')
     ..aOS(4, _omitFieldNames ? '' : 'discordChannelId')
-    ..aInt64(5, _omitFieldNames ? '' : 'discordReminderMins')
-    ..aOB(6, _omitFieldNames ? '' : 'discordSelfLinkEnabled')
-    ..aOB(7, _omitFieldNames ? '' : 'discordNameSyncEnabled')
-    ..aInt64(8, _omitFieldNames ? '' : 'discordStartReminderMins')
-    ..aInt64(9, _omitFieldNames ? '' : 'discordEndReminderMins')
-    ..aOS(10, _omitFieldNames ? '' : 'discordStartReminderMessage')
-    ..aOS(11, _omitFieldNames ? '' : 'discordEndReminderMessage')
+    ..aOB(5, _omitFieldNames ? '' : 'discordSelfLinkEnabled')
+    ..aOB(6, _omitFieldNames ? '' : 'discordNameSyncEnabled')
+    ..aInt64(7, _omitFieldNames ? '' : 'discordStartReminderMins')
+    ..aInt64(8, _omitFieldNames ? '' : 'discordEndReminderMins')
+    ..aOS(9, _omitFieldNames ? '' : 'discordStartReminderMessage')
+    ..aOS(10, _omitFieldNames ? '' : 'discordEndReminderMessage')
+    ..aOB(11, _omitFieldNames ? '' : 'discordOvertimeDmEnabled')
+    ..aInt64(12, _omitFieldNames ? '' : 'discordOvertimeDmMins')
+    ..aOS(13, _omitFieldNames ? '' : 'discordOvertimeDmMessage')
+    ..aOB(14, _omitFieldNames ? '' : 'discordAutoCheckoutDmEnabled')
+    ..aOS(15, _omitFieldNames ? '' : 'discordAutoCheckoutDmMessage')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -234,72 +249,105 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearDiscordChannelId() => $_clearField(4);
 
-  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(5)
-  $fixnum.Int64 get discordReminderMins => $_getI64(4);
-  @$core.Deprecated('This field is deprecated.')
+  $core.bool get discordSelfLinkEnabled => $_getBF(4);
   @$pb.TagNumber(5)
-  set discordReminderMins($fixnum.Int64 value) => $_setInt64(4, value);
-  @$core.Deprecated('This field is deprecated.')
+  set discordSelfLinkEnabled($core.bool value) => $_setBool(4, value);
   @$pb.TagNumber(5)
-  $core.bool hasDiscordReminderMins() => $_has(4);
-  @$core.Deprecated('This field is deprecated.')
+  $core.bool hasDiscordSelfLinkEnabled() => $_has(4);
   @$pb.TagNumber(5)
-  void clearDiscordReminderMins() => $_clearField(5);
+  void clearDiscordSelfLinkEnabled() => $_clearField(5);
 
   @$pb.TagNumber(6)
-  $core.bool get discordSelfLinkEnabled => $_getBF(5);
+  $core.bool get discordNameSyncEnabled => $_getBF(5);
   @$pb.TagNumber(6)
-  set discordSelfLinkEnabled($core.bool value) => $_setBool(5, value);
+  set discordNameSyncEnabled($core.bool value) => $_setBool(5, value);
   @$pb.TagNumber(6)
-  $core.bool hasDiscordSelfLinkEnabled() => $_has(5);
+  $core.bool hasDiscordNameSyncEnabled() => $_has(5);
   @$pb.TagNumber(6)
-  void clearDiscordSelfLinkEnabled() => $_clearField(6);
+  void clearDiscordNameSyncEnabled() => $_clearField(6);
 
   @$pb.TagNumber(7)
-  $core.bool get discordNameSyncEnabled => $_getBF(6);
+  $fixnum.Int64 get discordStartReminderMins => $_getI64(6);
   @$pb.TagNumber(7)
-  set discordNameSyncEnabled($core.bool value) => $_setBool(6, value);
+  set discordStartReminderMins($fixnum.Int64 value) => $_setInt64(6, value);
   @$pb.TagNumber(7)
-  $core.bool hasDiscordNameSyncEnabled() => $_has(6);
+  $core.bool hasDiscordStartReminderMins() => $_has(6);
   @$pb.TagNumber(7)
-  void clearDiscordNameSyncEnabled() => $_clearField(7);
+  void clearDiscordStartReminderMins() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $fixnum.Int64 get discordStartReminderMins => $_getI64(7);
+  $fixnum.Int64 get discordEndReminderMins => $_getI64(7);
   @$pb.TagNumber(8)
-  set discordStartReminderMins($fixnum.Int64 value) => $_setInt64(7, value);
+  set discordEndReminderMins($fixnum.Int64 value) => $_setInt64(7, value);
   @$pb.TagNumber(8)
-  $core.bool hasDiscordStartReminderMins() => $_has(7);
+  $core.bool hasDiscordEndReminderMins() => $_has(7);
   @$pb.TagNumber(8)
-  void clearDiscordStartReminderMins() => $_clearField(8);
+  void clearDiscordEndReminderMins() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  $fixnum.Int64 get discordEndReminderMins => $_getI64(8);
+  $core.String get discordStartReminderMessage => $_getSZ(8);
   @$pb.TagNumber(9)
-  set discordEndReminderMins($fixnum.Int64 value) => $_setInt64(8, value);
+  set discordStartReminderMessage($core.String value) => $_setString(8, value);
   @$pb.TagNumber(9)
-  $core.bool hasDiscordEndReminderMins() => $_has(8);
+  $core.bool hasDiscordStartReminderMessage() => $_has(8);
   @$pb.TagNumber(9)
-  void clearDiscordEndReminderMins() => $_clearField(9);
+  void clearDiscordStartReminderMessage() => $_clearField(9);
 
   @$pb.TagNumber(10)
-  $core.String get discordStartReminderMessage => $_getSZ(9);
+  $core.String get discordEndReminderMessage => $_getSZ(9);
   @$pb.TagNumber(10)
-  set discordStartReminderMessage($core.String value) => $_setString(9, value);
+  set discordEndReminderMessage($core.String value) => $_setString(9, value);
   @$pb.TagNumber(10)
-  $core.bool hasDiscordStartReminderMessage() => $_has(9);
+  $core.bool hasDiscordEndReminderMessage() => $_has(9);
   @$pb.TagNumber(10)
-  void clearDiscordStartReminderMessage() => $_clearField(10);
+  void clearDiscordEndReminderMessage() => $_clearField(10);
 
   @$pb.TagNumber(11)
-  $core.String get discordEndReminderMessage => $_getSZ(10);
+  $core.bool get discordOvertimeDmEnabled => $_getBF(10);
   @$pb.TagNumber(11)
-  set discordEndReminderMessage($core.String value) => $_setString(10, value);
+  set discordOvertimeDmEnabled($core.bool value) => $_setBool(10, value);
   @$pb.TagNumber(11)
-  $core.bool hasDiscordEndReminderMessage() => $_has(10);
+  $core.bool hasDiscordOvertimeDmEnabled() => $_has(10);
   @$pb.TagNumber(11)
-  void clearDiscordEndReminderMessage() => $_clearField(11);
+  void clearDiscordOvertimeDmEnabled() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $fixnum.Int64 get discordOvertimeDmMins => $_getI64(11);
+  @$pb.TagNumber(12)
+  set discordOvertimeDmMins($fixnum.Int64 value) => $_setInt64(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasDiscordOvertimeDmMins() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearDiscordOvertimeDmMins() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.String get discordOvertimeDmMessage => $_getSZ(12);
+  @$pb.TagNumber(13)
+  set discordOvertimeDmMessage($core.String value) => $_setString(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasDiscordOvertimeDmMessage() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearDiscordOvertimeDmMessage() => $_clearField(13);
+
+  @$pb.TagNumber(14)
+  $core.bool get discordAutoCheckoutDmEnabled => $_getBF(13);
+  @$pb.TagNumber(14)
+  set discordAutoCheckoutDmEnabled($core.bool value) => $_setBool(13, value);
+  @$pb.TagNumber(14)
+  $core.bool hasDiscordAutoCheckoutDmEnabled() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearDiscordAutoCheckoutDmEnabled() => $_clearField(14);
+
+  @$pb.TagNumber(15)
+  $core.String get discordAutoCheckoutDmMessage => $_getSZ(14);
+  @$pb.TagNumber(15)
+  set discordAutoCheckoutDmMessage($core.String value) =>
+      $_setString(14, value);
+  @$pb.TagNumber(15)
+  $core.bool hasDiscordAutoCheckoutDmMessage() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearDiscordAutoCheckoutDmMessage() => $_clearField(15);
 }
 
 class UpdateSettingsResponse extends $pb.GeneratedMessage {

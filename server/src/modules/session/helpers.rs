@@ -11,6 +11,23 @@ use crate::{
   },
 };
 
+/// A session that is past its end time, with precomputed state for both
+/// SessionService (auto-checkout) and DiscordNotificationService (DM warnings).
+pub struct PastEndSession {
+  pub session_id: String,
+  pub session: Session,
+  pub end_secs: i64,
+  pub checked_in: Vec<(String, TeamMemberSession)>,
+  pub next_start_secs: Option<i64>,
+}
+
+/// A member who was auto-checked-out by the SessionService but hasn't been notified yet.
+pub struct AutoCheckedOutMember {
+  pub ms_id: String,
+  pub member_session: TeamMemberSession,
+  pub session: Session,
+}
+
 /// Get the current time as a protobuf Timestamp.
 pub fn now_timestamp() -> Timestamp {
   let now = Utc::now();
@@ -40,6 +57,12 @@ pub fn is_member_checked_in(ms: &TeamMemberSession) -> bool {
 pub fn has_checked_in_members(session_id: &str) -> Result<bool> {
   let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
   Ok(member_sessions.values().any(is_member_checked_in))
+}
+
+/// Get all checked-in member sessions for a session (has check_in but no check_out).
+pub fn get_checked_in_members(session_id: &str) -> Result<Vec<(String, TeamMemberSession)>> {
+  let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
+  Ok(member_sessions.into_iter().filter(|(_, ms)| is_member_checked_in(ms)).collect())
 }
 
 /// Check out all lingering members in a session with the given timestamp.
@@ -96,4 +119,71 @@ pub fn find_session_for_location(
   }
 
   Ok(best.map(|(id, session, _)| (id, session)))
+}
+
+/// Get all unfinished sessions that are past their end time, with checked-in members
+/// and the next session's start time precomputed.
+///
+/// This is the single source of truth for overtime/auto-checkout detection,
+/// used by both SessionService and DiscordNotificationService.
+pub fn get_past_end_sessions() -> Result<Vec<PastEndSession>> {
+  let now_secs = Utc::now().timestamp();
+  let unfinished = get_unfinished_sessions_sorted()?;
+
+  let mut results = Vec::new();
+
+  for i in 0..unfinished.len() {
+    let (ref id, ref session) = unfinished[i];
+    let end_secs = match session.end_time.as_ref() {
+      Some(t) => t.seconds,
+      None => continue,
+    };
+
+    if now_secs <= end_secs {
+      continue;
+    }
+
+    let checked_in = get_checked_in_members(id)?;
+    let next_start_secs = unfinished.get(i + 1).and_then(|(_, next)| next.start_time.as_ref().map(|t| t.seconds));
+
+    results.push(PastEndSession {
+      session_id: id.clone(),
+      session: session.clone(),
+      end_secs,
+      checked_in,
+      next_start_secs,
+    });
+  }
+
+  Ok(results)
+}
+
+/// Check if an auto-checkout is imminent — i.e. the next session starts within the given threshold.
+pub fn is_auto_checkout_imminent(next_start_secs: Option<i64>, now_secs: i64, threshold_secs: i64) -> bool {
+  match next_start_secs {
+    Some(next_start) => (next_start - now_secs) <= threshold_secs,
+    None => false,
+  }
+}
+
+/// Get all members who were auto-checked-out (session finished, has check_out_time)
+/// but haven't been notified yet (auto_checkout_notified == false).
+pub fn get_auto_checked_out_members() -> Result<Vec<AutoCheckedOutMember>> {
+  let all_sessions = Session::get_all()?;
+  let mut results = Vec::new();
+
+  for (session_id, session) in &all_sessions {
+    if !session.finished {
+      continue;
+    }
+
+    let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
+    for (ms_id, ms) in member_sessions {
+      if ms.check_out_time.is_some() && !ms.auto_checkout_notified {
+        results.push(AutoCheckedOutMember { ms_id, member_session: ms, session: session.clone() });
+      }
+    }
+  }
+
+  Ok(results)
 }

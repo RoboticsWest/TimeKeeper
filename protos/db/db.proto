@@ -42,6 +42,8 @@ message TeamMemberSession {
   string session_id = 2;
   common.Timestamp check_in_time = 3;
   optional common.Timestamp check_out_time = 4;
+  bool overtime_notified = 5;
+  bool auto_checkout_notified = 6;
 }
 
 message Session {
@@ -58,11 +60,15 @@ message Settings {
   string discord_bot_token = 2;
   string discord_guild_id = 3;
   string discord_channel_id = 4;
-  int64 discord_reminder_mins = 5 [deprecated = true];
-  bool discord_self_link_enabled = 6;
-  bool discord_name_sync_enabled = 7;
-  int64 discord_start_reminder_mins = 8;
-  int64 discord_end_reminder_mins = 9;
-  string discord_start_reminder_message = 10;
-  string discord_end_reminder_message = 11;
+  bool discord_self_link_enabled = 5;
+  bool discord_name_sync_enabled = 6;
+  int64 discord_start_reminder_mins = 7;
+  int64 discord_end_reminder_mins = 8;
+  string discord_start_reminder_message = 9;
+  string discord_end_reminder_message = 10;
+  bool discord_overtime_dm_enabled = 11;
+  int64 discord_overtime_dm_mins = 12;
+  string discord_overtime_dm_message = 13;
+  bool discord_auto_checkout_dm_enabled = 14;
+  string discord_auto_checkout_dm_message = 15;
 }

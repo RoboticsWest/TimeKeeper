@@ -9,13 +9,13 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 class AnimatedInfiniteHorizontalList extends HookConsumerWidget {
   final List<Widget> children;
   final double childWidth;
-  final int scrollSpeed;
+  final int scrollSpeedMs;
 
   const AnimatedInfiniteHorizontalList({
     super.key,
     required this.children,
     required this.childWidth,
-    this.scrollSpeed = 5,
+    this.scrollSpeedMs = 2000,
   });
 
   double _getChildrenTotalWidth() {
@@ -32,7 +32,7 @@ class AnimatedInfiniteHorizontalList extends HookConsumerWidget {
           return _InfiniteScrolling(
             items: children,
             childWidth: childWidth,
-            scrollSpeed: scrollSpeed,
+            scrollSpeedMs: scrollSpeedMs,
           );
         } else {
           // Static normal list — fits on screen
@@ -62,19 +62,19 @@ class AnimatedInfiniteHorizontalList extends HookConsumerWidget {
 class _InfiniteScrolling extends HookWidget {
   final List<Widget> items;
   final double childWidth;
-  final int scrollSpeed;
+  final int scrollSpeedMs;
 
   const _InfiniteScrolling({
     required this.items,
     required this.childWidth,
-    required this.scrollSpeed,
+    required this.scrollSpeedMs,
   });
 
   @override
   Widget build(BuildContext context) {
     final totalWidth = items.length * childWidth;
     final duration = Duration(
-      seconds: (items.isEmpty ? 1 : items.length) * scrollSpeed,
+      milliseconds: (items.isEmpty ? 1 : items.length) * scrollSpeedMs,
     );
     final animationController = useAnimationController(duration: duration);
 
@@ -89,6 +89,7 @@ class _InfiniteScrolling extends HookWidget {
 
     final row = RepaintBoundary(
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           for (final item in items) SizedBox(width: childWidth, child: item),
           for (final item in items) SizedBox(width: childWidth, child: item),
@@ -96,15 +97,29 @@ class _InfiniteScrolling extends HookWidget {
       ),
     );
 
-    return ClipRect(
-      child: AnimatedBuilder(
-        animation: animationController,
-        builder: (context, child) {
-          final offset = animationController.value * totalWidth;
-          return Transform.translate(offset: Offset(-offset, 0), child: child);
-        },
-        child: row,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: constraints.maxWidth,
+          child: ClipRect(
+            child: OverflowBox(
+              maxWidth: totalWidth * 2,
+              alignment: Alignment.centerLeft,
+              child: AnimatedBuilder(
+                animation: animationController,
+                builder: (context, child) {
+                  final offset = animationController.value * totalWidth;
+                  return Transform.translate(
+                    offset: Offset(-offset, 0),
+                    child: child,
+                  );
+                },
+                child: row,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

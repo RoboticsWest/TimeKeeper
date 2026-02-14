@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/location.pbgrpc.dart';
 import 'package:time_keeper/providers/entity_sync_provider.dart';
@@ -8,8 +9,9 @@ import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/table_filter.dart';
 
-class LocationsView extends ConsumerWidget {
+class LocationsView extends HookConsumerWidget {
   const LocationsView({super.key});
 
   void _showClearDialog(
@@ -47,8 +49,16 @@ class LocationsView extends ConsumerWidget {
     final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
 
+    final filterController = useTextEditingController();
+    final filterText = useValueListenable(filterController).text.toLowerCase();
+
     final sorted = locations.entries.toList()
       ..sort((a, b) => a.value.location.compareTo(b.value.location));
+
+    final filtered = sorted.where((entry) {
+      if (filterText.isEmpty) return true;
+      return entry.value.location.toLowerCase().contains(filterText);
+    }).toList();
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -69,7 +79,9 @@ class LocationsView extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          TableFilter(controller: filterController),
+          const SizedBox(height: 12),
           Expanded(
             child: EditTable(
               alternatingRows: true,
@@ -88,7 +100,7 @@ class LocationsView extends ConsumerWidget {
                   top: Radius.circular(8),
                 ),
               ),
-              editRows: sorted.map((entry) {
+              editRows: filtered.map((entry) {
                 final id = entry.key;
                 final location = entry.value;
                 return EditTableRow(
