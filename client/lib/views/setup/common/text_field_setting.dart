@@ -13,6 +13,8 @@ class TextFieldSetting extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final bool multiline;
+  final int maxLines;
 
   const TextFieldSetting({
     super.key,
@@ -25,36 +27,57 @@ class TextFieldSetting extends StatelessWidget {
     this.inputFormatters,
     this.keyboardType,
     this.obscureText = false,
+    this.multiline = false,
+    this.maxLines = 1,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveMaxLines = multiline ? (maxLines > 1 ? maxLines : 5) : 1;
+    final effectiveKeyboardType = multiline
+        ? TextInputType.multiline
+        : keyboardType;
+
+    final textField = TextField(
+      controller: controller,
+      enabled: enabled,
+      inputFormatters: inputFormatters,
+      keyboardType: effectiveKeyboardType,
+      obscureText: obscureText,
+      maxLines: effectiveMaxLines,
+      minLines: multiline ? 3 : 1,
+      decoration: InputDecoration(
+        border: const OutlineInputBorder(),
+        hintText: hintText,
+        alignLabelWithHint: multiline,
+      ),
+    );
+
+    final updateButton = FilledButton.icon(
+      onPressed: enabled ? onUpdate : null,
+      icon: const Icon(Icons.save),
+      label: const Text('Update'),
+    );
+
     return SettingRow(
       label: label,
       description: description,
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              enabled: enabled,
-              inputFormatters: inputFormatters,
-              keyboardType: keyboardType,
-              obscureText: obscureText,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                hintText: hintText,
-              ),
+      child: multiline
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                textField,
+                const SizedBox(height: 8),
+                Align(alignment: Alignment.centerRight, child: updateButton),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: textField),
+                const SizedBox(width: 12),
+                updateButton,
+              ],
             ),
-          ),
-          const SizedBox(width: 12),
-          FilledButton.icon(
-            onPressed: enabled ? onUpdate : null,
-            icon: const Icon(Icons.save),
-            label: const Text('Update'),
-          ),
-        ],
-      ),
     );
   }
 }

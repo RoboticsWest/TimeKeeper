@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
 import 'package:time_keeper/generated/db/db.pbenum.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/helpers/settings_helper.dart' as settings_helper;
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
@@ -83,52 +84,34 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     }, const []);
 
     Future<void> updateDiscordSettings() async {
-      // Fetch existing settings first so we don't overwrite other fields
-      final current = await callGrpcEndpoint(
-        () =>
-            ref.read(settingsServiceProvider).getSettings(GetSettingsRequest()),
-      );
-
-      if (current is! GrpcSuccess<GetSettingsResponse>) {
-        if (context.mounted) {
-          PopupDialog.fromGrpcStatus(result: current).show(context);
-        }
-        return;
-      }
-
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateSettings(
-              UpdateSettingsRequest(
-                nextSessionThresholdSecs:
-                    current.data.settings.nextSessionThresholdSecs,
-                discordEnabled: discordEnabled.value,
-                discordBotToken: botTokenController.text,
-                discordGuildId: guildIdController.text,
-                discordChannelId: channelIdController.text,
-                discordStartReminderMins: Int64(
-                  int.tryParse(startReminderMinsController.text) ?? 1440,
-                ),
-                discordEndReminderMins: Int64(
-                  int.tryParse(endReminderMinsController.text) ?? 15,
-                ),
-                discordStartReminderMessage:
-                    startReminderMessageController.text,
-                discordEndReminderMessage: endReminderMessageController.text,
-                discordSelfLinkEnabled: selfLinkEnabled.value,
-                discordNameSyncEnabled: nameSyncEnabled.value,
-                discordOvertimeDmEnabled: overtimeDmEnabled.value,
-                discordOvertimeDmMins: Int64(
-                  int.tryParse(overtimeDmMinsController.text) ?? 10,
-                ),
-                discordOvertimeDmMessage: overtimeDmMessageController.text,
-                discordAutoCheckoutDmEnabled: autoCheckoutDmEnabled.value,
-                discordAutoCheckoutDmMessage:
-                    autoCheckoutDmMessageController.text,
-                discordCheckoutEnabled: checkoutEnabled.value,
-              ),
-            ),
+      final res = await settings_helper.updateSettings(
+        ref.read(settingsServiceProvider),
+        (req) {
+          req
+            ..discordEnabled = discordEnabled.value
+            ..discordBotToken = botTokenController.text
+            ..discordGuildId = guildIdController.text
+            ..discordChannelId = channelIdController.text
+            ..discordStartReminderMins = Int64(
+              int.tryParse(startReminderMinsController.text) ?? 1440,
+            )
+            ..discordEndReminderMins = Int64(
+              int.tryParse(endReminderMinsController.text) ?? 15,
+            )
+            ..discordStartReminderMessage = startReminderMessageController.text
+            ..discordEndReminderMessage = endReminderMessageController.text
+            ..discordSelfLinkEnabled = selfLinkEnabled.value
+            ..discordNameSyncEnabled = nameSyncEnabled.value
+            ..discordOvertimeDmEnabled = overtimeDmEnabled.value
+            ..discordOvertimeDmMins = Int64(
+              int.tryParse(overtimeDmMinsController.text) ?? 10,
+            )
+            ..discordOvertimeDmMessage = overtimeDmMessageController.text
+            ..discordAutoCheckoutDmEnabled = autoCheckoutDmEnabled.value
+            ..discordAutoCheckoutDmMessage =
+                autoCheckoutDmMessageController.text
+            ..discordCheckoutEnabled = checkoutEnabled.value;
+        },
       );
 
       if (context.mounted) {
@@ -273,6 +256,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           controller: startReminderMessageController,
           hintText:
               '@here Session on {date} from {start_time} to {end_time} @ {location} starting in ~{mins} minutes!',
+          multiline: true,
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 24),
@@ -294,6 +278,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           controller: endReminderMessageController,
           hintText:
               '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
+          multiline: true,
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 24),
@@ -405,6 +390,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           controller: overtimeDmMessageController,
           hintText:
               'Hey {username}, you\'re now in overtime for the session at {location}. The session ended at {end_time}. Don\'t forget to check out!',
+          multiline: true,
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 24),
@@ -434,6 +420,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           controller: autoCheckoutDmMessageController,
           hintText:
               'Hey {username}, you\'ve been auto-checked-out from the session at {location} (ended at {end_time}) because a new session is starting soon.',
+          multiline: true,
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 32),

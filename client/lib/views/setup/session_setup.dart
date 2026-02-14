@@ -7,6 +7,7 @@ import 'package:time_keeper/generated/api/schedule.pbgrpc.dart';
 import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
 import 'package:time_keeper/generated/api/user.pbgrpc.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/helpers/settings_helper.dart' as settings_helper;
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/schedule_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
@@ -76,46 +77,10 @@ class SessionSetupTab extends HookConsumerWidget {
     }, const []);
 
     Future<void> updateTimezone(String timezone) async {
-      final current = await callGrpcEndpoint(
-        () =>
-            ref.read(settingsServiceProvider).getSettings(GetSettingsRequest()),
+      final res = await settings_helper.updateSettings(
+        ref.read(settingsServiceProvider),
+        (req) => req.timezone = timezone,
       );
-
-      if (current is! GrpcSuccess<GetSettingsResponse>) {
-        if (context.mounted) {
-          PopupDialog.fromGrpcStatus(result: current).show(context);
-        }
-        return;
-      }
-
-      final s = current.data.settings;
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateSettings(
-              UpdateSettingsRequest(
-                nextSessionThresholdSecs: s.nextSessionThresholdSecs,
-                timezone: timezone,
-                discordEnabled: s.discordEnabled,
-                discordBotToken: s.discordBotToken,
-                discordGuildId: s.discordGuildId,
-                discordChannelId: s.discordChannelId,
-                discordSelfLinkEnabled: s.discordSelfLinkEnabled,
-                discordNameSyncEnabled: s.discordNameSyncEnabled,
-                discordStartReminderMins: s.discordStartReminderMins,
-                discordEndReminderMins: s.discordEndReminderMins,
-                discordStartReminderMessage: s.discordStartReminderMessage,
-                discordEndReminderMessage: s.discordEndReminderMessage,
-                discordOvertimeDmEnabled: s.discordOvertimeDmEnabled,
-                discordOvertimeDmMins: s.discordOvertimeDmMins,
-                discordOvertimeDmMessage: s.discordOvertimeDmMessage,
-                discordAutoCheckoutDmEnabled: s.discordAutoCheckoutDmEnabled,
-                discordAutoCheckoutDmMessage: s.discordAutoCheckoutDmMessage,
-                discordCheckoutEnabled: s.discordCheckoutEnabled,
-              ),
-            ),
-      );
-
       if (context.mounted) {
         PopupDialog.fromGrpcStatus(result: res).show(context);
       }
@@ -181,12 +146,9 @@ class SessionSetupTab extends HookConsumerWidget {
             final hours = double.tryParse(thresholdController.text);
             if (hours == null || hours <= 0) return;
             final secs = Int64((hours * 3600).round());
-            final res = await callGrpcEndpoint(
-              () => ref
-                  .read(settingsServiceProvider)
-                  .updateSettings(
-                    UpdateSettingsRequest(nextSessionThresholdSecs: secs),
-                  ),
+            final res = await settings_helper.updateSettings(
+              ref.read(settingsServiceProvider),
+              (req) => req.nextSessionThresholdSecs = secs,
             );
             if (context.mounted) {
               PopupDialog.fromGrpcStatus(result: res).show(context);
@@ -199,23 +161,36 @@ class SessionSetupTab extends HookConsumerWidget {
           description:
               'UTC offset used when the server formats times in Discord messages. '
               'Does not affect how times are stored (always UTC).',
-          child: DropdownButton<String>(
-            value: selectedTimezone.value,
-            isExpanded: true,
-            items: _timezones
-                .map(
-                  (tz) => DropdownMenuItem(
-                    value: tz,
-                    child: Text(tz == 'UTC' ? 'UTC' : 'UTC$tz'),
+          child: Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: selectedTimezone.value,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
                   ),
-                )
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                selectedTimezone.value = value;
-                updateTimezone(value);
-              }
-            },
+                  items: _timezones
+                      .map(
+                        (tz) => DropdownMenuItem(
+                          value: tz,
+                          child: Text(tz == 'UTC' ? 'UTC' : 'UTC$tz'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      selectedTimezone.value = value;
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton.icon(
+                onPressed: () => updateTimezone(selectedTimezone.value),
+                icon: const Icon(Icons.save),
+                label: const Text('Update'),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 24),
