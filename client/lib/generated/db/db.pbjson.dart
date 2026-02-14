@@ -28,6 +28,22 @@ const TeamMemberType$json = {
 final $typed_data.Uint8List teamMemberTypeDescriptor = $convert
     .base64Decode('Cg5UZWFtTWVtYmVyVHlwZRILCgdTVFVERU5UEAASCgoGTUVOVE9SEAE=');
 
+@$core.Deprecated('Use notificationTypeDescriptor instead')
+const NotificationType$json = {
+  '1': 'NotificationType',
+  '2': [
+    {'1': 'SESSION_START_REMINDER', '2': 0},
+    {'1': 'SESSION_END_REMINDER', '2': 1},
+    {'1': 'OVERTIME', '2': 2},
+    {'1': 'AUTO_CHECKOUT', '2': 3},
+  ],
+};
+
+/// Descriptor for `NotificationType`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List notificationTypeDescriptor = $convert.base64Decode(
+    'ChBOb3RpZmljYXRpb25UeXBlEhoKFlNFU1NJT05fU1RBUlRfUkVNSU5ERVIQABIYChRTRVNTSU'
+    '9OX0VORF9SRU1JTkRFUhABEgwKCE9WRVJUSU1FEAISEQoNQVVUT19DSEVDS09VVBAD');
+
 @$core.Deprecated('Use secretDescriptor instead')
 const Secret$json = {
   '1': 'Secret',
@@ -170,24 +186,15 @@ const TeamMemberSession$json = {
       '10': 'checkOutTime',
       '17': true
     },
-    {
-      '1': 'overtime_notified',
-      '3': 5,
-      '4': 1,
-      '5': 8,
-      '10': 'overtimeNotified'
-    },
-    {
-      '1': 'auto_checkout_notified',
-      '3': 6,
-      '4': 1,
-      '5': 8,
-      '10': 'autoCheckoutNotified'
-    },
   ],
   '8': [
     {'1': '_check_out_time'},
   ],
+  '9': [
+    {'1': 5, '2': 6},
+    {'1': 6, '2': 7},
+  ],
+  '10': ['overtime_notified', 'auto_checkout_notified'],
 };
 
 /// Descriptor for `TeamMemberSession`. Decode as a `google.protobuf.DescriptorProto`.
@@ -195,9 +202,9 @@ final $typed_data.Uint8List teamMemberSessionDescriptor = $convert.base64Decode(
     'ChFUZWFtTWVtYmVyU2Vzc2lvbhIkCg50ZWFtX21lbWJlcl9pZBgBIAEoCVIMdGVhbU1lbWJlck'
     'lkEh0KCnNlc3Npb25faWQYAiABKAlSCXNlc3Npb25JZBI4Cg1jaGVja19pbl90aW1lGAMgASgL'
     'MhQudGsuY29tbW9uLlRpbWVzdGFtcFILY2hlY2tJblRpbWUSPwoOY2hlY2tfb3V0X3RpbWUYBC'
-    'ABKAsyFC50ay5jb21tb24uVGltZXN0YW1wSABSDGNoZWNrT3V0VGltZYgBARIrChFvdmVydGlt'
-    'ZV9ub3RpZmllZBgFIAEoCFIQb3ZlcnRpbWVOb3RpZmllZBI0ChZhdXRvX2NoZWNrb3V0X25vdG'
-    'lmaWVkGAYgASgIUhRhdXRvQ2hlY2tvdXROb3RpZmllZEIRCg9fY2hlY2tfb3V0X3RpbWU=');
+    'ABKAsyFC50ay5jb21tb24uVGltZXN0YW1wSABSDGNoZWNrT3V0VGltZYgBAUIRCg9fY2hlY2tf'
+    'b3V0X3RpbWVKBAgFEAZKBAgGEAdSEW92ZXJ0aW1lX25vdGlmaWVkUhZhdXRvX2NoZWNrb3V0X2'
+    '5vdGlmaWVk');
 
 @$core.Deprecated('Use sessionDescriptor instead')
 const Session$json = {
@@ -221,15 +228,12 @@ const Session$json = {
     },
     {'1': 'location_id', '3': 3, '4': 1, '5': 9, '10': 'locationId'},
     {'1': 'finished', '3': 4, '4': 1, '5': 8, '10': 'finished'},
-    {
-      '1': 'start_reminder_sent',
-      '3': 5,
-      '4': 1,
-      '5': 8,
-      '10': 'startReminderSent'
-    },
-    {'1': 'end_reminder_sent', '3': 6, '4': 1, '5': 8, '10': 'endReminderSent'},
   ],
+  '9': [
+    {'1': 5, '2': 6},
+    {'1': 6, '2': 7},
+  ],
+  '10': ['start_reminder_sent', 'end_reminder_sent'],
 };
 
 /// Descriptor for `Session`. Decode as a `google.protobuf.DescriptorProto`.
@@ -237,8 +241,44 @@ final $typed_data.Uint8List sessionDescriptor = $convert.base64Decode(
     'CgdTZXNzaW9uEjMKCnN0YXJ0X3RpbWUYASABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUglzdG'
     'FydFRpbWUSLwoIZW5kX3RpbWUYAiABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUgdlbmRUaW1l'
     'Eh8KC2xvY2F0aW9uX2lkGAMgASgJUgpsb2NhdGlvbklkEhoKCGZpbmlzaGVkGAQgASgIUghmaW'
-    '5pc2hlZBIuChNzdGFydF9yZW1pbmRlcl9zZW50GAUgASgIUhFzdGFydFJlbWluZGVyU2VudBIq'
-    'ChFlbmRfcmVtaW5kZXJfc2VudBgGIAEoCFIPZW5kUmVtaW5kZXJTZW50');
+    '5pc2hlZEoECAUQBkoECAYQB1ITc3RhcnRfcmVtaW5kZXJfc2VudFIRZW5kX3JlbWluZGVyX3Nl'
+    'bnQ=');
+
+@$core.Deprecated('Use notificationDescriptor instead')
+const Notification$json = {
+  '1': 'Notification',
+  '2': [
+    {
+      '1': 'notification_type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.db.NotificationType',
+      '10': 'notificationType'
+    },
+    {'1': 'session_id', '3': 2, '4': 1, '5': 9, '10': 'sessionId'},
+    {
+      '1': 'team_member_id',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'teamMemberId',
+      '17': true
+    },
+    {'1': 'sent', '3': 4, '4': 1, '5': 8, '10': 'sent'},
+  ],
+  '8': [
+    {'1': '_team_member_id'},
+  ],
+};
+
+/// Descriptor for `Notification`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List notificationDescriptor = $convert.base64Decode(
+    'CgxOb3RpZmljYXRpb24SRAoRbm90aWZpY2F0aW9uX3R5cGUYASABKA4yFy50ay5kYi5Ob3RpZm'
+    'ljYXRpb25UeXBlUhBub3RpZmljYXRpb25UeXBlEh0KCnNlc3Npb25faWQYAiABKAlSCXNlc3Np'
+    'b25JZBIpCg50ZWFtX21lbWJlcl9pZBgDIAEoCUgAUgx0ZWFtTWVtYmVySWSIAQESEgoEc2VudB'
+    'gEIAEoCFIEc2VudEIRCg9fdGVhbV9tZW1iZXJfaWQ=');
 
 @$core.Deprecated('Use settingsDescriptor instead')
 const Settings$json = {
@@ -337,6 +377,13 @@ const Settings$json = {
       '5': 9,
       '10': 'discordAutoCheckoutDmMessage'
     },
+    {
+      '1': 'discord_checkout_enabled',
+      '3': 16,
+      '4': 1,
+      '5': 8,
+      '10': 'discordCheckoutEnabled'
+    },
   ],
 };
 
@@ -358,4 +405,5 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     '1fbWVzc2FnZRgNIAEoCVIYZGlzY29yZE92ZXJ0aW1lRG1NZXNzYWdlEkYKIGRpc2NvcmRfYXV0'
     'b19jaGVja291dF9kbV9lbmFibGVkGA4gASgIUhxkaXNjb3JkQXV0b0NoZWNrb3V0RG1FbmFibG'
     'VkEkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGA8gASgJUhxkaXNjb3JkQXV0'
-    'b0NoZWNrb3V0RG1NZXNzYWdl');
+    'b0NoZWNrb3V0RG1NZXNzYWdlEjgKGGRpc2NvcmRfY2hlY2tvdXRfZW5hYmxlZBgQIAEoCFIWZG'
+    'lzY29yZENoZWNrb3V0RW5hYmxlZA==');

@@ -39,6 +39,11 @@ impl Server {
     init_db(&self.config)?;
     init_jwt_secret()?;
 
+    // One-time migration: populate notification table from legacy boolean flags
+    if let Err(e) = crate::core::migration::run_notification_migration() {
+      log::error!("Notification migration failed: {e}");
+    }
+
     // Schedule background services
     self.scheduler.schedule(SessionService, shutdown_notifier);
     self.scheduler.schedule(DiscordNotificationService::new(), shutdown_notifier);

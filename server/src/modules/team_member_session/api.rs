@@ -126,8 +126,6 @@ impl TeamMemberSessionService for TeamMemberSessionApi {
       session_id: existing.session_id,
       check_in_time: request.check_in_time,
       check_out_time: request.check_out_time,
-      overtime_notified: existing.overtime_notified,
-      auto_checkout_notified: existing.auto_checkout_notified,
     };
 
     TeamMemberSession::update(&request.id, &updated)
@@ -243,8 +241,6 @@ impl TeamMemberSessionService for TeamMemberSessionApi {
         session_id: session_id.clone(),
         check_in_time: Some(record.check_in_time),
         check_out_time: record.check_out_time,
-        overtime_notified: false,
-        auto_checkout_notified: false,
       };
 
       if let Err(e) = TeamMemberSession::add(&new_record) {

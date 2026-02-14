@@ -70,6 +70,7 @@ impl SettingsRepository for Settings {
       discord_overtime_dm_message: DEFAULT_OVERTIME_DM_MESSAGE.to_string(),
       discord_auto_checkout_dm_enabled: true,
       discord_auto_checkout_dm_message: DEFAULT_AUTO_CHECKOUT_DM_MESSAGE.to_string(),
+      discord_checkout_enabled: false,
     };
 
     if let Some(s) = table.get::<Settings>(SETTINGS_KEY)? {

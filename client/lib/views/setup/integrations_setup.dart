@@ -33,6 +33,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     final overtimeDmMessageController = useTextEditingController();
     final autoCheckoutDmEnabled = useState(true);
     final autoCheckoutDmMessageController = useTextEditingController();
+    final checkoutEnabled = useState(false);
     final discordRoles = useState<List<DiscordRole>>([]);
     final selectedRoleId = useState<String?>(null);
     final isLoadingRoles = useState(false);
@@ -71,6 +72,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           overtimeDmMessageController.text = s.discordOvertimeDmMessage;
           autoCheckoutDmEnabled.value = s.discordAutoCheckoutDmEnabled;
           autoCheckoutDmMessageController.text = s.discordAutoCheckoutDmMessage;
+          checkoutEnabled.value = s.discordCheckoutEnabled;
         }
       }
 
@@ -121,6 +123,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 discordAutoCheckoutDmEnabled: autoCheckoutDmEnabled.value,
                 discordAutoCheckoutDmMessage:
                     autoCheckoutDmMessageController.text,
+                discordCheckoutEnabled: checkoutEnabled.value,
               ),
             ),
       );
@@ -305,6 +308,26 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(nameSyncEnabled.value ? 'Enabled' : 'Disabled'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        SettingRow(
+          label: 'Discord Checkout',
+          description:
+              'Allow team members to check themselves out using the !checkout command. '
+              'If used after a session ends, checkout time is set to the session end time.',
+          child: Row(
+            children: [
+              Switch(
+                value: checkoutEnabled.value,
+                onChanged: (value) {
+                  checkoutEnabled.value = value;
+                  updateDiscordSettings();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(checkoutEnabled.value ? 'Enabled' : 'Disabled'),
             ],
           ),
         ),

@@ -141,6 +141,13 @@ const UpdateSettingsRequest$json = {
       '5': 9,
       '10': 'discordAutoCheckoutDmMessage'
     },
+    {
+      '1': 'discord_checkout_enabled',
+      '3': 16,
+      '4': 1,
+      '5': 8,
+      '10': 'discordCheckoutEnabled'
+    },
   ],
 };
 
@@ -162,7 +169,8 @@ final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Dec
     'JkX292ZXJ0aW1lX2RtX21lc3NhZ2UYDSABKAlSGGRpc2NvcmRPdmVydGltZURtTWVzc2FnZRJG'
     'CiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fZW5hYmxlZBgOIAEoCFIcZGlzY29yZEF1dG9DaG'
     'Vja291dERtRW5hYmxlZBJGCiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbWVzc2FnZRgPIAEo'
-    'CVIcZGlzY29yZEF1dG9DaGVja291dERtTWVzc2FnZQ==');
+    'CVIcZGlzY29yZEF1dG9DaGVja291dERtTWVzc2FnZRI4ChhkaXNjb3JkX2NoZWNrb3V0X2VuYW'
+    'JsZWQYECABKAhSFmRpc2NvcmRDaGVja291dEVuYWJsZWQ=');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {
