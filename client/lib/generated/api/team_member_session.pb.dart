@@ -523,6 +523,104 @@ class DeleteTeamMemberSessionResponse extends $pb.GeneratedMessage {
   static DeleteTeamMemberSessionResponse? _defaultInstance;
 }
 
+class ImportAttendanceCsvRequest extends $pb.GeneratedMessage {
+  factory ImportAttendanceCsvRequest({
+    $core.List<$core.int>? csvData,
+  }) {
+    final result = create();
+    if (csvData != null) result.csvData = csvData;
+    return result;
+  }
+
+  ImportAttendanceCsvRequest._();
+
+  factory ImportAttendanceCsvRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ImportAttendanceCsvRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ImportAttendanceCsvRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'csvData', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportAttendanceCsvRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportAttendanceCsvRequest copyWith(
+          void Function(ImportAttendanceCsvRequest) updates) =>
+      super.copyWith(
+              (message) => updates(message as ImportAttendanceCsvRequest))
+          as ImportAttendanceCsvRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ImportAttendanceCsvRequest create() => ImportAttendanceCsvRequest._();
+  @$core.override
+  ImportAttendanceCsvRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ImportAttendanceCsvRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ImportAttendanceCsvRequest>(create);
+  static ImportAttendanceCsvRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get csvData => $_getN(0);
+  @$pb.TagNumber(1)
+  set csvData($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasCsvData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCsvData() => $_clearField(1);
+}
+
+class ImportAttendanceCsvResponse extends $pb.GeneratedMessage {
+  factory ImportAttendanceCsvResponse() => create();
+
+  ImportAttendanceCsvResponse._();
+
+  factory ImportAttendanceCsvResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ImportAttendanceCsvResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ImportAttendanceCsvResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportAttendanceCsvResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ImportAttendanceCsvResponse copyWith(
+          void Function(ImportAttendanceCsvResponse) updates) =>
+      super.copyWith(
+              (message) => updates(message as ImportAttendanceCsvResponse))
+          as ImportAttendanceCsvResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ImportAttendanceCsvResponse create() =>
+      ImportAttendanceCsvResponse._();
+  @$core.override
+  ImportAttendanceCsvResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ImportAttendanceCsvResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ImportAttendanceCsvResponse>(create);
+  static ImportAttendanceCsvResponse? _defaultInstance;
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

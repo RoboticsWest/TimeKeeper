@@ -83,13 +83,13 @@ impl Table {
 
   fn __get_record<T: Message + Default>(&self, id: &str) -> Result<Option<T>> {
     let full_key = format!("{}:{}:{}", self.name, DATA_PREFIX, id);
-    let bytes: Vec<u8> = match self.db.get(full_key) {
+    let bytes: Vec<u8> = match self.db.get(&full_key) {
       Ok(v) => match v {
         Some(data) => data.to_vec(),
         None => return Ok(None),
       },
       Err(e) => {
-        log::error!("Failed to get redis from db: {}", e);
+        log::error!("Failed to get record from db: {}", e);
         return Err(anyhow::anyhow!(e));
       }
     };
@@ -101,8 +101,14 @@ impl Table {
     let record: T = match Message::decode(bytes.as_slice()) {
       Ok(rec) => rec,
       Err(e) => {
-        log::error!("Failed to decode record from db: {}", e);
-        return Err(anyhow::anyhow!(e));
+        log::warn!(
+          "[{}] Failed to decode record '{}' (schema change?), removing corrupted entry: {}",
+          self.name,
+          id,
+          e
+        );
+        self.db.remove(full_key.as_bytes()).ok();
+        return Ok(None);
       }
     };
 
@@ -112,13 +118,24 @@ impl Table {
   fn __get_records<T: Message + Default>(&self, ids: Vec<String>) -> Result<HashMap<String, T>> {
     let mut records: HashMap<String, T> = HashMap::new();
 
-    // Get all values (we sadly don't have a proper get_all)
     for id in ids {
       let full_key = format!("{}:{}:{}", self.name, DATA_PREFIX, id);
 
       if let Some(bytes) = self.db.get(full_key.as_bytes())? {
-        let record: T = Message::decode(bytes.as_ref())?;
-        records.insert(id, record);
+        match Message::decode(bytes.as_ref()) {
+          Ok(record) => {
+            records.insert(id, record);
+          }
+          Err(e) => {
+            log::warn!(
+              "[{}] Failed to decode record '{}' (schema change?), removing corrupted entry: {}",
+              self.name,
+              id,
+              e
+            );
+            self.db.remove(full_key.as_bytes()).ok();
+          }
+        }
       }
     }
 
@@ -248,15 +265,7 @@ impl Table {
 
   /// Get single record by id
   pub fn get<T: Message + Default>(&self, id: &str) -> Result<Option<T>> {
-    let record = match self.__get_record::<T>(id) {
-      Ok(r) => r,
-      Err(e) => {
-        log::error!("Failed to get record: {}", e);
-        return Err(anyhow::anyhow!(e));
-      }
-    };
-
-    Ok(record)
+    self.__get_record::<T>(id)
   }
 
   /// Get multiple records by ids
@@ -264,15 +273,7 @@ impl Table {
     let mut records: HashMap<String, T> = HashMap::new();
 
     for id in ids {
-      let record = match self.__get_record::<T>(&id) {
-        Ok(r) => r,
-        Err(e) => {
-          log::error!("Failed to get record: {}", e);
-          return Err(anyhow::anyhow!(e));
-        }
-      };
-
-      if let Some(record) = record {
+      if let Some(record) = self.__get_record::<T>(&id)? {
         records.insert(id, record);
       }
     }
@@ -285,13 +286,30 @@ impl Table {
     let prefix = format!("{}:{}:", self.name, DATA_PREFIX);
 
     let mut records: HashMap<String, T> = HashMap::new();
+    let mut corrupted_keys: Vec<sled::IVec> = Vec::new();
 
     for item in self.db.scan_prefix(prefix.as_bytes()) {
       let (key, value) = item?;
       let key_str = String::from_utf8(key.to_vec())?;
       let id = key_str.strip_prefix(&prefix).unwrap_or(&key_str).to_string();
-      let record: T = Message::decode(value.to_vec().as_slice())?;
-      records.insert(id, record);
+      match Message::decode(value.to_vec().as_slice()) {
+        Ok(record) => {
+          records.insert(id, record);
+        }
+        Err(e) => {
+          log::warn!(
+            "[{}] Failed to decode record '{}' (schema change?), removing corrupted entry: {}",
+            self.name,
+            id,
+            e
+          );
+          corrupted_keys.push(key);
+        }
+      }
+    }
+
+    for key in corrupted_keys {
+      self.db.remove(key).ok();
     }
 
     Ok(records)
@@ -312,32 +330,44 @@ impl Table {
     Ok(records)
   }
 
-  /// Scan all records in the table as an iterator (memory efficient)
-  /// Returns an iterator of (id, record) tuples
+  /// Scan all records in the table as an iterator (memory efficient).
+  /// Corrupted records that fail to decode are skipped and removed.
   pub fn scan<T: Message + Default>(&self) -> impl Iterator<Item = Result<(String, T)>> + '_ {
     let prefix = format!("{}:{}:", self.name, DATA_PREFIX);
     let table_name = self.name.clone();
 
-    self.db.scan_prefix(prefix.as_bytes()).map(move |item| {
-      let (key, value) = item.map_err(|e| {
-        log::error!("Failed to scan key: {}", e);
-        anyhow::anyhow!(e)
-      })?;
+    self.db.scan_prefix(prefix.as_bytes()).filter_map(move |item| {
+      let (key, value) = match item {
+        Ok(kv) => kv,
+        Err(e) => {
+          log::error!("Failed to scan key: {}", e);
+          return Some(Err(anyhow::anyhow!(e)));
+        }
+      };
 
-      // Extract ID from key like "teams:data:uuid"
-      let key_str = String::from_utf8(key.to_vec()).map_err(|e| {
-        log::error!("Failed to convert key to string: {}", e);
-        anyhow::anyhow!(e)
-      })?;
+      let key_str = match String::from_utf8(key.to_vec()) {
+        Ok(s) => s,
+        Err(e) => {
+          log::error!("Failed to convert key to string: {}", e);
+          return Some(Err(anyhow::anyhow!(e)));
+        }
+      };
 
       let id = key_str.strip_prefix(&format!("{}:{}:", table_name, DATA_PREFIX)).unwrap_or_default().to_string();
 
-      let record: T = Message::decode(value.as_ref()).map_err(|e| {
-        log::error!("Failed to decode record from db: {}", e);
-        anyhow::anyhow!(e)
-      })?;
-
-      Ok((id, record))
+      match Message::decode(value.as_ref()) {
+        Ok(record) => Some(Ok((id, record))),
+        Err(e) => {
+          log::warn!(
+            "[{}] Failed to decode record '{}' (schema change?), removing corrupted entry: {}",
+            table_name,
+            id,
+            e
+          );
+          self.db.remove(key).ok();
+          None
+        }
+      }
     })
   }
 

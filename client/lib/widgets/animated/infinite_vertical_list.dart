@@ -106,6 +106,7 @@ class _InfiniteScrolling extends HookWidget {
     // Build the item list once, wrap in RepaintBoundary
     final column = RepaintBoundary(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           for (final item in items) SizedBox(height: childHeight, child: item),
           for (final item in items) SizedBox(height: childHeight, child: item),
@@ -113,15 +114,29 @@ class _InfiniteScrolling extends HookWidget {
       ),
     );
 
-    return ClipRect(
-      child: AnimatedBuilder(
-        animation: animationController,
-        builder: (context, child) {
-          final offset = animationController.value * totalHeight;
-          return Transform.translate(offset: Offset(0, -offset), child: child);
-        },
-        child: column,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          height: constraints.maxHeight,
+          child: ClipRect(
+            child: OverflowBox(
+              maxHeight: totalHeight * 2,
+              alignment: Alignment.topCenter,
+              child: AnimatedBuilder(
+                animation: animationController,
+                builder: (context, child) {
+                  final offset = animationController.value * totalHeight;
+                  return Transform.translate(
+                    offset: Offset(0, -offset),
+                    child: child,
+                  );
+                },
+                child: column,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

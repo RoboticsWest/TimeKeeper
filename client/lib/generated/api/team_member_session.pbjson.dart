@@ -175,3 +175,26 @@ const DeleteTeamMemberSessionResponse$json = {
 /// Descriptor for `DeleteTeamMemberSessionResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List deleteTeamMemberSessionResponseDescriptor =
     $convert.base64Decode('Ch9EZWxldGVUZWFtTWVtYmVyU2Vzc2lvblJlc3BvbnNl');
+
+@$core.Deprecated('Use importAttendanceCsvRequestDescriptor instead')
+const ImportAttendanceCsvRequest$json = {
+  '1': 'ImportAttendanceCsvRequest',
+  '2': [
+    {'1': 'csv_data', '3': 1, '4': 1, '5': 12, '10': 'csvData'},
+  ],
+};
+
+/// Descriptor for `ImportAttendanceCsvRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List importAttendanceCsvRequestDescriptor =
+    $convert.base64Decode(
+        'ChpJbXBvcnRBdHRlbmRhbmNlQ3N2UmVxdWVzdBIZCghjc3ZfZGF0YRgBIAEoDFIHY3N2RGF0YQ'
+        '==');
+
+@$core.Deprecated('Use importAttendanceCsvResponseDescriptor instead')
+const ImportAttendanceCsvResponse$json = {
+  '1': 'ImportAttendanceCsvResponse',
+};
+
+/// Descriptor for `ImportAttendanceCsvResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List importAttendanceCsvResponseDescriptor =
+    $convert.base64Decode('ChtJbXBvcnRBdHRlbmRhbmNlQ3N2UmVzcG9uc2U=');

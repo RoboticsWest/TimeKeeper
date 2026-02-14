@@ -68,6 +68,13 @@ class TeamMemberSessionServiceClient extends $grpc.Client {
         options: options);
   }
 
+  $grpc.ResponseFuture<$0.ImportAttendanceCsvResponse> importAttendanceCsv(
+    $0.ImportAttendanceCsvRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$importAttendanceCsv, request, options: options);
+  }
+
   // method descriptors
 
   static final _$getTeamMemberSessions = $grpc.ClientMethod<
@@ -93,6 +100,11 @@ class TeamMemberSessionServiceClient extends $grpc.Client {
       '/tk.api.TeamMemberSessionService/DeleteTeamMemberSession',
       ($0.DeleteTeamMemberSessionRequest value) => value.writeToBuffer(),
       $0.DeleteTeamMemberSessionResponse.fromBuffer);
+  static final _$importAttendanceCsv = $grpc.ClientMethod<
+          $0.ImportAttendanceCsvRequest, $0.ImportAttendanceCsvResponse>(
+      '/tk.api.TeamMemberSessionService/ImportAttendanceCsv',
+      ($0.ImportAttendanceCsvRequest value) => value.writeToBuffer(),
+      $0.ImportAttendanceCsvResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('tk.api.TeamMemberSessionService')
@@ -136,6 +148,15 @@ abstract class TeamMemberSessionServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.DeleteTeamMemberSessionRequest.fromBuffer(value),
         ($0.DeleteTeamMemberSessionResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.ImportAttendanceCsvRequest,
+            $0.ImportAttendanceCsvResponse>(
+        'ImportAttendanceCsv',
+        importAttendanceCsv_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) =>
+            $0.ImportAttendanceCsvRequest.fromBuffer(value),
+        ($0.ImportAttendanceCsvResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.GetTeamMemberSessionsResponse> getTeamMemberSessions_Pre(
@@ -173,4 +194,13 @@ abstract class TeamMemberSessionServiceBase extends $grpc.Service {
 
   $async.Future<$0.DeleteTeamMemberSessionResponse> deleteTeamMemberSession(
       $grpc.ServiceCall call, $0.DeleteTeamMemberSessionRequest request);
+
+  $async.Future<$0.ImportAttendanceCsvResponse> importAttendanceCsv_Pre(
+      $grpc.ServiceCall $call,
+      $async.Future<$0.ImportAttendanceCsvRequest> $request) async {
+    return importAttendanceCsv($call, await $request);
+  }
+
+  $async.Future<$0.ImportAttendanceCsvResponse> importAttendanceCsv(
+      $grpc.ServiceCall call, $0.ImportAttendanceCsvRequest request);
 }

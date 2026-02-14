@@ -42,6 +42,12 @@ pub fn has_checked_in_members(session_id: &str) -> Result<bool> {
   Ok(member_sessions.values().any(is_member_checked_in))
 }
 
+/// Get all checked-in member sessions for a session (has check_in but no check_out).
+pub fn get_checked_in_members(session_id: &str) -> Result<Vec<(String, TeamMemberSession)>> {
+  let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
+  Ok(member_sessions.into_iter().filter(|(_, ms)| is_member_checked_in(ms)).collect())
+}
+
 /// Check out all lingering members in a session with the given timestamp.
 pub fn check_out_all_members(session_id: &str, now: &Timestamp) -> Result<()> {
   let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
