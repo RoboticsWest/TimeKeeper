@@ -388,17 +388,12 @@ class TeamMemberSession extends $pb.GeneratedMessage {
     $core.String? sessionId,
     $0.Timestamp? checkInTime,
     $0.Timestamp? checkOutTime,
-    $core.bool? overtimeNotified,
-    $core.bool? autoCheckoutNotified,
   }) {
     final result = create();
     if (teamMemberId != null) result.teamMemberId = teamMemberId;
     if (sessionId != null) result.sessionId = sessionId;
     if (checkInTime != null) result.checkInTime = checkInTime;
     if (checkOutTime != null) result.checkOutTime = checkOutTime;
-    if (overtimeNotified != null) result.overtimeNotified = overtimeNotified;
-    if (autoCheckoutNotified != null)
-      result.autoCheckoutNotified = autoCheckoutNotified;
     return result;
   }
 
@@ -421,8 +416,6 @@ class TeamMemberSession extends $pb.GeneratedMessage {
         subBuilder: $0.Timestamp.create)
     ..aOM<$0.Timestamp>(4, _omitFieldNames ? '' : 'checkOutTime',
         subBuilder: $0.Timestamp.create)
-    ..aOB(5, _omitFieldNames ? '' : 'overtimeNotified')
-    ..aOB(6, _omitFieldNames ? '' : 'autoCheckoutNotified')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -483,24 +476,6 @@ class TeamMemberSession extends $pb.GeneratedMessage {
   void clearCheckOutTime() => $_clearField(4);
   @$pb.TagNumber(4)
   $0.Timestamp ensureCheckOutTime() => $_ensure(3);
-
-  @$pb.TagNumber(5)
-  $core.bool get overtimeNotified => $_getBF(4);
-  @$pb.TagNumber(5)
-  set overtimeNotified($core.bool value) => $_setBool(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasOvertimeNotified() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearOvertimeNotified() => $_clearField(5);
-
-  @$pb.TagNumber(6)
-  $core.bool get autoCheckoutNotified => $_getBF(5);
-  @$pb.TagNumber(6)
-  set autoCheckoutNotified($core.bool value) => $_setBool(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasAutoCheckoutNotified() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearAutoCheckoutNotified() => $_clearField(6);
 }
 
 class Session extends $pb.GeneratedMessage {
@@ -509,16 +484,12 @@ class Session extends $pb.GeneratedMessage {
     $0.Timestamp? endTime,
     $core.String? locationId,
     $core.bool? finished,
-    $core.bool? startReminderSent,
-    $core.bool? endReminderSent,
   }) {
     final result = create();
     if (startTime != null) result.startTime = startTime;
     if (endTime != null) result.endTime = endTime;
     if (locationId != null) result.locationId = locationId;
     if (finished != null) result.finished = finished;
-    if (startReminderSent != null) result.startReminderSent = startReminderSent;
-    if (endReminderSent != null) result.endReminderSent = endReminderSent;
     return result;
   }
 
@@ -541,8 +512,6 @@ class Session extends $pb.GeneratedMessage {
         subBuilder: $0.Timestamp.create)
     ..aOS(3, _omitFieldNames ? '' : 'locationId')
     ..aOB(4, _omitFieldNames ? '' : 'finished')
-    ..aOB(5, _omitFieldNames ? '' : 'startReminderSent')
-    ..aOB(6, _omitFieldNames ? '' : 'endReminderSent')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -602,24 +571,97 @@ class Session extends $pb.GeneratedMessage {
   $core.bool hasFinished() => $_has(3);
   @$pb.TagNumber(4)
   void clearFinished() => $_clearField(4);
+}
 
-  @$pb.TagNumber(5)
-  $core.bool get startReminderSent => $_getBF(4);
-  @$pb.TagNumber(5)
-  set startReminderSent($core.bool value) => $_setBool(4, value);
-  @$pb.TagNumber(5)
-  $core.bool hasStartReminderSent() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearStartReminderSent() => $_clearField(5);
+class Notification extends $pb.GeneratedMessage {
+  factory Notification({
+    NotificationType? notificationType,
+    $core.String? sessionId,
+    $core.String? teamMemberId,
+    $core.bool? sent,
+  }) {
+    final result = create();
+    if (notificationType != null) result.notificationType = notificationType;
+    if (sessionId != null) result.sessionId = sessionId;
+    if (teamMemberId != null) result.teamMemberId = teamMemberId;
+    if (sent != null) result.sent = sent;
+    return result;
+  }
 
-  @$pb.TagNumber(6)
-  $core.bool get endReminderSent => $_getBF(5);
-  @$pb.TagNumber(6)
-  set endReminderSent($core.bool value) => $_setBool(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasEndReminderSent() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearEndReminderSent() => $_clearField(6);
+  Notification._();
+
+  factory Notification.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Notification.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Notification',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
+      createEmptyInstance: create)
+    ..aE<NotificationType>(1, _omitFieldNames ? '' : 'notificationType',
+        enumValues: NotificationType.values)
+    ..aOS(2, _omitFieldNames ? '' : 'sessionId')
+    ..aOS(3, _omitFieldNames ? '' : 'teamMemberId')
+    ..aOB(4, _omitFieldNames ? '' : 'sent')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Notification clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Notification copyWith(void Function(Notification) updates) =>
+      super.copyWith((message) => updates(message as Notification))
+          as Notification;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Notification create() => Notification._();
+  @$core.override
+  Notification createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Notification getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<Notification>(create);
+  static Notification? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  NotificationType get notificationType => $_getN(0);
+  @$pb.TagNumber(1)
+  set notificationType(NotificationType value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasNotificationType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearNotificationType() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get sessionId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set sessionId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSessionId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSessionId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get teamMemberId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set teamMemberId($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTeamMemberId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTeamMemberId() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get sent => $_getBF(3);
+  @$pb.TagNumber(4)
+  set sent($core.bool value) => $_setBool(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSent() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSent() => $_clearField(4);
 }
 
 class Settings extends $pb.GeneratedMessage {
@@ -639,6 +681,7 @@ class Settings extends $pb.GeneratedMessage {
     $core.String? discordOvertimeDmMessage,
     $core.bool? discordAutoCheckoutDmEnabled,
     $core.String? discordAutoCheckoutDmMessage,
+    $core.bool? discordCheckoutEnabled,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -668,6 +711,8 @@ class Settings extends $pb.GeneratedMessage {
       result.discordAutoCheckoutDmEnabled = discordAutoCheckoutDmEnabled;
     if (discordAutoCheckoutDmMessage != null)
       result.discordAutoCheckoutDmMessage = discordAutoCheckoutDmMessage;
+    if (discordCheckoutEnabled != null)
+      result.discordCheckoutEnabled = discordCheckoutEnabled;
     return result;
   }
 
@@ -699,6 +744,7 @@ class Settings extends $pb.GeneratedMessage {
     ..aOS(13, _omitFieldNames ? '' : 'discordOvertimeDmMessage')
     ..aOB(14, _omitFieldNames ? '' : 'discordAutoCheckoutDmEnabled')
     ..aOS(15, _omitFieldNames ? '' : 'discordAutoCheckoutDmMessage')
+    ..aOB(16, _omitFieldNames ? '' : 'discordCheckoutEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -854,6 +900,15 @@ class Settings extends $pb.GeneratedMessage {
   $core.bool hasDiscordAutoCheckoutDmMessage() => $_has(14);
   @$pb.TagNumber(15)
   void clearDiscordAutoCheckoutDmMessage() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.bool get discordCheckoutEnabled => $_getBF(15);
+  @$pb.TagNumber(16)
+  set discordCheckoutEnabled($core.bool value) => $_setBool(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasDiscordCheckoutEnabled() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearDiscordCheckoutEnabled() => $_clearField(16);
 }
 
 const $core.bool _omitFieldNames =

@@ -13,11 +13,12 @@ use crate::{
       UpdateSettingsRequest, UpdateSettingsResponse, settings_service_server::SettingsService,
     },
     common::Role,
-    db::{Location, Secret, Session, Settings, TeamMember, TeamMemberSession, TeamMemberType, User},
+    db::{Location, Notification, Secret, Session, Settings, TeamMember, TeamMemberSession, TeamMemberType, User},
   },
   modules::{
-    location::LocationRepository, secret::SecretRepository, session::SessionRepository, settings::SettingsRepository,
-    team_member::TeamMemberRepository, team_member_session::TeamMemberSessionRepository, user::UserRepository,
+    location::LocationRepository, notification::NotificationRepository, secret::SecretRepository,
+    session::SessionRepository, settings::SettingsRepository, team_member::TeamMemberRepository,
+    team_member_session::TeamMemberSessionRepository, user::UserRepository,
   },
 };
 
@@ -53,6 +54,7 @@ impl SettingsService for SettingsApi {
       discord_overtime_dm_message: req.discord_overtime_dm_message,
       discord_auto_checkout_dm_enabled: req.discord_auto_checkout_dm_enabled,
       discord_auto_checkout_dm_message: req.discord_auto_checkout_dm_message,
+      discord_checkout_enabled: req.discord_checkout_enabled,
     };
     Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;
 
@@ -66,6 +68,7 @@ impl SettingsService for SettingsApi {
     require_permission(&request, Role::Admin)?;
 
     // Clear all data using repository methods so the event bus notifies clients
+    Notification::clear().map_err(|e| Status::internal(format!("Failed to clear notification data: {}", e)))?;
     TeamMemberSession::clear()
       .map_err(|e| Status::internal(format!("Failed to clear team member session data: {}", e)))?;
     Session::clear().map_err(|e| Status::internal(format!("Failed to clear session data: {}", e)))?;

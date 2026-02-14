@@ -131,6 +131,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     $core.String? discordOvertimeDmMessage,
     $core.bool? discordAutoCheckoutDmEnabled,
     $core.String? discordAutoCheckoutDmMessage,
+    $core.bool? discordCheckoutEnabled,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -160,6 +161,8 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
       result.discordAutoCheckoutDmEnabled = discordAutoCheckoutDmEnabled;
     if (discordAutoCheckoutDmMessage != null)
       result.discordAutoCheckoutDmMessage = discordAutoCheckoutDmMessage;
+    if (discordCheckoutEnabled != null)
+      result.discordCheckoutEnabled = discordCheckoutEnabled;
     return result;
   }
 
@@ -191,6 +194,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     ..aOS(13, _omitFieldNames ? '' : 'discordOvertimeDmMessage')
     ..aOB(14, _omitFieldNames ? '' : 'discordAutoCheckoutDmEnabled')
     ..aOS(15, _omitFieldNames ? '' : 'discordAutoCheckoutDmMessage')
+    ..aOB(16, _omitFieldNames ? '' : 'discordCheckoutEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -348,6 +352,15 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
   $core.bool hasDiscordAutoCheckoutDmMessage() => $_has(14);
   @$pb.TagNumber(15)
   void clearDiscordAutoCheckoutDmMessage() => $_clearField(15);
+
+  @$pb.TagNumber(16)
+  $core.bool get discordCheckoutEnabled => $_getBF(15);
+  @$pb.TagNumber(16)
+  set discordCheckoutEnabled($core.bool value) => $_setBool(15, value);
+  @$pb.TagNumber(16)
+  $core.bool hasDiscordCheckoutEnabled() => $_has(15);
+  @$pb.TagNumber(16)
+  void clearDiscordCheckoutEnabled() => $_clearField(16);
 }
 
 class UpdateSettingsResponse extends $pb.GeneratedMessage {

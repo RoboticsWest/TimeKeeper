@@ -2510,6 +2510,8 @@ pub struct UpdateSettingsRequest {
     pub discord_auto_checkout_dm_enabled: bool,
     #[prost(string, tag = "15")]
     pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
+    #[prost(bool, tag = "16")]
+    pub discord_checkout_enabled: bool,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateSettingsResponse {}

@@ -25,6 +25,7 @@ message UpdateSettingsRequest {
   string discord_overtime_dm_message = 13;
   bool discord_auto_checkout_dm_enabled = 14;
   string discord_auto_checkout_dm_message = 15;
+  bool discord_checkout_enabled = 16;
 }
 message UpdateSettingsResponse {}
 

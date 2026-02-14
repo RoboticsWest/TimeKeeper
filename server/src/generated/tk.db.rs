@@ -50,10 +50,6 @@ pub struct TeamMemberSession {
     pub check_in_time: ::core::option::Option<super::common::Timestamp>,
     #[prost(message, optional, tag = "4")]
     pub check_out_time: ::core::option::Option<super::common::Timestamp>,
-    #[prost(bool, tag = "5")]
-    pub overtime_notified: bool,
-    #[prost(bool, tag = "6")]
-    pub auto_checkout_notified: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Session {
@@ -65,10 +61,17 @@ pub struct Session {
     pub location_id: ::prost::alloc::string::String,
     #[prost(bool, tag = "4")]
     pub finished: bool,
-    #[prost(bool, tag = "5")]
-    pub start_reminder_sent: bool,
-    #[prost(bool, tag = "6")]
-    pub end_reminder_sent: bool,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Notification {
+    #[prost(enumeration = "NotificationType", tag = "1")]
+    pub notification_type: i32,
+    #[prost(string, tag = "2")]
+    pub session_id: ::prost::alloc::string::String,
+    #[prost(string, optional, tag = "3")]
+    pub team_member_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, tag = "4")]
+    pub sent: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Settings {
@@ -102,6 +105,8 @@ pub struct Settings {
     pub discord_auto_checkout_dm_enabled: bool,
     #[prost(string, tag = "15")]
     pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
+    #[prost(bool, tag = "16")]
+    pub discord_checkout_enabled: bool,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -125,6 +130,38 @@ impl TeamMemberType {
         match value {
             "STUDENT" => Some(Self::Student),
             "MENTOR" => Some(Self::Mentor),
+            _ => None,
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum NotificationType {
+    SessionStartReminder = 0,
+    SessionEndReminder = 1,
+    Overtime = 2,
+    AutoCheckout = 3,
+}
+impl NotificationType {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::SessionStartReminder => "SESSION_START_REMINDER",
+            Self::SessionEndReminder => "SESSION_END_REMINDER",
+            Self::Overtime => "OVERTIME",
+            Self::AutoCheckout => "AUTO_CHECKOUT",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "SESSION_START_REMINDER" => Some(Self::SessionStartReminder),
+            "SESSION_END_REMINDER" => Some(Self::SessionEndReminder),
+            "OVERTIME" => Some(Self::Overtime),
+            "AUTO_CHECKOUT" => Some(Self::AutoCheckout),
             _ => None,
         }
     }

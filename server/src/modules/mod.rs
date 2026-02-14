@@ -1,6 +1,7 @@
 pub mod discord;
 pub mod health;
 pub mod location;
+pub mod notification;
 pub mod rfid_tag;
 pub mod schedule;
 pub mod secret;
