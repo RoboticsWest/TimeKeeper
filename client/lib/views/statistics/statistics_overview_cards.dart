@@ -6,12 +6,14 @@ import 'package:time_keeper/widgets/stat_card.dart';
 
 class StatisticsOverviewCards extends StatelessWidget {
   final Map<String, Session> filteredSessions;
+  final Map<String, TeamMemberSession> teamMemberSessions;
   final Map<String, MemberHoursData> memberHours;
   final AttendanceInsights insights;
 
   const StatisticsOverviewCards({
     super.key,
     required this.filteredSessions,
+    required this.teamMemberSessions,
     required this.memberHours,
     required this.insights,
   });
@@ -20,28 +22,62 @@ class StatisticsOverviewCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    double totalRegular = 0;
-    double totalOvertime = 0;
-    for (final h in memberHours.values) {
-      totalRegular += h.regularSecs;
-      totalOvertime += h.overtimeSecs;
-    }
-
-    // Average scheduled session duration
-    double avgSessionDuration = 0;
-    final sessionsWithTimes = filteredSessions.values
-        .where((s) => s.hasStartTime() && s.hasEndTime())
+    final sessionsWithTimes = filteredSessions.entries
+        .where((e) => e.value.hasStartTime() && e.value.hasEndTime())
         .toList();
+
+    // Total hours = sum of scheduled session durations
+    double totalScheduledSecs = 0;
+    double avgSessionDuration = 0;
+    for (final e in sessionsWithTimes) {
+      totalScheduledSecs += e.value.endTime
+          .toDateTime()
+          .difference(e.value.startTime.toDateTime())
+          .inSeconds;
+    }
     if (sessionsWithTimes.isNotEmpty) {
-      double totalScheduledSecs = 0;
-      for (final s in sessionsWithTimes) {
-        totalScheduledSecs += s.endTime
-            .toDateTime()
-            .difference(s.startTime.toDateTime())
-            .inSeconds;
-      }
       avgSessionDuration = totalScheduledSecs / sessionsWithTimes.length;
     }
+
+    // Total overtime = per session, how much time extended beyond the
+    // scheduled window. For each session: earliest check-in before start
+    // counts as pre-overtime, latest check-out after end counts as
+    // post-overtime.
+    double totalOvertimeSecs = 0;
+    for (final e in sessionsWithTimes) {
+      final session = e.value;
+      final sessionStart = session.startTime.toDateTime();
+      final sessionEnd = session.endTime.toDateTime();
+
+      DateTime? earliestCheckIn;
+      DateTime? latestCheckOut;
+
+      for (final ms in teamMemberSessions.values) {
+        if (ms.sessionId != e.key || !ms.hasCheckInTime()) continue;
+        final checkIn = ms.checkInTime.toDateTime();
+        if (earliestCheckIn == null || checkIn.isBefore(earliestCheckIn)) {
+          earliestCheckIn = checkIn;
+        }
+        final checkOut = ms.hasCheckOutTime()
+            ? ms.checkOutTime.toDateTime()
+            : DateTime.now();
+        if (latestCheckOut == null || checkOut.isAfter(latestCheckOut)) {
+          latestCheckOut = checkOut;
+        }
+      }
+
+      // Pre-overtime: time before session start
+      if (earliestCheckIn != null && earliestCheckIn.isBefore(sessionStart)) {
+        totalOvertimeSecs += sessionStart.difference(earliestCheckIn).inSeconds;
+      }
+      // Post-overtime: time after session end
+      if (latestCheckOut != null && latestCheckOut.isAfter(sessionEnd)) {
+        totalOvertimeSecs += latestCheckOut.difference(sessionEnd).inSeconds;
+      }
+    }
+
+    // Total hours includes scheduled time + overtime
+    final totalHoursSecs = totalScheduledSecs + totalOvertimeSecs;
 
     return Wrap(
       spacing: 12,
@@ -56,7 +92,7 @@ class StatisticsOverviewCards extends StatelessWidget {
         StatCard(
           icon: Icons.schedule,
           label: 'Total Hours',
-          value: formatSecsAsHoursMinutes(totalRegular + totalOvertime),
+          value: formatSecsAsHoursMinutes(totalHoursSecs),
           color: theme.colorScheme.secondary,
         ),
         StatCard(
@@ -68,7 +104,7 @@ class StatisticsOverviewCards extends StatelessWidget {
         StatCard(
           icon: Icons.warning_amber,
           label: 'Total Overtime',
-          value: formatSecsAsHoursMinutes(totalOvertime),
+          value: formatSecsAsHoursMinutes(totalOvertimeSecs),
           color: theme.colorScheme.error,
         ),
         StatCard(
