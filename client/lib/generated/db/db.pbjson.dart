@@ -279,7 +279,6 @@ const Settings$json = {
       '5': 3,
       '10': 'nextSessionThresholdSecs'
     },
-    {'1': 'discord_enabled', '3': 17, '4': 1, '5': 8, '10': 'discordEnabled'},
     {'1': 'discord_bot_token', '3': 2, '4': 1, '5': 9, '10': 'discordBotToken'},
     {'1': 'discord_guild_id', '3': 3, '4': 1, '5': 9, '10': 'discordGuildId'},
     {
