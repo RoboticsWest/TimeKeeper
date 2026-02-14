@@ -55,6 +55,7 @@ const UpdateSettingsRequest$json = {
       '5': 3,
       '10': 'nextSessionThresholdSecs'
     },
+    {'1': 'discord_enabled', '3': 17, '4': 1, '5': 8, '10': 'discordEnabled'},
     {'1': 'discord_bot_token', '3': 2, '4': 1, '5': 9, '10': 'discordBotToken'},
     {'1': 'discord_guild_id', '3': 3, '4': 1, '5': 9, '10': 'discordGuildId'},
     {
@@ -141,28 +142,38 @@ const UpdateSettingsRequest$json = {
       '5': 9,
       '10': 'discordAutoCheckoutDmMessage'
     },
+    {
+      '1': 'discord_checkout_enabled',
+      '3': 16,
+      '4': 1,
+      '5': 8,
+      '10': 'discordCheckoutEnabled'
+    },
+    {'1': 'timezone', '3': 18, '4': 1, '5': 9, '10': 'timezone'},
   ],
 };
 
 /// Descriptor for `UpdateSettingsRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Decode(
     'ChVVcGRhdGVTZXR0aW5nc1JlcXVlc3QSPQobbmV4dF9zZXNzaW9uX3RocmVzaG9sZF9zZWNzGA'
-    'EgASgDUhhuZXh0U2Vzc2lvblRocmVzaG9sZFNlY3MSKgoRZGlzY29yZF9ib3RfdG9rZW4YAiAB'
-    'KAlSD2Rpc2NvcmRCb3RUb2tlbhIoChBkaXNjb3JkX2d1aWxkX2lkGAMgASgJUg5kaXNjb3JkR3'
-    'VpbGRJZBIsChJkaXNjb3JkX2NoYW5uZWxfaWQYBCABKAlSEGRpc2NvcmRDaGFubmVsSWQSOQoZ'
-    'ZGlzY29yZF9zZWxmX2xpbmtfZW5hYmxlZBgFIAEoCFIWZGlzY29yZFNlbGZMaW5rRW5hYmxlZB'
-    'I5ChlkaXNjb3JkX25hbWVfc3luY19lbmFibGVkGAYgASgIUhZkaXNjb3JkTmFtZVN5bmNFbmFi'
-    'bGVkEj0KG2Rpc2NvcmRfc3RhcnRfcmVtaW5kZXJfbWlucxgHIAEoA1IYZGlzY29yZFN0YXJ0Um'
-    'VtaW5kZXJNaW5zEjkKGWRpc2NvcmRfZW5kX3JlbWluZGVyX21pbnMYCCABKANSFmRpc2NvcmRF'
-    'bmRSZW1pbmRlck1pbnMSQwoeZGlzY29yZF9zdGFydF9yZW1pbmRlcl9tZXNzYWdlGAkgASgJUh'
-    'tkaXNjb3JkU3RhcnRSZW1pbmRlck1lc3NhZ2USPwocZGlzY29yZF9lbmRfcmVtaW5kZXJfbWVz'
-    'c2FnZRgKIAEoCVIZZGlzY29yZEVuZFJlbWluZGVyTWVzc2FnZRI9ChtkaXNjb3JkX292ZXJ0aW'
-    '1lX2RtX2VuYWJsZWQYCyABKAhSGGRpc2NvcmRPdmVydGltZURtRW5hYmxlZBI3ChhkaXNjb3Jk'
-    'X292ZXJ0aW1lX2RtX21pbnMYDCABKANSFWRpc2NvcmRPdmVydGltZURtTWlucxI9ChtkaXNjb3'
-    'JkX292ZXJ0aW1lX2RtX21lc3NhZ2UYDSABKAlSGGRpc2NvcmRPdmVydGltZURtTWVzc2FnZRJG'
-    'CiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fZW5hYmxlZBgOIAEoCFIcZGlzY29yZEF1dG9DaG'
-    'Vja291dERtRW5hYmxlZBJGCiBkaXNjb3JkX2F1dG9fY2hlY2tvdXRfZG1fbWVzc2FnZRgPIAEo'
-    'CVIcZGlzY29yZEF1dG9DaGVja291dERtTWVzc2FnZQ==');
+    'EgASgDUhhuZXh0U2Vzc2lvblRocmVzaG9sZFNlY3MSJwoPZGlzY29yZF9lbmFibGVkGBEgASgI'
+    'Ug5kaXNjb3JkRW5hYmxlZBIqChFkaXNjb3JkX2JvdF90b2tlbhgCIAEoCVIPZGlzY29yZEJvdF'
+    'Rva2VuEigKEGRpc2NvcmRfZ3VpbGRfaWQYAyABKAlSDmRpc2NvcmRHdWlsZElkEiwKEmRpc2Nv'
+    'cmRfY2hhbm5lbF9pZBgEIAEoCVIQZGlzY29yZENoYW5uZWxJZBI5ChlkaXNjb3JkX3NlbGZfbG'
+    'lua19lbmFibGVkGAUgASgIUhZkaXNjb3JkU2VsZkxpbmtFbmFibGVkEjkKGWRpc2NvcmRfbmFt'
+    'ZV9zeW5jX2VuYWJsZWQYBiABKAhSFmRpc2NvcmROYW1lU3luY0VuYWJsZWQSPQobZGlzY29yZF'
+    '9zdGFydF9yZW1pbmRlcl9taW5zGAcgASgDUhhkaXNjb3JkU3RhcnRSZW1pbmRlck1pbnMSOQoZ'
+    'ZGlzY29yZF9lbmRfcmVtaW5kZXJfbWlucxgIIAEoA1IWZGlzY29yZEVuZFJlbWluZGVyTWlucx'
+    'JDCh5kaXNjb3JkX3N0YXJ0X3JlbWluZGVyX21lc3NhZ2UYCSABKAlSG2Rpc2NvcmRTdGFydFJl'
+    'bWluZGVyTWVzc2FnZRI/ChxkaXNjb3JkX2VuZF9yZW1pbmRlcl9tZXNzYWdlGAogASgJUhlkaX'
+    'Njb3JkRW5kUmVtaW5kZXJNZXNzYWdlEj0KG2Rpc2NvcmRfb3ZlcnRpbWVfZG1fZW5hYmxlZBgL'
+    'IAEoCFIYZGlzY29yZE92ZXJ0aW1lRG1FbmFibGVkEjcKGGRpc2NvcmRfb3ZlcnRpbWVfZG1fbW'
+    'lucxgMIAEoA1IVZGlzY29yZE92ZXJ0aW1lRG1NaW5zEj0KG2Rpc2NvcmRfb3ZlcnRpbWVfZG1f'
+    'bWVzc2FnZRgNIAEoCVIYZGlzY29yZE92ZXJ0aW1lRG1NZXNzYWdlEkYKIGRpc2NvcmRfYXV0b1'
+    '9jaGVja291dF9kbV9lbmFibGVkGA4gASgIUhxkaXNjb3JkQXV0b0NoZWNrb3V0RG1FbmFibGVk'
+    'EkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGA8gASgJUhxkaXNjb3JkQXV0b0'
+    'NoZWNrb3V0RG1NZXNzYWdlEjgKGGRpc2NvcmRfY2hlY2tvdXRfZW5hYmxlZBgQIAEoCFIWZGlz'
+    'Y29yZENoZWNrb3V0RW5hYmxlZBIaCgh0aW1lem9uZRgSIAEoCVIIdGltZXpvbmU=');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {

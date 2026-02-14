@@ -109,8 +109,6 @@ impl SessionService for SessionApi {
       end_time: request.end_time,
       location_id: request.location_id,
       finished: false,
-      start_reminder_sent: false,
-      end_reminder_sent: false,
     };
 
     Session::add(&session).map_err(|e| Status::internal(format!("Failed to create session: {}", e)))?;
@@ -131,17 +129,15 @@ impl SessionService for SessionApi {
 
     let existing = Session::get(&request.id).map_err(|e| Status::internal(format!("Failed to get session: {}", e)))?;
 
-    let Some(existing) = existing else {
+    if existing.is_none() {
       return Err(Status::not_found("Session not found"));
-    };
+    }
 
     let session = Session {
       start_time: request.start_time,
       end_time: request.end_time,
       location_id: request.location_id,
       finished: request.finished,
-      start_reminder_sent: existing.start_reminder_sent,
-      end_reminder_sent: existing.end_reminder_sent,
     };
 
     Session::update(&request.id, &session).map_err(|e| Status::internal(format!("Failed to update session: {}", e)))?;
@@ -202,14 +198,7 @@ impl SessionService for SessionApi {
       return Err(Status::not_found("No active session at this location"));
     };
 
-    let new_ms = TeamMemberSession {
-      team_member_id,
-      session_id,
-      check_in_time: Some(now),
-      check_out_time: None,
-      overtime_notified: false,
-      auto_checkout_notified: false,
-    };
+    let new_ms = TeamMemberSession { team_member_id, session_id, check_in_time: Some(now), check_out_time: None };
 
     TeamMemberSession::add(&new_ms).map_err(|e| Status::internal(format!("Failed to create member session: {}", e)))?;
 

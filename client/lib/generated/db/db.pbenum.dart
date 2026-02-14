@@ -33,5 +33,30 @@ class TeamMemberType extends $pb.ProtobufEnum {
   const TeamMemberType._(super.value, super.name);
 }
 
+class NotificationType extends $pb.ProtobufEnum {
+  static const NotificationType SESSION_START_REMINDER =
+      NotificationType._(0, _omitEnumNames ? '' : 'SESSION_START_REMINDER');
+  static const NotificationType SESSION_END_REMINDER =
+      NotificationType._(1, _omitEnumNames ? '' : 'SESSION_END_REMINDER');
+  static const NotificationType OVERTIME =
+      NotificationType._(2, _omitEnumNames ? '' : 'OVERTIME');
+  static const NotificationType AUTO_CHECKOUT =
+      NotificationType._(3, _omitEnumNames ? '' : 'AUTO_CHECKOUT');
+
+  static const $core.List<NotificationType> values = <NotificationType>[
+    SESSION_START_REMINDER,
+    SESSION_END_REMINDER,
+    OVERTIME,
+    AUTO_CHECKOUT,
+  ];
+
+  static final $core.List<NotificationType?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 3);
+  static NotificationType? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const NotificationType._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

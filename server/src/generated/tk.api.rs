@@ -2482,6 +2482,8 @@ pub struct GetSettingsResponse {
 pub struct UpdateSettingsRequest {
     #[prost(int64, tag = "1")]
     pub next_session_threshold_secs: i64,
+    #[prost(bool, tag = "17")]
+    pub discord_enabled: bool,
     #[prost(string, tag = "2")]
     pub discord_bot_token: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
@@ -2510,6 +2512,10 @@ pub struct UpdateSettingsRequest {
     pub discord_auto_checkout_dm_enabled: bool,
     #[prost(string, tag = "15")]
     pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
+    #[prost(bool, tag = "16")]
+    pub discord_checkout_enabled: bool,
+    #[prost(string, tag = "18")]
+    pub timezone: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateSettingsResponse {}

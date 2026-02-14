@@ -11,6 +11,7 @@ message GetSettingsResponse {
 
 message UpdateSettingsRequest {
   int64 next_session_threshold_secs = 1;
+  bool discord_enabled = 17;
   string discord_bot_token = 2;
   string discord_guild_id = 3;
   string discord_channel_id = 4;
@@ -25,6 +26,8 @@ message UpdateSettingsRequest {
   string discord_overtime_dm_message = 13;
   bool discord_auto_checkout_dm_enabled = 14;
   string discord_auto_checkout_dm_message = 15;
+  bool discord_checkout_enabled = 16;
+  string timezone = 18;
 }
 message UpdateSettingsResponse {}
 

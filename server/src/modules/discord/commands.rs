@@ -1,14 +1,21 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, Datelike, Utc};
+use chrono::{Datelike, Utc};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
+use crate::core::time::{format_datetime, parse_tz};
 use crate::{
-  generated::db::{Location, Session, Settings, TeamMember, TeamMemberSession},
+  generated::{
+    common::Timestamp,
+    db::{Location, Session, Settings, TeamMember, TeamMemberSession},
+  },
   modules::{
-    location::LocationRepository, session::SessionRepository, settings::SettingsRepository,
-    team_member::TeamMemberRepository, team_member_session::TeamMemberSessionRepository,
+    location::LocationRepository,
+    session::{SessionRepository, helpers::is_member_checked_in},
+    settings::SettingsRepository,
+    team_member::TeamMemberRepository,
+    team_member_session::TeamMemberSessionRepository,
   },
 };
 
@@ -37,6 +44,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message) {
     "checkedin" => Some(checked_in()),
     "locations" => Some(locations()),
     "link" => Some(link_member(msg, args)),
+    "checkout" => Some(checkout(msg)),
     _ => None,
   };
 
@@ -56,6 +64,7 @@ fn help() -> String {
     "`!checkedin` - Show who is currently checked in",
     "`!locations` - List all locations",
     "`!link Name` - Link your Discord account to a team member",
+    "`!checkout` - Check yourself out of the current session",
     "`!help` - Show this help message",
   ]
   .join("\n")
@@ -67,10 +76,6 @@ fn format_secs(secs: f64) -> String {
   let hours = total_mins / 60;
   let mins = total_mins % 60;
   format!("{hours}h {mins}m")
-}
-
-fn format_timestamp(secs: i64) -> String {
-  DateTime::from_timestamp(secs, 0).map_or_else(|| "Unknown".to_string(), |dt| dt.format("%b %d, %H:%M").to_string())
 }
 
 fn leaderboard() -> String {
@@ -156,6 +161,11 @@ fn leaderboard() -> String {
 }
 
 fn sessions() -> String {
+  let settings = match Settings::get() {
+    Ok(s) => s,
+    Err(e) => return format!("Error loading settings: {e}"),
+  };
+  let tz = parse_tz(&settings.timezone);
   let sessions = match Session::get_all() {
     Ok(s) => s,
     Err(e) => return format!("Error loading sessions: {e}"),
@@ -192,7 +202,7 @@ fn sessions() -> String {
   if !active.is_empty() {
     lines.push("**Active Sessions**".to_string());
     for (_, start, end, loc) in &active {
-      lines.push(format!("- {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
+      lines.push(format!("- {} - {} @ {loc}", format_datetime(*start, &tz), format_datetime(*end, &tz)));
     }
   }
 
@@ -200,7 +210,7 @@ fn sessions() -> String {
     upcoming.sort_by_key(|(_, start, _, _)| *start);
     lines.push("**Upcoming Sessions**".to_string());
     for (_, start, end, loc) in upcoming.iter().take(5) {
-      lines.push(format!("- {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
+      lines.push(format!("- {} - {} @ {loc}", format_datetime(*start, &tz), format_datetime(*end, &tz)));
     }
   }
 
@@ -330,6 +340,80 @@ fn link_member(msg: &Message, args: &str) -> String {
   }
 
   format!("Linked **{name}** to Discord user **{discord_username}**.")
+}
+
+fn checkout(msg: &Message) -> String {
+  let settings = match Settings::get() {
+    Ok(s) => s,
+    Err(e) => return format!("Error loading settings: {e}"),
+  };
+
+  let tz = parse_tz(&settings.timezone);
+
+  if !settings.discord_checkout_enabled {
+    return "Discord checkout is not enabled. Contact an admin to enable it in settings.".to_string();
+  }
+
+  let discord_username = &msg.author.name;
+
+  // Find the team member linked to this Discord account
+  let members = match TeamMember::get_all() {
+    Ok(m) => m,
+    Err(e) => return format!("Error loading team members: {e}"),
+  };
+
+  let found = members
+    .into_iter()
+    .find(|(_, m)| m.discord_username.as_ref().is_some_and(|u| u.eq_ignore_ascii_case(discord_username)));
+
+  let Some((member_id, member)) = found else {
+    return if settings.discord_self_link_enabled {
+      "Your Discord account is not linked to a team member. Use `!link Name` to link it.".to_string()
+    } else {
+      "Your Discord account is not linked to a team member. Contact an admin to link your account.".to_string()
+    };
+  };
+
+  let name = member_name(&member).to_string();
+
+  // Find if they're checked into any session
+  let member_sessions = match TeamMemberSession::get_by_member_id(&member_id) {
+    Ok(ms) => ms,
+    Err(e) => return format!("Error loading attendance: {e}"),
+  };
+
+  let active = member_sessions.into_iter().find(|(_, ms)| is_member_checked_in(ms));
+
+  let Some((ms_id, mut ms)) = active else {
+    return format!("{name} is not currently checked in.");
+  };
+
+  // Get the session to check end_time
+  let session = match Session::get(&ms.session_id) {
+    Ok(Some(s)) => s,
+    Ok(None) => return "Error: session not found.".to_string(),
+    Err(e) => return format!("Error loading session: {e}"),
+  };
+
+  let now_secs = Utc::now().timestamp();
+  let end_secs = session.end_time.as_ref().map_or(now_secs, |t| t.seconds);
+
+  // If past session end time, cap checkout to end_time; otherwise use now
+  let (checkout_secs, late) = if now_secs > end_secs { (end_secs, true) } else { (now_secs, false) };
+
+  ms.check_out_time = Some(Timestamp { seconds: checkout_secs, nanos: 0 });
+  if let Err(e) = TeamMemberSession::update(&ms_id, &ms) {
+    return format!("Error checking out: {e}");
+  }
+
+  if late {
+    format!(
+      "Checked out **{name}** at session end time ({}) since the session has already ended.",
+      format_datetime(end_secs, &tz)
+    )
+  } else {
+    format!("Checked out **{name}** at {}.", format_datetime(checkout_secs, &tz))
+  }
 }
 
 fn week_start_secs() -> i64 {
