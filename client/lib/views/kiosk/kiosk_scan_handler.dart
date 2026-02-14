@@ -9,10 +9,13 @@ import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
+import 'package:time_keeper/providers/scan_debounce_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/utils/permissions.dart';
 import 'package:time_keeper/views/kiosk/link_card_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/toast_overlay.dart';
@@ -58,6 +61,43 @@ Future<void> handleKioskScan({
   final name = member.displayName;
 
   _log.i('Scan matched member: $name');
+
+  // Debounce: prevent accidental rapid check-in/check-out toggles
+  final debounceMins = ref.read(scanDebounceMinsProvider);
+  if (debounceMins > 0) {
+    final sessions = ref.read(teamMemberSessionsProvider);
+    final debounceWindow = Duration(minutes: debounceMins);
+    final now = DateTime.now();
+
+    // Find the most recent check-in or check-out for this member
+    DateTime? mostRecent;
+    for (final ms in sessions.values) {
+      if (ms.teamMemberId != memberId) continue;
+      if (ms.hasCheckInTime()) {
+        final t = ms.checkInTime.toDateTime();
+        if (mostRecent == null || t.isAfter(mostRecent)) mostRecent = t;
+      }
+      if (ms.hasCheckOutTime()) {
+        final t = ms.checkOutTime.toDateTime();
+        if (mostRecent == null || t.isAfter(mostRecent)) mostRecent = t;
+      }
+    }
+
+    if (mostRecent != null && now.difference(mostRecent) < debounceWindow) {
+      final remaining = debounceWindow - now.difference(mostRecent);
+      final mins = remaining.inMinutes;
+      final secs = remaining.inSeconds % 60;
+      final timeLeft = mins > 0 ? '$mins min ${secs}s' : '${secs}s';
+      if (context.mounted) {
+        ToastOverlay.warn(
+          context,
+          title: 'Too Soon',
+          message: '$name\nPlease wait $timeLeft before scanning again.',
+        );
+      }
+      return;
+    }
+  }
 
   final currentLocation = ref.read(currentLocationProvider) ?? '';
   final result = await callGrpcEndpoint(

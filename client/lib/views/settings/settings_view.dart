@@ -9,6 +9,7 @@ import 'package:time_keeper/providers/kiosk_mode_provider.dart';
 import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/network_config_provider.dart';
+import 'package:time_keeper/providers/scan_debounce_provider.dart';
 import 'package:time_keeper/views/setup/common/dropdown_setting.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
 import 'package:time_keeper/views/setup/common/text_field_setting.dart';
@@ -36,6 +37,11 @@ class SettingsView extends HookConsumerWidget {
     );
     final apiPortController = useTextEditingController(
       text: apiPort.toString(),
+    );
+
+    final debounceMins = ref.watch(scanDebounceMinsProvider);
+    final debounceController = useTextEditingController(
+      text: debounceMins.toString(),
     );
 
     final selectedLocationId = useState<String?>(currentLocationId);
@@ -80,6 +86,21 @@ class SettingsView extends HookConsumerWidget {
           onChanged: isKioskModeSupported
               ? (_) => ref.read(kioskModeProvider.notifier).toggle()
               : null,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Scan Debounce (minutes)',
+          description:
+              'Minimum minutes between check-in and check-out for the same member to prevent accidental double scans. Set to 0 to disable.',
+          controller: debounceController,
+          hintText: 'e.g. 1',
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onUpdate: () {
+            final mins = int.tryParse(debounceController.text) ?? 0;
+            ref.read(scanDebounceMinsProvider.notifier).setMins(mins);
+            _showConfirmation(context, 'Scan debounce updated');
+          },
         ),
         const SizedBox(height: 24),
         const Divider(),
