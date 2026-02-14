@@ -6,4 +6,5 @@ pub mod migration;
 pub mod scheduler;
 pub mod server;
 pub mod shutdown;
+pub mod time;
 pub mod web;

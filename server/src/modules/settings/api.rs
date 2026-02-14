@@ -40,6 +40,7 @@ impl SettingsService for SettingsApi {
 
     let settings = Settings {
       next_session_threshold_secs: req.next_session_threshold_secs,
+      discord_enabled: req.discord_enabled,
       discord_bot_token: req.discord_bot_token,
       discord_guild_id: req.discord_guild_id,
       discord_channel_id: req.discord_channel_id,
@@ -55,6 +56,7 @@ impl SettingsService for SettingsApi {
       discord_auto_checkout_dm_enabled: req.discord_auto_checkout_dm_enabled,
       discord_auto_checkout_dm_message: req.discord_auto_checkout_dm_message,
       discord_checkout_enabled: req.discord_checkout_enabled,
+      timezone: req.timezone,
     };
     Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;
 

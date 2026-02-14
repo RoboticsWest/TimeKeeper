@@ -110,9 +110,9 @@ pub async fn discord_bot_service(shutdown: &'static ShutdownNotifier) {
   loop {
     // Read current token
     let token = match Settings::get() {
-      Ok(settings) if !settings.discord_bot_token.is_empty() => settings.discord_bot_token,
+      Ok(settings) if settings.discord_enabled && !settings.discord_bot_token.is_empty() => settings.discord_bot_token,
       Ok(_) => {
-        log::info!("Discord bot token not configured, waiting for settings update...");
+        log::info!("Discord bot not enabled or token not configured, waiting for settings update...");
 
         // Wait for either a settings change or shutdown
         let mut settings_rx =

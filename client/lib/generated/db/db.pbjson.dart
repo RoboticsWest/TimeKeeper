@@ -190,11 +190,6 @@ const TeamMemberSession$json = {
   '8': [
     {'1': '_check_out_time'},
   ],
-  '9': [
-    {'1': 5, '2': 6},
-    {'1': 6, '2': 7},
-  ],
-  '10': ['overtime_notified', 'auto_checkout_notified'],
 };
 
 /// Descriptor for `TeamMemberSession`. Decode as a `google.protobuf.DescriptorProto`.
@@ -203,8 +198,7 @@ final $typed_data.Uint8List teamMemberSessionDescriptor = $convert.base64Decode(
     'lkEh0KCnNlc3Npb25faWQYAiABKAlSCXNlc3Npb25JZBI4Cg1jaGVja19pbl90aW1lGAMgASgL'
     'MhQudGsuY29tbW9uLlRpbWVzdGFtcFILY2hlY2tJblRpbWUSPwoOY2hlY2tfb3V0X3RpbWUYBC'
     'ABKAsyFC50ay5jb21tb24uVGltZXN0YW1wSABSDGNoZWNrT3V0VGltZYgBAUIRCg9fY2hlY2tf'
-    'b3V0X3RpbWVKBAgFEAZKBAgGEAdSEW92ZXJ0aW1lX25vdGlmaWVkUhZhdXRvX2NoZWNrb3V0X2'
-    '5vdGlmaWVk');
+    'b3V0X3RpbWU=');
 
 @$core.Deprecated('Use sessionDescriptor instead')
 const Session$json = {
@@ -229,11 +223,6 @@ const Session$json = {
     {'1': 'location_id', '3': 3, '4': 1, '5': 9, '10': 'locationId'},
     {'1': 'finished', '3': 4, '4': 1, '5': 8, '10': 'finished'},
   ],
-  '9': [
-    {'1': 5, '2': 6},
-    {'1': 6, '2': 7},
-  ],
-  '10': ['start_reminder_sent', 'end_reminder_sent'],
 };
 
 /// Descriptor for `Session`. Decode as a `google.protobuf.DescriptorProto`.
@@ -241,8 +230,7 @@ final $typed_data.Uint8List sessionDescriptor = $convert.base64Decode(
     'CgdTZXNzaW9uEjMKCnN0YXJ0X3RpbWUYASABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUglzdG'
     'FydFRpbWUSLwoIZW5kX3RpbWUYAiABKAsyFC50ay5jb21tb24uVGltZXN0YW1wUgdlbmRUaW1l'
     'Eh8KC2xvY2F0aW9uX2lkGAMgASgJUgpsb2NhdGlvbklkEhoKCGZpbmlzaGVkGAQgASgIUghmaW'
-    '5pc2hlZEoECAUQBkoECAYQB1ITc3RhcnRfcmVtaW5kZXJfc2VudFIRZW5kX3JlbWluZGVyX3Nl'
-    'bnQ=');
+    '5pc2hlZA==');
 
 @$core.Deprecated('Use notificationDescriptor instead')
 const Notification$json = {
@@ -291,6 +279,7 @@ const Settings$json = {
       '5': 3,
       '10': 'nextSessionThresholdSecs'
     },
+    {'1': 'discord_enabled', '3': 17, '4': 1, '5': 8, '10': 'discordEnabled'},
     {'1': 'discord_bot_token', '3': 2, '4': 1, '5': 9, '10': 'discordBotToken'},
     {'1': 'discord_guild_id', '3': 3, '4': 1, '5': 9, '10': 'discordGuildId'},
     {
@@ -384,26 +373,28 @@ const Settings$json = {
       '5': 8,
       '10': 'discordCheckoutEnabled'
     },
+    {'1': 'timezone', '3': 18, '4': 1, '5': 9, '10': 'timezone'},
   ],
 };
 
 /// Descriptor for `Settings`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'CghTZXR0aW5ncxI9ChtuZXh0X3Nlc3Npb25fdGhyZXNob2xkX3NlY3MYASABKANSGG5leHRTZX'
-    'NzaW9uVGhyZXNob2xkU2VjcxIqChFkaXNjb3JkX2JvdF90b2tlbhgCIAEoCVIPZGlzY29yZEJv'
-    'dFRva2VuEigKEGRpc2NvcmRfZ3VpbGRfaWQYAyABKAlSDmRpc2NvcmRHdWlsZElkEiwKEmRpc2'
-    'NvcmRfY2hhbm5lbF9pZBgEIAEoCVIQZGlzY29yZENoYW5uZWxJZBI5ChlkaXNjb3JkX3NlbGZf'
-    'bGlua19lbmFibGVkGAUgASgIUhZkaXNjb3JkU2VsZkxpbmtFbmFibGVkEjkKGWRpc2NvcmRfbm'
-    'FtZV9zeW5jX2VuYWJsZWQYBiABKAhSFmRpc2NvcmROYW1lU3luY0VuYWJsZWQSPQobZGlzY29y'
-    'ZF9zdGFydF9yZW1pbmRlcl9taW5zGAcgASgDUhhkaXNjb3JkU3RhcnRSZW1pbmRlck1pbnMSOQ'
-    'oZZGlzY29yZF9lbmRfcmVtaW5kZXJfbWlucxgIIAEoA1IWZGlzY29yZEVuZFJlbWluZGVyTWlu'
-    'cxJDCh5kaXNjb3JkX3N0YXJ0X3JlbWluZGVyX21lc3NhZ2UYCSABKAlSG2Rpc2NvcmRTdGFydF'
-    'JlbWluZGVyTWVzc2FnZRI/ChxkaXNjb3JkX2VuZF9yZW1pbmRlcl9tZXNzYWdlGAogASgJUhlk'
-    'aXNjb3JkRW5kUmVtaW5kZXJNZXNzYWdlEj0KG2Rpc2NvcmRfb3ZlcnRpbWVfZG1fZW5hYmxlZB'
-    'gLIAEoCFIYZGlzY29yZE92ZXJ0aW1lRG1FbmFibGVkEjcKGGRpc2NvcmRfb3ZlcnRpbWVfZG1f'
-    'bWlucxgMIAEoA1IVZGlzY29yZE92ZXJ0aW1lRG1NaW5zEj0KG2Rpc2NvcmRfb3ZlcnRpbWVfZG'
-    '1fbWVzc2FnZRgNIAEoCVIYZGlzY29yZE92ZXJ0aW1lRG1NZXNzYWdlEkYKIGRpc2NvcmRfYXV0'
-    'b19jaGVja291dF9kbV9lbmFibGVkGA4gASgIUhxkaXNjb3JkQXV0b0NoZWNrb3V0RG1FbmFibG'
-    'VkEkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGA8gASgJUhxkaXNjb3JkQXV0'
-    'b0NoZWNrb3V0RG1NZXNzYWdlEjgKGGRpc2NvcmRfY2hlY2tvdXRfZW5hYmxlZBgQIAEoCFIWZG'
-    'lzY29yZENoZWNrb3V0RW5hYmxlZA==');
+    'NzaW9uVGhyZXNob2xkU2VjcxInCg9kaXNjb3JkX2VuYWJsZWQYESABKAhSDmRpc2NvcmRFbmFi'
+    'bGVkEioKEWRpc2NvcmRfYm90X3Rva2VuGAIgASgJUg9kaXNjb3JkQm90VG9rZW4SKAoQZGlzY2'
+    '9yZF9ndWlsZF9pZBgDIAEoCVIOZGlzY29yZEd1aWxkSWQSLAoSZGlzY29yZF9jaGFubmVsX2lk'
+    'GAQgASgJUhBkaXNjb3JkQ2hhbm5lbElkEjkKGWRpc2NvcmRfc2VsZl9saW5rX2VuYWJsZWQYBS'
+    'ABKAhSFmRpc2NvcmRTZWxmTGlua0VuYWJsZWQSOQoZZGlzY29yZF9uYW1lX3N5bmNfZW5hYmxl'
+    'ZBgGIAEoCFIWZGlzY29yZE5hbWVTeW5jRW5hYmxlZBI9ChtkaXNjb3JkX3N0YXJ0X3JlbWluZG'
+    'VyX21pbnMYByABKANSGGRpc2NvcmRTdGFydFJlbWluZGVyTWlucxI5ChlkaXNjb3JkX2VuZF9y'
+    'ZW1pbmRlcl9taW5zGAggASgDUhZkaXNjb3JkRW5kUmVtaW5kZXJNaW5zEkMKHmRpc2NvcmRfc3'
+    'RhcnRfcmVtaW5kZXJfbWVzc2FnZRgJIAEoCVIbZGlzY29yZFN0YXJ0UmVtaW5kZXJNZXNzYWdl'
+    'Ej8KHGRpc2NvcmRfZW5kX3JlbWluZGVyX21lc3NhZ2UYCiABKAlSGWRpc2NvcmRFbmRSZW1pbm'
+    'Rlck1lc3NhZ2USPQobZGlzY29yZF9vdmVydGltZV9kbV9lbmFibGVkGAsgASgIUhhkaXNjb3Jk'
+    'T3ZlcnRpbWVEbUVuYWJsZWQSNwoYZGlzY29yZF9vdmVydGltZV9kbV9taW5zGAwgASgDUhVkaX'
+    'Njb3JkT3ZlcnRpbWVEbU1pbnMSPQobZGlzY29yZF9vdmVydGltZV9kbV9tZXNzYWdlGA0gASgJ'
+    'UhhkaXNjb3JkT3ZlcnRpbWVEbU1lc3NhZ2USRgogZGlzY29yZF9hdXRvX2NoZWNrb3V0X2RtX2'
+    'VuYWJsZWQYDiABKAhSHGRpc2NvcmRBdXRvQ2hlY2tvdXREbUVuYWJsZWQSRgogZGlzY29yZF9h'
+    'dXRvX2NoZWNrb3V0X2RtX21lc3NhZ2UYDyABKAlSHGRpc2NvcmRBdXRvQ2hlY2tvdXREbU1lc3'
+    'NhZ2USOAoYZGlzY29yZF9jaGVja291dF9lbmFibGVkGBAgASgIUhZkaXNjb3JkQ2hlY2tvdXRF'
+    'bmFibGVkEhoKCHRpbWV6b25lGBIgASgJUgh0aW1lem9uZQ==');

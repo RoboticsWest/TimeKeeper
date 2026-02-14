@@ -682,6 +682,8 @@ class Settings extends $pb.GeneratedMessage {
     $core.bool? discordAutoCheckoutDmEnabled,
     $core.String? discordAutoCheckoutDmMessage,
     $core.bool? discordCheckoutEnabled,
+    $core.bool? discordEnabled,
+    $core.String? timezone,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -713,6 +715,8 @@ class Settings extends $pb.GeneratedMessage {
       result.discordAutoCheckoutDmMessage = discordAutoCheckoutDmMessage;
     if (discordCheckoutEnabled != null)
       result.discordCheckoutEnabled = discordCheckoutEnabled;
+    if (discordEnabled != null) result.discordEnabled = discordEnabled;
+    if (timezone != null) result.timezone = timezone;
     return result;
   }
 
@@ -745,6 +749,8 @@ class Settings extends $pb.GeneratedMessage {
     ..aOB(14, _omitFieldNames ? '' : 'discordAutoCheckoutDmEnabled')
     ..aOS(15, _omitFieldNames ? '' : 'discordAutoCheckoutDmMessage')
     ..aOB(16, _omitFieldNames ? '' : 'discordCheckoutEnabled')
+    ..aOB(17, _omitFieldNames ? '' : 'discordEnabled')
+    ..aOS(18, _omitFieldNames ? '' : 'timezone')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -909,6 +915,24 @@ class Settings extends $pb.GeneratedMessage {
   $core.bool hasDiscordCheckoutEnabled() => $_has(15);
   @$pb.TagNumber(16)
   void clearDiscordCheckoutEnabled() => $_clearField(16);
+
+  @$pb.TagNumber(17)
+  $core.bool get discordEnabled => $_getBF(16);
+  @$pb.TagNumber(17)
+  set discordEnabled($core.bool value) => $_setBool(16, value);
+  @$pb.TagNumber(17)
+  $core.bool hasDiscordEnabled() => $_has(16);
+  @$pb.TagNumber(17)
+  void clearDiscordEnabled() => $_clearField(17);
+
+  @$pb.TagNumber(18)
+  $core.String get timezone => $_getSZ(17);
+  @$pb.TagNumber(18)
+  set timezone($core.String value) => $_setString(17, value);
+  @$pb.TagNumber(18)
+  $core.bool hasTimezone() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearTimezone() => $_clearField(18);
 }
 
 const $core.bool _omitFieldNames =

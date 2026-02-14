@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
-use chrono::{DateTime, Datelike, Utc};
+use chrono::{Datelike, Utc};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
+use crate::core::time::{format_datetime, parse_tz};
 use crate::{
   generated::{
     common::Timestamp,
@@ -75,10 +76,6 @@ fn format_secs(secs: f64) -> String {
   let hours = total_mins / 60;
   let mins = total_mins % 60;
   format!("{hours}h {mins}m")
-}
-
-fn format_timestamp(secs: i64) -> String {
-  DateTime::from_timestamp(secs, 0).map_or_else(|| "Unknown".to_string(), |dt| dt.format("%b %d, %H:%M").to_string())
 }
 
 fn leaderboard() -> String {
@@ -164,6 +161,11 @@ fn leaderboard() -> String {
 }
 
 fn sessions() -> String {
+  let settings = match Settings::get() {
+    Ok(s) => s,
+    Err(e) => return format!("Error loading settings: {e}"),
+  };
+  let tz = parse_tz(&settings.timezone);
   let sessions = match Session::get_all() {
     Ok(s) => s,
     Err(e) => return format!("Error loading sessions: {e}"),
@@ -200,7 +202,7 @@ fn sessions() -> String {
   if !active.is_empty() {
     lines.push("**Active Sessions**".to_string());
     for (_, start, end, loc) in &active {
-      lines.push(format!("- {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
+      lines.push(format!("- {} - {} @ {loc}", format_datetime(*start, &tz), format_datetime(*end, &tz)));
     }
   }
 
@@ -208,7 +210,7 @@ fn sessions() -> String {
     upcoming.sort_by_key(|(_, start, _, _)| *start);
     lines.push("**Upcoming Sessions**".to_string());
     for (_, start, end, loc) in upcoming.iter().take(5) {
-      lines.push(format!("- {} - {} @ {loc}", format_timestamp(*start), format_timestamp(*end)));
+      lines.push(format!("- {} - {} @ {loc}", format_datetime(*start, &tz), format_datetime(*end, &tz)));
     }
   }
 
@@ -346,6 +348,8 @@ fn checkout(msg: &Message) -> String {
     Err(e) => return format!("Error loading settings: {e}"),
   };
 
+  let tz = parse_tz(&settings.timezone);
+
   if !settings.discord_checkout_enabled {
     return "Discord checkout is not enabled. Contact an admin to enable it in settings.".to_string();
   }
@@ -405,10 +409,10 @@ fn checkout(msg: &Message) -> String {
   if late {
     format!(
       "Checked out **{name}** at session end time ({}) since the session has already ended.",
-      format_timestamp(end_secs)
+      format_datetime(end_secs, &tz)
     )
   } else {
-    format!("Checked out **{name}** at {}.", format_timestamp(checkout_secs))
+    format!("Checked out **{name}** at {}.", format_datetime(checkout_secs, &tz))
   }
 }
 

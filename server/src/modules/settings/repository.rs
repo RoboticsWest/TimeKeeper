@@ -56,6 +56,7 @@ impl SettingsRepository for Settings {
 
     let default_settings = Settings {
       next_session_threshold_secs: DEFAULT_NEXT_SESSION_THRESHOLD_SECS,
+      discord_enabled: false,
       discord_bot_token: String::new(),
       discord_guild_id: String::new(),
       discord_channel_id: String::new(),
@@ -71,6 +72,7 @@ impl SettingsRepository for Settings {
       discord_auto_checkout_dm_enabled: true,
       discord_auto_checkout_dm_message: DEFAULT_AUTO_CHECKOUT_DM_MESSAGE.to_string(),
       discord_checkout_enabled: false,
+      timezone: String::new(),
     };
 
     if let Some(s) = table.get::<Settings>(SETTINGS_KEY)? {
