@@ -371,33 +371,6 @@ impl Table {
     })
   }
 
-  /// Scan all records as raw bytes (for migrations that need to decode old schemas).
-  pub fn scan_raw(&self) -> impl Iterator<Item = Result<(String, Vec<u8>)>> + '_ {
-    let prefix = format!("{}:{}:", self.name, DATA_PREFIX);
-    let table_name = self.name.clone();
-
-    self.db.scan_prefix(prefix.as_bytes()).filter_map(move |item| {
-      let (key, value) = match item {
-        Ok(kv) => kv,
-        Err(e) => {
-          log::error!("Failed to scan key: {}", e);
-          return Some(Err(anyhow::anyhow!(e)));
-        }
-      };
-
-      let key_str = match String::from_utf8(key.to_vec()) {
-        Ok(s) => s,
-        Err(e) => {
-          log::error!("Failed to convert key to string: {}", e);
-          return Some(Err(anyhow::anyhow!(e)));
-        }
-      };
-
-      let id = key_str.strip_prefix(&format!("{}:{}:", table_name, DATA_PREFIX)).unwrap_or_default().to_string();
-      Some(Ok((id, value.to_vec())))
-    })
-  }
-
   /// Clear all records from the table (deletes both data and search indexes)
   pub fn clear(&self) -> Result<()> {
     let mut batch_update = sled::Batch::default();
