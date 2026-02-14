@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
@@ -10,10 +8,8 @@ import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/csv_utils.dart';
 import 'package:time_keeper/utils/time.dart';
-import 'package:time_keeper/views/setup/common/file_upload_setting.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
-import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
 class DataSetupTab extends ConsumerWidget {
@@ -263,44 +259,6 @@ class DataSetupTab extends ConsumerWidget {
             icon: const Icon(Icons.download),
             label: const Text('Export CSV'),
           ),
-        ),
-        const SizedBox(height: 32),
-
-        const Divider(),
-        const SizedBox(height: 24),
-
-        // --- Import Section ---
-        Text('Import', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 16),
-
-        FileUploadSetting(
-          label: 'Import Attendance',
-          description:
-              'Upload a CSV file containing attendance records '
-              '(FIRST_NAME, LAST_NAME, LOCATION, CHECK_IN_TIME, CHECK_OUT_TIME)',
-          allowedExtensions: ['csv'],
-          uploadButtonLabel: 'Import',
-          onUpload: (file) async {
-            if (file.bytes != null) {
-              ConfirmDialog.warn(
-                title: 'Confirm Import',
-                message: const Text(
-                  'Importing attendance can have impacts on existing data integrity. '
-                  'Duplicate records (same member + session) will be skipped.',
-                ),
-                onConfirmAsyncGrpc: () async {
-                  final req = ImportAttendanceCsvRequest(csvData: file.bytes!);
-                  return await callGrpcEndpoint(
-                    () => ref
-                        .read(teamMemberSessionServiceProvider)
-                        .importAttendanceCsv(req),
-                  );
-                },
-                showResultDialog: true,
-                successMessage: const Text('Attendance imported successfully!'),
-              ).show(context);
-            }
-          },
         ),
       ],
     );
