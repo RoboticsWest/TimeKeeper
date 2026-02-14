@@ -331,15 +331,8 @@ const Settings$json = {
       '10': 'discordAutoCheckoutDmEnabled'
     },
     {
-      '1': 'discord_auto_checkout_dm_mins',
-      '3': 15,
-      '4': 1,
-      '5': 3,
-      '10': 'discordAutoCheckoutDmMins'
-    },
-    {
       '1': 'discord_auto_checkout_dm_message',
-      '3': 16,
+      '3': 15,
       '4': 1,
       '5': 9,
       '10': 'discordAutoCheckoutDmMessage'
@@ -364,6 +357,5 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'bWlucxgMIAEoA1IVZGlzY29yZE92ZXJ0aW1lRG1NaW5zEj0KG2Rpc2NvcmRfb3ZlcnRpbWVfZG'
     '1fbWVzc2FnZRgNIAEoCVIYZGlzY29yZE92ZXJ0aW1lRG1NZXNzYWdlEkYKIGRpc2NvcmRfYXV0'
     'b19jaGVja291dF9kbV9lbmFibGVkGA4gASgIUhxkaXNjb3JkQXV0b0NoZWNrb3V0RG1FbmFibG'
-    'VkEkAKHWRpc2NvcmRfYXV0b19jaGVja291dF9kbV9taW5zGA8gASgDUhlkaXNjb3JkQXV0b0No'
-    'ZWNrb3V0RG1NaW5zEkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGBAgASgJUh'
-    'xkaXNjb3JkQXV0b0NoZWNrb3V0RG1NZXNzYWdl');
+    'VkEkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGA8gASgJUhxkaXNjb3JkQXV0'
+    'b0NoZWNrb3V0RG1NZXNzYWdl');

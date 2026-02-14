@@ -21,6 +21,13 @@ pub struct PastEndSession {
   pub next_start_secs: Option<i64>,
 }
 
+/// A member who was auto-checked-out by the SessionService but hasn't been notified yet.
+pub struct AutoCheckedOutMember {
+  pub ms_id: String,
+  pub member_session: TeamMemberSession,
+  pub session: Session,
+}
+
 /// Get the current time as a protobuf Timestamp.
 pub fn now_timestamp() -> Timestamp {
   let now = Utc::now();
@@ -157,4 +164,26 @@ pub fn is_auto_checkout_imminent(next_start_secs: Option<i64>, now_secs: i64, th
     Some(next_start) => (next_start - now_secs) <= threshold_secs,
     None => false,
   }
+}
+
+/// Get all members who were auto-checked-out (session finished, has check_out_time)
+/// but haven't been notified yet (auto_checkout_notified == false).
+pub fn get_auto_checked_out_members() -> Result<Vec<AutoCheckedOutMember>> {
+  let all_sessions = Session::get_all()?;
+  let mut results = Vec::new();
+
+  for (session_id, session) in &all_sessions {
+    if !session.finished {
+      continue;
+    }
+
+    let member_sessions = TeamMemberSession::get_by_session_id(session_id)?;
+    for (ms_id, ms) in member_sessions {
+      if ms.check_out_time.is_some() && !ms.auto_checkout_notified {
+        results.push(AutoCheckedOutMember { ms_id, member_session: ms, session: session.clone() });
+      }
+    }
+  }
+
+  Ok(results)
 }
