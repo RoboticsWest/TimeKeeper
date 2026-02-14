@@ -42,8 +42,6 @@ message TeamMemberSession {
   string session_id = 2;
   common.Timestamp check_in_time = 3;
   optional common.Timestamp check_out_time = 4;
-  reserved 5, 6;
-  reserved "overtime_notified", "auto_checkout_notified";
 }
 
 message Session {
@@ -51,8 +49,6 @@ message Session {
   common.Timestamp end_time = 2;
   string location_id = 3;
   bool finished = 4;
-  reserved 5, 6;
-  reserved "start_reminder_sent", "end_reminder_sent";
 }
 
 enum NotificationType {
@@ -86,4 +82,6 @@ message Settings {
   bool discord_auto_checkout_dm_enabled = 14;
   string discord_auto_checkout_dm_message = 15;
   bool discord_checkout_enabled = 16;
+  bool discord_enabled = 17;
+  string timezone = 18;
 }

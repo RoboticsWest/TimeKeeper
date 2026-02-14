@@ -1,8 +1,10 @@
 use std::{future::Future, time::Duration};
 
-use chrono::{TimeZone, Utc};
+use chrono::Utc;
 use serenity::all::{ChannelId, GuildId, Member as GuildMember};
 use serenity::http::Http;
+
+use crate::core::time::{format_date, format_time, parse_tz};
 
 /// Run an async future from within a sync context that's already on the tokio runtime.
 /// Uses `block_in_place` to avoid the "cannot block inside a runtime" panic.
@@ -46,7 +48,7 @@ impl ScheduledService for DiscordNotificationService {
   fn execute(&mut self) -> anyhow::Result<()> {
     let settings = Settings::get()?;
 
-    if settings.discord_bot_token.is_empty() || settings.discord_channel_id.is_empty() {
+    if !settings.discord_enabled || settings.discord_bot_token.is_empty() || settings.discord_channel_id.is_empty() {
       return Ok(());
     }
 
@@ -69,6 +71,7 @@ impl ScheduledService for DiscordNotificationService {
     let http = Http::new(&settings.discord_bot_token);
     let channel = ChannelId::new(channel_id);
 
+    let tz = parse_tz(&settings.timezone);
     let sessions = Session::get_all()?;
     let locations = Location::get_all()?;
     let now_secs = Utc::now().timestamp();
@@ -83,11 +86,9 @@ impl ScheduledService for DiscordNotificationService {
       let end_secs = session.end_time.as_ref().map_or(0, |t| t.seconds);
       let location = locations.get(&session.location_id).map_or("Unknown", |l| l.location.as_str());
 
-      let start_dt = Utc.timestamp_opt(start_secs, 0).single();
-      let end_dt = Utc.timestamp_opt(end_secs, 0).single();
-      let date_str = start_dt.map_or("Unknown".to_string(), |dt| dt.format("%B %-d").to_string());
-      let start_time_str = start_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
-      let end_time_str = end_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
+      let date_str = format_date(start_secs, &tz);
+      let start_time_str = format_time(start_secs, &tz);
+      let end_time_str = format_time(end_secs, &tz);
 
       // Session starting soon reminder
       if start_reminder_secs > 0 {
@@ -183,8 +184,7 @@ impl ScheduledService for DiscordNotificationService {
           }
 
           let location = locations.get(&pes.session.location_id).map_or("Unknown", |l| l.location.as_str());
-          let end_dt = Utc.timestamp_opt(pes.end_secs, 0).single();
-          let end_time_str = end_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
+          let end_time_str = format_time(pes.end_secs, &tz);
 
           for (_, ms) in &pes.checked_in {
             if Notification::exists(NotificationType::Overtime, &pes.session_id, Some(&ms.team_member_id))? {
@@ -239,8 +239,7 @@ impl ScheduledService for DiscordNotificationService {
           let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
           let location = locations.get(&session.location_id).map_or("Unknown", |l| l.location.as_str());
           let end_secs = session.end_time.as_ref().map_or(0, |t| t.seconds);
-          let end_dt = Utc.timestamp_opt(end_secs, 0).single();
-          let end_time_str = end_dt.map_or("Unknown".to_string(), |dt| dt.format("%-I:%M%p").to_string());
+          let end_time_str = format_time(end_secs, &tz);
 
           let msg = auto_checkout_msg_template
             .replace("{username}", &mention)

@@ -107,6 +107,10 @@ pub struct Settings {
     pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
     #[prost(bool, tag = "16")]
     pub discord_checkout_enabled: bool,
+    #[prost(bool, tag = "17")]
+    pub discord_enabled: bool,
+    #[prost(string, tag = "18")]
+    pub timezone: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
