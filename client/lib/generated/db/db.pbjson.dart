@@ -302,6 +302,48 @@ const Settings$json = {
       '5': 9,
       '10': 'discordEndReminderMessage'
     },
+    {
+      '1': 'discord_overtime_dm_enabled',
+      '3': 11,
+      '4': 1,
+      '5': 8,
+      '10': 'discordOvertimeDmEnabled'
+    },
+    {
+      '1': 'discord_overtime_dm_mins',
+      '3': 12,
+      '4': 1,
+      '5': 3,
+      '10': 'discordOvertimeDmMins'
+    },
+    {
+      '1': 'discord_overtime_dm_message',
+      '3': 13,
+      '4': 1,
+      '5': 9,
+      '10': 'discordOvertimeDmMessage'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_enabled',
+      '3': 14,
+      '4': 1,
+      '5': 8,
+      '10': 'discordAutoCheckoutDmEnabled'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_mins',
+      '3': 15,
+      '4': 1,
+      '5': 3,
+      '10': 'discordAutoCheckoutDmMins'
+    },
+    {
+      '1': 'discord_auto_checkout_dm_message',
+      '3': 16,
+      '4': 1,
+      '5': 9,
+      '10': 'discordAutoCheckoutDmMessage'
+    },
   ],
 };
 
@@ -317,4 +359,11 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'oZZGlzY29yZF9lbmRfcmVtaW5kZXJfbWlucxgIIAEoA1IWZGlzY29yZEVuZFJlbWluZGVyTWlu'
     'cxJDCh5kaXNjb3JkX3N0YXJ0X3JlbWluZGVyX21lc3NhZ2UYCSABKAlSG2Rpc2NvcmRTdGFydF'
     'JlbWluZGVyTWVzc2FnZRI/ChxkaXNjb3JkX2VuZF9yZW1pbmRlcl9tZXNzYWdlGAogASgJUhlk'
-    'aXNjb3JkRW5kUmVtaW5kZXJNZXNzYWdl');
+    'aXNjb3JkRW5kUmVtaW5kZXJNZXNzYWdlEj0KG2Rpc2NvcmRfb3ZlcnRpbWVfZG1fZW5hYmxlZB'
+    'gLIAEoCFIYZGlzY29yZE92ZXJ0aW1lRG1FbmFibGVkEjcKGGRpc2NvcmRfb3ZlcnRpbWVfZG1f'
+    'bWlucxgMIAEoA1IVZGlzY29yZE92ZXJ0aW1lRG1NaW5zEj0KG2Rpc2NvcmRfb3ZlcnRpbWVfZG'
+    '1fbWVzc2FnZRgNIAEoCVIYZGlzY29yZE92ZXJ0aW1lRG1NZXNzYWdlEkYKIGRpc2NvcmRfYXV0'
+    'b19jaGVja291dF9kbV9lbmFibGVkGA4gASgIUhxkaXNjb3JkQXV0b0NoZWNrb3V0RG1FbmFibG'
+    'VkEkAKHWRpc2NvcmRfYXV0b19jaGVja291dF9kbV9taW5zGA8gASgDUhlkaXNjb3JkQXV0b0No'
+    'ZWNrb3V0RG1NaW5zEkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGBAgASgJUh'
+    'xkaXNjb3JkQXV0b0NoZWNrb3V0RG1NZXNzYWdl');

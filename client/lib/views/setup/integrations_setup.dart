@@ -28,6 +28,12 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     final endReminderMessageController = useTextEditingController();
     final selfLinkEnabled = useState(false);
     final nameSyncEnabled = useState(true);
+    final overtimeDmEnabled = useState(true);
+    final overtimeDmMinsController = useTextEditingController();
+    final overtimeDmMessageController = useTextEditingController();
+    final autoCheckoutDmEnabled = useState(true);
+    final autoCheckoutDmMinsController = useTextEditingController();
+    final autoCheckoutDmMessageController = useTextEditingController();
     final discordRoles = useState<List<DiscordRole>>([]);
     final selectedRoleId = useState<String?>(null);
     final isLoadingRoles = useState(false);
@@ -58,6 +64,18 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           endReminderMessageController.text = s.discordEndReminderMessage;
           selfLinkEnabled.value = s.discordSelfLinkEnabled;
           nameSyncEnabled.value = s.discordNameSyncEnabled;
+          overtimeDmEnabled.value = s.discordOvertimeDmEnabled;
+          final overtimeMins = s.discordOvertimeDmMins;
+          overtimeDmMinsController.text = overtimeMins > 0
+              ? overtimeMins.toString()
+              : '10';
+          overtimeDmMessageController.text = s.discordOvertimeDmMessage;
+          autoCheckoutDmEnabled.value = s.discordAutoCheckoutDmEnabled;
+          final autoCheckoutMins = s.discordAutoCheckoutDmMins;
+          autoCheckoutDmMinsController.text = autoCheckoutMins > 0
+              ? autoCheckoutMins.toString()
+              : '30';
+          autoCheckoutDmMessageController.text = s.discordAutoCheckoutDmMessage;
         }
       }
 
@@ -100,6 +118,17 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 discordEndReminderMessage: endReminderMessageController.text,
                 discordSelfLinkEnabled: selfLinkEnabled.value,
                 discordNameSyncEnabled: nameSyncEnabled.value,
+                discordOvertimeDmEnabled: overtimeDmEnabled.value,
+                discordOvertimeDmMins: Int64(
+                  int.tryParse(overtimeDmMinsController.text) ?? 10,
+                ),
+                discordOvertimeDmMessage: overtimeDmMessageController.text,
+                discordAutoCheckoutDmEnabled: autoCheckoutDmEnabled.value,
+                discordAutoCheckoutDmMins: Int64(
+                  int.tryParse(autoCheckoutDmMinsController.text) ?? 30,
+                ),
+                discordAutoCheckoutDmMessage:
+                    autoCheckoutDmMessageController.text,
               ),
             ),
       );
@@ -286,6 +315,99 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               Text(nameSyncEnabled.value ? 'Enabled' : 'Disabled'),
             ],
           ),
+        ),
+        const SizedBox(height: 32),
+        const Divider(),
+        const SizedBox(height: 16),
+        Text('DM Notifications', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          'Send direct messages to team members for overtime and auto-checkout warnings. '
+          'Members must have a linked Discord account. '
+          'Placeholders: {username}, {name}, {location}, {end_time}.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SettingRow(
+          label: 'Overtime DM',
+          description:
+              'DM members who are still checked in after a session ends',
+          child: Row(
+            children: [
+              Switch(
+                value: overtimeDmEnabled.value,
+                onChanged: (value) {
+                  overtimeDmEnabled.value = value;
+                  updateDiscordSettings();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(overtimeDmEnabled.value ? 'Enabled' : 'Disabled'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Overtime DM (minutes after session end)',
+          description:
+              'How many minutes after a session ends to send the overtime DM (default: 10)',
+          controller: overtimeDmMinsController,
+          hintText: '10',
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Overtime DM Message',
+          description:
+              'Custom message for overtime DMs. Supports {username}, {name}, {location}, {end_time}',
+          controller: overtimeDmMessageController,
+          hintText:
+              'Hey {username}, you\'re now in overtime for the session at {location}. The session ended at {end_time}. Don\'t forget to check out!',
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        SettingRow(
+          label: 'Auto-Checkout DM',
+          description:
+              'DM members when they are about to be auto-checked-out before a new session starts',
+          child: Row(
+            children: [
+              Switch(
+                value: autoCheckoutDmEnabled.value,
+                onChanged: (value) {
+                  autoCheckoutDmEnabled.value = value;
+                  updateDiscordSettings();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(autoCheckoutDmEnabled.value ? 'Enabled' : 'Disabled'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Auto-Checkout DM (minutes before next session)',
+          description:
+              'How many minutes before the next session starts to send the warning DM (default: 30)',
+          controller: autoCheckoutDmMinsController,
+          hintText: '30',
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Auto-Checkout DM Message',
+          description:
+              'Custom message for auto-checkout DMs. Supports {username}, {name}, {location}, {end_time}',
+          controller: autoCheckoutDmMessageController,
+          hintText:
+              'Heads up {username} \u2014 you\'re about to be auto-checked-out from the session at {location}. A new session is starting soon.',
+          onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 32),
         const Divider(),

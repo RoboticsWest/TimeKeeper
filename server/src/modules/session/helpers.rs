@@ -11,6 +11,16 @@ use crate::{
   },
 };
 
+/// A session that is past its end time, with precomputed state for both
+/// SessionService (auto-checkout) and DiscordNotificationService (DM warnings).
+pub struct PastEndSession {
+  pub session_id: String,
+  pub session: Session,
+  pub end_secs: i64,
+  pub checked_in: Vec<(String, TeamMemberSession)>,
+  pub next_start_secs: Option<i64>,
+}
+
 /// Get the current time as a protobuf Timestamp.
 pub fn now_timestamp() -> Timestamp {
   let now = Utc::now();
@@ -102,4 +112,49 @@ pub fn find_session_for_location(
   }
 
   Ok(best.map(|(id, session, _)| (id, session)))
+}
+
+/// Get all unfinished sessions that are past their end time, with checked-in members
+/// and the next session's start time precomputed.
+///
+/// This is the single source of truth for overtime/auto-checkout detection,
+/// used by both SessionService and DiscordNotificationService.
+pub fn get_past_end_sessions() -> Result<Vec<PastEndSession>> {
+  let now_secs = Utc::now().timestamp();
+  let unfinished = get_unfinished_sessions_sorted()?;
+
+  let mut results = Vec::new();
+
+  for i in 0..unfinished.len() {
+    let (ref id, ref session) = unfinished[i];
+    let end_secs = match session.end_time.as_ref() {
+      Some(t) => t.seconds,
+      None => continue,
+    };
+
+    if now_secs <= end_secs {
+      continue;
+    }
+
+    let checked_in = get_checked_in_members(id)?;
+    let next_start_secs = unfinished.get(i + 1).and_then(|(_, next)| next.start_time.as_ref().map(|t| t.seconds));
+
+    results.push(PastEndSession {
+      session_id: id.clone(),
+      session: session.clone(),
+      end_secs,
+      checked_in,
+      next_start_secs,
+    });
+  }
+
+  Ok(results)
+}
+
+/// Check if an auto-checkout is imminent — i.e. the next session starts within the given threshold.
+pub fn is_auto_checkout_imminent(next_start_secs: Option<i64>, now_secs: i64, threshold_secs: i64) -> bool {
+  match next_start_secs {
+    Some(next_start) => (next_start - now_secs) <= threshold_secs,
+    None => false,
+  }
 }

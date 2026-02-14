@@ -2500,6 +2500,18 @@ pub struct UpdateSettingsRequest {
     pub discord_start_reminder_message: ::prost::alloc::string::String,
     #[prost(string, tag = "10")]
     pub discord_end_reminder_message: ::prost::alloc::string::String,
+    #[prost(bool, tag = "11")]
+    pub discord_overtime_dm_enabled: bool,
+    #[prost(int64, tag = "12")]
+    pub discord_overtime_dm_mins: i64,
+    #[prost(string, tag = "13")]
+    pub discord_overtime_dm_message: ::prost::alloc::string::String,
+    #[prost(bool, tag = "14")]
+    pub discord_auto_checkout_dm_enabled: bool,
+    #[prost(int64, tag = "15")]
+    pub discord_auto_checkout_dm_mins: i64,
+    #[prost(string, tag = "16")]
+    pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateSettingsResponse {}
