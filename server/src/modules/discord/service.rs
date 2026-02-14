@@ -201,18 +201,18 @@ impl ScheduledService for DiscordNotificationService {
               .replace("{location}", location)
               .replace("{end_time}", &end_time_str);
 
-            if Self::send_member_notification(&http, channel, &msg) {
-              if let Err(e) = Notification::add(&Notification {
+            if Self::send_member_notification(&http, channel, &msg)
+              && let Err(e) = Notification::add(&Notification {
                 notification_type: NotificationType::Overtime as i32,
                 session_id: pes.session_id.clone(),
                 team_member_id: Some(ms.team_member_id.clone()),
                 sent: true,
-              }) {
-                log::error!(
-                  "[DiscordNotificationService] Failed to record overtime notification for {}: {e}",
-                  ms.team_member_id
-                );
-              }
+              })
+            {
+              log::error!(
+                "[DiscordNotificationService] Failed to record overtime notification for {}: {e}",
+                ms.team_member_id
+              );
             }
           }
         }
