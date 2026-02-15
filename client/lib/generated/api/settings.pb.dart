@@ -119,7 +119,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? nextSessionThresholdSecs,
     $core.String? discordBotToken,
     $core.String? discordGuildId,
-    $core.String? discordChannelId,
+    $core.String? discordAnnouncementChannelId,
     $core.bool? discordSelfLinkEnabled,
     $core.bool? discordNameSyncEnabled,
     $fixnum.Int64? discordStartReminderMins,
@@ -139,13 +139,15 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     $core.bool? leaderboardShowOvertime,
     $core.Iterable<$1.TeamMemberType>? leaderboardMemberTypes,
     $core.bool? discordRsvpReactionsEnabled,
+    $core.String? discordNotificationChannelId,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
       result.nextSessionThresholdSecs = nextSessionThresholdSecs;
     if (discordBotToken != null) result.discordBotToken = discordBotToken;
     if (discordGuildId != null) result.discordGuildId = discordGuildId;
-    if (discordChannelId != null) result.discordChannelId = discordChannelId;
+    if (discordAnnouncementChannelId != null)
+      result.discordAnnouncementChannelId = discordAnnouncementChannelId;
     if (discordSelfLinkEnabled != null)
       result.discordSelfLinkEnabled = discordSelfLinkEnabled;
     if (discordNameSyncEnabled != null)
@@ -180,6 +182,8 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
       result.leaderboardMemberTypes.addAll(leaderboardMemberTypes);
     if (discordRsvpReactionsEnabled != null)
       result.discordRsvpReactionsEnabled = discordRsvpReactionsEnabled;
+    if (discordNotificationChannelId != null)
+      result.discordNotificationChannelId = discordNotificationChannelId;
     return result;
   }
 
@@ -199,7 +203,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'nextSessionThresholdSecs')
     ..aOS(2, _omitFieldNames ? '' : 'discordBotToken')
     ..aOS(3, _omitFieldNames ? '' : 'discordGuildId')
-    ..aOS(4, _omitFieldNames ? '' : 'discordChannelId')
+    ..aOS(4, _omitFieldNames ? '' : 'discordAnnouncementChannelId')
     ..aOB(5, _omitFieldNames ? '' : 'discordSelfLinkEnabled')
     ..aOB(6, _omitFieldNames ? '' : 'discordNameSyncEnabled')
     ..aInt64(7, _omitFieldNames ? '' : 'discordStartReminderMins')
@@ -223,6 +227,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
         enumValues: $1.TeamMemberType.values,
         defaultEnumValue: $1.TeamMemberType.STUDENT)
     ..aOB(23, _omitFieldNames ? '' : 'discordRsvpReactionsEnabled')
+    ..aOS(24, _omitFieldNames ? '' : 'discordNotificationChannelId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -273,13 +278,13 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
   void clearDiscordGuildId() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $core.String get discordChannelId => $_getSZ(3);
+  $core.String get discordAnnouncementChannelId => $_getSZ(3);
   @$pb.TagNumber(4)
-  set discordChannelId($core.String value) => $_setString(3, value);
+  set discordAnnouncementChannelId($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasDiscordChannelId() => $_has(3);
+  $core.bool hasDiscordAnnouncementChannelId() => $_has(3);
   @$pb.TagNumber(4)
-  void clearDiscordChannelId() => $_clearField(4);
+  void clearDiscordAnnouncementChannelId() => $_clearField(4);
 
   @$pb.TagNumber(5)
   $core.bool get discordSelfLinkEnabled => $_getBF(4);
@@ -446,6 +451,16 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
   $core.bool hasDiscordRsvpReactionsEnabled() => $_has(22);
   @$pb.TagNumber(23)
   void clearDiscordRsvpReactionsEnabled() => $_clearField(23);
+
+  @$pb.TagNumber(24)
+  $core.String get discordNotificationChannelId => $_getSZ(23);
+  @$pb.TagNumber(24)
+  set discordNotificationChannelId($core.String value) =>
+      $_setString(23, value);
+  @$pb.TagNumber(24)
+  $core.bool hasDiscordNotificationChannelId() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearDiscordNotificationChannelId() => $_clearField(24);
 }
 
 class UpdateSettingsResponse extends $pb.GeneratedMessage {
