@@ -67,7 +67,7 @@ class CheckedInList extends ConsumerWidget {
       padding: const EdgeInsetsGeometry.symmetric(horizontal: 40),
       child: Column(
         children: [
-          SizedBox(height: childHeight, child: TeamMemberHeader()),
+          const TeamMemberHeader(),
           Expanded(
             child: AnimatedInfiniteVerticalList(
               childHeight: childHeight,

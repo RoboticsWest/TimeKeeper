@@ -388,6 +388,21 @@ const Settings$json = {
     {'1': 'timezone', '3': 18, '4': 1, '5': 9, '10': 'timezone'},
     {'1': 'primary_color', '3': 19, '4': 1, '5': 9, '10': 'primaryColor'},
     {'1': 'secondary_color', '3': 20, '4': 1, '5': 9, '10': 'secondaryColor'},
+    {
+      '1': 'leaderboard_show_overtime',
+      '3': 21,
+      '4': 1,
+      '5': 8,
+      '10': 'leaderboardShowOvertime'
+    },
+    {
+      '1': 'leaderboard_member_types',
+      '3': 22,
+      '4': 3,
+      '5': 14,
+      '6': '.tk.db.TeamMemberType',
+      '10': 'leaderboardMemberTypes'
+    },
   ],
 };
 
@@ -413,4 +428,6 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'lzY29yZENoZWNrb3V0RW5hYmxlZBInCg9kaXNjb3JkX2VuYWJsZWQYESABKAhSDmRpc2NvcmRF'
     'bmFibGVkEhoKCHRpbWV6b25lGBIgASgJUgh0aW1lem9uZRIjCg1wcmltYXJ5X2NvbG9yGBMgAS'
     'gJUgxwcmltYXJ5Q29sb3ISJwoPc2Vjb25kYXJ5X2NvbG9yGBQgASgJUg5zZWNvbmRhcnlDb2xv'
-    'cg==');
+    'chI6ChlsZWFkZXJib2FyZF9zaG93X292ZXJ0aW1lGBUgASgIUhdsZWFkZXJib2FyZFNob3dPdm'
+    'VydGltZRJPChhsZWFkZXJib2FyZF9tZW1iZXJfdHlwZXMYFiADKA4yFS50ay5kYi5UZWFtTWVt'
+    'YmVyVHlwZVIWbGVhZGVyYm9hcmRNZW1iZXJUeXBlcw==');

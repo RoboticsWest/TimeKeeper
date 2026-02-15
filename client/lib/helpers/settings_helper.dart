@@ -43,6 +43,8 @@ Future<GrpcResult<UpdateSettingsResponse>> updateSettings(
     discordCheckoutEnabled: s.discordCheckoutEnabled,
     primaryColor: s.primaryColor,
     secondaryColor: s.secondaryColor,
+    leaderboardShowOvertime: s.leaderboardShowOvertime,
+    leaderboardMemberTypes: s.leaderboardMemberTypes,
   );
 
   applyChanges(req);
