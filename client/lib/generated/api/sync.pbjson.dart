@@ -90,6 +90,15 @@ const StreamEntitiesResponse$json = {
       '9': 0,
       '10': 'notifications'
     },
+    {
+      '1': 'session_rsvps',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.tk.api.StreamSessionRsvpsResponse',
+      '9': 0,
+      '10': 'sessionRsvps'
+    },
   ],
   '8': [
     {'1': 'payload'},
@@ -107,4 +116,5 @@ final $typed_data.Uint8List streamEntitiesResponseDescriptor = $convert.base64De
     'aW9uc1Jlc3BvbnNlSABSEnRlYW1NZW1iZXJTZXNzaW9ucxI9CglyZmlkX3RhZ3MYBiABKAsyHi'
     '50ay5hcGkuU3RyZWFtUmZpZFRhZ3NSZXNwb25zZUgAUghyZmlkVGFncxJLCg1ub3RpZmljYXRp'
     'b25zGAcgASgLMiMudGsuYXBpLlN0cmVhbU5vdGlmaWNhdGlvbnNSZXNwb25zZUgAUg1ub3RpZm'
-    'ljYXRpb25zQgkKB3BheWxvYWQ=');
+    'ljYXRpb25zEkkKDXNlc3Npb25fcnN2cHMYCCABKAsyIi50ay5hcGkuU3RyZWFtU2Vzc2lvblJz'
+    'dnBzUmVzcG9uc2VIAFIMc2Vzc2lvblJzdnBzQgkKB3BheWxvYWQ=');

@@ -15,7 +15,8 @@ use crate::{
     },
     common::Role,
     db::{
-      Location, Logo, Notification, Secret, Session, Settings, TeamMember, TeamMemberSession, TeamMemberType, User,
+      Location, Logo, Notification, Secret, Session, SessionRsvp, SessionRsvpMessage, Settings, TeamMember,
+      TeamMemberSession, TeamMemberType, User,
     },
   },
   modules::{
@@ -23,6 +24,7 @@ use crate::{
     notification::NotificationRepository,
     secret::SecretRepository,
     session::SessionRepository,
+    session_rsvp::{SessionRsvpMessageRepository, SessionRsvpRepository},
     settings::{LogoRepository, SettingsRepository},
     team_member::TeamMemberRepository,
     team_member_session::TeamMemberSessionRepository,
@@ -51,7 +53,8 @@ impl SettingsService for SettingsApi {
       discord_enabled: req.discord_enabled,
       discord_bot_token: req.discord_bot_token,
       discord_guild_id: req.discord_guild_id,
-      discord_channel_id: req.discord_channel_id,
+      discord_announcement_channel_id: req.discord_announcement_channel_id,
+      discord_notification_channel_id: req.discord_notification_channel_id,
       discord_self_link_enabled: req.discord_self_link_enabled,
       discord_name_sync_enabled: req.discord_name_sync_enabled,
       discord_start_reminder_mins: req.discord_start_reminder_mins,
@@ -69,6 +72,7 @@ impl SettingsService for SettingsApi {
       secondary_color: req.secondary_color,
       leaderboard_show_overtime: req.leaderboard_show_overtime,
       leaderboard_member_types: req.leaderboard_member_types,
+      discord_rsvp_reactions_enabled: req.discord_rsvp_reactions_enabled,
     };
     Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;
 
@@ -104,6 +108,9 @@ impl SettingsService for SettingsApi {
     Secret::clear().map_err(|e| Status::internal(format!("Failed to clear secret data: {}", e)))?;
     Settings::clear().map_err(|e| Status::internal(format!("Failed to clear settings data: {}", e)))?;
     Logo::clear().map_err(|e| Status::internal(format!("Failed to clear logo data: {}", e)))?;
+    SessionRsvp::clear().map_err(|e| Status::internal(format!("Failed to clear session RSVP data: {}", e)))?;
+    SessionRsvpMessage::clear()
+      .map_err(|e| Status::internal(format!("Failed to clear session RSVP message data: {}", e)))?;
 
     log::warn!("Database purged by admin");
 

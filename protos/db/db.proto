@@ -69,11 +69,28 @@ message Logo {
   bytes data = 1;
 }
 
+enum RsvpStatus {
+  GOING = 0;
+  NOT_GOING = 1;
+}
+
+message SessionRsvp {
+  string session_id = 1;
+  string team_member_id = 2;
+  RsvpStatus status = 3;
+}
+
+message SessionRsvpMessage {
+  string discord_message_id = 1;
+  string session_id = 2;
+}
+
 message Settings {
   int64 next_session_threshold_secs = 1;
   string discord_bot_token = 2;
   string discord_guild_id = 3;
-  string discord_channel_id = 4;
+  string discord_announcement_channel_id = 4;
+  string discord_notification_channel_id = 24;
   bool discord_self_link_enabled = 5;
   bool discord_name_sync_enabled = 6;
   int64 discord_start_reminder_mins = 7;
@@ -92,4 +109,5 @@ message Settings {
   string secondary_color = 20;
   bool leaderboard_show_overtime = 21;
   repeated TeamMemberType leaderboard_member_types = 22;
+  bool discord_rsvp_reactions_enabled = 23;
 }

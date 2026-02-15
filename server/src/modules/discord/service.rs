@@ -12,13 +12,16 @@ fn block_on<F: Future>(f: F) -> F::Output {
   tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(f))
 }
 
+use serenity::model::channel::ReactionType;
+
 use crate::{
   core::scheduler::ScheduledService,
-  generated::db::{Location, Notification, NotificationType, Session, Settings, TeamMember},
+  generated::db::{Location, Notification, NotificationType, Session, SessionRsvpMessage, Settings, TeamMember},
   modules::{
     location::LocationRepository,
     notification::NotificationRepository,
     session::{SessionRepository, helpers::get_past_end_sessions},
+    session_rsvp::SessionRsvpMessageRepository,
     settings::{
       DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_END_REMINDER_MESSAGE, DEFAULT_OVERTIME_DM_MESSAGE,
       DEFAULT_START_REMINDER_MESSAGE, SettingsRepository,
@@ -48,14 +51,24 @@ impl ScheduledService for DiscordNotificationService {
   fn execute(&mut self) -> anyhow::Result<()> {
     let settings = Settings::get()?;
 
-    if !settings.discord_enabled || settings.discord_bot_token.is_empty() || settings.discord_channel_id.is_empty() {
+    if !settings.discord_enabled
+      || settings.discord_bot_token.is_empty()
+      || settings.discord_announcement_channel_id.is_empty()
+      || settings.discord_notification_channel_id.is_empty()
+    {
       return Ok(());
     }
 
     let start_reminder_secs = settings.discord_start_reminder_mins * 60;
     let end_reminder_secs = settings.discord_end_reminder_mins * 60;
-    let channel_id: u64 =
-      settings.discord_channel_id.parse().map_err(|e| anyhow::anyhow!("Invalid channel ID: {e}"))?;
+    let announcement_channel_id: u64 = settings
+      .discord_announcement_channel_id
+      .parse()
+      .map_err(|e| anyhow::anyhow!("Invalid announcement channel ID: {e}"))?;
+    let notification_channel_id: u64 = settings
+      .discord_notification_channel_id
+      .parse()
+      .map_err(|e| anyhow::anyhow!("Invalid notification channel ID: {e}"))?;
 
     let start_msg_template = if settings.discord_start_reminder_message.is_empty() {
       DEFAULT_START_REMINDER_MESSAGE
@@ -69,7 +82,8 @@ impl ScheduledService for DiscordNotificationService {
     };
 
     let http = Http::new(&settings.discord_bot_token);
-    let channel = ChannelId::new(channel_id);
+    let announcement_channel = ChannelId::new(announcement_channel_id);
+    let notification_channel = ChannelId::new(notification_channel_id);
 
     let tz = parse_tz(&settings.timezone);
     let sessions = Session::get_all()?;
@@ -105,15 +119,29 @@ impl ScheduledService for DiscordNotificationService {
             .replace("{start_time}", &start_time_str)
             .replace("{end_time}", &end_time_str);
 
-          if let Err(e) = block_on(async { channel.say(&http, &msg).await }) {
-            log::error!("[DiscordNotificationService] Failed to send start reminder: {e}");
-          } else {
-            Notification::add(&Notification {
-              notification_type: NotificationType::SessionStartReminder as i32,
-              session_id: id.clone(),
-              team_member_id: None,
-              sent: true,
-            })?;
+          match block_on(async { announcement_channel.say(&http, &msg).await }) {
+            Ok(sent_msg) => {
+              if settings.discord_rsvp_reactions_enabled {
+                // Add RSVP reaction emojis
+                let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👍".to_string())).await });
+                let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👎".to_string())).await });
+
+                // Store message → session mapping for reaction tracking
+                if let Err(e) = SessionRsvpMessage::set(&sent_msg.id.to_string(), id) {
+                  log::error!("[DiscordNotificationService] Failed to store RSVP message mapping: {e}");
+                }
+              }
+
+              Notification::add(&Notification {
+                notification_type: NotificationType::SessionStartReminder as i32,
+                session_id: id.clone(),
+                team_member_id: None,
+                sent: true,
+              })?;
+            }
+            Err(e) => {
+              log::error!("[DiscordNotificationService] Failed to send start reminder: {e}");
+            }
           }
         }
       }
@@ -134,7 +162,7 @@ impl ScheduledService for DiscordNotificationService {
             .replace("{start_time}", &start_time_str)
             .replace("{end_time}", &end_time_str);
 
-          if let Err(e) = block_on(async { channel.say(&http, &msg).await }) {
+          if let Err(e) = block_on(async { announcement_channel.say(&http, &msg).await }) {
             log::error!("[DiscordNotificationService] Failed to send end reminder: {e}");
           } else {
             Notification::add(&Notification {
@@ -201,7 +229,7 @@ impl ScheduledService for DiscordNotificationService {
               .replace("{location}", location)
               .replace("{end_time}", &end_time_str);
 
-            if Self::send_member_notification(&http, channel, &msg)
+            if Self::send_member_notification(&http, notification_channel, &msg)
               && let Err(e) = Notification::add(&Notification {
                 notification_type: NotificationType::Overtime as i32,
                 session_id: pes.session_id.clone(),
@@ -247,7 +275,7 @@ impl ScheduledService for DiscordNotificationService {
             .replace("{location}", location)
             .replace("{end_time}", &end_time_str);
 
-          if Self::send_member_notification(&http, channel, &msg) {
+          if Self::send_member_notification(&http, notification_channel, &msg) {
             let mut updated = notification.clone();
             updated.sent = true;
             if let Err(e) = Notification::update(&notif_id, &updated) {

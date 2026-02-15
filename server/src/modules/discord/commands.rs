@@ -6,7 +6,7 @@ use crate::core::time::{format_datetime, parse_tz};
 use crate::{
   generated::{
     common::Timestamp,
-    db::{Location, Session, Settings, TeamMember, TeamMemberSession},
+    db::{Location, Session, Settings, TeamMember, TeamMemberSession, TeamMemberType},
   },
   modules::{
     location::LocationRepository,
@@ -38,7 +38,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message) {
   let response = match cmd.as_str() {
     "ping" => Some("Pong!".to_string()),
     "help" => Some(help()),
-    "leaderboard" => Some(leaderboard()),
+    "leaderboard" => Some(leaderboard(args)),
     "sessions" => Some(sessions()),
     "checkedin" => Some(checked_in()),
     "locations" => Some(locations()),
@@ -58,7 +58,7 @@ fn help() -> String {
   [
     "**TimeKeeper Bot Commands**",
     "`!ping` - Check if the bot is alive",
-    "`!leaderboard` - Show the hours leaderboard",
+    "`!leaderboard` - Show the hours leaderboard, use `!leaderboard help` for options",
     "`!sessions` - Show active and upcoming sessions",
     "`!checkedin` - Show who is currently checked in",
     "`!locations` - List all locations",
@@ -77,16 +77,43 @@ fn format_secs(secs: f64) -> String {
   format!("{hours}h {mins}m")
 }
 
-fn leaderboard() -> String {
+fn leaderboard(args: &str) -> String {
+  let arg = args.trim();
+
+  if arg.eq_ignore_ascii_case("help") {
+    let mut lines = vec![
+      "**Leaderboard Options**".to_string(),
+      "`!leaderboard` \u{2014} Show leaderboard (default filter from settings)".to_string(),
+    ];
+    for i in 0.. {
+      let Ok(t) = TeamMemberType::try_from(i) else { break };
+      let name = t.as_str_name().to_lowercase();
+      lines.push(format!("`!leaderboard {name}s` \u{2014} Show only {name}s"));
+    }
+    return lines.join("\n");
+  }
+
   let settings = match Settings::get() {
     Ok(s) => s,
     Err(e) => return format!("Error loading settings: {e}"),
   };
 
-  let config = LeaderboardConfig {
+  let mut config = LeaderboardConfig {
     show_overtime: settings.leaderboard_show_overtime,
     member_types: settings.leaderboard_member_types,
   };
+
+  if !arg.is_empty() {
+    // Normalize: uppercase, strip trailing 'S' for plural ("MENTORS" → "MENTOR")
+    let mut normalized = arg.to_uppercase();
+    if normalized.ends_with('S') {
+      normalized.pop();
+    }
+    match TeamMemberType::from_str_name(&normalized) {
+      Some(t) => config.member_types = vec![t as i32],
+      None => return format!("Unknown filter \"{arg}\". Use `!leaderboard help` for options."),
+    }
+  }
 
   let entries = match compute_leaderboard(&config) {
     Ok(e) => e,

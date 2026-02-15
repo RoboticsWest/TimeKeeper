@@ -28,7 +28,8 @@ Future<GrpcResult<UpdateSettingsResponse>> updateSettings(
     discordEnabled: s.discordEnabled,
     discordBotToken: s.discordBotToken,
     discordGuildId: s.discordGuildId,
-    discordChannelId: s.discordChannelId,
+    discordAnnouncementChannelId: s.discordAnnouncementChannelId,
+    discordNotificationChannelId: s.discordNotificationChannelId,
     discordSelfLinkEnabled: s.discordSelfLinkEnabled,
     discordNameSyncEnabled: s.discordNameSyncEnabled,
     discordStartReminderMins: s.discordStartReminderMins,
@@ -45,6 +46,7 @@ Future<GrpcResult<UpdateSettingsResponse>> updateSettings(
     secondaryColor: s.secondaryColor,
     leaderboardShowOvertime: s.leaderboardShowOvertime,
     leaderboardMemberTypes: s.leaderboardMemberTypes,
+    discordRsvpReactionsEnabled: s.discordRsvpReactionsEnabled,
   );
 
   applyChanges(req);
