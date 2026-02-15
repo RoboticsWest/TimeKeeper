@@ -76,7 +76,6 @@ class _LeaderboardTable extends StatelessWidget {
                 Expanded(flex: 2, child: _HeaderText('Type')),
                 Expanded(flex: 2, child: _HeaderText('Session')),
                 Expanded(flex: 2, child: _HeaderText('Week')),
-                Expanded(flex: 2, child: _HeaderText('All Time')),
                 Expanded(flex: 2, child: _HeaderText('Total')),
               ],
             ),
@@ -163,7 +162,6 @@ class _LeaderboardRow extends StatelessWidget {
         Expanded(flex: 2, child: Center(child: Text(memberType))),
         Expanded(flex: 2, child: _HoursCell(bucket: entry.activeSession)),
         Expanded(flex: 2, child: _HoursCell(bucket: entry.thisWeek)),
-        Expanded(flex: 2, child: _HoursCell(bucket: entry.allTime)),
         Expanded(
           flex: 2,
           child: Center(
