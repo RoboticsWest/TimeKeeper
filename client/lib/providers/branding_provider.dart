@@ -4,12 +4,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/colors.dart';
 import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/helpers/local_storage.dart';
 import 'package:time_keeper/providers/health_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
 
 part 'branding_provider.g.dart';
 
+const _defaultPrimaryColorHex = '#009485';
+const _defaultSecondaryColorHex = '#005994';
 const _defaultPrimaryColor = Color(0xFF009485);
 const _defaultSecondaryColor = Color(0xFF005994);
 
@@ -42,8 +45,22 @@ Color? _parseHexColor(String hex) {
 
 @Riverpod(keepAlive: true)
 class BrandingNotifier extends _$BrandingNotifier {
+  final String _primaryColorKey = 'primary_color';
+  final String _secondaryColorKey = 'secondary_color';
+
   @override
   Branding build() {
+    // Get local storage for colors
+    final primaryColorHex = localStorage.getString(_primaryColorKey);
+    final secondaryColorHex = localStorage.getString(_secondaryColorKey);
+
+    final primaryColor = primaryColorHex != null
+        ? _parseHexColor(primaryColorHex) ?? _defaultPrimaryColor
+        : _defaultPrimaryColor;
+    final secondaryColor = secondaryColorHex != null
+        ? _parseHexColor(secondaryColorHex) ?? _defaultSecondaryColor
+        : _defaultSecondaryColor;
+
     ref.listen<AsyncValue<bool>>(isConnectedProvider, (prev, next) {
       final wasConnected = prev?.value ?? false;
       final isConnected = next.value ?? false;
@@ -53,8 +70,8 @@ class BrandingNotifier extends _$BrandingNotifier {
     });
 
     return Branding(
-      primaryColor: createMaterialColor(_defaultPrimaryColor),
-      secondaryColor: createMaterialColor(_defaultSecondaryColor),
+      primaryColor: createMaterialColor(primaryColor),
+      secondaryColor: createMaterialColor(secondaryColor),
     );
   }
 
@@ -69,12 +86,21 @@ class BrandingNotifier extends _$BrandingNotifier {
       () => client.getLogo(GetLogoRequest()),
     );
 
-    final primary = settingsResult is GrpcSuccess<GetSettingsResponse>
-        ? _parseHexColor(settingsResult.data.settings.primaryColor)
-        : null;
+    final (
+      primaryColorHex,
+      secondaryColorHex,
+    ) = settingsResult is GrpcSuccess<GetSettingsResponse>
+        ? (
+            settingsResult.data.settings.primaryColor,
+            settingsResult.data.settings.secondaryColor,
+          )
+        : (null, null);
 
-    final secondary = settingsResult is GrpcSuccess<GetSettingsResponse>
-        ? _parseHexColor(settingsResult.data.settings.secondaryColor)
+    final primaryColor = primaryColorHex != null
+        ? _parseHexColor(primaryColorHex)
+        : null;
+    final secondaryColor = secondaryColorHex != null
+        ? _parseHexColor(secondaryColorHex)
         : null;
 
     Uint8List? logoBytes;
@@ -83,9 +109,15 @@ class BrandingNotifier extends _$BrandingNotifier {
       logoBytes = Uint8List.fromList(logoResult.data.logo);
     }
 
+    // Set local storage
+    localStorage.setString(_primaryColorKey, primaryColorHex ?? '');
+    localStorage.setString(_secondaryColorKey, secondaryColorHex ?? '');
+
     final newBranding = Branding(
-      primaryColor: createMaterialColor(primary ?? _defaultPrimaryColor),
-      secondaryColor: createMaterialColor(secondary ?? _defaultSecondaryColor),
+      primaryColor: createMaterialColor(primaryColor ?? _defaultPrimaryColor),
+      secondaryColor: createMaterialColor(
+        secondaryColor ?? _defaultSecondaryColor,
+      ),
       logoBytes: logoBytes,
     );
 
