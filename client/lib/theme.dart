@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/colors.dart';
 
-ThemeData _buildTheme(Brightness brightness) {
+ThemeData _buildTheme(
+  Brightness brightness,
+  MaterialColor primary,
+  MaterialColor secondary,
+) {
   final bool isDark = brightness == Brightness.dark;
 
   // Subtle primary-tinted white for light mode cards/popups
-  final lightCardColor = Color.lerp(Colors.white, primaryColor[50], 0.3)!;
+  final lightCardColor = Color.lerp(Colors.white, primary[50], 0.3)!;
 
   final colorScheme = ColorScheme.fromSeed(
     brightness: brightness,
-    seedColor: primaryColor,
-    primary: primaryColor,
-    secondary: secondaryColor,
+    seedColor: primary,
+    primary: primary,
+    secondary: secondary,
     error: supportErrorColor,
     // Dark: neutral base with lighter containers | Light: lightSurfaceColor shades
     surface: isDark ? neutralColor : lightSurfaceColor[50],
@@ -27,7 +31,7 @@ ThemeData _buildTheme(Brightness brightness) {
     brightness: brightness,
     colorScheme: colorScheme,
     appBarTheme: AppBarTheme(
-      backgroundColor: primaryColor,
+      backgroundColor: primary,
       surfaceTintColor: Colors.transparent,
       foregroundColor: Colors.white,
       centerTitle: true,
@@ -36,10 +40,10 @@ ThemeData _buildTheme(Brightness brightness) {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
         elevation: WidgetStateProperty.all<double>(0.0),
-        backgroundColor: WidgetStateProperty.all<Color?>(primaryColor),
+        backgroundColor: WidgetStateProperty.all<Color?>(primary),
 
         foregroundColor: WidgetStateProperty.all<Color?>(Colors.white),
-        overlayColor: WidgetStateProperty.all<Color?>(primaryColor[800]),
+        overlayColor: WidgetStateProperty.all<Color?>(primary[800]),
         enableFeedback: true,
         shape: WidgetStateProperty.all<OutlinedBorder>(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -57,5 +61,8 @@ ThemeData _buildTheme(Brightness brightness) {
   );
 }
 
-ThemeData get darkTheme => _buildTheme(Brightness.dark);
-ThemeData get lightTheme => _buildTheme(Brightness.light);
+ThemeData buildDarkTheme(MaterialColor primary, MaterialColor secondary) =>
+    _buildTheme(Brightness.dark, primary, secondary);
+
+ThemeData buildLightTheme(MaterialColor primary, MaterialColor secondary) =>
+    _buildTheme(Brightness.light, primary, secondary);

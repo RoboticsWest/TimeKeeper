@@ -28,8 +28,20 @@ message UpdateSettingsRequest {
   string discord_auto_checkout_dm_message = 15;
   bool discord_checkout_enabled = 16;
   string timezone = 18;
+  string primary_color = 19;
+  string secondary_color = 20;
 }
 message UpdateSettingsResponse {}
+
+message UploadLogoRequest {
+  bytes logo = 1;
+}
+message UploadLogoResponse {}
+
+message GetLogoRequest {}
+message GetLogoResponse {
+  bytes logo = 1;
+}
 
 message PurgeDatabaseRequest {}
 message PurgeDatabaseResponse {}
@@ -57,6 +69,8 @@ message ImportDiscordMembersResponse {
 service SettingsService {
   rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
   rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+  rpc UploadLogo(UploadLogoRequest) returns (UploadLogoResponse);
+  rpc GetLogo(GetLogoRequest) returns (GetLogoResponse);
   rpc PurgeDatabase(PurgeDatabaseRequest) returns (PurgeDatabaseResponse);
   rpc GetDiscordRoles(GetDiscordRolesRequest) returns (GetDiscordRolesResponse);
   rpc ImportDiscordMembers(ImportDiscordMembersRequest) returns (ImportDiscordMembersResponse);

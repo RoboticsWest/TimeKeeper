@@ -268,6 +268,18 @@ final $typed_data.Uint8List notificationDescriptor = $convert.base64Decode(
     'b25JZBIpCg50ZWFtX21lbWJlcl9pZBgDIAEoCUgAUgx0ZWFtTWVtYmVySWSIAQESEgoEc2VudB'
     'gEIAEoCFIEc2VudEIRCg9fdGVhbV9tZW1iZXJfaWQ=');
 
+@$core.Deprecated('Use logoDescriptor instead')
+const Logo$json = {
+  '1': 'Logo',
+  '2': [
+    {'1': 'data', '3': 1, '4': 1, '5': 12, '10': 'data'},
+  ],
+};
+
+/// Descriptor for `Logo`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List logoDescriptor =
+    $convert.base64Decode('CgRMb2dvEhIKBGRhdGEYASABKAxSBGRhdGE=');
+
 @$core.Deprecated('Use settingsDescriptor instead')
 const Settings$json = {
   '1': 'Settings',
@@ -374,6 +386,8 @@ const Settings$json = {
     },
     {'1': 'discord_enabled', '3': 17, '4': 1, '5': 8, '10': 'discordEnabled'},
     {'1': 'timezone', '3': 18, '4': 1, '5': 9, '10': 'timezone'},
+    {'1': 'primary_color', '3': 19, '4': 1, '5': 9, '10': 'primaryColor'},
+    {'1': 'secondary_color', '3': 20, '4': 1, '5': 9, '10': 'secondaryColor'},
   ],
 };
 
@@ -397,4 +411,6 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'VkEkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGA8gASgJUhxkaXNjb3JkQXV0'
     'b0NoZWNrb3V0RG1NZXNzYWdlEjgKGGRpc2NvcmRfY2hlY2tvdXRfZW5hYmxlZBgQIAEoCFIWZG'
     'lzY29yZENoZWNrb3V0RW5hYmxlZBInCg9kaXNjb3JkX2VuYWJsZWQYESABKAhSDmRpc2NvcmRF'
-    'bmFibGVkEhoKCHRpbWV6b25lGBIgASgJUgh0aW1lem9uZQ==');
+    'bmFibGVkEhoKCHRpbWV6b25lGBIgASgJUgh0aW1lem9uZRIjCg1wcmltYXJ5X2NvbG9yGBMgAS'
+    'gJUgxwcmltYXJ5Q29sb3ISJwoPc2Vjb25kYXJ5X2NvbG9yGBQgASgJUg5zZWNvbmRhcnlDb2xv'
+    'cg==');

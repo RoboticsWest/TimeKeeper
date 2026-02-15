@@ -134,6 +134,8 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     $core.bool? discordCheckoutEnabled,
     $core.bool? discordEnabled,
     $core.String? timezone,
+    $core.String? primaryColor,
+    $core.String? secondaryColor,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -167,6 +169,8 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
       result.discordCheckoutEnabled = discordCheckoutEnabled;
     if (discordEnabled != null) result.discordEnabled = discordEnabled;
     if (timezone != null) result.timezone = timezone;
+    if (primaryColor != null) result.primaryColor = primaryColor;
+    if (secondaryColor != null) result.secondaryColor = secondaryColor;
     return result;
   }
 
@@ -201,6 +205,8 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     ..aOB(16, _omitFieldNames ? '' : 'discordCheckoutEnabled')
     ..aOB(17, _omitFieldNames ? '' : 'discordEnabled')
     ..aOS(18, _omitFieldNames ? '' : 'timezone')
+    ..aOS(19, _omitFieldNames ? '' : 'primaryColor')
+    ..aOS(20, _omitFieldNames ? '' : 'secondaryColor')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -385,6 +391,24 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
   $core.bool hasTimezone() => $_has(17);
   @$pb.TagNumber(18)
   void clearTimezone() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.String get primaryColor => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set primaryColor($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasPrimaryColor() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearPrimaryColor() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.String get secondaryColor => $_getSZ(19);
+  @$pb.TagNumber(20)
+  set secondaryColor($core.String value) => $_setString(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasSecondaryColor() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearSecondaryColor() => $_clearField(20);
 }
 
 class UpdateSettingsResponse extends $pb.GeneratedMessage {
@@ -424,6 +448,192 @@ class UpdateSettingsResponse extends $pb.GeneratedMessage {
   static UpdateSettingsResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<UpdateSettingsResponse>(create);
   static UpdateSettingsResponse? _defaultInstance;
+}
+
+class UploadLogoRequest extends $pb.GeneratedMessage {
+  factory UploadLogoRequest({
+    $core.List<$core.int>? logo,
+  }) {
+    final result = create();
+    if (logo != null) result.logo = logo;
+    return result;
+  }
+
+  UploadLogoRequest._();
+
+  factory UploadLogoRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UploadLogoRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UploadLogoRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'logo', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UploadLogoRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UploadLogoRequest copyWith(void Function(UploadLogoRequest) updates) =>
+      super.copyWith((message) => updates(message as UploadLogoRequest))
+          as UploadLogoRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UploadLogoRequest create() => UploadLogoRequest._();
+  @$core.override
+  UploadLogoRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UploadLogoRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UploadLogoRequest>(create);
+  static UploadLogoRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get logo => $_getN(0);
+  @$pb.TagNumber(1)
+  set logo($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLogo() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLogo() => $_clearField(1);
+}
+
+class UploadLogoResponse extends $pb.GeneratedMessage {
+  factory UploadLogoResponse() => create();
+
+  UploadLogoResponse._();
+
+  factory UploadLogoResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory UploadLogoResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'UploadLogoResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UploadLogoResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  UploadLogoResponse copyWith(void Function(UploadLogoResponse) updates) =>
+      super.copyWith((message) => updates(message as UploadLogoResponse))
+          as UploadLogoResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static UploadLogoResponse create() => UploadLogoResponse._();
+  @$core.override
+  UploadLogoResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static UploadLogoResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<UploadLogoResponse>(create);
+  static UploadLogoResponse? _defaultInstance;
+}
+
+class GetLogoRequest extends $pb.GeneratedMessage {
+  factory GetLogoRequest() => create();
+
+  GetLogoRequest._();
+
+  factory GetLogoRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetLogoRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetLogoRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetLogoRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetLogoRequest copyWith(void Function(GetLogoRequest) updates) =>
+      super.copyWith((message) => updates(message as GetLogoRequest))
+          as GetLogoRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetLogoRequest create() => GetLogoRequest._();
+  @$core.override
+  GetLogoRequest createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetLogoRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetLogoRequest>(create);
+  static GetLogoRequest? _defaultInstance;
+}
+
+class GetLogoResponse extends $pb.GeneratedMessage {
+  factory GetLogoResponse({
+    $core.List<$core.int>? logo,
+  }) {
+    final result = create();
+    if (logo != null) result.logo = logo;
+    return result;
+  }
+
+  GetLogoResponse._();
+
+  factory GetLogoResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GetLogoResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetLogoResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'logo', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetLogoResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetLogoResponse copyWith(void Function(GetLogoResponse) updates) =>
+      super.copyWith((message) => updates(message as GetLogoResponse))
+          as GetLogoResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetLogoResponse create() => GetLogoResponse._();
+  @$core.override
+  GetLogoResponse createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GetLogoResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetLogoResponse>(create);
+  static GetLogoResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get logo => $_getN(0);
+  @$pb.TagNumber(1)
+  set logo($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasLogo() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLogo() => $_clearField(1);
 }
 
 class PurgeDatabaseRequest extends $pb.GeneratedMessage {

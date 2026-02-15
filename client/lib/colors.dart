@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 
-// const _primaryColor = Colors.blue;
-// const _primaryColor = Colors.pink;
-const _primaryColor = Color(0xFF009485);
-const _secondaryColor = Color(0xFF005994);
-
 const _supportErrorColor = Color(0xFFD92B2B);
 const _supportWarningColor = Color(0xFFD9822B);
 const _supportSuccessColor = Color(0xFF2BD92B);
@@ -18,7 +13,7 @@ const _surfaceColor = Color(0xFF282A31);
 // Light surface color for light theme backgrounds and containers
 const _lightSurfaceColor = Color(0xFFDAE1DE);
 
-MaterialColor _createMaterialColor(Color color) {
+MaterialColor createMaterialColor(Color color) {
   final strengths = <double>[.05, .1, .2, .3, .4, .5, .6, .7, .8, .9];
   final swatch = <int, Color>{};
   final r = color.r, g = color.g, b = color.b;
@@ -35,15 +30,13 @@ MaterialColor _createMaterialColor(Color color) {
   return MaterialColor(color.toARGB32(), swatch);
 }
 
-final primaryColor = _createMaterialColor(_primaryColor);
-final secondaryColor = _createMaterialColor(_secondaryColor);
-final supportErrorColor = _createMaterialColor(_supportErrorColor);
-final supportWarningColor = _createMaterialColor(_supportWarningColor);
-final supportSuccessColor = _createMaterialColor(_supportSuccessColor);
-final supportInfoColor = _createMaterialColor(_supportInfoColor);
-final neutralColor = _createMaterialColor(_neutralColor);
-final surfaceColor = _createMaterialColor(_surfaceColor);
-final lightSurfaceColor = _createMaterialColor(_lightSurfaceColor);
+final supportErrorColor = createMaterialColor(_supportErrorColor);
+final supportWarningColor = createMaterialColor(_supportWarningColor);
+final supportSuccessColor = createMaterialColor(_supportSuccessColor);
+final supportInfoColor = createMaterialColor(_supportInfoColor);
+final neutralColor = createMaterialColor(_neutralColor);
+final surfaceColor = createMaterialColor(_surfaceColor);
+final lightSurfaceColor = createMaterialColor(_lightSurfaceColor);
 
 // Vibrant colors palette - avoiding cyan/teal/blue to prevent clash with primary/secondary
 const _vibrantColorPalette = [

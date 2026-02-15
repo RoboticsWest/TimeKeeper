@@ -6,12 +6,16 @@ use crate::{
     db::get_db,
     events::{ChangeEvent, ChangeOperation, EVENT_BUS},
   },
-  generated::db::Settings,
+  generated::db::{Logo, Settings},
 };
 
 const SETTINGS_TABLE_NAME: &str = "settings";
 const SETTINGS_KEY: &str = "settings";
+const LOGO_TABLE_NAME: &str = "logo";
+const LOGO_KEY: &str = "logo";
 
+pub const DEFAULT_PRIMARY_COLOR: &str = "#009485";
+pub const DEFAULT_SECONDARY_COLOR: &str = "#005994";
 pub const DEFAULT_NEXT_SESSION_THRESHOLD_SECS: i64 = 4 * 60 * 60; // 4 hours
 pub const DEFAULT_START_REMINDER_MINS: i64 = 24 * 60; // 24 hours
 pub const DEFAULT_END_REMINDER_MINS: i64 = 15;
@@ -73,6 +77,8 @@ impl SettingsRepository for Settings {
       discord_auto_checkout_dm_message: DEFAULT_AUTO_CHECKOUT_DM_MESSAGE.to_string(),
       discord_checkout_enabled: false,
       timezone: String::new(),
+      primary_color: DEFAULT_PRIMARY_COLOR.to_string(),
+      secondary_color: DEFAULT_SECONDARY_COLOR.to_string(),
     };
 
     if let Some(s) = table.get::<Settings>(SETTINGS_KEY)? {
@@ -95,6 +101,39 @@ impl SettingsRepository for Settings {
 
     event_bus.publish(ChangeEvent::<Settings>::Table)?;
 
+    Ok(())
+  }
+}
+
+pub trait LogoRepository {
+  fn set(data: &[u8]) -> Result<()>;
+  fn get() -> Result<Option<Vec<u8>>>;
+  fn clear() -> Result<()>;
+}
+
+impl LogoRepository for Logo {
+  fn set(data: &[u8]) -> Result<()> {
+    let db = get_db()?;
+    let table = db.get_table(LOGO_TABLE_NAME);
+    let logo = Logo { data: data.to_vec() };
+    let insert = DataInsert { id: Some(LOGO_KEY.to_string()), value: logo, search_indexes: vec![] };
+    table.insert(insert)?;
+    Ok(())
+  }
+
+  fn get() -> Result<Option<Vec<u8>>> {
+    let db = get_db()?;
+    let table = db.get_table(LOGO_TABLE_NAME);
+    match table.get::<Logo>(LOGO_KEY)? {
+      Some(logo) if !logo.data.is_empty() => Ok(Some(logo.data)),
+      _ => Ok(None),
+    }
+  }
+
+  fn clear() -> Result<()> {
+    let db = get_db()?;
+    let table = db.get_table(LOGO_TABLE_NAME);
+    table.clear()?;
     Ok(())
   }
 }

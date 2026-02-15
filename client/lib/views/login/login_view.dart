@@ -5,21 +5,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/widgets/logo_widget.dart';
 
 class LoginView extends HookConsumerWidget {
   const LoginView({super.key});
-
-  Widget _logo() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 25),
-          child: Image.asset('assets/logos/logo.png', width: 150),
-        ),
-      ],
-    );
-  }
 
   Widget _username(TextEditingController controller) {
     return SizedBox(
@@ -85,7 +74,10 @@ class LoginView extends HookConsumerWidget {
     Widget loginWidget() {
       return Column(
         children: [
-          _logo(),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 25),
+            child: LogoWidget(width: 150),
+          ),
           _username(usernameController),
           _password(passwordController),
           if (isLoading.value)
@@ -107,7 +99,10 @@ class LoginView extends HookConsumerWidget {
     Widget logoutWidget() {
       return Column(
         children: [
-          _logo(),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 25),
+            child: LogoWidget(width: 150),
+          ),
           Text('Logged in as $username'),
           const SizedBox(height: 20),
           SizedBox(
