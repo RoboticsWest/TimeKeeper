@@ -44,6 +44,19 @@ final $typed_data.Uint8List notificationTypeDescriptor = $convert.base64Decode(
     'ChBOb3RpZmljYXRpb25UeXBlEhoKFlNFU1NJT05fU1RBUlRfUkVNSU5ERVIQABIYChRTRVNTSU'
     '9OX0VORF9SRU1JTkRFUhABEgwKCE9WRVJUSU1FEAISEQoNQVVUT19DSEVDS09VVBAD');
 
+@$core.Deprecated('Use rsvpStatusDescriptor instead')
+const RsvpStatus$json = {
+  '1': 'RsvpStatus',
+  '2': [
+    {'1': 'GOING', '2': 0},
+    {'1': 'NOT_GOING', '2': 1},
+  ],
+};
+
+/// Descriptor for `RsvpStatus`. Decode as a `google.protobuf.EnumDescriptorProto`.
+final $typed_data.Uint8List rsvpStatusDescriptor = $convert
+    .base64Decode('CgpSc3ZwU3RhdHVzEgkKBUdPSU5HEAASDQoJTk9UX0dPSU5HEAE=');
+
 @$core.Deprecated('Use secretDescriptor instead')
 const Secret$json = {
   '1': 'Secret',
@@ -280,6 +293,49 @@ const Logo$json = {
 final $typed_data.Uint8List logoDescriptor =
     $convert.base64Decode('CgRMb2dvEhIKBGRhdGEYASABKAxSBGRhdGE=');
 
+@$core.Deprecated('Use sessionRsvpDescriptor instead')
+const SessionRsvp$json = {
+  '1': 'SessionRsvp',
+  '2': [
+    {'1': 'session_id', '3': 1, '4': 1, '5': 9, '10': 'sessionId'},
+    {'1': 'team_member_id', '3': 2, '4': 1, '5': 9, '10': 'teamMemberId'},
+    {
+      '1': 'status',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.tk.db.RsvpStatus',
+      '10': 'status'
+    },
+  ],
+};
+
+/// Descriptor for `SessionRsvp`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sessionRsvpDescriptor = $convert.base64Decode(
+    'CgtTZXNzaW9uUnN2cBIdCgpzZXNzaW9uX2lkGAEgASgJUglzZXNzaW9uSWQSJAoOdGVhbV9tZW'
+    '1iZXJfaWQYAiABKAlSDHRlYW1NZW1iZXJJZBIpCgZzdGF0dXMYAyABKA4yES50ay5kYi5Sc3Zw'
+    'U3RhdHVzUgZzdGF0dXM=');
+
+@$core.Deprecated('Use sessionRsvpMessageDescriptor instead')
+const SessionRsvpMessage$json = {
+  '1': 'SessionRsvpMessage',
+  '2': [
+    {
+      '1': 'discord_message_id',
+      '3': 1,
+      '4': 1,
+      '5': 9,
+      '10': 'discordMessageId'
+    },
+    {'1': 'session_id', '3': 2, '4': 1, '5': 9, '10': 'sessionId'},
+  ],
+};
+
+/// Descriptor for `SessionRsvpMessage`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List sessionRsvpMessageDescriptor = $convert.base64Decode(
+    'ChJTZXNzaW9uUnN2cE1lc3NhZ2USLAoSZGlzY29yZF9tZXNzYWdlX2lkGAEgASgJUhBkaXNjb3'
+    'JkTWVzc2FnZUlkEh0KCnNlc3Npb25faWQYAiABKAlSCXNlc3Npb25JZA==');
+
 @$core.Deprecated('Use settingsDescriptor instead')
 const Settings$json = {
   '1': 'Settings',
@@ -403,6 +459,13 @@ const Settings$json = {
       '6': '.tk.db.TeamMemberType',
       '10': 'leaderboardMemberTypes'
     },
+    {
+      '1': 'discord_rsvp_reactions_enabled',
+      '3': 23,
+      '4': 1,
+      '5': 8,
+      '10': 'discordRsvpReactionsEnabled'
+    },
   ],
 };
 
@@ -430,4 +493,5 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'gJUgxwcmltYXJ5Q29sb3ISJwoPc2Vjb25kYXJ5X2NvbG9yGBQgASgJUg5zZWNvbmRhcnlDb2xv'
     'chI6ChlsZWFkZXJib2FyZF9zaG93X292ZXJ0aW1lGBUgASgIUhdsZWFkZXJib2FyZFNob3dPdm'
     'VydGltZRJPChhsZWFkZXJib2FyZF9tZW1iZXJfdHlwZXMYFiADKA4yFS50ay5kYi5UZWFtTWVt'
-    'YmVyVHlwZVIWbGVhZGVyYm9hcmRNZW1iZXJUeXBlcw==');
+    'YmVyVHlwZVIWbGVhZGVyYm9hcmRNZW1iZXJUeXBlcxJDCh5kaXNjb3JkX3JzdnBfcmVhY3Rpb2'
+    '5zX2VuYWJsZWQYFyABKAhSG2Rpc2NvcmRSc3ZwUmVhY3Rpb25zRW5hYmxlZA==');

@@ -138,6 +138,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
     $core.String? secondaryColor,
     $core.bool? leaderboardShowOvertime,
     $core.Iterable<$1.TeamMemberType>? leaderboardMemberTypes,
+    $core.bool? discordRsvpReactionsEnabled,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -177,6 +178,8 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
       result.leaderboardShowOvertime = leaderboardShowOvertime;
     if (leaderboardMemberTypes != null)
       result.leaderboardMemberTypes.addAll(leaderboardMemberTypes);
+    if (discordRsvpReactionsEnabled != null)
+      result.discordRsvpReactionsEnabled = discordRsvpReactionsEnabled;
     return result;
   }
 
@@ -219,6 +222,7 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
         valueOf: $1.TeamMemberType.valueOf,
         enumValues: $1.TeamMemberType.values,
         defaultEnumValue: $1.TeamMemberType.STUDENT)
+    ..aOB(23, _omitFieldNames ? '' : 'discordRsvpReactionsEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -433,6 +437,15 @@ class UpdateSettingsRequest extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(22)
   $pb.PbList<$1.TeamMemberType> get leaderboardMemberTypes => $_getList(21);
+
+  @$pb.TagNumber(23)
+  $core.bool get discordRsvpReactionsEnabled => $_getBF(22);
+  @$pb.TagNumber(23)
+  set discordRsvpReactionsEnabled($core.bool value) => $_setBool(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasDiscordRsvpReactionsEnabled() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearDiscordRsvpReactionsEnabled() => $_clearField(23);
 }
 
 class UpdateSettingsResponse extends $pb.GeneratedMessage {

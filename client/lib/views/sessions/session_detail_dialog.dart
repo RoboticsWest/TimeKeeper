@@ -14,6 +14,7 @@ void showSessionDetailDialog(
   required Map<String, Location> locations,
   required Map<String, TeamMember> teamMembers,
   required Map<String, TeamMemberSession> teamMemberSessions,
+  required Map<String, SessionRsvp> sessionRsvps,
 }) {
   final start = session.startTime.toDateTime();
   final end = session.endTime.toDateTime();
@@ -56,6 +57,24 @@ void showSessionDetailDialog(
           _InfoRow(label: 'Duration', value: formatDuration(duration)),
           _InfoRow(label: 'Location', value: locationName),
           _InfoRow(label: 'Status', value: statusLabel(status)),
+          Builder(
+            builder: (context) {
+              final rsvps = sessionRsvps.values
+                  .where((r) => r.sessionId == sessionId)
+                  .toList();
+              final going = rsvps
+                  .where((r) => r.status == RsvpStatus.GOING)
+                  .length;
+              final notGoing = rsvps
+                  .where((r) => r.status == RsvpStatus.NOT_GOING)
+                  .length;
+              if (rsvps.isEmpty) return const SizedBox.shrink();
+              return _InfoRow(
+                label: 'RSVPs',
+                value: 'Going: $going, Not Going: $notGoing',
+              );
+            },
+          ),
           const Divider(height: 24),
 
           Text(

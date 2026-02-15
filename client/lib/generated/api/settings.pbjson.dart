@@ -167,6 +167,13 @@ const UpdateSettingsRequest$json = {
       '6': '.tk.db.TeamMemberType',
       '10': 'leaderboardMemberTypes'
     },
+    {
+      '1': 'discord_rsvp_reactions_enabled',
+      '3': 23,
+      '4': 1,
+      '5': 8,
+      '10': 'discordRsvpReactionsEnabled'
+    },
   ],
 };
 
@@ -194,7 +201,9 @@ final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Dec
     'FyeV9jb2xvchgTIAEoCVIMcHJpbWFyeUNvbG9yEicKD3NlY29uZGFyeV9jb2xvchgUIAEoCVIO'
     'c2Vjb25kYXJ5Q29sb3ISOgoZbGVhZGVyYm9hcmRfc2hvd19vdmVydGltZRgVIAEoCFIXbGVhZG'
     'VyYm9hcmRTaG93T3ZlcnRpbWUSTwoYbGVhZGVyYm9hcmRfbWVtYmVyX3R5cGVzGBYgAygOMhUu'
-    'dGsuZGIuVGVhbU1lbWJlclR5cGVSFmxlYWRlcmJvYXJkTWVtYmVyVHlwZXM=');
+    'dGsuZGIuVGVhbU1lbWJlclR5cGVSFmxlYWRlcmJvYXJkTWVtYmVyVHlwZXMSQwoeZGlzY29yZF'
+    '9yc3ZwX3JlYWN0aW9uc19lbmFibGVkGBcgASgIUhtkaXNjb3JkUnN2cFJlYWN0aW9uc0VuYWJs'
+    'ZWQ=');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {

@@ -3226,6 +3226,8 @@ pub struct UpdateSettingsRequest {
     pub leaderboard_show_overtime: bool,
     #[prost(enumeration = "super::db::TeamMemberType", repeated, tag = "22")]
     pub leaderboard_member_types: ::prost::alloc::vec::Vec<i32>,
+    #[prost(bool, tag = "23")]
+    pub discord_rsvp_reactions_enabled: bool,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateSettingsResponse {}
@@ -4364,6 +4366,425 @@ pub mod statistics_service_server {
     /// Generated gRPC service name
     pub const SERVICE_NAME: &str = "tk.api.StatisticsService";
     impl<T> tonic::server::NamedService for StatisticsServiceServer<T> {
+        const NAME: &'static str = SERVICE_NAME;
+    }
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SessionRsvpResponse {
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub rsvp: ::core::option::Option<super::db::SessionRsvp>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetSessionRsvpsRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GetSessionRsvpsResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub rsvps: ::prost::alloc::vec::Vec<SessionRsvpResponse>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamSessionRsvpsRequest {}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamSessionRsvpsResponse {
+    #[prost(message, repeated, tag = "1")]
+    pub rsvps: ::prost::alloc::vec::Vec<SessionRsvpResponse>,
+    #[prost(enumeration = "super::common::SyncType", tag = "2")]
+    pub sync_type: i32,
+}
+/// Generated client implementations.
+pub mod session_rsvp_service_client {
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
+    use tonic::codegen::*;
+    use tonic::codegen::http::Uri;
+    #[derive(Debug, Clone)]
+    pub struct SessionRsvpServiceClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl SessionRsvpServiceClient<tonic::transport::Channel> {
+        /// Attempt to create a new client by connecting to a given endpoint.
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> SessionRsvpServiceClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::Body>,
+        T::Error: Into<StdError>,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
+            let inner = tonic::client::Grpc::with_origin(inner, origin);
+            Self { inner }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> SessionRsvpServiceClient<InterceptedService<T, F>>
+        where
+            F: tonic::service::Interceptor,
+            T::ResponseBody: Default,
+            T: tonic::codegen::Service<
+                http::Request<tonic::body::Body>,
+                Response = http::Response<
+                    <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
+                >,
+            >,
+            <T as tonic::codegen::Service<
+                http::Request<tonic::body::Body>,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
+        {
+            SessionRsvpServiceClient::new(InterceptedService::new(inner, interceptor))
+        }
+        /// Compress requests with the given encoding.
+        ///
+        /// This requires the server to support it otherwise it might respond with an
+        /// error.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.send_compressed(encoding);
+            self
+        }
+        /// Enable decompressing responses.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.accept_compressed(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_decoding_message_size(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_encoding_message_size(limit);
+            self
+        }
+        pub async fn get_session_rsvps(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetSessionRsvpsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetSessionRsvpsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SessionRsvpService/GetSessionRsvps",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("tk.api.SessionRsvpService", "GetSessionRsvps"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn stream_session_rsvps(
+            &mut self,
+            request: impl tonic::IntoRequest<super::StreamSessionRsvpsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<tonic::codec::Streaming<super::StreamSessionRsvpsResponse>>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SessionRsvpService/StreamSessionRsvps",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("tk.api.SessionRsvpService", "StreamSessionRsvps"),
+                );
+            self.inner.server_streaming(req, path, codec).await
+        }
+    }
+}
+/// Generated server implementations.
+pub mod session_rsvp_service_server {
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
+    use tonic::codegen::*;
+    /// Generated trait containing gRPC methods that should be implemented for use with SessionRsvpServiceServer.
+    #[async_trait]
+    pub trait SessionRsvpService: std::marker::Send + std::marker::Sync + 'static {
+        async fn get_session_rsvps(
+            &self,
+            request: tonic::Request<super::GetSessionRsvpsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetSessionRsvpsResponse>,
+            tonic::Status,
+        >;
+        /// Server streaming response type for the StreamSessionRsvps method.
+        type StreamSessionRsvpsStream: tonic::codegen::tokio_stream::Stream<
+                Item = std::result::Result<
+                    super::StreamSessionRsvpsResponse,
+                    tonic::Status,
+                >,
+            >
+            + std::marker::Send
+            + 'static;
+        async fn stream_session_rsvps(
+            &self,
+            request: tonic::Request<super::StreamSessionRsvpsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<Self::StreamSessionRsvpsStream>,
+            tonic::Status,
+        >;
+    }
+    #[derive(Debug)]
+    pub struct SessionRsvpServiceServer<T> {
+        inner: Arc<T>,
+        accept_compression_encodings: EnabledCompressionEncodings,
+        send_compression_encodings: EnabledCompressionEncodings,
+        max_decoding_message_size: Option<usize>,
+        max_encoding_message_size: Option<usize>,
+    }
+    impl<T> SessionRsvpServiceServer<T> {
+        pub fn new(inner: T) -> Self {
+            Self::from_arc(Arc::new(inner))
+        }
+        pub fn from_arc(inner: Arc<T>) -> Self {
+            Self {
+                inner,
+                accept_compression_encodings: Default::default(),
+                send_compression_encodings: Default::default(),
+                max_decoding_message_size: None,
+                max_encoding_message_size: None,
+            }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> InterceptedService<Self, F>
+        where
+            F: tonic::service::Interceptor,
+        {
+            InterceptedService::new(Self::new(inner), interceptor)
+        }
+        /// Enable decompressing requests with the given encoding.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.accept_compression_encodings.enable(encoding);
+            self
+        }
+        /// Compress responses with the given encoding, if the client supports it.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.send_compression_encodings.enable(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.max_decoding_message_size = Some(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.max_encoding_message_size = Some(limit);
+            self
+        }
+    }
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for SessionRsvpServiceServer<T>
+    where
+        T: SessionRsvpService,
+        B: Body + std::marker::Send + 'static,
+        B::Error: Into<StdError> + std::marker::Send + 'static,
+    {
+        type Response = http::Response<tonic::body::Body>;
+        type Error = std::convert::Infallible;
+        type Future = BoxFuture<Self::Response, Self::Error>;
+        fn poll_ready(
+            &mut self,
+            _cx: &mut Context<'_>,
+        ) -> Poll<std::result::Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+            match req.uri().path() {
+                "/tk.api.SessionRsvpService/GetSessionRsvps" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetSessionRsvpsSvc<T: SessionRsvpService>(pub Arc<T>);
+                    impl<
+                        T: SessionRsvpService,
+                    > tonic::server::UnaryService<super::GetSessionRsvpsRequest>
+                    for GetSessionRsvpsSvc<T> {
+                        type Response = super::GetSessionRsvpsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::GetSessionRsvpsRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SessionRsvpService>::get_session_rsvps(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = GetSessionRsvpsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SessionRsvpService/StreamSessionRsvps" => {
+                    #[allow(non_camel_case_types)]
+                    struct StreamSessionRsvpsSvc<T: SessionRsvpService>(pub Arc<T>);
+                    impl<
+                        T: SessionRsvpService,
+                    > tonic::server::ServerStreamingService<
+                        super::StreamSessionRsvpsRequest,
+                    > for StreamSessionRsvpsSvc<T> {
+                        type Response = super::StreamSessionRsvpsResponse;
+                        type ResponseStream = T::StreamSessionRsvpsStream;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::ResponseStream>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::StreamSessionRsvpsRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SessionRsvpService>::stream_session_rsvps(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = StreamSessionRsvpsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.server_streaming(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                _ => {
+                    Box::pin(async move {
+                        let mut response = http::Response::new(
+                            tonic::body::Body::default(),
+                        );
+                        let headers = response.headers_mut();
+                        headers
+                            .insert(
+                                tonic::Status::GRPC_STATUS,
+                                (tonic::Code::Unimplemented as i32).into(),
+                            );
+                        headers
+                            .insert(
+                                http::header::CONTENT_TYPE,
+                                tonic::metadata::GRPC_CONTENT_TYPE,
+                            );
+                        Ok(response)
+                    })
+                }
+            }
+        }
+    }
+    impl<T> Clone for SessionRsvpServiceServer<T> {
+        fn clone(&self) -> Self {
+            let inner = self.inner.clone();
+            Self {
+                inner,
+                accept_compression_encodings: self.accept_compression_encodings,
+                send_compression_encodings: self.send_compression_encodings,
+                max_decoding_message_size: self.max_decoding_message_size,
+                max_encoding_message_size: self.max_encoding_message_size,
+            }
+        }
+    }
+    /// Generated gRPC service name
+    pub const SERVICE_NAME: &str = "tk.api.SessionRsvpService";
+    impl<T> tonic::server::NamedService for SessionRsvpServiceServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }
 }
@@ -6320,7 +6741,7 @@ pub struct StreamEntitiesRequest {}
 pub struct StreamEntitiesResponse {
     #[prost(enumeration = "super::common::SyncType", tag = "1")]
     pub sync_type: i32,
-    #[prost(oneof = "stream_entities_response::Payload", tags = "2, 3, 4, 5, 6, 7")]
+    #[prost(oneof = "stream_entities_response::Payload", tags = "2, 3, 4, 5, 6, 7, 8")]
     pub payload: ::core::option::Option<stream_entities_response::Payload>,
 }
 /// Nested message and enum types in `StreamEntitiesResponse`.
@@ -6339,6 +6760,8 @@ pub mod stream_entities_response {
         RfidTags(super::StreamRfidTagsResponse),
         #[prost(message, tag = "7")]
         Notifications(super::StreamNotificationsResponse),
+        #[prost(message, tag = "8")]
+        SessionRsvps(super::StreamSessionRsvpsResponse),
     }
 }
 /// Generated client implementations.

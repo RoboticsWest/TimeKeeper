@@ -12,13 +12,16 @@ fn block_on<F: Future>(f: F) -> F::Output {
   tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(f))
 }
 
+use serenity::model::channel::ReactionType;
+
 use crate::{
   core::scheduler::ScheduledService,
-  generated::db::{Location, Notification, NotificationType, Session, Settings, TeamMember},
+  generated::db::{Location, Notification, NotificationType, Session, SessionRsvpMessage, Settings, TeamMember},
   modules::{
     location::LocationRepository,
     notification::NotificationRepository,
     session::{SessionRepository, helpers::get_past_end_sessions},
+    session_rsvp::SessionRsvpMessageRepository,
     settings::{
       DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_END_REMINDER_MESSAGE, DEFAULT_OVERTIME_DM_MESSAGE,
       DEFAULT_START_REMINDER_MESSAGE, SettingsRepository,
@@ -105,15 +108,29 @@ impl ScheduledService for DiscordNotificationService {
             .replace("{start_time}", &start_time_str)
             .replace("{end_time}", &end_time_str);
 
-          if let Err(e) = block_on(async { channel.say(&http, &msg).await }) {
-            log::error!("[DiscordNotificationService] Failed to send start reminder: {e}");
-          } else {
-            Notification::add(&Notification {
-              notification_type: NotificationType::SessionStartReminder as i32,
-              session_id: id.clone(),
-              team_member_id: None,
-              sent: true,
-            })?;
+          match block_on(async { channel.say(&http, &msg).await }) {
+            Ok(sent_msg) => {
+              if settings.discord_rsvp_reactions_enabled {
+                // Add RSVP reaction emojis
+                let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👍".to_string())).await });
+                let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👎".to_string())).await });
+
+                // Store message → session mapping for reaction tracking
+                if let Err(e) = SessionRsvpMessage::set(&sent_msg.id.to_string(), id) {
+                  log::error!("[DiscordNotificationService] Failed to store RSVP message mapping: {e}");
+                }
+              }
+
+              Notification::add(&Notification {
+                notification_type: NotificationType::SessionStartReminder as i32,
+                session_id: id.clone(),
+                team_member_id: None,
+                sent: true,
+              })?;
+            }
+            Err(e) => {
+              log::error!("[DiscordNotificationService] Failed to send start reminder: {e}");
+            }
           }
         }
       }

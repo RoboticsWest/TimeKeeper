@@ -81,6 +81,7 @@ impl SettingsRepository for Settings {
       secondary_color: DEFAULT_SECONDARY_COLOR.to_string(),
       leaderboard_show_overtime: true,
       leaderboard_member_types: vec![TeamMemberType::Student as i32, TeamMemberType::Mentor as i32],
+      discord_rsvp_reactions_enabled: true,
     };
 
     if let Some(s) = table.get::<Settings>(SETTINGS_KEY)? {
