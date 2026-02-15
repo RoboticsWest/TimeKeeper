@@ -103,7 +103,9 @@ pub struct Settings {
     #[prost(string, tag = "3")]
     pub discord_guild_id: ::prost::alloc::string::String,
     #[prost(string, tag = "4")]
-    pub discord_channel_id: ::prost::alloc::string::String,
+    pub discord_announcement_channel_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "24")]
+    pub discord_notification_channel_id: ::prost::alloc::string::String,
     #[prost(bool, tag = "5")]
     pub discord_self_link_enabled: bool,
     #[prost(bool, tag = "6")]

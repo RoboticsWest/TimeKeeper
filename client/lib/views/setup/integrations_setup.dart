@@ -22,7 +22,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final botTokenController = useTextEditingController();
     final guildIdController = useTextEditingController();
-    final channelIdController = useTextEditingController();
+    final channelAnnouncementIdController = useTextEditingController();
+    final channelNotificationIdController = useTextEditingController();
     final startReminderMinsController = useTextEditingController();
     final endReminderMinsController = useTextEditingController();
     final startReminderMessageController = useTextEditingController();
@@ -55,7 +56,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           discordEnabled.value = s.discordEnabled;
           botTokenController.text = s.discordBotToken;
           guildIdController.text = s.discordGuildId;
-          channelIdController.text = s.discordChannelId;
+          channelAnnouncementIdController.text = s.discordAnnouncementChannelId;
+          channelNotificationIdController.text = s.discordNotificationChannelId;
           final startMins = s.discordStartReminderMins;
           startReminderMinsController.text = startMins > 0
               ? startMins.toString()
@@ -93,7 +95,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
             ..discordEnabled = discordEnabled.value
             ..discordBotToken = botTokenController.text
             ..discordGuildId = guildIdController.text
-            ..discordChannelId = channelIdController.text
+            ..discordAnnouncementChannelId =
+                channelAnnouncementIdController.text
+            ..discordNotificationChannelId =
+                channelNotificationIdController.text
             ..discordStartReminderMins = Int64(
               int.tryParse(startReminderMinsController.text) ?? 1440,
             )
@@ -221,17 +226,29 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'Notification Channel ID',
+          label: 'Announcement Channel ID',
           description:
               'The ID of the channel where the bot will post session reminders (right-click channel, Copy Channel ID)',
-          controller: channelIdController,
+          controller: channelAnnouncementIdController,
+          hintText: 'Enter channel ID',
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Notification Channel ID',
+          description:
+              'The ID of the channel where the bot will post notifications and user directed messages (right-click channel, Copy Channel ID)',
+          controller: channelNotificationIdController,
           hintText: 'Enter channel ID',
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text('Reminders', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Reminders (Announcement Channel)',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 4),
         Text(
           'Configure when and what the bot posts before sessions start and end. '
@@ -365,7 +382,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text('Notifications', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Notifications (Notification Channel)',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 4),
         Text(
           'Send notifications to team members for overtime and auto-checkout warnings. '
