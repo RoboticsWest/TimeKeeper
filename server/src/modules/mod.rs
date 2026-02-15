@@ -6,6 +6,7 @@ pub mod rfid_tag;
 pub mod schedule;
 pub mod secret;
 pub mod session;
+pub mod session_rsvp;
 pub mod settings;
 pub mod statistics;
 pub mod sync;

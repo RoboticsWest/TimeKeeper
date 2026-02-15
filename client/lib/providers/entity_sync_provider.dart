@@ -8,6 +8,7 @@ import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/notification_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
+import 'package:time_keeper/providers/session_rsvp_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 
@@ -62,6 +63,10 @@ void entitySync(Ref ref) {
           ref
               .read(notificationsProvider.notifier)
               .syncFromStream(response.notifications);
+        case StreamEntitiesResponse_Payload.sessionRsvps:
+          ref
+              .read(sessionRsvpsProvider.notifier)
+              .syncFromStream(response.sessionRsvps);
         case StreamEntitiesResponse_Payload.notSet:
           break;
       }

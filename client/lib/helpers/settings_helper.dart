@@ -45,6 +45,7 @@ Future<GrpcResult<UpdateSettingsResponse>> updateSettings(
     secondaryColor: s.secondaryColor,
     leaderboardShowOvertime: s.leaderboardShowOvertime,
     leaderboardMemberTypes: s.leaderboardMemberTypes,
+    discordRsvpReactionsEnabled: s.discordRsvpReactionsEnabled,
   );
 
   applyChanges(req);

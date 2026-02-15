@@ -79,6 +79,22 @@ pub struct Logo {
     pub data: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SessionRsvp {
+    #[prost(string, tag = "1")]
+    pub session_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub team_member_id: ::prost::alloc::string::String,
+    #[prost(enumeration = "RsvpStatus", tag = "3")]
+    pub status: i32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SessionRsvpMessage {
+    #[prost(string, tag = "1")]
+    pub discord_message_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub session_id: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Settings {
     #[prost(int64, tag = "1")]
     pub next_session_threshold_secs: i64,
@@ -124,6 +140,8 @@ pub struct Settings {
     pub leaderboard_show_overtime: bool,
     #[prost(enumeration = "TeamMemberType", repeated, tag = "22")]
     pub leaderboard_member_types: ::prost::alloc::vec::Vec<i32>,
+    #[prost(bool, tag = "23")]
+    pub discord_rsvp_reactions_enabled: bool,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
@@ -179,6 +197,32 @@ impl NotificationType {
             "SESSION_END_REMINDER" => Some(Self::SessionEndReminder),
             "OVERTIME" => Some(Self::Overtime),
             "AUTO_CHECKOUT" => Some(Self::AutoCheckout),
+            _ => None,
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum RsvpStatus {
+    Going = 0,
+    NotGoing = 1,
+}
+impl RsvpStatus {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            Self::Going => "GOING",
+            Self::NotGoing => "NOT_GOING",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "GOING" => Some(Self::Going),
+            "NOT_GOING" => Some(Self::NotGoing),
             _ => None,
         }
     }

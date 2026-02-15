@@ -718,6 +718,151 @@ class Logo extends $pb.GeneratedMessage {
   void clearData() => $_clearField(1);
 }
 
+class SessionRsvp extends $pb.GeneratedMessage {
+  factory SessionRsvp({
+    $core.String? sessionId,
+    $core.String? teamMemberId,
+    RsvpStatus? status,
+  }) {
+    final result = create();
+    if (sessionId != null) result.sessionId = sessionId;
+    if (teamMemberId != null) result.teamMemberId = teamMemberId;
+    if (status != null) result.status = status;
+    return result;
+  }
+
+  SessionRsvp._();
+
+  factory SessionRsvp.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SessionRsvp.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SessionRsvp',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'sessionId')
+    ..aOS(2, _omitFieldNames ? '' : 'teamMemberId')
+    ..aE<RsvpStatus>(3, _omitFieldNames ? '' : 'status',
+        enumValues: RsvpStatus.values)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SessionRsvp clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SessionRsvp copyWith(void Function(SessionRsvp) updates) =>
+      super.copyWith((message) => updates(message as SessionRsvp))
+          as SessionRsvp;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SessionRsvp create() => SessionRsvp._();
+  @$core.override
+  SessionRsvp createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SessionRsvp getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SessionRsvp>(create);
+  static SessionRsvp? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get sessionId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set sessionId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSessionId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSessionId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get teamMemberId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set teamMemberId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTeamMemberId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTeamMemberId() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  RsvpStatus get status => $_getN(2);
+  @$pb.TagNumber(3)
+  set status(RsvpStatus value) => $_setField(3, value);
+  @$pb.TagNumber(3)
+  $core.bool hasStatus() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearStatus() => $_clearField(3);
+}
+
+class SessionRsvpMessage extends $pb.GeneratedMessage {
+  factory SessionRsvpMessage({
+    $core.String? discordMessageId,
+    $core.String? sessionId,
+  }) {
+    final result = create();
+    if (discordMessageId != null) result.discordMessageId = discordMessageId;
+    if (sessionId != null) result.sessionId = sessionId;
+    return result;
+  }
+
+  SessionRsvpMessage._();
+
+  factory SessionRsvpMessage.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory SessionRsvpMessage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'SessionRsvpMessage',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'discordMessageId')
+    ..aOS(2, _omitFieldNames ? '' : 'sessionId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SessionRsvpMessage clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  SessionRsvpMessage copyWith(void Function(SessionRsvpMessage) updates) =>
+      super.copyWith((message) => updates(message as SessionRsvpMessage))
+          as SessionRsvpMessage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static SessionRsvpMessage create() => SessionRsvpMessage._();
+  @$core.override
+  SessionRsvpMessage createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static SessionRsvpMessage getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<SessionRsvpMessage>(create);
+  static SessionRsvpMessage? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get discordMessageId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set discordMessageId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasDiscordMessageId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDiscordMessageId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get sessionId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set sessionId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSessionId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSessionId() => $_clearField(2);
+}
+
 class Settings extends $pb.GeneratedMessage {
   factory Settings({
     $fixnum.Int64? nextSessionThresholdSecs,
@@ -742,6 +887,7 @@ class Settings extends $pb.GeneratedMessage {
     $core.String? secondaryColor,
     $core.bool? leaderboardShowOvertime,
     $core.Iterable<TeamMemberType>? leaderboardMemberTypes,
+    $core.bool? discordRsvpReactionsEnabled,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -781,6 +927,8 @@ class Settings extends $pb.GeneratedMessage {
       result.leaderboardShowOvertime = leaderboardShowOvertime;
     if (leaderboardMemberTypes != null)
       result.leaderboardMemberTypes.addAll(leaderboardMemberTypes);
+    if (discordRsvpReactionsEnabled != null)
+      result.discordRsvpReactionsEnabled = discordRsvpReactionsEnabled;
     return result;
   }
 
@@ -823,6 +971,7 @@ class Settings extends $pb.GeneratedMessage {
         valueOf: TeamMemberType.valueOf,
         enumValues: TeamMemberType.values,
         defaultEnumValue: TeamMemberType.STUDENT)
+    ..aOB(23, _omitFieldNames ? '' : 'discordRsvpReactionsEnabled')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1035,6 +1184,15 @@ class Settings extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(22)
   $pb.PbList<TeamMemberType> get leaderboardMemberTypes => $_getList(21);
+
+  @$pb.TagNumber(23)
+  $core.bool get discordRsvpReactionsEnabled => $_getBF(22);
+  @$pb.TagNumber(23)
+  set discordRsvpReactionsEnabled($core.bool value) => $_setBool(22, value);
+  @$pb.TagNumber(23)
+  $core.bool hasDiscordRsvpReactionsEnabled() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearDiscordRsvpReactionsEnabled() => $_clearField(23);
 }
 
 const $core.bool _omitFieldNames =

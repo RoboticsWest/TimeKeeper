@@ -6,6 +6,7 @@ import "api/location.proto";
 import "api/notification.proto";
 import "api/rfid_tag.proto";
 import "api/session.proto";
+import "api/session_rsvp.proto";
 import "api/team_member.proto";
 import "api/team_member_session.proto";
 import "common/common.proto";
@@ -21,6 +22,7 @@ message StreamEntitiesResponse {
     StreamTeamMemberSessionsResponse team_member_sessions = 5;
     StreamRfidTagsResponse rfid_tags = 6;
     StreamNotificationsResponse notifications = 7;
+    StreamSessionRsvpsResponse session_rsvps = 8;
   }
 }
 

@@ -13,17 +13,19 @@ use crate::{
   },
   generated::{
     api::{
-      LocationResponse, NotificationResponse, RfidTagResponse, SessionResponse, StreamEntitiesRequest,
-      StreamEntitiesResponse, StreamLocationsResponse, StreamNotificationsResponse, StreamRfidTagsResponse,
-      StreamSessionsResponse, StreamTeamMemberSessionsResponse, StreamTeamMembersResponse, TeamMemberResponse,
-      TeamMemberSessionResponse, stream_entities_response::Payload, sync_service_server::SyncService,
+      LocationResponse, NotificationResponse, RfidTagResponse, SessionResponse, SessionRsvpResponse,
+      StreamEntitiesRequest, StreamEntitiesResponse, StreamLocationsResponse, StreamNotificationsResponse,
+      StreamRfidTagsResponse, StreamSessionRsvpsResponse, StreamSessionsResponse, StreamTeamMemberSessionsResponse,
+      StreamTeamMembersResponse, TeamMemberResponse, TeamMemberSessionResponse, stream_entities_response::Payload,
+      sync_service_server::SyncService,
     },
     common::SyncType,
-    db::{Location, Notification, RfidTag, Session, TeamMember, TeamMemberSession},
+    db::{Location, Notification, RfidTag, Session, SessionRsvp, TeamMember, TeamMemberSession},
   },
   modules::{
     location::LocationRepository, notification::NotificationRepository, rfid_tag::RfidTagRepository,
-    session::SessionRepository, team_member::TeamMemberRepository, team_member_session::TeamMemberSessionRepository,
+    session::SessionRepository, session_rsvp::SessionRsvpRepository, team_member::TeamMemberRepository,
+    team_member_session::TeamMemberSessionRepository,
   },
 };
 
@@ -71,6 +73,14 @@ fn get_all_notifications() -> std::result::Result<Vec<NotificationResponse>, Sta
     .collect()
 }
 
+fn get_all_session_rsvps() -> std::result::Result<Vec<SessionRsvpResponse>, Status> {
+  SessionRsvp::get_all()
+    .map_err(|e| Status::internal(format!("Failed to get session RSVPs: {e}")))?
+    .into_iter()
+    .map(|(id, rsvp)| Ok(SessionRsvpResponse { id, rsvp: Some(rsvp) }))
+    .collect()
+}
+
 fn get_all_team_member_sessions() -> std::result::Result<Vec<TeamMemberSessionResponse>, Status> {
   TeamMemberSession::get_all()
     .map_err(|e| Status::internal(format!("Failed to get team member sessions: {e}")))?
@@ -90,6 +100,7 @@ enum EntityEvent {
   TeamMemberSessions(StreamTeamMemberSessionsResponse),
   RfidTags(StreamRfidTagsResponse),
   Notifications(StreamNotificationsResponse),
+  SessionRsvps(StreamSessionRsvpsResponse),
 }
 
 impl EntityEvent {
@@ -104,6 +115,7 @@ impl EntityEvent {
       }
       Self::RfidTags(r) => StreamEntitiesResponse { sync_type: st, payload: Some(Payload::RfidTags(r)) },
       Self::Notifications(n) => StreamEntitiesResponse { sync_type: st, payload: Some(Payload::Notifications(n)) },
+      Self::SessionRsvps(r) => StreamEntitiesResponse { sync_type: st, payload: Some(Payload::SessionRsvps(r)) },
     }
   }
 }
@@ -128,6 +140,7 @@ impl SyncService for SyncApi {
     let initial_member_sessions = get_all_team_member_sessions()?;
     let initial_rfid_tags = get_all_rfid_tags()?;
     let initial_notifications = get_all_notifications()?;
+    let initial_session_rsvps = get_all_session_rsvps()?;
 
     let initial = vec![
       Ok(
@@ -169,6 +182,13 @@ impl SyncService for SyncApi {
         })
         .into_response(SyncType::Full),
       ),
+      Ok(
+        EntityEvent::SessionRsvps(StreamSessionRsvpsResponse {
+          rsvps: initial_session_rsvps,
+          sync_type: SyncType::Full as i32,
+        })
+        .into_response(SyncType::Full),
+      ),
     ];
 
     // ── Subscribe to all entity event bus channels ──────────────────
@@ -196,6 +216,10 @@ impl SyncService for SyncApi {
     let notification_rx = event_bus
       .subscribe::<Notification>()
       .map_err(|e| Status::internal(format!("Failed to subscribe to notification events: {e}")))?;
+
+    let session_rsvp_rx = event_bus
+      .subscribe::<SessionRsvp>()
+      .map_err(|e| Status::internal(format!("Failed to subscribe to session RSVP events: {e}")))?;
 
     // ── Map each broadcast stream to EntityEvent ────────────────────
 
@@ -364,6 +388,33 @@ impl SyncService for SyncApi {
       }
     });
 
+    let session_rsvp_stream = BroadcastStream::new(session_rsvp_rx).filter_map(|result| match result {
+      Ok(event) => match event {
+        ChangeEvent::Record { id, data, .. } => Some(Ok(
+          EntityEvent::SessionRsvps(StreamSessionRsvpsResponse {
+            rsvps: vec![SessionRsvpResponse { id, rsvp: data }],
+            sync_type: SyncType::Partial as i32,
+          })
+          .into_response(SyncType::Partial),
+        )),
+        ChangeEvent::Table => match get_all_session_rsvps() {
+          Ok(rsvps) => Some(Ok(
+            EntityEvent::SessionRsvps(StreamSessionRsvpsResponse { rsvps, sync_type: SyncType::Full as i32 })
+              .into_response(SyncType::Full),
+          )),
+          Err(e) => {
+            log::error!("Failed to get session RSVPs after table change: {e}");
+            None
+          }
+        },
+        _ => None,
+      },
+      Err(BroadcastStreamRecvError::Lagged(n)) => {
+        log::warn!("Entity session RSVP stream lagged by {n} messages");
+        None
+      }
+    });
+
     // ── Merge all streams ───────────────────────────────────────────
 
     let merged = session_stream
@@ -371,7 +422,8 @@ impl SyncService for SyncApi {
       .merge(member_stream)
       .merge(member_session_stream)
       .merge(rfid_tag_stream)
-      .merge(notification_stream);
+      .merge(notification_stream)
+      .merge(session_rsvp_stream);
 
     // Prepend initial snapshots, then chain live updates
     let full_stream = tokio_stream::iter(initial).chain(merged);
