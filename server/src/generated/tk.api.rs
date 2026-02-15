@@ -3222,6 +3222,10 @@ pub struct UpdateSettingsRequest {
     pub primary_color: ::prost::alloc::string::String,
     #[prost(string, tag = "20")]
     pub secondary_color: ::prost::alloc::string::String,
+    #[prost(bool, tag = "21")]
+    pub leaderboard_show_overtime: bool,
+    #[prost(enumeration = "super::db::TeamMemberType", repeated, tag = "22")]
+    pub leaderboard_member_types: ::prost::alloc::vec::Vec<i32>,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateSettingsResponse {}

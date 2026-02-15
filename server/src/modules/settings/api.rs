@@ -67,6 +67,8 @@ impl SettingsService for SettingsApi {
       timezone: req.timezone,
       primary_color: req.primary_color,
       secondary_color: req.secondary_color,
+      leaderboard_show_overtime: req.leaderboard_show_overtime,
+      leaderboard_member_types: req.leaderboard_member_types,
     };
     Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;
 

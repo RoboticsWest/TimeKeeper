@@ -30,6 +30,8 @@ message UpdateSettingsRequest {
   string timezone = 18;
   string primary_color = 19;
   string secondary_color = 20;
+  bool leaderboard_show_overtime = 21;
+  repeated db.TeamMemberType leaderboard_member_types = 22;
 }
 message UpdateSettingsResponse {}
 

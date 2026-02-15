@@ -740,6 +740,8 @@ class Settings extends $pb.GeneratedMessage {
     $core.String? timezone,
     $core.String? primaryColor,
     $core.String? secondaryColor,
+    $core.bool? leaderboardShowOvertime,
+    $core.Iterable<TeamMemberType>? leaderboardMemberTypes,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -775,6 +777,10 @@ class Settings extends $pb.GeneratedMessage {
     if (timezone != null) result.timezone = timezone;
     if (primaryColor != null) result.primaryColor = primaryColor;
     if (secondaryColor != null) result.secondaryColor = secondaryColor;
+    if (leaderboardShowOvertime != null)
+      result.leaderboardShowOvertime = leaderboardShowOvertime;
+    if (leaderboardMemberTypes != null)
+      result.leaderboardMemberTypes.addAll(leaderboardMemberTypes);
     return result;
   }
 
@@ -811,6 +817,12 @@ class Settings extends $pb.GeneratedMessage {
     ..aOS(18, _omitFieldNames ? '' : 'timezone')
     ..aOS(19, _omitFieldNames ? '' : 'primaryColor')
     ..aOS(20, _omitFieldNames ? '' : 'secondaryColor')
+    ..aOB(21, _omitFieldNames ? '' : 'leaderboardShowOvertime')
+    ..pc<TeamMemberType>(
+        22, _omitFieldNames ? '' : 'leaderboardMemberTypes', $pb.PbFieldType.KE,
+        valueOf: TeamMemberType.valueOf,
+        enumValues: TeamMemberType.values,
+        defaultEnumValue: TeamMemberType.STUDENT)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1011,6 +1023,18 @@ class Settings extends $pb.GeneratedMessage {
   $core.bool hasSecondaryColor() => $_has(19);
   @$pb.TagNumber(20)
   void clearSecondaryColor() => $_clearField(20);
+
+  @$pb.TagNumber(21)
+  $core.bool get leaderboardShowOvertime => $_getBF(20);
+  @$pb.TagNumber(21)
+  set leaderboardShowOvertime($core.bool value) => $_setBool(20, value);
+  @$pb.TagNumber(21)
+  $core.bool hasLeaderboardShowOvertime() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearLeaderboardShowOvertime() => $_clearField(21);
+
+  @$pb.TagNumber(22)
+  $pb.PbList<TeamMemberType> get leaderboardMemberTypes => $_getList(21);
 }
 
 const $core.bool _omitFieldNames =

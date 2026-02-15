@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use chrono::{Datelike, Utc};
+use chrono::Utc;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
@@ -14,6 +12,7 @@ use crate::{
     location::LocationRepository,
     session::{SessionRepository, helpers::is_member_checked_in},
     settings::SettingsRepository,
+    statistics::leaderboard::{LeaderboardConfig, compute_leaderboard},
     team_member::TeamMemberRepository,
     team_member_session::TeamMemberSessionRepository,
   },
@@ -79,70 +78,31 @@ fn format_secs(secs: f64) -> String {
 }
 
 fn leaderboard() -> String {
-  let sessions = match Session::get_all() {
+  let settings = match Settings::get() {
     Ok(s) => s,
-    Err(e) => return format!("Error loading sessions: {e}"),
-  };
-  let members = match TeamMember::get_all() {
-    Ok(m) => m,
-    Err(e) => return format!("Error loading team members: {e}"),
-  };
-  let member_sessions = match TeamMemberSession::get_all() {
-    Ok(ms) => ms,
-    Err(e) => return format!("Error loading attendance: {e}"),
+    Err(e) => return format!("Error loading settings: {e}"),
   };
 
-  let now_secs = Utc::now().timestamp();
-  let week_start = week_start_secs();
-  let week_end = week_start + 7 * 24 * 60 * 60;
+  let config = LeaderboardConfig {
+    show_overtime: settings.leaderboard_show_overtime,
+    member_types: settings.leaderboard_member_types,
+  };
 
-  // Accumulate hours per member
-  let mut totals: HashMap<String, (f64, f64)> = HashMap::new(); // (all_time, this_week)
+  let entries = match compute_leaderboard(&config) {
+    Ok(e) => e,
+    Err(e) => return format!("Error computing leaderboard: {e}"),
+  };
 
-  for ms in member_sessions.values() {
-    if ms.check_in_time.is_none() {
-      continue;
-    }
-    let Some(session) = sessions.get(&ms.session_id) else { continue };
-    if session.start_time.is_none() || session.end_time.is_none() {
-      continue;
-    }
-
-    let check_in = ms.check_in_time.as_ref().map_or(0, |t| t.seconds);
-    let check_out = ms.check_out_time.as_ref().map_or(now_secs, |t| t.seconds);
-    if check_out <= check_in {
-      continue;
-    }
-
-    #[allow(clippy::cast_precision_loss)]
-    let total = (check_out - check_in) as f64;
-
-    let session_start = session.start_time.as_ref().map_or(0, |t| t.seconds);
-    let is_this_week = session_start >= week_start && session_start < week_end;
-
-    let entry = totals.entry(ms.team_member_id.clone()).or_insert((0.0, 0.0));
-    entry.0 += total;
-    if is_this_week {
-      entry.1 += total;
-    }
-  }
-
-  if totals.is_empty() {
+  if entries.is_empty() {
     return "No attendance data yet.".to_string();
   }
 
-  let mut entries: Vec<_> = totals
-    .into_iter()
-    .filter_map(|(id, (all_time, this_week))| {
-      let member = members.get(&id)?;
-      Some((member_name(member), all_time, this_week))
-    })
-    .collect();
-
-  entries.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-
   let mut lines = vec!["**Leaderboard**".to_string()];
-  for (i, (name, all_time, this_week)) in entries.iter().enumerate().take(15) {
+  for (i, entry) in entries.iter().enumerate().take(15) {
+    let name = entry.team_member.as_ref().map_or("Unknown", |m| m.display_name.as_deref().unwrap_or("Unknown"));
+    let all_time = entry.all_time.as_ref().map_or(0.0, |b| b.regular_secs + b.overtime_secs);
+    let this_week = entry.this_week.as_ref().map_or(0.0, |b| b.regular_secs + b.overtime_secs);
+
     let medal = match i {
       0 => "\u{1f947} ",
       1 => "\u{1f948} ",
@@ -152,8 +112,8 @@ fn leaderboard() -> String {
     lines.push(format!(
       "{medal}**{}.** {name} - {} (this week: {})",
       i + 1,
-      format_secs(*all_time),
-      format_secs(*this_week),
+      format_secs(all_time),
+      format_secs(this_week),
     ));
   }
 
@@ -414,13 +374,6 @@ fn checkout(msg: &Message) -> String {
   } else {
     format!("Checked out **{name}** at {}.", format_datetime(checkout_secs, &tz))
   }
-}
-
-fn week_start_secs() -> i64 {
-  let now = Utc::now();
-  let days_since_monday = i64::from(now.weekday().num_days_from_monday());
-  let monday = now.date_naive() - chrono::Duration::days(days_since_monday);
-  monday.and_hms_opt(0, 0, 0).map_or(0, |dt| dt.and_utc().timestamp())
 }
 
 /// Helper to allow method-chaining on references

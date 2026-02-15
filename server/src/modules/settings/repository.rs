@@ -6,7 +6,7 @@ use crate::{
     db::get_db,
     events::{ChangeEvent, ChangeOperation, EVENT_BUS},
   },
-  generated::db::{Logo, Settings},
+  generated::db::{Logo, Settings, TeamMemberType},
 };
 
 const SETTINGS_TABLE_NAME: &str = "settings";
@@ -79,6 +79,8 @@ impl SettingsRepository for Settings {
       timezone: String::new(),
       primary_color: DEFAULT_PRIMARY_COLOR.to_string(),
       secondary_color: DEFAULT_SECONDARY_COLOR.to_string(),
+      leaderboard_show_overtime: true,
+      leaderboard_member_types: vec![TeamMemberType::Student as i32, TeamMemberType::Mentor as i32],
     };
 
     if let Some(s) = table.get::<Settings>(SETTINGS_KEY)? {

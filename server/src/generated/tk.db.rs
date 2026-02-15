@@ -120,6 +120,10 @@ pub struct Settings {
     pub primary_color: ::prost::alloc::string::String,
     #[prost(string, tag = "20")]
     pub secondary_color: ::prost::alloc::string::String,
+    #[prost(bool, tag = "21")]
+    pub leaderboard_show_overtime: bool,
+    #[prost(enumeration = "TeamMemberType", repeated, tag = "22")]
+    pub leaderboard_member_types: ::prost::alloc::vec::Vec<i32>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

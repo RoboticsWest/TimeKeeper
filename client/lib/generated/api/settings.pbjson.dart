@@ -152,6 +152,21 @@ const UpdateSettingsRequest$json = {
     {'1': 'timezone', '3': 18, '4': 1, '5': 9, '10': 'timezone'},
     {'1': 'primary_color', '3': 19, '4': 1, '5': 9, '10': 'primaryColor'},
     {'1': 'secondary_color', '3': 20, '4': 1, '5': 9, '10': 'secondaryColor'},
+    {
+      '1': 'leaderboard_show_overtime',
+      '3': 21,
+      '4': 1,
+      '5': 8,
+      '10': 'leaderboardShowOvertime'
+    },
+    {
+      '1': 'leaderboard_member_types',
+      '3': 22,
+      '4': 3,
+      '5': 14,
+      '6': '.tk.db.TeamMemberType',
+      '10': 'leaderboardMemberTypes'
+    },
   ],
 };
 
@@ -177,7 +192,9 @@ final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Dec
     'NoZWNrb3V0RG1NZXNzYWdlEjgKGGRpc2NvcmRfY2hlY2tvdXRfZW5hYmxlZBgQIAEoCFIWZGlz'
     'Y29yZENoZWNrb3V0RW5hYmxlZBIaCgh0aW1lem9uZRgSIAEoCVIIdGltZXpvbmUSIwoNcHJpbW'
     'FyeV9jb2xvchgTIAEoCVIMcHJpbWFyeUNvbG9yEicKD3NlY29uZGFyeV9jb2xvchgUIAEoCVIO'
-    'c2Vjb25kYXJ5Q29sb3I=');
+    'c2Vjb25kYXJ5Q29sb3ISOgoZbGVhZGVyYm9hcmRfc2hvd19vdmVydGltZRgVIAEoCFIXbGVhZG'
+    'VyYm9hcmRTaG93T3ZlcnRpbWUSTwoYbGVhZGVyYm9hcmRfbWVtYmVyX3R5cGVzGBYgAygOMhUu'
+    'dGsuZGIuVGVhbU1lbWJlclR5cGVSFmxlYWRlcmJvYXJkTWVtYmVyVHlwZXM=');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {
