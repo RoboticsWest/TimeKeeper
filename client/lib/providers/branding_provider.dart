@@ -11,8 +11,6 @@ import 'package:time_keeper/utils/grpc_result.dart';
 
 part 'branding_provider.g.dart';
 
-const _defaultPrimaryColorHex = '#009485';
-const _defaultSecondaryColorHex = '#005994';
 const _defaultPrimaryColor = Color(0xFF009485);
 const _defaultSecondaryColor = Color(0xFF005994);
 
