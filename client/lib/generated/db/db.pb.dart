@@ -664,6 +664,60 @@ class Notification extends $pb.GeneratedMessage {
   void clearSent() => $_clearField(4);
 }
 
+class Logo extends $pb.GeneratedMessage {
+  factory Logo({
+    $core.List<$core.int>? data,
+  }) {
+    final result = create();
+    if (data != null) result.data = data;
+    return result;
+  }
+
+  Logo._();
+
+  factory Logo.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory Logo.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'Logo',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.db'),
+      createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(
+        1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Logo clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  Logo copyWith(void Function(Logo) updates) =>
+      super.copyWith((message) => updates(message as Logo)) as Logo;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Logo create() => Logo._();
+  @$core.override
+  Logo createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static Logo getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Logo>(create);
+  static Logo? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get data => $_getN(0);
+  @$pb.TagNumber(1)
+  set data($core.List<$core.int> value) => $_setBytes(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearData() => $_clearField(1);
+}
+
 class Settings extends $pb.GeneratedMessage {
   factory Settings({
     $fixnum.Int64? nextSessionThresholdSecs,
@@ -684,6 +738,8 @@ class Settings extends $pb.GeneratedMessage {
     $core.bool? discordCheckoutEnabled,
     $core.bool? discordEnabled,
     $core.String? timezone,
+    $core.String? primaryColor,
+    $core.String? secondaryColor,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -717,6 +773,8 @@ class Settings extends $pb.GeneratedMessage {
       result.discordCheckoutEnabled = discordCheckoutEnabled;
     if (discordEnabled != null) result.discordEnabled = discordEnabled;
     if (timezone != null) result.timezone = timezone;
+    if (primaryColor != null) result.primaryColor = primaryColor;
+    if (secondaryColor != null) result.secondaryColor = secondaryColor;
     return result;
   }
 
@@ -751,6 +809,8 @@ class Settings extends $pb.GeneratedMessage {
     ..aOB(16, _omitFieldNames ? '' : 'discordCheckoutEnabled')
     ..aOB(17, _omitFieldNames ? '' : 'discordEnabled')
     ..aOS(18, _omitFieldNames ? '' : 'timezone')
+    ..aOS(19, _omitFieldNames ? '' : 'primaryColor')
+    ..aOS(20, _omitFieldNames ? '' : 'secondaryColor')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -933,6 +993,24 @@ class Settings extends $pb.GeneratedMessage {
   $core.bool hasTimezone() => $_has(17);
   @$pb.TagNumber(18)
   void clearTimezone() => $_clearField(18);
+
+  @$pb.TagNumber(19)
+  $core.String get primaryColor => $_getSZ(18);
+  @$pb.TagNumber(19)
+  set primaryColor($core.String value) => $_setString(18, value);
+  @$pb.TagNumber(19)
+  $core.bool hasPrimaryColor() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearPrimaryColor() => $_clearField(19);
+
+  @$pb.TagNumber(20)
+  $core.String get secondaryColor => $_getSZ(19);
+  @$pb.TagNumber(20)
+  set secondaryColor($core.String value) => $_setString(19, value);
+  @$pb.TagNumber(20)
+  $core.bool hasSecondaryColor() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearSecondaryColor() => $_clearField(20);
 }
 
 const $core.bool _omitFieldNames =

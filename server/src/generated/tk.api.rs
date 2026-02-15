@@ -3218,9 +3218,27 @@ pub struct UpdateSettingsRequest {
     pub discord_checkout_enabled: bool,
     #[prost(string, tag = "18")]
     pub timezone: ::prost::alloc::string::String,
+    #[prost(string, tag = "19")]
+    pub primary_color: ::prost::alloc::string::String,
+    #[prost(string, tag = "20")]
+    pub secondary_color: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateSettingsResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UploadLogoRequest {
+    #[prost(bytes = "vec", tag = "1")]
+    pub logo: ::prost::alloc::vec::Vec<u8>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UploadLogoResponse {}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetLogoRequest {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct GetLogoResponse {
+    #[prost(bytes = "vec", tag = "1")]
+    pub logo: ::prost::alloc::vec::Vec<u8>,
+}
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct PurgeDatabaseRequest {}
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
@@ -3394,6 +3412,54 @@ pub mod settings_service_client {
                 .insert(GrpcMethod::new("tk.api.SettingsService", "UpdateSettings"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn upload_logo(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UploadLogoRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UploadLogoResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SettingsService/UploadLogo",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("tk.api.SettingsService", "UploadLogo"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn get_logo(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetLogoRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GetLogoResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SettingsService/GetLogo",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("tk.api.SettingsService", "GetLogo"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn purge_database(
             &mut self,
             request: impl tonic::IntoRequest<super::PurgeDatabaseRequest>,
@@ -3497,6 +3563,17 @@ pub mod settings_service_server {
             tonic::Response<super::UpdateSettingsResponse>,
             tonic::Status,
         >;
+        async fn upload_logo(
+            &self,
+            request: tonic::Request<super::UploadLogoRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UploadLogoResponse>,
+            tonic::Status,
+        >;
+        async fn get_logo(
+            &self,
+            request: tonic::Request<super::GetLogoRequest>,
+        ) -> std::result::Result<tonic::Response<super::GetLogoResponse>, tonic::Status>;
         async fn purge_database(
             &self,
             request: tonic::Request<super::PurgeDatabaseRequest>,
@@ -3671,6 +3748,96 @@ pub mod settings_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = UpdateSettingsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SettingsService/UploadLogo" => {
+                    #[allow(non_camel_case_types)]
+                    struct UploadLogoSvc<T: SettingsService>(pub Arc<T>);
+                    impl<
+                        T: SettingsService,
+                    > tonic::server::UnaryService<super::UploadLogoRequest>
+                    for UploadLogoSvc<T> {
+                        type Response = super::UploadLogoResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::UploadLogoRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SettingsService>::upload_logo(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UploadLogoSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SettingsService/GetLogo" => {
+                    #[allow(non_camel_case_types)]
+                    struct GetLogoSvc<T: SettingsService>(pub Arc<T>);
+                    impl<
+                        T: SettingsService,
+                    > tonic::server::UnaryService<super::GetLogoRequest>
+                    for GetLogoSvc<T> {
+                        type Response = super::GetLogoResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::GetLogoRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SettingsService>::get_logo(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = GetLogoSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

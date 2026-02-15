@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/providers/branding_provider.dart';
 import 'package:time_keeper/providers/theme_provider.dart';
 import 'package:time_keeper/providers/token_validator_provider.dart';
 import 'package:time_keeper/router/router.dart';
@@ -11,6 +12,7 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(appThemeModeProvider);
+    final branding = ref.watch(brandingProvider);
 
     // Initialize token validator to monitor app lifecycle
     ref.watch(tokenValidatorProvider);
@@ -20,8 +22,8 @@ class App extends ConsumerWidget {
       debugShowCheckedModeBanner: true,
       routerConfig: ref.watch(routerProvider),
       themeMode: themeMode,
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      theme: buildLightTheme(branding.primaryColor, branding.secondaryColor),
+      darkTheme: buildDarkTheme(branding.primaryColor, branding.secondaryColor),
       themeAnimationDuration: Duration.zero,
     );
   }

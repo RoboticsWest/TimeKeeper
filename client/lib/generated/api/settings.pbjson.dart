@@ -150,6 +150,8 @@ const UpdateSettingsRequest$json = {
       '10': 'discordCheckoutEnabled'
     },
     {'1': 'timezone', '3': 18, '4': 1, '5': 9, '10': 'timezone'},
+    {'1': 'primary_color', '3': 19, '4': 1, '5': 9, '10': 'primaryColor'},
+    {'1': 'secondary_color', '3': 20, '4': 1, '5': 9, '10': 'secondaryColor'},
   ],
 };
 
@@ -173,7 +175,9 @@ final $typed_data.Uint8List updateSettingsRequestDescriptor = $convert.base64Dec
     '9jaGVja291dF9kbV9lbmFibGVkGA4gASgIUhxkaXNjb3JkQXV0b0NoZWNrb3V0RG1FbmFibGVk'
     'EkYKIGRpc2NvcmRfYXV0b19jaGVja291dF9kbV9tZXNzYWdlGA8gASgJUhxkaXNjb3JkQXV0b0'
     'NoZWNrb3V0RG1NZXNzYWdlEjgKGGRpc2NvcmRfY2hlY2tvdXRfZW5hYmxlZBgQIAEoCFIWZGlz'
-    'Y29yZENoZWNrb3V0RW5hYmxlZBIaCgh0aW1lem9uZRgSIAEoCVIIdGltZXpvbmU=');
+    'Y29yZENoZWNrb3V0RW5hYmxlZBIaCgh0aW1lem9uZRgSIAEoCVIIdGltZXpvbmUSIwoNcHJpbW'
+    'FyeV9jb2xvchgTIAEoCVIMcHJpbWFyeUNvbG9yEicKD3NlY29uZGFyeV9jb2xvchgUIAEoCVIO'
+    'c2Vjb25kYXJ5Q29sb3I=');
 
 @$core.Deprecated('Use updateSettingsResponseDescriptor instead')
 const UpdateSettingsResponse$json = {
@@ -183,6 +187,48 @@ const UpdateSettingsResponse$json = {
 /// Descriptor for `UpdateSettingsResponse`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List updateSettingsResponseDescriptor =
     $convert.base64Decode('ChZVcGRhdGVTZXR0aW5nc1Jlc3BvbnNl');
+
+@$core.Deprecated('Use uploadLogoRequestDescriptor instead')
+const UploadLogoRequest$json = {
+  '1': 'UploadLogoRequest',
+  '2': [
+    {'1': 'logo', '3': 1, '4': 1, '5': 12, '10': 'logo'},
+  ],
+};
+
+/// Descriptor for `UploadLogoRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List uploadLogoRequestDescriptor = $convert
+    .base64Decode('ChFVcGxvYWRMb2dvUmVxdWVzdBISCgRsb2dvGAEgASgMUgRsb2dv');
+
+@$core.Deprecated('Use uploadLogoResponseDescriptor instead')
+const UploadLogoResponse$json = {
+  '1': 'UploadLogoResponse',
+};
+
+/// Descriptor for `UploadLogoResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List uploadLogoResponseDescriptor =
+    $convert.base64Decode('ChJVcGxvYWRMb2dvUmVzcG9uc2U=');
+
+@$core.Deprecated('Use getLogoRequestDescriptor instead')
+const GetLogoRequest$json = {
+  '1': 'GetLogoRequest',
+};
+
+/// Descriptor for `GetLogoRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getLogoRequestDescriptor =
+    $convert.base64Decode('Cg5HZXRMb2dvUmVxdWVzdA==');
+
+@$core.Deprecated('Use getLogoResponseDescriptor instead')
+const GetLogoResponse$json = {
+  '1': 'GetLogoResponse',
+  '2': [
+    {'1': 'logo', '3': 1, '4': 1, '5': 12, '10': 'logo'},
+  ],
+};
+
+/// Descriptor for `GetLogoResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getLogoResponseDescriptor = $convert
+    .base64Decode('Cg9HZXRMb2dvUmVzcG9uc2USEgoEbG9nbxgBIAEoDFIEbG9nbw==');
 
 @$core.Deprecated('Use purgeDatabaseRequestDescriptor instead')
 const PurgeDatabaseRequest$json = {

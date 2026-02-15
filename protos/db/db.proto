@@ -65,6 +65,10 @@ message Notification {
   bool sent = 4;
 }
 
+message Logo {
+  bytes data = 1;
+}
+
 message Settings {
   int64 next_session_threshold_secs = 1;
   string discord_bot_token = 2;
@@ -84,4 +88,6 @@ message Settings {
   bool discord_checkout_enabled = 16;
   bool discord_enabled = 17;
   string timezone = 18;
+  string primary_color = 19;
+  string secondary_color = 20;
 }

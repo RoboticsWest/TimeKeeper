@@ -41,6 +41,8 @@ Future<GrpcResult<UpdateSettingsResponse>> updateSettings(
     discordAutoCheckoutDmEnabled: s.discordAutoCheckoutDmEnabled,
     discordAutoCheckoutDmMessage: s.discordAutoCheckoutDmMessage,
     discordCheckoutEnabled: s.discordCheckoutEnabled,
+    primaryColor: s.primaryColor,
+    secondaryColor: s.secondaryColor,
   );
 
   applyChanges(req);

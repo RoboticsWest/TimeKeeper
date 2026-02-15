@@ -8,17 +8,25 @@ use crate::{
   core::db::recreate_default_admin,
   generated::{
     api::{
-      DiscordRole, GetDiscordRolesRequest, GetDiscordRolesResponse, GetSettingsRequest, GetSettingsResponse,
-      ImportDiscordMembersRequest, ImportDiscordMembersResponse, PurgeDatabaseRequest, PurgeDatabaseResponse,
-      UpdateSettingsRequest, UpdateSettingsResponse, settings_service_server::SettingsService,
+      DiscordRole, GetDiscordRolesRequest, GetDiscordRolesResponse, GetLogoRequest, GetLogoResponse,
+      GetSettingsRequest, GetSettingsResponse, ImportDiscordMembersRequest, ImportDiscordMembersResponse,
+      PurgeDatabaseRequest, PurgeDatabaseResponse, UpdateSettingsRequest, UpdateSettingsResponse, UploadLogoRequest,
+      UploadLogoResponse, settings_service_server::SettingsService,
     },
     common::Role,
-    db::{Location, Notification, Secret, Session, Settings, TeamMember, TeamMemberSession, TeamMemberType, User},
+    db::{
+      Location, Logo, Notification, Secret, Session, Settings, TeamMember, TeamMemberSession, TeamMemberType, User,
+    },
   },
   modules::{
-    location::LocationRepository, notification::NotificationRepository, secret::SecretRepository,
-    session::SessionRepository, settings::SettingsRepository, team_member::TeamMemberRepository,
-    team_member_session::TeamMemberSessionRepository, user::UserRepository,
+    location::LocationRepository,
+    notification::NotificationRepository,
+    secret::SecretRepository,
+    session::SessionRepository,
+    settings::{LogoRepository, SettingsRepository},
+    team_member::TeamMemberRepository,
+    team_member_session::TeamMemberSessionRepository,
+    user::UserRepository,
   },
 };
 
@@ -57,10 +65,24 @@ impl SettingsService for SettingsApi {
       discord_auto_checkout_dm_message: req.discord_auto_checkout_dm_message,
       discord_checkout_enabled: req.discord_checkout_enabled,
       timezone: req.timezone,
+      primary_color: req.primary_color,
+      secondary_color: req.secondary_color,
     };
     Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;
 
     Ok(Response::new(UpdateSettingsResponse {}))
+  }
+
+  async fn upload_logo(&self, request: Request<UploadLogoRequest>) -> Result<Response<UploadLogoResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let req = request.into_inner();
+    Logo::set(&req.logo).map_err(|e| Status::internal(format!("Failed to upload logo: {}", e)))?;
+    Ok(Response::new(UploadLogoResponse {}))
+  }
+
+  async fn get_logo(&self, _request: Request<GetLogoRequest>) -> Result<Response<GetLogoResponse>, Status> {
+    let logo = Logo::get().map_err(|e| Status::internal(format!("Failed to get logo: {}", e)))?;
+    Ok(Response::new(GetLogoResponse { logo: logo.unwrap_or_default() }))
   }
 
   async fn purge_database(
@@ -79,6 +101,7 @@ impl SettingsService for SettingsApi {
     User::clear().map_err(|e| Status::internal(format!("Failed to clear user data: {}", e)))?;
     Secret::clear().map_err(|e| Status::internal(format!("Failed to clear secret data: {}", e)))?;
     Settings::clear().map_err(|e| Status::internal(format!("Failed to clear settings data: {}", e)))?;
+    Logo::clear().map_err(|e| Status::internal(format!("Failed to clear logo data: {}", e)))?;
 
     log::warn!("Database purged by admin");
 

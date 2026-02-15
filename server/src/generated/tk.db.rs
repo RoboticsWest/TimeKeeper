@@ -74,6 +74,11 @@ pub struct Notification {
     pub sent: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Logo {
+    #[prost(bytes = "vec", tag = "1")]
+    pub data: ::prost::alloc::vec::Vec<u8>,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Settings {
     #[prost(int64, tag = "1")]
     pub next_session_threshold_secs: i64,
@@ -111,6 +116,10 @@ pub struct Settings {
     pub discord_enabled: bool,
     #[prost(string, tag = "18")]
     pub timezone: ::prost::alloc::string::String,
+    #[prost(string, tag = "19")]
+    pub primary_color: ::prost::alloc::string::String,
+    #[prost(string, tag = "20")]
+    pub secondary_color: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

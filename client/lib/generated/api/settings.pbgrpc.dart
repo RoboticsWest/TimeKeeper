@@ -46,6 +46,20 @@ class SettingsServiceClient extends $grpc.Client {
     return $createUnaryCall(_$updateSettings, request, options: options);
   }
 
+  $grpc.ResponseFuture<$0.UploadLogoResponse> uploadLogo(
+    $0.UploadLogoRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$uploadLogo, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.GetLogoResponse> getLogo(
+    $0.GetLogoRequest request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$getLogo, request, options: options);
+  }
+
   $grpc.ResponseFuture<$0.PurgeDatabaseResponse> purgeDatabase(
     $0.PurgeDatabaseRequest request, {
     $grpc.CallOptions? options,
@@ -79,6 +93,16 @@ class SettingsServiceClient extends $grpc.Client {
           '/tk.api.SettingsService/UpdateSettings',
           ($0.UpdateSettingsRequest value) => value.writeToBuffer(),
           $0.UpdateSettingsResponse.fromBuffer);
+  static final _$uploadLogo =
+      $grpc.ClientMethod<$0.UploadLogoRequest, $0.UploadLogoResponse>(
+          '/tk.api.SettingsService/UploadLogo',
+          ($0.UploadLogoRequest value) => value.writeToBuffer(),
+          $0.UploadLogoResponse.fromBuffer);
+  static final _$getLogo =
+      $grpc.ClientMethod<$0.GetLogoRequest, $0.GetLogoResponse>(
+          '/tk.api.SettingsService/GetLogo',
+          ($0.GetLogoRequest value) => value.writeToBuffer(),
+          $0.GetLogoResponse.fromBuffer);
   static final _$purgeDatabase =
       $grpc.ClientMethod<$0.PurgeDatabaseRequest, $0.PurgeDatabaseResponse>(
           '/tk.api.SettingsService/PurgeDatabase',
@@ -119,6 +143,20 @@ abstract class SettingsServiceBase extends $grpc.Service {
         ($core.List<$core.int> value) =>
             $0.UpdateSettingsRequest.fromBuffer(value),
         ($0.UpdateSettingsResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UploadLogoRequest, $0.UploadLogoResponse>(
+        'UploadLogo',
+        uploadLogo_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.UploadLogoRequest.fromBuffer(value),
+        ($0.UploadLogoResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.GetLogoRequest, $0.GetLogoResponse>(
+        'GetLogo',
+        getLogo_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.GetLogoRequest.fromBuffer(value),
+        ($0.GetLogoResponse value) => value.writeToBuffer()));
     $addMethod(
         $grpc.ServiceMethod<$0.PurgeDatabaseRequest, $0.PurgeDatabaseResponse>(
             'PurgeDatabase',
@@ -164,6 +202,22 @@ abstract class SettingsServiceBase extends $grpc.Service {
 
   $async.Future<$0.UpdateSettingsResponse> updateSettings(
       $grpc.ServiceCall call, $0.UpdateSettingsRequest request);
+
+  $async.Future<$0.UploadLogoResponse> uploadLogo_Pre($grpc.ServiceCall $call,
+      $async.Future<$0.UploadLogoRequest> $request) async {
+    return uploadLogo($call, await $request);
+  }
+
+  $async.Future<$0.UploadLogoResponse> uploadLogo(
+      $grpc.ServiceCall call, $0.UploadLogoRequest request);
+
+  $async.Future<$0.GetLogoResponse> getLogo_Pre($grpc.ServiceCall $call,
+      $async.Future<$0.GetLogoRequest> $request) async {
+    return getLogo($call, await $request);
+  }
+
+  $async.Future<$0.GetLogoResponse> getLogo(
+      $grpc.ServiceCall call, $0.GetLogoRequest request);
 
   $async.Future<$0.PurgeDatabaseResponse> purgeDatabase_Pre(
       $grpc.ServiceCall $call,

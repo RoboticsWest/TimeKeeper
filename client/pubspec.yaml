@@ -26,6 +26,7 @@ dependencies:
   window_manager: ^0.4.3
   async: ^2.8.2
   dart_pcsc: ^2.0.2
+  flutter_colorpicker: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -41,7 +42,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/logos/logo.png"
+  image_path: "assets/logos/default_logo.png"
   web:
     generate: true
   windows:
