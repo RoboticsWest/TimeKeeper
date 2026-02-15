@@ -58,5 +58,24 @@ class NotificationType extends $pb.ProtobufEnum {
   const NotificationType._(super.value, super.name);
 }
 
+class RsvpStatus extends $pb.ProtobufEnum {
+  static const RsvpStatus GOING =
+      RsvpStatus._(0, _omitEnumNames ? '' : 'GOING');
+  static const RsvpStatus NOT_GOING =
+      RsvpStatus._(1, _omitEnumNames ? '' : 'NOT_GOING');
+
+  static const $core.List<RsvpStatus> values = <RsvpStatus>[
+    GOING,
+    NOT_GOING,
+  ];
+
+  static final $core.List<RsvpStatus?> _byValue =
+      $pb.ProtobufEnum.$_initByValueList(values, 1);
+  static RsvpStatus? valueOf($core.int value) =>
+      value < 0 || value >= _byValue.length ? null : _byValue[value];
+
+  const RsvpStatus._(super.value, super.name);
+}
+
 const $core.bool _omitEnumNames =
     $core.bool.fromEnvironment('protobuf.omit_enum_names');

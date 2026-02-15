@@ -22,11 +22,13 @@ class IntegrationsSetupTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final botTokenController = useTextEditingController();
     final guildIdController = useTextEditingController();
-    final channelIdController = useTextEditingController();
+    final channelAnnouncementIdController = useTextEditingController();
+    final channelNotificationIdController = useTextEditingController();
     final startReminderMinsController = useTextEditingController();
     final endReminderMinsController = useTextEditingController();
     final startReminderMessageController = useTextEditingController();
     final endReminderMessageController = useTextEditingController();
+    final rsvpReactionsEnabled = useState(true);
     final selfLinkEnabled = useState(false);
     final nameSyncEnabled = useState(true);
     final overtimeDmEnabled = useState(true);
@@ -54,7 +56,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           discordEnabled.value = s.discordEnabled;
           botTokenController.text = s.discordBotToken;
           guildIdController.text = s.discordGuildId;
-          channelIdController.text = s.discordChannelId;
+          channelAnnouncementIdController.text = s.discordAnnouncementChannelId;
+          channelNotificationIdController.text = s.discordNotificationChannelId;
           final startMins = s.discordStartReminderMins;
           startReminderMinsController.text = startMins > 0
               ? startMins.toString()
@@ -65,6 +68,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               : '15';
           startReminderMessageController.text = s.discordStartReminderMessage;
           endReminderMessageController.text = s.discordEndReminderMessage;
+          rsvpReactionsEnabled.value = s.discordRsvpReactionsEnabled;
           selfLinkEnabled.value = s.discordSelfLinkEnabled;
           nameSyncEnabled.value = s.discordNameSyncEnabled;
           overtimeDmEnabled.value = s.discordOvertimeDmEnabled;
@@ -91,7 +95,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
             ..discordEnabled = discordEnabled.value
             ..discordBotToken = botTokenController.text
             ..discordGuildId = guildIdController.text
-            ..discordChannelId = channelIdController.text
+            ..discordAnnouncementChannelId =
+                channelAnnouncementIdController.text
+            ..discordNotificationChannelId =
+                channelNotificationIdController.text
             ..discordStartReminderMins = Int64(
               int.tryParse(startReminderMinsController.text) ?? 1440,
             )
@@ -100,6 +107,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
             )
             ..discordStartReminderMessage = startReminderMessageController.text
             ..discordEndReminderMessage = endReminderMessageController.text
+            ..discordRsvpReactionsEnabled = rsvpReactionsEnabled.value
             ..discordSelfLinkEnabled = selfLinkEnabled.value
             ..discordNameSyncEnabled = nameSyncEnabled.value
             ..discordOvertimeDmEnabled = overtimeDmEnabled.value
@@ -218,17 +226,29 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'Notification Channel ID',
+          label: 'Announcement Channel ID',
           description:
               'The ID of the channel where the bot will post session reminders (right-click channel, Copy Channel ID)',
-          controller: channelIdController,
+          controller: channelAnnouncementIdController,
+          hintText: 'Enter channel ID',
+          onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Notification Channel ID',
+          description:
+              'The ID of the channel where the bot will post notifications and user directed messages (right-click channel, Copy Channel ID)',
+          controller: channelNotificationIdController,
           hintText: 'Enter channel ID',
           onUpdate: updateDiscordSettings,
         ),
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text('Reminders', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Reminders (Announcement Channel)',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 4),
         Text(
           'Configure when and what the bot posts before sessions start and end. '
@@ -280,6 +300,26 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
           multiline: true,
           onUpdate: updateDiscordSettings,
+        ),
+        const SizedBox(height: 24),
+        SettingRow(
+          label: 'RSVP Reactions',
+          description:
+              'Add thumbs up/down reactions to session start reminders so members can RSVP. '
+              'RSVPs are tracked and visible in the Sessions view.',
+          child: Row(
+            children: [
+              Switch(
+                value: rsvpReactionsEnabled.value,
+                onChanged: (value) {
+                  rsvpReactionsEnabled.value = value;
+                  updateDiscordSettings();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(rsvpReactionsEnabled.value ? 'Enabled' : 'Disabled'),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
         SettingRow(
@@ -342,7 +382,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text('Notifications', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Notifications (Notification Channel)',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 4),
         Text(
           'Send notifications to team members for overtime and auto-checkout warnings. '

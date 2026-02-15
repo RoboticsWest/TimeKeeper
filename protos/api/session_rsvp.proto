@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package tk.api;
+
+import "common/common.proto";
+import "db/db.proto";
+
+message SessionRsvpResponse {
+  string id = 1;
+  db.SessionRsvp rsvp = 2;
+}
+
+message GetSessionRsvpsRequest {}
+message GetSessionRsvpsResponse {
+  repeated SessionRsvpResponse rsvps = 1;
+}
+
+message StreamSessionRsvpsRequest {}
+message StreamSessionRsvpsResponse {
+  repeated SessionRsvpResponse rsvps = 1;
+  common.SyncType sync_type = 2;
+}
+
+service SessionRsvpService {
+  rpc GetSessionRsvps(GetSessionRsvpsRequest) returns (GetSessionRsvpsResponse);
+  rpc StreamSessionRsvps(StreamSessionRsvpsRequest) returns (stream StreamSessionRsvpsResponse);
+}

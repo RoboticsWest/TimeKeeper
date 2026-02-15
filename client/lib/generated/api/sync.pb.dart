@@ -14,11 +14,12 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../common/common.pbenum.dart' as $7;
+import '../common/common.pbenum.dart' as $8;
 import 'location.pb.dart' as $2;
 import 'notification.pb.dart' as $6;
 import 'rfid_tag.pb.dart' as $5;
 import 'session.pb.dart' as $1;
+import 'session_rsvp.pb.dart' as $7;
 import 'team_member.pb.dart' as $3;
 import 'team_member_session.pb.dart' as $4;
 
@@ -70,18 +71,20 @@ enum StreamEntitiesResponse_Payload {
   teamMemberSessions,
   rfidTags,
   notifications,
+  sessionRsvps,
   notSet
 }
 
 class StreamEntitiesResponse extends $pb.GeneratedMessage {
   factory StreamEntitiesResponse({
-    $7.SyncType? syncType,
+    $8.SyncType? syncType,
     $1.StreamSessionsResponse? sessions,
     $2.StreamLocationsResponse? locations,
     $3.StreamTeamMembersResponse? teamMembers,
     $4.StreamTeamMemberSessionsResponse? teamMemberSessions,
     $5.StreamRfidTagsResponse? rfidTags,
     $6.StreamNotificationsResponse? notifications,
+    $7.StreamSessionRsvpsResponse? sessionRsvps,
   }) {
     final result = create();
     if (syncType != null) result.syncType = syncType;
@@ -92,6 +95,7 @@ class StreamEntitiesResponse extends $pb.GeneratedMessage {
       result.teamMemberSessions = teamMemberSessions;
     if (rfidTags != null) result.rfidTags = rfidTags;
     if (notifications != null) result.notifications = notifications;
+    if (sessionRsvps != null) result.sessionRsvps = sessionRsvps;
     return result;
   }
 
@@ -112,15 +116,16 @@ class StreamEntitiesResponse extends $pb.GeneratedMessage {
     5: StreamEntitiesResponse_Payload.teamMemberSessions,
     6: StreamEntitiesResponse_Payload.rfidTags,
     7: StreamEntitiesResponse_Payload.notifications,
+    8: StreamEntitiesResponse_Payload.sessionRsvps,
     0: StreamEntitiesResponse_Payload.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'StreamEntitiesResponse',
       package: const $pb.PackageName(_omitMessageNames ? '' : 'tk.api'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5, 6, 7])
-    ..aE<$7.SyncType>(1, _omitFieldNames ? '' : 'syncType',
-        enumValues: $7.SyncType.values)
+    ..oo(0, [2, 3, 4, 5, 6, 7, 8])
+    ..aE<$8.SyncType>(1, _omitFieldNames ? '' : 'syncType',
+        enumValues: $8.SyncType.values)
     ..aOM<$1.StreamSessionsResponse>(2, _omitFieldNames ? '' : 'sessions',
         subBuilder: $1.StreamSessionsResponse.create)
     ..aOM<$2.StreamLocationsResponse>(3, _omitFieldNames ? '' : 'locations',
@@ -135,6 +140,9 @@ class StreamEntitiesResponse extends $pb.GeneratedMessage {
     ..aOM<$6.StreamNotificationsResponse>(
         7, _omitFieldNames ? '' : 'notifications',
         subBuilder: $6.StreamNotificationsResponse.create)
+    ..aOM<$7.StreamSessionRsvpsResponse>(
+        8, _omitFieldNames ? '' : 'sessionRsvps',
+        subBuilder: $7.StreamSessionRsvpsResponse.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -163,6 +171,7 @@ class StreamEntitiesResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   StreamEntitiesResponse_Payload whichPayload() =>
       _StreamEntitiesResponse_PayloadByTag[$_whichOneof(0)]!;
   @$pb.TagNumber(2)
@@ -171,12 +180,13 @@ class StreamEntitiesResponse extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   @$pb.TagNumber(6)
   @$pb.TagNumber(7)
+  @$pb.TagNumber(8)
   void clearPayload() => $_clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  $7.SyncType get syncType => $_getN(0);
+  $8.SyncType get syncType => $_getN(0);
   @$pb.TagNumber(1)
-  set syncType($7.SyncType value) => $_setField(1, value);
+  set syncType($8.SyncType value) => $_setField(1, value);
   @$pb.TagNumber(1)
   $core.bool hasSyncType() => $_has(0);
   @$pb.TagNumber(1)
@@ -249,6 +259,17 @@ class StreamEntitiesResponse extends $pb.GeneratedMessage {
   void clearNotifications() => $_clearField(7);
   @$pb.TagNumber(7)
   $6.StreamNotificationsResponse ensureNotifications() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  $7.StreamSessionRsvpsResponse get sessionRsvps => $_getN(7);
+  @$pb.TagNumber(8)
+  set sessionRsvps($7.StreamSessionRsvpsResponse value) => $_setField(8, value);
+  @$pb.TagNumber(8)
+  $core.bool hasSessionRsvps() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearSessionRsvps() => $_clearField(8);
+  @$pb.TagNumber(8)
+  $7.StreamSessionRsvpsResponse ensureSessionRsvps() => $_ensure(7);
 }
 
 const $core.bool _omitFieldNames =

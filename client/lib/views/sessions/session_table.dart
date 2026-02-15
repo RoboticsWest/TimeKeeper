@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/providers/session_rsvp_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
@@ -24,6 +25,7 @@ class SessionTable extends ConsumerWidget {
     final locations = ref.watch(locationsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
+    final sessionRsvps = ref.watch(sessionRsvpsProvider);
     final theme = Theme.of(context);
 
     return EditTable(
@@ -45,6 +47,9 @@ class SessionTable extends ConsumerWidget {
         ),
         BaseTableCell(
           child: Text('Members', style: TextStyle(color: Colors.white)),
+        ),
+        BaseTableCell(
+          child: Text('RSVPs', style: TextStyle(color: Colors.white)),
         ),
         BaseTableCell(
           child: Text('Status', style: TextStyle(color: Colors.white)),
@@ -92,6 +97,9 @@ class SessionTable extends ConsumerWidget {
                 sessionMemberSessions: sessionMemberSessions,
               ),
             ),
+            BaseTableCell(
+              child: _RsvpCount(sessionId: id, sessionRsvps: sessionRsvps),
+            ),
             BaseTableCell(child: SessionStatusChip(status: status)),
             BaseTableCell(
               child: IconButton(
@@ -109,6 +117,7 @@ class SessionTable extends ConsumerWidget {
                   locations: locations,
                   teamMembers: teamMembers,
                   teamMemberSessions: teamMemberSessions,
+                  sessionRsvps: sessionRsvps,
                 ),
               ),
             ),
@@ -116,6 +125,54 @@ class SessionTable extends ConsumerWidget {
         );
       }).toList(),
       onAdd: () => showSessionDialog(context, ref),
+    );
+  }
+}
+
+class _RsvpCount extends StatelessWidget {
+  final String sessionId;
+  final Map<String, SessionRsvp> sessionRsvps;
+
+  const _RsvpCount({required this.sessionId, required this.sessionRsvps});
+
+  @override
+  Widget build(BuildContext context) {
+    final rsvps = sessionRsvps.values
+        .where((r) => r.sessionId == sessionId)
+        .toList();
+    final going = rsvps.where((r) => r.status == RsvpStatus.GOING).length;
+    final notGoing = rsvps
+        .where((r) => r.status == RsvpStatus.NOT_GOING)
+        .length;
+
+    if (rsvps.isEmpty) {
+      return Text(
+        '\u2014',
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$going',
+          style: TextStyle(
+            color: Colors.green[700],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          ' / ',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          '$notGoing',
+          style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 }

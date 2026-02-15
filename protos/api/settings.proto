@@ -14,7 +14,8 @@ message UpdateSettingsRequest {
   bool discord_enabled = 17;
   string discord_bot_token = 2;
   string discord_guild_id = 3;
-  string discord_channel_id = 4;
+  string discord_announcement_channel_id = 4;
+  string discord_notification_channel_id = 24;
   bool discord_self_link_enabled = 5;
   bool discord_name_sync_enabled = 6;
   int64 discord_start_reminder_mins = 7;
@@ -32,6 +33,7 @@ message UpdateSettingsRequest {
   string secondary_color = 20;
   bool leaderboard_show_overtime = 21;
   repeated db.TeamMemberType leaderboard_member_types = 22;
+  bool discord_rsvp_reactions_enabled = 23;
 }
 message UpdateSettingsResponse {}
 

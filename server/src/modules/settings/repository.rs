@@ -63,7 +63,8 @@ impl SettingsRepository for Settings {
       discord_enabled: false,
       discord_bot_token: String::new(),
       discord_guild_id: String::new(),
-      discord_channel_id: String::new(),
+      discord_notification_channel_id: String::new(),
+      discord_announcement_channel_id: String::new(),
       discord_self_link_enabled: false,
       discord_name_sync_enabled: true,
       discord_start_reminder_mins: DEFAULT_START_REMINDER_MINS,
@@ -81,6 +82,7 @@ impl SettingsRepository for Settings {
       secondary_color: DEFAULT_SECONDARY_COLOR.to_string(),
       leaderboard_show_overtime: true,
       leaderboard_member_types: vec![TeamMemberType::Student as i32, TeamMemberType::Mentor as i32],
+      discord_rsvp_reactions_enabled: true,
     };
 
     if let Some(s) = table.get::<Settings>(SETTINGS_KEY)? {

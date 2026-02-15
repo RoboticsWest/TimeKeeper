@@ -11,15 +11,17 @@ use crate::{
   generated::api::{
     health_service_server::HealthServiceServer, location_service_server::LocationServiceServer,
     notification_service_server::NotificationServiceServer, rfid_tag_service_server::RfidTagServiceServer,
-    schedule_service_server::ScheduleServiceServer, session_service_server::SessionServiceServer,
-    settings_service_server::SettingsServiceServer, statistics_service_server::StatisticsServiceServer,
-    sync_service_server::SyncServiceServer, team_member_service_server::TeamMemberServiceServer,
+    schedule_service_server::ScheduleServiceServer, session_rsvp_service_server::SessionRsvpServiceServer,
+    session_service_server::SessionServiceServer, settings_service_server::SettingsServiceServer,
+    statistics_service_server::StatisticsServiceServer, sync_service_server::SyncServiceServer,
+    team_member_service_server::TeamMemberServiceServer,
     team_member_session_service_server::TeamMemberSessionServiceServer, user_service_server::UserServiceServer,
   },
   modules::{
     health::HealthApi, location::LocationApi, notification::api::NotificationApi, rfid_tag::api::RfidTagApi,
-    schedule::ScheduleApi, session::SessionApi, settings::SettingsApi, statistics::StatisticsApi, sync::api::SyncApi,
-    team_member::TeamMemberApi, team_member_session::TeamMemberSessionApi, user::UserApi,
+    schedule::ScheduleApi, session::SessionApi, session_rsvp::api::SessionRsvpApi, settings::SettingsApi,
+    statistics::StatisticsApi, sync::api::SyncApi, team_member::TeamMemberApi,
+    team_member_session::TeamMemberSessionApi, user::UserApi,
   },
 };
 
@@ -64,6 +66,7 @@ impl Api {
       .add_service(RfidTagServiceServer::with_interceptor(RfidTagApi, auth_interceptor))
       .add_service(StatisticsServiceServer::with_interceptor(StatisticsApi {}, auth_interceptor))
       .add_service(TeamMemberSessionServiceServer::with_interceptor(TeamMemberSessionApi {}, auth_interceptor))
+      .add_service(SessionRsvpServiceServer::with_interceptor(SessionRsvpApi, auth_interceptor))
       .add_service(SyncServiceServer::with_interceptor(SyncApi, auth_interceptor));
 
     match router
