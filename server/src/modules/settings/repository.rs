@@ -66,7 +66,7 @@ impl SettingsRepository for Settings {
       discord_notification_channel_id: String::new(),
       discord_announcement_channel_id: String::new(),
       discord_self_link_enabled: false,
-      discord_name_sync_enabled: true,
+      discord_name_sync_enabled: false,
       discord_start_reminder_mins: DEFAULT_START_REMINDER_MINS,
       discord_end_reminder_mins: DEFAULT_END_REMINDER_MINS,
       discord_start_reminder_message: DEFAULT_START_REMINDER_MESSAGE.to_string(),

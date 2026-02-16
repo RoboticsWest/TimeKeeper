@@ -41,7 +41,7 @@ final class BrandingNotifierProvider
   }
 }
 
-String _$brandingNotifierHash() => r'129f2c1b1ec469e848413f87090a4eaa303a96f7';
+String _$brandingNotifierHash() => r'e3aaec1f7e2a1840cf360d3590b0cd1ff28c8768';
 
 abstract class _$BrandingNotifier extends $Notifier<Branding> {
   Branding build();

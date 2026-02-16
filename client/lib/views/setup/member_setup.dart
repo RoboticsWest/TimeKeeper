@@ -7,7 +7,6 @@ import 'package:time_keeper/generated/api/team_member.pbgrpc.dart';
 import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
 import 'package:time_keeper/generated/db/db.pbenum.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
-import 'package:time_keeper/helpers/settings_helper.dart' as settings_helper;
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
@@ -50,14 +49,15 @@ class MemberSetupTab extends HookConsumerWidget {
     }, const []);
 
     Future<void> updateLeaderboardSettings() async {
-      final res = await settings_helper.updateSettings(
-        ref.read(settingsServiceProvider),
-        (req) {
-          req
-            ..leaderboardShowOvertime = showOvertime.value
-            ..leaderboardMemberTypes.clear();
-          req.leaderboardMemberTypes.addAll(selectedMemberTypes.value);
-        },
+      final res = await callGrpcEndpoint(
+        () => ref
+            .read(settingsServiceProvider)
+            .updateLeaderboardSettings(
+              UpdateLeaderboardSettingsRequest(
+                leaderboardShowOvertime: showOvertime.value,
+                leaderboardMemberTypes: selectedMemberTypes.value,
+              ),
+            ),
       );
 
       if (context.mounted) {

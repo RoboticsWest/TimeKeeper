@@ -6,7 +6,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
 import 'package:time_keeper/generated/db/db.pbenum.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
-import 'package:time_keeper/helpers/settings_helper.dart' as settings_helper;
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
@@ -87,39 +86,72 @@ class IntegrationsSetupTab extends HookConsumerWidget {
       return null;
     }, const []);
 
-    Future<void> updateDiscordSettings() async {
-      final res = await settings_helper.updateSettings(
-        ref.read(settingsServiceProvider),
-        (req) {
-          req
-            ..discordEnabled = discordEnabled.value
-            ..discordBotToken = botTokenController.text
-            ..discordGuildId = guildIdController.text
-            ..discordAnnouncementChannelId =
-                channelAnnouncementIdController.text
-            ..discordNotificationChannelId =
-                channelNotificationIdController.text
-            ..discordStartReminderMins = Int64(
-              int.tryParse(startReminderMinsController.text) ?? 1440,
-            )
-            ..discordEndReminderMins = Int64(
-              int.tryParse(endReminderMinsController.text) ?? 15,
-            )
-            ..discordStartReminderMessage = startReminderMessageController.text
-            ..discordEndReminderMessage = endReminderMessageController.text
-            ..discordRsvpReactionsEnabled = rsvpReactionsEnabled.value
-            ..discordSelfLinkEnabled = selfLinkEnabled.value
-            ..discordNameSyncEnabled = nameSyncEnabled.value
-            ..discordOvertimeDmEnabled = overtimeDmEnabled.value
-            ..discordOvertimeDmMins = Int64(
-              int.tryParse(overtimeDmMinsController.text) ?? 10,
-            )
-            ..discordOvertimeDmMessage = overtimeDmMessageController.text
-            ..discordAutoCheckoutDmEnabled = autoCheckoutDmEnabled.value
-            ..discordAutoCheckoutDmMessage =
-                autoCheckoutDmMessageController.text
-            ..discordCheckoutEnabled = checkoutEnabled.value;
-        },
+    Future<void> updateDiscordCore() async {
+      final res = await callGrpcEndpoint(
+        () => ref
+            .read(settingsServiceProvider)
+            .updateDiscordCoreSettings(
+              UpdateDiscordCoreSettingsRequest(
+                discordEnabled: discordEnabled.value,
+                discordBotToken: botTokenController.text,
+                discordGuildId: guildIdController.text,
+                discordAnnouncementChannelId:
+                    channelAnnouncementIdController.text,
+                discordNotificationChannelId:
+                    channelNotificationIdController.text,
+              ),
+            ),
+      );
+
+      if (context.mounted) {
+        PopupDialog.fromGrpcStatus(result: res).show(context);
+      }
+    }
+
+    Future<void> updateDiscordReminder() async {
+      final res = await callGrpcEndpoint(
+        () => ref
+            .read(settingsServiceProvider)
+            .updateDiscordReminderSettings(
+              UpdateDiscordReminderSettingsRequest(
+                discordStartReminderMins: Int64(
+                  int.tryParse(startReminderMinsController.text) ?? 1440,
+                ),
+                discordEndReminderMins: Int64(
+                  int.tryParse(endReminderMinsController.text) ?? 15,
+                ),
+                discordStartReminderMessage:
+                    startReminderMessageController.text,
+                discordEndReminderMessage: endReminderMessageController.text,
+              ),
+            ),
+      );
+
+      if (context.mounted) {
+        PopupDialog.fromGrpcStatus(result: res).show(context);
+      }
+    }
+
+    Future<void> updateDiscordBehavior() async {
+      final res = await callGrpcEndpoint(
+        () => ref
+            .read(settingsServiceProvider)
+            .updateDiscordBehaviorSettings(
+              UpdateDiscordBehaviorSettingsRequest(
+                discordRsvpReactionsEnabled: rsvpReactionsEnabled.value,
+                discordSelfLinkEnabled: selfLinkEnabled.value,
+                discordNameSyncEnabled: nameSyncEnabled.value,
+                discordOvertimeDmEnabled: overtimeDmEnabled.value,
+                discordOvertimeDmMins: Int64(
+                  int.tryParse(overtimeDmMinsController.text) ?? 10,
+                ),
+                discordOvertimeDmMessage: overtimeDmMessageController.text,
+                discordAutoCheckoutDmEnabled: autoCheckoutDmEnabled.value,
+                discordAutoCheckoutDmMessage:
+                    autoCheckoutDmMessageController.text,
+                discordCheckoutEnabled: checkoutEnabled.value,
+              ),
+            ),
       );
 
       if (context.mounted) {
@@ -197,7 +229,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 value: discordEnabled.value,
                 onChanged: (value) {
                   discordEnabled.value = value;
-                  updateDiscordSettings();
+                  updateDiscordCore();
                 },
               ),
               const SizedBox(width: 8),
@@ -213,7 +245,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           controller: botTokenController,
           hintText: 'Enter bot token',
           obscureText: true,
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordCore,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
@@ -222,7 +254,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               'The ID of your Discord server (Enable Developer Mode, right-click server, Copy Server ID)',
           controller: guildIdController,
           hintText: 'Enter server ID',
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordCore,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
@@ -231,7 +263,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               'The ID of the channel where the bot will post session reminders (right-click channel, Copy Channel ID)',
           controller: channelAnnouncementIdController,
           hintText: 'Enter channel ID',
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordCore,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
@@ -240,7 +272,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               'The ID of the channel where the bot will post notifications and user directed messages (right-click channel, Copy Channel ID)',
           controller: channelNotificationIdController,
           hintText: 'Enter channel ID',
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordCore,
         ),
         const SizedBox(height: 32),
         const Divider(),
@@ -266,7 +298,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText: '1440',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordReminder,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
@@ -277,7 +309,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText:
               '@here Session on {date} from {start_time} to {end_time} @ {location} starting in ~{mins} minutes!',
           multiline: true,
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordReminder,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
@@ -288,7 +320,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText: '15',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordReminder,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
@@ -299,7 +331,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText:
               '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
           multiline: true,
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordReminder,
         ),
         const SizedBox(height: 24),
         SettingRow(
@@ -313,7 +345,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 value: rsvpReactionsEnabled.value,
                 onChanged: (value) {
                   rsvpReactionsEnabled.value = value;
-                  updateDiscordSettings();
+                  updateDiscordBehavior();
                 },
               ),
               const SizedBox(width: 8),
@@ -332,7 +364,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 value: selfLinkEnabled.value,
                 onChanged: (value) {
                   selfLinkEnabled.value = value;
-                  updateDiscordSettings();
+                  updateDiscordBehavior();
                 },
               ),
               const SizedBox(width: 8),
@@ -351,7 +383,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 value: nameSyncEnabled.value,
                 onChanged: (value) {
                   nameSyncEnabled.value = value;
-                  updateDiscordSettings();
+                  updateDiscordBehavior();
                 },
               ),
               const SizedBox(width: 8),
@@ -371,7 +403,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 value: checkoutEnabled.value,
                 onChanged: (value) {
                   checkoutEnabled.value = value;
-                  updateDiscordSettings();
+                  updateDiscordBehavior();
                 },
               ),
               const SizedBox(width: 8),
@@ -406,7 +438,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 value: overtimeDmEnabled.value,
                 onChanged: (value) {
                   overtimeDmEnabled.value = value;
-                  updateDiscordSettings();
+                  updateDiscordBehavior();
                 },
               ),
               const SizedBox(width: 8),
@@ -423,7 +455,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText: '10',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordBehavior,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
@@ -434,7 +466,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText:
               'Hey {username}, you\'re now in overtime for the session at {location}. The session ended at {end_time}. Don\'t forget to check out!',
           multiline: true,
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordBehavior,
         ),
         const SizedBox(height: 24),
         SettingRow(
@@ -447,7 +479,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 value: autoCheckoutDmEnabled.value,
                 onChanged: (value) {
                   autoCheckoutDmEnabled.value = value;
-                  updateDiscordSettings();
+                  updateDiscordBehavior();
                 },
               ),
               const SizedBox(width: 8),
@@ -464,7 +496,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           hintText:
               'Hey {username}, you\'ve been auto-checked-out from the session at {location} (ended at {end_time}) because a new session is starting soon.',
           multiline: true,
-          onUpdate: updateDiscordSettings,
+          onUpdate: updateDiscordBehavior,
         ),
         const SizedBox(height: 32),
         const Divider(),

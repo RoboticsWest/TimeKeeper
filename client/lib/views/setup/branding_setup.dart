@@ -4,7 +4,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
-import 'package:time_keeper/helpers/settings_helper.dart' as settings_helper;
 import 'package:time_keeper/providers/branding_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/utils/grpc_result.dart';
@@ -75,22 +74,20 @@ class BrandingSetupTab extends HookConsumerWidget {
       }
 
       final normalizedHex = _colorToHex(color);
-      final res = await settings_helper.updateSettings(
-        ref.read(settingsServiceProvider),
-        (req) {
-          if (isPrimary) {
-            req.primaryColor = normalizedHex;
-          } else {
-            req.secondaryColor = normalizedHex;
-          }
-        },
+      final res = await callGrpcEndpoint(
+        () => ref
+            .read(settingsServiceProvider)
+            .updateBrandingSettings(
+              isPrimary
+                  ? UpdateBrandingSettingsRequest(primaryColor: normalizedHex)
+                  : UpdateBrandingSettingsRequest(
+                      secondaryColor: normalizedHex,
+                    ),
+            ),
       );
 
       if (context.mounted) {
         PopupDialog.fromGrpcStatus(result: res).show(context);
-        if (res is GrpcSuccess) {
-          await ref.read(brandingProvider.notifier).refresh();
-        }
       }
     }
 

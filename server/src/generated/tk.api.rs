@@ -3181,58 +3181,23 @@ pub struct GetSettingsResponse {
     pub settings: ::core::option::Option<super::db::Settings>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct UpdateSettingsRequest {
-    #[prost(int64, tag = "1")]
-    pub next_session_threshold_secs: i64,
-    #[prost(bool, tag = "17")]
-    pub discord_enabled: bool,
-    #[prost(string, tag = "2")]
-    pub discord_bot_token: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub discord_guild_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    pub discord_announcement_channel_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "24")]
-    pub discord_notification_channel_id: ::prost::alloc::string::String,
-    #[prost(bool, tag = "5")]
-    pub discord_self_link_enabled: bool,
-    #[prost(bool, tag = "6")]
-    pub discord_name_sync_enabled: bool,
-    #[prost(int64, tag = "7")]
-    pub discord_start_reminder_mins: i64,
-    #[prost(int64, tag = "8")]
-    pub discord_end_reminder_mins: i64,
-    #[prost(string, tag = "9")]
-    pub discord_start_reminder_message: ::prost::alloc::string::String,
-    #[prost(string, tag = "10")]
-    pub discord_end_reminder_message: ::prost::alloc::string::String,
-    #[prost(bool, tag = "11")]
-    pub discord_overtime_dm_enabled: bool,
-    #[prost(int64, tag = "12")]
-    pub discord_overtime_dm_mins: i64,
-    #[prost(string, tag = "13")]
-    pub discord_overtime_dm_message: ::prost::alloc::string::String,
-    #[prost(bool, tag = "14")]
-    pub discord_auto_checkout_dm_enabled: bool,
-    #[prost(string, tag = "15")]
-    pub discord_auto_checkout_dm_message: ::prost::alloc::string::String,
-    #[prost(bool, tag = "16")]
-    pub discord_checkout_enabled: bool,
-    #[prost(string, tag = "18")]
-    pub timezone: ::prost::alloc::string::String,
-    #[prost(string, tag = "19")]
-    pub primary_color: ::prost::alloc::string::String,
-    #[prost(string, tag = "20")]
-    pub secondary_color: ::prost::alloc::string::String,
-    #[prost(bool, tag = "21")]
-    pub leaderboard_show_overtime: bool,
-    #[prost(enumeration = "super::db::TeamMemberType", repeated, tag = "22")]
-    pub leaderboard_member_types: ::prost::alloc::vec::Vec<i32>,
-    #[prost(bool, tag = "23")]
-    pub discord_rsvp_reactions_enabled: bool,
+pub struct UpdateGeneralSettingsRequest {
+    #[prost(int64, optional, tag = "1")]
+    pub next_session_threshold_secs: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "2")]
+    pub timezone: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct UpdateSettingsResponse {}
+pub struct UpdateGeneralSettingsResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateBrandingSettingsRequest {
+    #[prost(string, optional, tag = "1")]
+    pub primary_color: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "2")]
+    pub secondary_color: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateBrandingSettingsResponse {}
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UploadLogoRequest {
     #[prost(bytes = "vec", tag = "1")]
@@ -3247,10 +3212,82 @@ pub struct GetLogoResponse {
     #[prost(bytes = "vec", tag = "1")]
     pub logo: ::prost::alloc::vec::Vec<u8>,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateLeaderboardSettingsRequest {
+    #[prost(bool, optional, tag = "1")]
+    pub leaderboard_show_overtime: ::core::option::Option<bool>,
+    /// Note:
+    /// repeated fields do not support presence tracking.
+    /// If this list is empty, it will overwrite with empty.
+    /// If omitted entirely, it remains unchanged.
+    #[prost(enumeration = "super::db::TeamMemberType", repeated, tag = "2")]
+    pub leaderboard_member_types: ::prost::alloc::vec::Vec<i32>,
+}
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct PurgeDatabaseRequest {}
+pub struct UpdateLeaderboardSettingsResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateDiscordCoreSettingsRequest {
+    #[prost(bool, optional, tag = "1")]
+    pub discord_enabled: ::core::option::Option<bool>,
+    #[prost(string, optional, tag = "2")]
+    pub discord_bot_token: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "3")]
+    pub discord_guild_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "4")]
+    pub discord_announcement_channel_id: ::core::option::Option<
+        ::prost::alloc::string::String,
+    >,
+    #[prost(string, optional, tag = "5")]
+    pub discord_notification_channel_id: ::core::option::Option<
+        ::prost::alloc::string::String,
+    >,
+}
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct PurgeDatabaseResponse {}
+pub struct UpdateDiscordCoreSettingsResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateDiscordReminderSettingsRequest {
+    #[prost(int64, optional, tag = "1")]
+    pub discord_start_reminder_mins: ::core::option::Option<i64>,
+    #[prost(int64, optional, tag = "2")]
+    pub discord_end_reminder_mins: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "3")]
+    pub discord_start_reminder_message: ::core::option::Option<
+        ::prost::alloc::string::String,
+    >,
+    #[prost(string, optional, tag = "4")]
+    pub discord_end_reminder_message: ::core::option::Option<
+        ::prost::alloc::string::String,
+    >,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateDiscordReminderSettingsResponse {}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateDiscordBehaviorSettingsRequest {
+    #[prost(bool, optional, tag = "1")]
+    pub discord_self_link_enabled: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "2")]
+    pub discord_name_sync_enabled: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "3")]
+    pub discord_overtime_dm_enabled: ::core::option::Option<bool>,
+    #[prost(int64, optional, tag = "4")]
+    pub discord_overtime_dm_mins: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "5")]
+    pub discord_overtime_dm_message: ::core::option::Option<
+        ::prost::alloc::string::String,
+    >,
+    #[prost(bool, optional, tag = "6")]
+    pub discord_auto_checkout_dm_enabled: ::core::option::Option<bool>,
+    #[prost(string, optional, tag = "7")]
+    pub discord_auto_checkout_dm_message: ::core::option::Option<
+        ::prost::alloc::string::String,
+    >,
+    #[prost(bool, optional, tag = "8")]
+    pub discord_checkout_enabled: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "9")]
+    pub discord_rsvp_reactions_enabled: ::core::option::Option<bool>,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UpdateDiscordBehaviorSettingsResponse {}
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct DiscordRole {
     #[prost(string, tag = "1")]
@@ -3281,6 +3318,10 @@ pub struct ImportDiscordMembersResponse {
     #[prost(int32, tag = "3")]
     pub already_linked: i32,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PurgeDatabaseRequest {}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct PurgeDatabaseResponse {}
 /// Generated client implementations.
 pub mod settings_service_client {
     #![allow(
@@ -3372,6 +3413,7 @@ pub mod settings_service_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        /// Retrieval
         pub async fn get_settings(
             &mut self,
             request: impl tonic::IntoRequest<super::GetSettingsRequest>,
@@ -3396,11 +3438,12 @@ pub mod settings_service_client {
                 .insert(GrpcMethod::new("tk.api.SettingsService", "GetSettings"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn update_settings(
+        /// General
+        pub async fn update_general_settings(
             &mut self,
-            request: impl tonic::IntoRequest<super::UpdateSettingsRequest>,
+            request: impl tonic::IntoRequest<super::UpdateGeneralSettingsRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::UpdateSettingsResponse>,
+            tonic::Response<super::UpdateGeneralSettingsResponse>,
             tonic::Status,
         > {
             self.inner
@@ -3413,11 +3456,40 @@ pub mod settings_service_client {
                 })?;
             let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/tk.api.SettingsService/UpdateSettings",
+                "/tk.api.SettingsService/UpdateGeneralSettings",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("tk.api.SettingsService", "UpdateSettings"));
+                .insert(
+                    GrpcMethod::new("tk.api.SettingsService", "UpdateGeneralSettings"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Branding
+        pub async fn update_branding_settings(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateBrandingSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateBrandingSettingsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SettingsService/UpdateBrandingSettings",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("tk.api.SettingsService", "UpdateBrandingSettings"),
+                );
             self.inner.unary(req, path, codec).await
         }
         pub async fn upload_logo(
@@ -3468,11 +3540,12 @@ pub mod settings_service_client {
                 .insert(GrpcMethod::new("tk.api.SettingsService", "GetLogo"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn purge_database(
+        /// Leaderboard
+        pub async fn update_leaderboard_settings(
             &mut self,
-            request: impl tonic::IntoRequest<super::PurgeDatabaseRequest>,
+            request: impl tonic::IntoRequest<super::UpdateLeaderboardSettingsRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::PurgeDatabaseResponse>,
+            tonic::Response<super::UpdateLeaderboardSettingsResponse>,
             tonic::Status,
         > {
             self.inner
@@ -3485,11 +3558,104 @@ pub mod settings_service_client {
                 })?;
             let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/tk.api.SettingsService/PurgeDatabase",
+                "/tk.api.SettingsService/UpdateLeaderboardSettings",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("tk.api.SettingsService", "PurgeDatabase"));
+                .insert(
+                    GrpcMethod::new(
+                        "tk.api.SettingsService",
+                        "UpdateLeaderboardSettings",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Discord
+        pub async fn update_discord_core_settings(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateDiscordCoreSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateDiscordCoreSettingsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SettingsService/UpdateDiscordCoreSettings",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "tk.api.SettingsService",
+                        "UpdateDiscordCoreSettings",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn update_discord_reminder_settings(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateDiscordReminderSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateDiscordReminderSettingsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SettingsService/UpdateDiscordReminderSettings",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "tk.api.SettingsService",
+                        "UpdateDiscordReminderSettings",
+                    ),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn update_discord_behavior_settings(
+            &mut self,
+            request: impl tonic::IntoRequest<super::UpdateDiscordBehaviorSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateDiscordBehaviorSettingsResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SettingsService/UpdateDiscordBehaviorSettings",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new(
+                        "tk.api.SettingsService",
+                        "UpdateDiscordBehaviorSettings",
+                    ),
+                );
             self.inner.unary(req, path, codec).await
         }
         pub async fn get_discord_roles(
@@ -3542,6 +3708,31 @@ pub mod settings_service_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+        /// Maintenance
+        pub async fn purge_database(
+            &mut self,
+            request: impl tonic::IntoRequest<super::PurgeDatabaseRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::PurgeDatabaseResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::unknown(
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/tk.api.SettingsService/PurgeDatabase",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("tk.api.SettingsService", "PurgeDatabase"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -3557,6 +3748,7 @@ pub mod settings_service_server {
     /// Generated trait containing gRPC methods that should be implemented for use with SettingsServiceServer.
     #[async_trait]
     pub trait SettingsService: std::marker::Send + std::marker::Sync + 'static {
+        /// Retrieval
         async fn get_settings(
             &self,
             request: tonic::Request<super::GetSettingsRequest>,
@@ -3564,11 +3756,20 @@ pub mod settings_service_server {
             tonic::Response<super::GetSettingsResponse>,
             tonic::Status,
         >;
-        async fn update_settings(
+        /// General
+        async fn update_general_settings(
             &self,
-            request: tonic::Request<super::UpdateSettingsRequest>,
+            request: tonic::Request<super::UpdateGeneralSettingsRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::UpdateSettingsResponse>,
+            tonic::Response<super::UpdateGeneralSettingsResponse>,
+            tonic::Status,
+        >;
+        /// Branding
+        async fn update_branding_settings(
+            &self,
+            request: tonic::Request<super::UpdateBrandingSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateBrandingSettingsResponse>,
             tonic::Status,
         >;
         async fn upload_logo(
@@ -3582,11 +3783,34 @@ pub mod settings_service_server {
             &self,
             request: tonic::Request<super::GetLogoRequest>,
         ) -> std::result::Result<tonic::Response<super::GetLogoResponse>, tonic::Status>;
-        async fn purge_database(
+        /// Leaderboard
+        async fn update_leaderboard_settings(
             &self,
-            request: tonic::Request<super::PurgeDatabaseRequest>,
+            request: tonic::Request<super::UpdateLeaderboardSettingsRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::PurgeDatabaseResponse>,
+            tonic::Response<super::UpdateLeaderboardSettingsResponse>,
+            tonic::Status,
+        >;
+        /// Discord
+        async fn update_discord_core_settings(
+            &self,
+            request: tonic::Request<super::UpdateDiscordCoreSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateDiscordCoreSettingsResponse>,
+            tonic::Status,
+        >;
+        async fn update_discord_reminder_settings(
+            &self,
+            request: tonic::Request<super::UpdateDiscordReminderSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateDiscordReminderSettingsResponse>,
+            tonic::Status,
+        >;
+        async fn update_discord_behavior_settings(
+            &self,
+            request: tonic::Request<super::UpdateDiscordBehaviorSettingsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::UpdateDiscordBehaviorSettingsResponse>,
             tonic::Status,
         >;
         async fn get_discord_roles(
@@ -3601,6 +3825,14 @@ pub mod settings_service_server {
             request: tonic::Request<super::ImportDiscordMembersRequest>,
         ) -> std::result::Result<
             tonic::Response<super::ImportDiscordMembersResponse>,
+            tonic::Status,
+        >;
+        /// Maintenance
+        async fn purge_database(
+            &self,
+            request: tonic::Request<super::PurgeDatabaseRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::PurgeDatabaseResponse>,
             tonic::Status,
         >;
     }
@@ -3725,25 +3957,28 @@ pub mod settings_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/tk.api.SettingsService/UpdateSettings" => {
+                "/tk.api.SettingsService/UpdateGeneralSettings" => {
                     #[allow(non_camel_case_types)]
-                    struct UpdateSettingsSvc<T: SettingsService>(pub Arc<T>);
+                    struct UpdateGeneralSettingsSvc<T: SettingsService>(pub Arc<T>);
                     impl<
                         T: SettingsService,
-                    > tonic::server::UnaryService<super::UpdateSettingsRequest>
-                    for UpdateSettingsSvc<T> {
-                        type Response = super::UpdateSettingsResponse;
+                    > tonic::server::UnaryService<super::UpdateGeneralSettingsRequest>
+                    for UpdateGeneralSettingsSvc<T> {
+                        type Response = super::UpdateGeneralSettingsResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::UpdateSettingsRequest>,
+                            request: tonic::Request<super::UpdateGeneralSettingsRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as SettingsService>::update_settings(&inner, request)
+                                <T as SettingsService>::update_general_settings(
+                                        &inner,
+                                        request,
+                                    )
                                     .await
                             };
                             Box::pin(fut)
@@ -3755,7 +3990,56 @@ pub mod settings_service_server {
                     let max_encoding_message_size = self.max_encoding_message_size;
                     let inner = self.inner.clone();
                     let fut = async move {
-                        let method = UpdateSettingsSvc(inner);
+                        let method = UpdateGeneralSettingsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SettingsService/UpdateBrandingSettings" => {
+                    #[allow(non_camel_case_types)]
+                    struct UpdateBrandingSettingsSvc<T: SettingsService>(pub Arc<T>);
+                    impl<
+                        T: SettingsService,
+                    > tonic::server::UnaryService<super::UpdateBrandingSettingsRequest>
+                    for UpdateBrandingSettingsSvc<T> {
+                        type Response = super::UpdateBrandingSettingsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::UpdateBrandingSettingsRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SettingsService>::update_branding_settings(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UpdateBrandingSettingsSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
@@ -3861,25 +4145,31 @@ pub mod settings_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/tk.api.SettingsService/PurgeDatabase" => {
+                "/tk.api.SettingsService/UpdateLeaderboardSettings" => {
                     #[allow(non_camel_case_types)]
-                    struct PurgeDatabaseSvc<T: SettingsService>(pub Arc<T>);
+                    struct UpdateLeaderboardSettingsSvc<T: SettingsService>(pub Arc<T>);
                     impl<
                         T: SettingsService,
-                    > tonic::server::UnaryService<super::PurgeDatabaseRequest>
-                    for PurgeDatabaseSvc<T> {
-                        type Response = super::PurgeDatabaseResponse;
+                    > tonic::server::UnaryService<
+                        super::UpdateLeaderboardSettingsRequest,
+                    > for UpdateLeaderboardSettingsSvc<T> {
+                        type Response = super::UpdateLeaderboardSettingsResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::PurgeDatabaseRequest>,
+                            request: tonic::Request<
+                                super::UpdateLeaderboardSettingsRequest,
+                            >,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as SettingsService>::purge_database(&inner, request)
+                                <T as SettingsService>::update_leaderboard_settings(
+                                        &inner,
+                                        request,
+                                    )
                                     .await
                             };
                             Box::pin(fut)
@@ -3891,7 +4181,167 @@ pub mod settings_service_server {
                     let max_encoding_message_size = self.max_encoding_message_size;
                     let inner = self.inner.clone();
                     let fut = async move {
-                        let method = PurgeDatabaseSvc(inner);
+                        let method = UpdateLeaderboardSettingsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SettingsService/UpdateDiscordCoreSettings" => {
+                    #[allow(non_camel_case_types)]
+                    struct UpdateDiscordCoreSettingsSvc<T: SettingsService>(pub Arc<T>);
+                    impl<
+                        T: SettingsService,
+                    > tonic::server::UnaryService<
+                        super::UpdateDiscordCoreSettingsRequest,
+                    > for UpdateDiscordCoreSettingsSvc<T> {
+                        type Response = super::UpdateDiscordCoreSettingsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::UpdateDiscordCoreSettingsRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SettingsService>::update_discord_core_settings(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UpdateDiscordCoreSettingsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SettingsService/UpdateDiscordReminderSettings" => {
+                    #[allow(non_camel_case_types)]
+                    struct UpdateDiscordReminderSettingsSvc<T: SettingsService>(
+                        pub Arc<T>,
+                    );
+                    impl<
+                        T: SettingsService,
+                    > tonic::server::UnaryService<
+                        super::UpdateDiscordReminderSettingsRequest,
+                    > for UpdateDiscordReminderSettingsSvc<T> {
+                        type Response = super::UpdateDiscordReminderSettingsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::UpdateDiscordReminderSettingsRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SettingsService>::update_discord_reminder_settings(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UpdateDiscordReminderSettingsSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SettingsService/UpdateDiscordBehaviorSettings" => {
+                    #[allow(non_camel_case_types)]
+                    struct UpdateDiscordBehaviorSettingsSvc<T: SettingsService>(
+                        pub Arc<T>,
+                    );
+                    impl<
+                        T: SettingsService,
+                    > tonic::server::UnaryService<
+                        super::UpdateDiscordBehaviorSettingsRequest,
+                    > for UpdateDiscordBehaviorSettingsSvc<T> {
+                        type Response = super::UpdateDiscordBehaviorSettingsResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::UpdateDiscordBehaviorSettingsRequest,
+                            >,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SettingsService>::update_discord_behavior_settings(
+                                        &inner,
+                                        request,
+                                    )
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = UpdateDiscordBehaviorSettingsSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
@@ -3987,6 +4437,52 @@ pub mod settings_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = ImportDiscordMembersSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/tk.api.SettingsService/PurgeDatabase" => {
+                    #[allow(non_camel_case_types)]
+                    struct PurgeDatabaseSvc<T: SettingsService>(pub Arc<T>);
+                    impl<
+                        T: SettingsService,
+                    > tonic::server::UnaryService<super::PurgeDatabaseRequest>
+                    for PurgeDatabaseSvc<T> {
+                        type Response = super::PurgeDatabaseResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::PurgeDatabaseRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as SettingsService>::purge_database(&inner, request)
+                                    .await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = PurgeDatabaseSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
