@@ -2,4 +2,4 @@
 # I.e, version of the app, etc. (major, minor, patch)
 variables:
   - name: tk_version
-    value: 2.3.1
+    value: 2.3.2

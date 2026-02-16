@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
 import 'package:time_keeper/generated/common/common.pbenum.dart';
+import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
+import 'package:time_keeper/providers/settings_provider.dart';
+import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/utils/permissions.dart';
 import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
@@ -30,6 +37,8 @@ class HomeView extends HookConsumerWidget {
     final locations = ref.watch(locationsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
+    final thresholdDuration = useState<Duration>(Duration.zero);
+    final isUpcoming = useState(false);
 
     // filter unfinished sessions sorted by start time
     final unfinishedSessions =
@@ -47,14 +56,9 @@ class HomeView extends HookConsumerWidget {
                 a.startTime.toDateTime().compareTo(b.startTime.toDateTime()),
           );
 
-    final now = DateTime.now();
-
     final currentSession = unfinishedSessions.isNotEmpty
         ? unfinishedSessions.first
         : null;
-    final isUpcoming =
-        currentSession != null &&
-        currentSession.startTime.toDateTime().isAfter(now);
     final nextSession = unfinishedSessions.length > 1
         ? unfinishedSessions[1]
         : null;
@@ -97,6 +101,55 @@ class HomeView extends HookConsumerWidget {
       },
     );
 
+    useEffect(() {
+      Future<void> loadSettings() async {
+        final result = await callGrpcEndpoint(
+          () => ref
+              .read(settingsServiceProvider)
+              .getSettings(GetSettingsRequest()),
+        );
+
+        if (result is GrpcSuccess<GetSettingsResponse>) {
+          final s = result.data.settings;
+          thresholdDuration.value = Duration(
+            seconds: s.nextSessionThresholdSecs.toInt(),
+          );
+        }
+      }
+
+      loadSettings();
+      return null;
+    }, []); // ← once on mount
+
+    useEffect(() {
+      if (currentSession == null) {
+        isUpcoming.value = false;
+        return null;
+      }
+
+      final now = DateTime.now();
+      final sessionStart = currentSession.startTime.toDateTime();
+
+      final thresholdTime = sessionStart.subtract(thresholdDuration.value);
+
+      final shouldBeUpcoming = now.isBefore(thresholdTime);
+
+      isUpcoming.value = shouldBeUpcoming;
+
+      // If we are still before threshold, schedule when it flips
+      if (shouldBeUpcoming) {
+        final triggerIn = thresholdTime.difference(now);
+
+        final timer = Timer(triggerIn, () {
+          isUpcoming.value = false;
+        });
+
+        return timer.cancel;
+      }
+
+      return null;
+    }, [currentSession, thresholdDuration.value]);
+
     return Column(
       children: [
         if (hasKiosk)
@@ -118,7 +171,7 @@ class HomeView extends HookConsumerWidget {
           ),
         SessionInfoBar(
           currentSession: currentSession,
-          isUpcoming: isUpcoming,
+          isUpcoming: isUpcoming.value,
           nextSession: nextSession,
           locations: locations,
           deviceLocationName: deviceLocationId != null
