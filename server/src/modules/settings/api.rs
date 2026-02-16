@@ -1,8 +1,17 @@
-use serenity::all::GuildId;
-use serenity::all::RoleId;
+use serenity::all::{GuildId, RoleId};
 use serenity::http::Http;
 use tonic::{Request, Response, Result, Status};
 
+use crate::generated::api::settings_service_server::SettingsService;
+use crate::modules::location::LocationRepository;
+use crate::modules::notification::NotificationRepository;
+use crate::modules::secret::SecretRepository;
+use crate::modules::session::SessionRepository;
+use crate::modules::session_rsvp::{SessionRsvpMessageRepository, SessionRsvpRepository};
+use crate::modules::settings::{LogoRepository, SettingsRepository};
+use crate::modules::team_member::TeamMemberRepository;
+use crate::modules::team_member_session::TeamMemberSessionRepository;
+use crate::modules::user::UserRepository;
 use crate::{
   auth::auth_helpers::require_permission,
   core::db::recreate_default_admin,
@@ -10,8 +19,11 @@ use crate::{
     api::{
       DiscordRole, GetDiscordRolesRequest, GetDiscordRolesResponse, GetLogoRequest, GetLogoResponse,
       GetSettingsRequest, GetSettingsResponse, ImportDiscordMembersRequest, ImportDiscordMembersResponse,
-      PurgeDatabaseRequest, PurgeDatabaseResponse, UpdateSettingsRequest, UpdateSettingsResponse, UploadLogoRequest,
-      UploadLogoResponse, settings_service_server::SettingsService,
+      PurgeDatabaseRequest, PurgeDatabaseResponse, UpdateBrandingSettingsRequest, UpdateBrandingSettingsResponse,
+      UpdateDiscordBehaviorSettingsRequest, UpdateDiscordBehaviorSettingsResponse, UpdateDiscordCoreSettingsRequest,
+      UpdateDiscordCoreSettingsResponse, UpdateDiscordReminderSettingsRequest, UpdateDiscordReminderSettingsResponse,
+      UpdateGeneralSettingsRequest, UpdateGeneralSettingsResponse, UpdateLeaderboardSettingsRequest,
+      UpdateLeaderboardSettingsResponse, UploadLogoRequest, UploadLogoResponse,
     },
     common::Role,
     db::{
@@ -19,77 +31,243 @@ use crate::{
       TeamMemberSession, TeamMemberType, User,
     },
   },
-  modules::{
-    location::LocationRepository,
-    notification::NotificationRepository,
-    secret::SecretRepository,
-    session::SessionRepository,
-    session_rsvp::{SessionRsvpMessageRepository, SessionRsvpRepository},
-    settings::{LogoRepository, SettingsRepository},
-    team_member::TeamMemberRepository,
-    team_member_session::TeamMemberSessionRepository,
-    user::UserRepository,
-  },
 };
 
 pub struct SettingsApi;
 
+impl SettingsApi {
+  fn load_settings() -> Result<Settings, Status> {
+    Settings::get().map_err(|e| Status::internal(format!("Failed to load settings: {e}")))
+  }
+
+  fn save_settings(settings: &Settings) -> Result<(), Status> {
+    Settings::set(settings).map_err(|e| Status::internal(format!("Failed to save settings: {e}")))
+  }
+}
+
 #[tonic::async_trait]
 impl SettingsService for SettingsApi {
+  // ============================================================
+  // GET SETTINGS
+  // ============================================================
+
   async fn get_settings(&self, _request: Request<GetSettingsRequest>) -> Result<Response<GetSettingsResponse>, Status> {
-    let settings = Settings::get().map_err(|e| Status::internal(format!("Failed to get settings: {}", e)))?;
+    let settings = Self::load_settings()?;
     Ok(Response::new(GetSettingsResponse { settings: Some(settings) }))
   }
 
-  async fn update_settings(
+  // ============================================================
+  // GENERAL SETTINGS (PATCH)
+  // ============================================================
+
+  async fn update_general_settings(
     &self,
-    request: Request<UpdateSettingsRequest>,
-  ) -> Result<Response<UpdateSettingsResponse>, Status> {
+    request: Request<UpdateGeneralSettingsRequest>,
+  ) -> Result<Response<UpdateGeneralSettingsResponse>, Status> {
     require_permission(&request, Role::Admin)?;
     let req = request.into_inner();
+    let mut settings = Self::load_settings()?;
 
-    let settings = Settings {
-      next_session_threshold_secs: req.next_session_threshold_secs,
-      discord_enabled: req.discord_enabled,
-      discord_bot_token: req.discord_bot_token,
-      discord_guild_id: req.discord_guild_id,
-      discord_announcement_channel_id: req.discord_announcement_channel_id,
-      discord_notification_channel_id: req.discord_notification_channel_id,
-      discord_self_link_enabled: req.discord_self_link_enabled,
-      discord_name_sync_enabled: req.discord_name_sync_enabled,
-      discord_start_reminder_mins: req.discord_start_reminder_mins,
-      discord_end_reminder_mins: req.discord_end_reminder_mins,
-      discord_start_reminder_message: req.discord_start_reminder_message,
-      discord_end_reminder_message: req.discord_end_reminder_message,
-      discord_overtime_dm_enabled: req.discord_overtime_dm_enabled,
-      discord_overtime_dm_mins: req.discord_overtime_dm_mins,
-      discord_overtime_dm_message: req.discord_overtime_dm_message,
-      discord_auto_checkout_dm_enabled: req.discord_auto_checkout_dm_enabled,
-      discord_auto_checkout_dm_message: req.discord_auto_checkout_dm_message,
-      discord_checkout_enabled: req.discord_checkout_enabled,
-      timezone: req.timezone,
-      primary_color: req.primary_color,
-      secondary_color: req.secondary_color,
-      leaderboard_show_overtime: req.leaderboard_show_overtime,
-      leaderboard_member_types: req.leaderboard_member_types,
-      discord_rsvp_reactions_enabled: req.discord_rsvp_reactions_enabled,
-    };
-    Settings::set(&settings).map_err(|e| Status::internal(format!("Failed to update settings: {}", e)))?;
+    if let Some(v) = req.next_session_threshold_secs {
+      settings.next_session_threshold_secs = v;
+    }
 
-    Ok(Response::new(UpdateSettingsResponse {}))
+    if let Some(v) = req.timezone {
+      settings.timezone = v;
+    }
+
+    Self::save_settings(&settings)?;
+    Ok(Response::new(UpdateGeneralSettingsResponse {}))
   }
+
+  // ============================================================
+  // BRANDING SETTINGS (PATCH)
+  // ============================================================
+
+  async fn update_branding_settings(
+    &self,
+    request: Request<UpdateBrandingSettingsRequest>,
+  ) -> Result<Response<UpdateBrandingSettingsResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let req = request.into_inner();
+    let mut settings = Self::load_settings()?;
+
+    if let Some(v) = req.primary_color {
+      settings.primary_color = v;
+    }
+
+    if let Some(v) = req.secondary_color {
+      settings.secondary_color = v;
+    }
+
+    Self::save_settings(&settings)?;
+    Ok(Response::new(UpdateBrandingSettingsResponse {}))
+  }
+
+  // ============================================================
+  // LEADERBOARD SETTINGS (PATCH)
+  // ============================================================
+
+  async fn update_leaderboard_settings(
+    &self,
+    request: Request<UpdateLeaderboardSettingsRequest>,
+  ) -> Result<Response<UpdateLeaderboardSettingsResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let req = request.into_inner();
+    let mut settings = Self::load_settings()?;
+
+    if let Some(v) = req.leaderboard_show_overtime {
+      settings.leaderboard_show_overtime = v;
+    }
+
+    settings.leaderboard_member_types = req.leaderboard_member_types;
+
+    Self::save_settings(&settings)?;
+    Ok(Response::new(UpdateLeaderboardSettingsResponse {}))
+  }
+
+  // ============================================================
+  // DISCORD CORE SETTINGS (PATCH)
+  // ============================================================
+
+  async fn update_discord_core_settings(
+    &self,
+    request: Request<UpdateDiscordCoreSettingsRequest>,
+  ) -> Result<Response<UpdateDiscordCoreSettingsResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let req = request.into_inner();
+    let mut settings = Self::load_settings()?;
+
+    if let Some(v) = req.discord_enabled {
+      settings.discord_enabled = v;
+    }
+
+    if let Some(v) = req.discord_bot_token {
+      settings.discord_bot_token = v;
+    }
+
+    if let Some(v) = req.discord_guild_id {
+      settings.discord_guild_id = v;
+    }
+
+    if let Some(v) = req.discord_announcement_channel_id {
+      settings.discord_announcement_channel_id = v;
+    }
+
+    if let Some(v) = req.discord_notification_channel_id {
+      settings.discord_notification_channel_id = v;
+    }
+
+    Self::save_settings(&settings)?;
+    Ok(Response::new(UpdateDiscordCoreSettingsResponse {}))
+  }
+
+  // ============================================================
+  // DISCORD REMINDER SETTINGS (PATCH)
+  // ============================================================
+
+  async fn update_discord_reminder_settings(
+    &self,
+    request: Request<UpdateDiscordReminderSettingsRequest>,
+  ) -> Result<Response<UpdateDiscordReminderSettingsResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let req = request.into_inner();
+    let mut settings = Self::load_settings()?;
+
+    if let Some(v) = req.discord_start_reminder_mins {
+      settings.discord_start_reminder_mins = v;
+    }
+
+    if let Some(v) = req.discord_end_reminder_mins {
+      settings.discord_end_reminder_mins = v;
+    }
+
+    if let Some(v) = req.discord_start_reminder_message {
+      settings.discord_start_reminder_message = v;
+    }
+
+    if let Some(v) = req.discord_end_reminder_message {
+      settings.discord_end_reminder_message = v;
+    }
+
+    Self::save_settings(&settings)?;
+    Ok(Response::new(UpdateDiscordReminderSettingsResponse {}))
+  }
+
+  // ============================================================
+  // DISCORD BEHAVIOR SETTINGS (PATCH)
+  // ============================================================
+
+  async fn update_discord_behavior_settings(
+    &self,
+    request: Request<UpdateDiscordBehaviorSettingsRequest>,
+  ) -> Result<Response<UpdateDiscordBehaviorSettingsResponse>, Status> {
+    require_permission(&request, Role::Admin)?;
+    let req = request.into_inner();
+    let mut settings = Self::load_settings()?;
+
+    if let Some(v) = req.discord_self_link_enabled {
+      settings.discord_self_link_enabled = v;
+    }
+
+    if let Some(v) = req.discord_name_sync_enabled {
+      settings.discord_name_sync_enabled = v;
+    }
+
+    if let Some(v) = req.discord_overtime_dm_enabled {
+      settings.discord_overtime_dm_enabled = v;
+    }
+
+    if let Some(v) = req.discord_overtime_dm_mins {
+      settings.discord_overtime_dm_mins = v;
+    }
+
+    if let Some(v) = req.discord_overtime_dm_message {
+      settings.discord_overtime_dm_message = v;
+    }
+
+    if let Some(v) = req.discord_auto_checkout_dm_enabled {
+      settings.discord_auto_checkout_dm_enabled = v;
+    }
+
+    if let Some(v) = req.discord_auto_checkout_dm_message {
+      settings.discord_auto_checkout_dm_message = v;
+    }
+
+    if let Some(v) = req.discord_checkout_enabled {
+      settings.discord_checkout_enabled = v;
+    }
+
+    if let Some(v) = req.discord_rsvp_reactions_enabled {
+      settings.discord_rsvp_reactions_enabled = v;
+    }
+
+    Self::save_settings(&settings)?;
+    Ok(Response::new(UpdateDiscordBehaviorSettingsResponse {}))
+  }
+
+  // ============================================================
+  // LOGO
+  // ============================================================
 
   async fn upload_logo(&self, request: Request<UploadLogoRequest>) -> Result<Response<UploadLogoResponse>, Status> {
     require_permission(&request, Role::Admin)?;
     let req = request.into_inner();
-    Logo::set(&req.logo).map_err(|e| Status::internal(format!("Failed to upload logo: {}", e)))?;
+
+    Logo::set(&req.logo).map_err(|e| Status::internal(format!("Failed to upload logo: {e}")))?;
+
     Ok(Response::new(UploadLogoResponse {}))
   }
 
   async fn get_logo(&self, _request: Request<GetLogoRequest>) -> Result<Response<GetLogoResponse>, Status> {
-    let logo = Logo::get().map_err(|e| Status::internal(format!("Failed to get logo: {}", e)))?;
+    let logo = Logo::get().map_err(|e| Status::internal(format!("Failed to get logo: {e}")))?;
+
     Ok(Response::new(GetLogoResponse { logo: logo.unwrap_or_default() }))
   }
+
+  // ============================================================
+  // PURGE DATABASE
+  // ============================================================
 
   async fn purge_database(
     &self,
@@ -97,28 +275,30 @@ impl SettingsService for SettingsApi {
   ) -> Result<Response<PurgeDatabaseResponse>, Status> {
     require_permission(&request, Role::Admin)?;
 
-    // Clear all data using repository methods so the event bus notifies clients
-    Notification::clear().map_err(|e| Status::internal(format!("Failed to clear notification data: {}", e)))?;
+    Notification::clear().map_err(|e| Status::internal(format!("Failed to clear notification data: {e}")))?;
     TeamMemberSession::clear()
-      .map_err(|e| Status::internal(format!("Failed to clear team member session data: {}", e)))?;
-    Session::clear().map_err(|e| Status::internal(format!("Failed to clear session data: {}", e)))?;
-    TeamMember::clear().map_err(|e| Status::internal(format!("Failed to clear team member data: {}", e)))?;
-    Location::clear().map_err(|e| Status::internal(format!("Failed to clear location data: {}", e)))?;
-    User::clear().map_err(|e| Status::internal(format!("Failed to clear user data: {}", e)))?;
-    Secret::clear().map_err(|e| Status::internal(format!("Failed to clear secret data: {}", e)))?;
-    Settings::clear().map_err(|e| Status::internal(format!("Failed to clear settings data: {}", e)))?;
-    Logo::clear().map_err(|e| Status::internal(format!("Failed to clear logo data: {}", e)))?;
-    SessionRsvp::clear().map_err(|e| Status::internal(format!("Failed to clear session RSVP data: {}", e)))?;
+      .map_err(|e| Status::internal(format!("Failed to clear team member session data: {e}")))?;
+    Session::clear().map_err(|e| Status::internal(format!("Failed to clear session data: {e}")))?;
+    TeamMember::clear().map_err(|e| Status::internal(format!("Failed to clear team member data: {e}")))?;
+    Location::clear().map_err(|e| Status::internal(format!("Failed to clear location data: {e}")))?;
+    User::clear().map_err(|e| Status::internal(format!("Failed to clear user data: {e}")))?;
+    Secret::clear().map_err(|e| Status::internal(format!("Failed to clear secret data: {e}")))?;
+    Settings::clear().map_err(|e| Status::internal(format!("Failed to clear settings data: {e}")))?;
+    Logo::clear().map_err(|e| Status::internal(format!("Failed to clear logo data: {e}")))?;
+    SessionRsvp::clear().map_err(|e| Status::internal(format!("Failed to clear session RSVP data: {e}")))?;
     SessionRsvpMessage::clear()
-      .map_err(|e| Status::internal(format!("Failed to clear session RSVP message data: {}", e)))?;
+      .map_err(|e| Status::internal(format!("Failed to clear session RSVP message data: {e}")))?;
 
     log::warn!("Database purged by admin");
 
-    // Recreate admin user with default password after clearing users
-    recreate_default_admin().map_err(|e| Status::internal(format!("Failed to recreate admin user: {}", e)))?;
+    recreate_default_admin().map_err(|e| Status::internal(format!("Failed to recreate admin user: {e}")))?;
 
     Ok(Response::new(PurgeDatabaseResponse {}))
   }
+
+  // ============================================================
+  // DISCORD ROLES
+  // ============================================================
 
   async fn get_discord_roles(
     &self,
@@ -126,11 +306,12 @@ impl SettingsService for SettingsApi {
   ) -> Result<Response<GetDiscordRolesResponse>, Status> {
     require_permission(&request, Role::Admin)?;
 
-    let settings = Settings::get().map_err(|e| Status::internal(format!("Failed to get settings: {e}")))?;
+    let settings = Self::load_settings()?;
 
     if settings.discord_bot_token.is_empty() {
       return Err(Status::failed_precondition("Discord bot token is not configured"));
     }
+
     if settings.discord_guild_id.is_empty() {
       return Err(Status::failed_precondition("Discord server ID is not configured"));
     }
@@ -154,6 +335,10 @@ impl SettingsService for SettingsApi {
     Ok(Response::new(GetDiscordRolesResponse { roles }))
   }
 
+  // ============================================================
+  // IMPORT DISCORD MEMBERS
+  // ============================================================
+
   async fn import_discord_members(
     &self,
     request: Request<ImportDiscordMembersRequest>,
@@ -168,11 +353,12 @@ impl SettingsService for SettingsApi {
     let member_type =
       TeamMemberType::try_from(req.member_type).map_err(|_| Status::invalid_argument("Invalid member type"))?;
 
-    let settings = Settings::get().map_err(|e| Status::internal(format!("Failed to get settings: {e}")))?;
+    let settings = Self::load_settings()?;
 
     if settings.discord_bot_token.is_empty() {
       return Err(Status::failed_precondition("Discord bot token is not configured"));
     }
+
     if settings.discord_guild_id.is_empty() {
       return Err(Status::failed_precondition("Discord server ID is not configured"));
     }
@@ -190,12 +376,12 @@ impl SettingsService for SettingsApi {
       .await
       .map_err(|e| Status::internal(format!("Failed to fetch Discord members: {e}")))?;
 
-    let mut imported: i32 = 0;
-    let mut linked: i32 = 0;
-    let mut already_linked: i32 = 0;
-
     let existing_members =
       TeamMember::get_all().map_err(|e| Status::internal(format!("Failed to load team members: {e}")))?;
+
+    let mut imported = 0;
+    let mut linked = 0;
+    let mut already_linked = 0;
 
     for guild_member in &guild_members {
       if !guild_member.roles.contains(&target_role) {
@@ -205,7 +391,6 @@ impl SettingsService for SettingsApi {
       let display_name = guild_member.display_name().to_string();
       let discord_username = guild_member.user.name.clone();
 
-      // Check if any existing member is already linked to this Discord username
       let existing =
         existing_members.iter().find(|(_, m)| m.discord_username.as_ref().is_some_and(|u| u == &discord_username));
 
@@ -214,7 +399,6 @@ impl SettingsService for SettingsApi {
         continue;
       }
 
-      // Check if a member with this display name exists but isn't linked
       let by_display_name = existing_members.iter().find(|(_, m)| {
         m.discord_username.as_ref().is_none_or(String::is_empty)
           && m.display_name.as_ref().is_some_and(|dn| dn == &display_name)
@@ -234,7 +418,9 @@ impl SettingsService for SettingsApi {
           mobile_number: None,
           discord_username: Some(discord_username),
         };
+
         TeamMember::add(&new_member).map_err(|e| Status::internal(format!("Failed to create member: {e}")))?;
+
         imported += 1;
       }
     }

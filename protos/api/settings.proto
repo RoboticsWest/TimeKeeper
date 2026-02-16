@@ -4,51 +4,132 @@ package tk.api;
 
 import "db/db.proto";
 
+//
+// ===============================
+// Core Settings Retrieval
+// ===============================
+//
+
 message GetSettingsRequest {}
+
 message GetSettingsResponse {
   db.Settings settings = 1;
 }
 
-message UpdateSettingsRequest {
-  int64 next_session_threshold_secs = 1;
-  bool discord_enabled = 17;
-  string discord_bot_token = 2;
-  string discord_guild_id = 3;
-  string discord_announcement_channel_id = 4;
-  string discord_notification_channel_id = 24;
-  bool discord_self_link_enabled = 5;
-  bool discord_name_sync_enabled = 6;
-  int64 discord_start_reminder_mins = 7;
-  int64 discord_end_reminder_mins = 8;
-  string discord_start_reminder_message = 9;
-  string discord_end_reminder_message = 10;
-  bool discord_overtime_dm_enabled = 11;
-  int64 discord_overtime_dm_mins = 12;
-  string discord_overtime_dm_message = 13;
-  bool discord_auto_checkout_dm_enabled = 14;
-  string discord_auto_checkout_dm_message = 15;
-  bool discord_checkout_enabled = 16;
-  string timezone = 18;
-  string primary_color = 19;
-  string secondary_color = 20;
-  bool leaderboard_show_overtime = 21;
-  repeated db.TeamMemberType leaderboard_member_types = 22;
-  bool discord_rsvp_reactions_enabled = 23;
+//
+// ===============================
+// General Settings (PATCH)
+// ===============================
+//
+
+message UpdateGeneralSettingsRequest {
+  optional int64 next_session_threshold_secs = 1;
+  optional string timezone = 2;
 }
-message UpdateSettingsResponse {}
+
+message UpdateGeneralSettingsResponse {}
+
+//
+// ===============================
+// Branding / UI Settings (PATCH)
+// ===============================
+//
+
+message UpdateBrandingSettingsRequest {
+  optional string primary_color = 1;
+  optional string secondary_color = 2;
+}
+
+message UpdateBrandingSettingsResponse {}
 
 message UploadLogoRequest {
   bytes logo = 1;
 }
+
 message UploadLogoResponse {}
 
 message GetLogoRequest {}
+
 message GetLogoResponse {
   bytes logo = 1;
 }
 
-message PurgeDatabaseRequest {}
-message PurgeDatabaseResponse {}
+//
+// ===============================
+// Leaderboard Settings (PATCH)
+// ===============================
+//
+
+message UpdateLeaderboardSettingsRequest {
+  optional bool leaderboard_show_overtime = 1;
+  repeated db.TeamMemberType leaderboard_member_types = 2;
+  // Note:
+  // repeated fields do not support presence tracking.
+  // If this list is empty, it will overwrite with empty.
+  // If omitted entirely, it remains unchanged.
+}
+
+message UpdateLeaderboardSettingsResponse {}
+
+//
+// ===============================
+// Discord Core Configuration (PATCH)
+// ===============================
+//
+
+message UpdateDiscordCoreSettingsRequest {
+  optional bool discord_enabled = 1;
+  optional string discord_bot_token = 2;
+  optional string discord_guild_id = 3;
+  optional string discord_announcement_channel_id = 4;
+  optional string discord_notification_channel_id = 5;
+}
+
+message UpdateDiscordCoreSettingsResponse {}
+
+//
+// ===============================
+// Discord Reminder Settings (PATCH)
+// ===============================
+//
+
+message UpdateDiscordReminderSettingsRequest {
+  optional int64 discord_start_reminder_mins = 1;
+  optional int64 discord_end_reminder_mins = 2;
+  optional string discord_start_reminder_message = 3;
+  optional string discord_end_reminder_message = 4;
+}
+
+message UpdateDiscordReminderSettingsResponse {}
+
+//
+// ===============================
+// Discord Behavior / DM Settings (PATCH)
+// ===============================
+//
+
+message UpdateDiscordBehaviorSettingsRequest {
+  optional bool discord_self_link_enabled = 1;
+  optional bool discord_name_sync_enabled = 2;
+
+  optional bool discord_overtime_dm_enabled = 3;
+  optional int64 discord_overtime_dm_mins = 4;
+  optional string discord_overtime_dm_message = 5;
+
+  optional bool discord_auto_checkout_dm_enabled = 6;
+  optional string discord_auto_checkout_dm_message = 7;
+
+  optional bool discord_checkout_enabled = 8;
+  optional bool discord_rsvp_reactions_enabled = 9;
+}
+
+message UpdateDiscordBehaviorSettingsResponse {}
+
+//
+// ===============================
+// Discord Role Management
+// ===============================
+//
 
 message DiscordRole {
   string id = 1;
@@ -56,6 +137,7 @@ message DiscordRole {
 }
 
 message GetDiscordRolesRequest {}
+
 message GetDiscordRolesResponse {
   repeated DiscordRole roles = 1;
 }
@@ -64,18 +146,57 @@ message ImportDiscordMembersRequest {
   string role_id = 1;
   db.TeamMemberType member_type = 2;
 }
+
 message ImportDiscordMembersResponse {
   int32 imported = 1;
   int32 linked = 2;
   int32 already_linked = 3;
 }
 
+//
+// ===============================
+// Database Maintenance
+// ===============================
+//
+
+message PurgeDatabaseRequest {}
+
+message PurgeDatabaseResponse {}
+
+//
+// ===============================
+// Service Definition
+// ===============================
+//
+
 service SettingsService {
+  // Retrieval
   rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
-  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+
+  // General
+  rpc UpdateGeneralSettings(UpdateGeneralSettingsRequest) returns (UpdateGeneralSettingsResponse);
+
+  // Branding
+  rpc UpdateBrandingSettings(UpdateBrandingSettingsRequest) returns (UpdateBrandingSettingsResponse);
+
   rpc UploadLogo(UploadLogoRequest) returns (UploadLogoResponse);
+
   rpc GetLogo(GetLogoRequest) returns (GetLogoResponse);
-  rpc PurgeDatabase(PurgeDatabaseRequest) returns (PurgeDatabaseResponse);
+
+  // Leaderboard
+  rpc UpdateLeaderboardSettings(UpdateLeaderboardSettingsRequest) returns (UpdateLeaderboardSettingsResponse);
+
+  // Discord
+  rpc UpdateDiscordCoreSettings(UpdateDiscordCoreSettingsRequest) returns (UpdateDiscordCoreSettingsResponse);
+
+  rpc UpdateDiscordReminderSettings(UpdateDiscordReminderSettingsRequest) returns (UpdateDiscordReminderSettingsResponse);
+
+  rpc UpdateDiscordBehaviorSettings(UpdateDiscordBehaviorSettingsRequest) returns (UpdateDiscordBehaviorSettingsResponse);
+
   rpc GetDiscordRoles(GetDiscordRolesRequest) returns (GetDiscordRolesResponse);
+
   rpc ImportDiscordMembers(ImportDiscordMembersRequest) returns (ImportDiscordMembersResponse);
+
+  // Maintenance
+  rpc PurgeDatabase(PurgeDatabaseRequest) returns (PurgeDatabaseResponse);
 }

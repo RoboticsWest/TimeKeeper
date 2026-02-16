@@ -7,7 +7,6 @@ import 'package:time_keeper/generated/api/schedule.pbgrpc.dart';
 import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
 import 'package:time_keeper/generated/api/user.pbgrpc.dart';
 import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
-import 'package:time_keeper/helpers/settings_helper.dart' as settings_helper;
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/schedule_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
@@ -77,10 +76,14 @@ class SessionSetupTab extends HookConsumerWidget {
     }, const []);
 
     Future<void> updateTimezone(String timezone) async {
-      final res = await settings_helper.updateSettings(
-        ref.read(settingsServiceProvider),
-        (req) => req.timezone = timezone,
+      final res = await callGrpcEndpoint(
+        () => ref
+            .read(settingsServiceProvider)
+            .updateGeneralSettings(
+              UpdateGeneralSettingsRequest(timezone: timezone),
+            ),
       );
+
       if (context.mounted) {
         PopupDialog.fromGrpcStatus(result: res).show(context);
       }
@@ -145,11 +148,19 @@ class SessionSetupTab extends HookConsumerWidget {
           onUpdate: () async {
             final hours = double.tryParse(thresholdController.text);
             if (hours == null || hours <= 0) return;
+
             final secs = Int64((hours * 3600).round());
-            final res = await settings_helper.updateSettings(
-              ref.read(settingsServiceProvider),
-              (req) => req.nextSessionThresholdSecs = secs,
+
+            final res = await callGrpcEndpoint(
+              () => ref
+                  .read(settingsServiceProvider)
+                  .updateGeneralSettings(
+                    UpdateGeneralSettingsRequest(
+                      nextSessionThresholdSecs: secs,
+                    ),
+                  ),
             );
+
             if (context.mounted) {
               PopupDialog.fromGrpcStatus(result: res).show(context);
             }
