@@ -2,7 +2,7 @@ use chrono::Utc;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
-use crate::core::time::{format_date, format_datetime, format_time, parse_tz};
+use crate::core::time::{format_datetime, parse_tz};
 use crate::{
   generated::{
     common::Timestamp,
@@ -148,12 +148,10 @@ fn leaderboard(args: &str) -> String {
 }
 
 pub fn sessions() -> String {
-  // Load settings
-  let settings = match Settings::get() {
-    Ok(s) => s,
-    Err(e) => return format!("Error loading settings: {e}"),
-  };
-  let tz = parse_tz(&settings.timezone);
+  // Load settings (no longer need timezone parsing)
+  if let Err(e) = Settings::get() {
+    return format!("Error loading settings: {e}");
+  }
 
   // Load sessions
   let sessions = match Session::get_all() {
@@ -176,13 +174,18 @@ pub fn sessions() -> String {
   for session in sessions.values() {
     let start = session.start_time.as_ref().map_or(0, |t| t.seconds);
     let end = session.end_time.as_ref().map_or(0, |t| t.seconds);
-    let location =
-      session.location_id.as_str().pipe_ref(|lid| locations_map.get(*lid)).map_or("Unknown", |l| l.location.as_str());
+
+    let location = session
+      .location_id
+      .as_str()
+      .pipe_ref(|lid| locations_map.get(*lid))
+      .map_or("Unknown", |l| l.location.as_str())
+      .to_string();
 
     if !session.finished && start <= now_secs {
-      active.push((start, end, location.to_string()));
+      active.push((start, end, location));
     } else if start > now_secs {
-      upcoming.push((start, end, location.to_string()));
+      upcoming.push((start, end, location));
     }
   }
 
@@ -192,32 +195,27 @@ pub fn sessions() -> String {
 
   let mut lines = Vec::new();
 
-  // Format active sessions
+  // -------------------------
+  // Active Sessions
+  // -------------------------
   if !active.is_empty() {
     lines.push("**Active Sessions**".to_string());
-    for (start, end, loc) in &active {
-      let dt_string = format_datetime(*start, &tz);
-      let start_day = dt_string.split(',').next().unwrap_or("").to_string(); // own the String now
-      let start_date = format_date(*start, &tz);
-      let start_time = format_time(*start, &tz);
-      let end_time = format_time(*end, &tz);
 
-      lines.push(format!("[{start_day}, {start_date}]: {start_time}–{end_time} @ {loc}"));
+    for (start, end, loc) in &active {
+      lines.push(format!("<t:{start}:F> – <t:{end}:t> @ **{loc}**"));
     }
   }
 
-  // Format upcoming sessions
+  // -------------------------
+  // Upcoming Sessions
+  // -------------------------
   if !upcoming.is_empty() {
     upcoming.sort_by_key(|(start, _, _)| *start);
-    lines.push("**Upcoming Sessions**".to_string());
-    for (start, end, loc) in upcoming.iter().take(5) {
-      let dt_string = format_datetime(*start, &tz);
-      let start_day = dt_string.split(',').next().unwrap_or("").to_string(); // own the String now
-      let start_date = format_date(*start, &tz);
-      let start_time = format_time(*start, &tz);
-      let end_time = format_time(*end, &tz);
 
-      lines.push(format!("[{start_day}, {start_date}]: {start_time}–{end_time} @ {loc}"));
+    lines.push("**Upcoming Sessions**".to_string());
+
+    for (start, end, loc) in upcoming.iter().take(5) {
+      lines.push(format!("<t:{start}:F> – <t:{end}:t> @ **{loc}**"));
     }
   }
 
@@ -416,10 +414,10 @@ fn checkout(msg: &Message) -> String {
   if late {
     format!(
       "Checked out **{name}** at session end time ({}) since the session has already ended.",
-      format_datetime(end_secs, &tz)
+      format_datetime(end_secs, tz)
     )
   } else {
-    format!("Checked out **{name}** at {}.", format_datetime(checkout_secs, &tz))
+    format!("Checked out **{name}** at {}.", format_datetime(checkout_secs, tz))
   }
 }
 
