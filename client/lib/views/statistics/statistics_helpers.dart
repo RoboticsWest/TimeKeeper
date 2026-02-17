@@ -119,8 +119,9 @@ List<DayHoursData> computeDailyHours(
 
   for (final sessionEntry in sessions.entries) {
     final session = sessionEntry.value;
-    if (!session.hasStartTime() || !session.hasEndTime() || !session.finished)
+    if (!session.hasStartTime() || !session.hasEndTime() || !session.finished) {
       continue;
+    }
 
     final sessionStart = session.startTime.toDateTime();
     final sessionEnd = session.endTime.toDateTime();
