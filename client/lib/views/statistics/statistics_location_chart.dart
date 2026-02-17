@@ -1,10 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:time_keeper/colors.dart';
-import 'package:time_keeper/views/statistics/statistics_helpers.dart';
+import 'package:time_keeper/models/statistics_data.dart';
 
 class StatisticsLocationChart extends StatelessWidget {
-  final List<LocationAttendanceData> locationData;
+  final List<AverageLocationAttendanceData> locationData;
 
   const StatisticsLocationChart({super.key, required this.locationData});
 

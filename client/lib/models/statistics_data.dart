@@ -73,12 +73,12 @@ class DayMemberDetail {
   double get totalSecs => regularSecs + overtimeSecs;
 }
 
-class LocationAttendanceData {
+class AverageLocationAttendanceData {
   final String locationId;
   final String locationName;
-  int checkInCount;
+  double checkInCount;
 
-  LocationAttendanceData({
+  AverageLocationAttendanceData({
     required this.locationId,
     required this.locationName,
     this.checkInCount = 0,

@@ -10,8 +10,9 @@ export 'package:time_keeper/utils/formatting.dart'
 /// Regular vs overtime for a single member session.
 ({double regularSecs, double overtimeSecs}) computeMemberSessionHours(
   TeamMemberSession ms,
-  Session session,
-) {
+  Session session, {
+  List<TeamMemberSession>? allMembersForSession,
+}) {
   final sessionStart = session.startTime.toDateTime();
   final sessionEnd = session.endTime.toDateTime();
   final checkIn = ms.checkInTime.toDateTime();
@@ -19,16 +20,46 @@ export 'package:time_keeper/utils/formatting.dart'
       ? ms.checkOutTime.toDateTime()
       : DateTime.now();
 
-  final totalSecs = checkOut.difference(checkIn).inSeconds.toDouble();
-  if (totalSecs <= 0) return (regularSecs: 0, overtimeSecs: 0);
+  // Determine earliest check-in & latest checkout among all members if provided
+  DateTime earliestCheckIn = checkIn;
+  DateTime latestCheckOut = checkOut;
 
-  final overlapStart = checkIn.isAfter(sessionStart) ? checkIn : sessionStart;
-  final overlapEnd = checkOut.isBefore(sessionEnd) ? checkOut : sessionEnd;
-  final regularSecs = overlapEnd.isAfter(overlapStart)
-      ? overlapEnd.difference(overlapStart).inSeconds.toDouble()
+  if (allMembersForSession != null && allMembersForSession.isNotEmpty) {
+    for (final memberMs in allMembersForSession) {
+      final ci = memberMs.checkInTime.toDateTime();
+      final co = memberMs.hasCheckOutTime()
+          ? memberMs.checkOutTime.toDateTime()
+          : DateTime.now();
+      if (ci.isBefore(earliestCheckIn)) earliestCheckIn = ci;
+      if (co.isAfter(latestCheckOut)) latestCheckOut = co;
+    }
+  }
+
+  // Effective regular period inside session window
+  final effectiveStart = earliestCheckIn.isAfter(sessionStart)
+      ? earliestCheckIn
+      : sessionStart;
+  final effectiveEnd = latestCheckOut.isBefore(sessionEnd)
+      ? latestCheckOut
+      : sessionEnd;
+
+  final regularSecs = effectiveEnd.isAfter(effectiveStart)
+      ? effectiveEnd.difference(effectiveStart).inSeconds.toDouble()
       : 0.0;
 
-  return (regularSecs: regularSecs, overtimeSecs: totalSecs - regularSecs);
+  // Overtime: before sessionStart or after sessionEnd
+  double overtimeSecs = 0.0;
+  if (earliestCheckIn.isBefore(sessionStart)) {
+    overtimeSecs += sessionStart
+        .difference(earliestCheckIn)
+        .inSeconds
+        .toDouble();
+  }
+  if (latestCheckOut.isAfter(sessionEnd)) {
+    overtimeSecs += latestCheckOut.difference(sessionEnd).inSeconds.toDouble();
+  }
+
+  return (regularSecs: regularSecs, overtimeSecs: overtimeSecs);
 }
 
 Map<String, MemberHoursData> computeMemberHours(
@@ -37,6 +68,13 @@ Map<String, MemberHoursData> computeMemberHours(
   Map<String, TeamMemberSession> teamMemberSessions,
 ) {
   final result = <String, MemberHoursData>{};
+
+  // Group member sessions by session ID for correct earliest/latest
+  final sessionsToMembers = <String, List<TeamMemberSession>>{};
+  for (final ms in teamMemberSessions.values) {
+    if (!ms.hasCheckInTime()) continue;
+    sessionsToMembers.putIfAbsent(ms.sessionId, () => []).add(ms);
+  }
 
   for (final ms in teamMemberSessions.values) {
     if (!ms.hasCheckInTime()) continue;
@@ -49,9 +87,12 @@ Map<String, MemberHoursData> computeMemberHours(
     final name = member?.displayName ?? ms.teamMemberId;
     final memberType = member?.memberType ?? TeamMemberType.STUDENT;
 
+    final allMembers = sessionsToMembers[ms.sessionId];
+
     final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
       ms,
       session,
+      allMembersForSession: allMembers,
     );
 
     final entry = result.putIfAbsent(
@@ -62,6 +103,7 @@ Map<String, MemberHoursData> computeMemberHours(
         memberType: memberType,
       ),
     );
+
     entry.regularSecs += regularSecs;
     entry.overtimeSecs += overtimeSecs;
   }
@@ -75,61 +117,62 @@ List<DayHoursData> computeDailyHours(
 ) {
   final byDay = <String, DayHoursData>{};
 
-  for (final entry in sessions.entries) {
-    final sessionId = entry.key;
-    final session = entry.value;
-
-    if (!session.hasStartTime() || !session.hasEndTime()) continue;
-    if (!session.finished) continue; // ignore unfinished sessions
+  for (final sessionEntry in sessions.entries) {
+    final session = sessionEntry.value;
+    if (!session.hasStartTime() || !session.hasEndTime() || !session.finished)
+      continue;
 
     final sessionStart = session.startTime.toDateTime();
     final sessionEnd = session.endTime.toDateTime();
 
-    double sessionSecs = sessionEnd
-        .difference(sessionStart)
-        .inSeconds
-        .toDouble();
-
-    // Calculate overtime (earliest check-in & latest checkout)
     DateTime? earliestCheckIn;
     DateTime? latestCheckOut;
 
     for (final ms in teamMemberSessions.values) {
-      if (ms.sessionId != sessionId || !ms.hasCheckInTime()) continue;
-
+      if (ms.sessionId != sessionEntry.key || !ms.hasCheckInTime()) continue;
       final checkIn = ms.checkInTime.toDateTime();
-      if (earliestCheckIn == null || checkIn.isBefore(earliestCheckIn)) {
-        earliestCheckIn = checkIn;
-      }
-
       final checkOut = ms.hasCheckOutTime()
           ? ms.checkOutTime.toDateTime()
           : DateTime.now();
 
+      if (earliestCheckIn == null || checkIn.isBefore(earliestCheckIn)) {
+        earliestCheckIn = checkIn;
+      }
       if (latestCheckOut == null || checkOut.isAfter(latestCheckOut)) {
         latestCheckOut = checkOut;
       }
     }
 
-    if (earliestCheckIn != null && earliestCheckIn.isBefore(sessionStart)) {
-      sessionSecs += sessionStart.difference(earliestCheckIn).inSeconds;
-    }
+    if (earliestCheckIn == null || latestCheckOut == null) continue;
 
-    if (latestCheckOut != null && latestCheckOut.isAfter(sessionEnd)) {
-      sessionSecs += latestCheckOut.difference(sessionEnd).inSeconds;
-    }
+    // Regular time: from session start to either last checkout or session end (whichever is earlier)
+    final effectiveEnd = latestCheckOut.isBefore(sessionEnd)
+        ? latestCheckOut
+        : sessionEnd;
+    final effectiveStart = earliestCheckIn.isAfter(sessionStart)
+        ? earliestCheckIn
+        : sessionStart;
+
+    final regularSecs = effectiveEnd.isAfter(effectiveStart)
+        ? effectiveEnd.difference(effectiveStart).inSeconds.toDouble()
+        : 0.0;
+
+    // Overtime: only if last checkout > planned session end
+    final overtimeSecs = latestCheckOut.isAfter(sessionEnd)
+        ? latestCheckOut.difference(sessionEnd).inSeconds.toDouble()
+        : 0.0;
 
     final date = DateTime(
       sessionStart.year,
       sessionStart.month,
       sessionStart.day,
     );
-
     final key =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
     byDay.putIfAbsent(key, () => DayHoursData(date: date));
-    byDay[key]!.regularSecs += sessionSecs;
+    byDay[key]!.regularSecs += regularSecs;
+    byDay[key]!.overtimeSecs += overtimeSecs;
   }
 
   return byDay.values.toList()..sort((a, b) => a.date.compareTo(b.date));
@@ -228,50 +271,40 @@ class _LocationAccumulator {
   _LocationAccumulator(this.locationId, this.locationName);
 }
 
-List<LocationAttendanceData> computeLocationAttendance(
+List<AverageLocationAttendanceData> computeLocationAttendance(
   Map<String, Session> sessions,
   Map<String, Location> locations,
   Map<String, TeamMemberSession> teamMemberSessions,
 ) {
   final Map<String, _LocationAccumulator> accum = {};
 
-  // Iterate over all finished sessions
   for (final entry in sessions.entries) {
-    final sessionId = entry.key;
     final session = entry.value;
-
-    if (!session.finished) continue; // ignore incomplete sessions
+    if (!session.finished) continue;
 
     final locId = session.locationId;
     final locName = locations[locId]?.location ?? locId;
 
-    // Get all unique members who checked into this session
     final members = teamMemberSessions.values
-        .where((ms) => ms.sessionId == sessionId && ms.hasCheckInTime())
+        .where((ms) => ms.sessionId == entry.key && ms.hasCheckInTime())
         .map((ms) => ms.teamMemberId)
-        .toSet(); // unique members
+        .toSet();
 
-    if (members.isEmpty) continue; // skip if nobody checked in
+    if (members.isEmpty) continue;
 
     accum.putIfAbsent(locId, () => _LocationAccumulator(locId, locName));
     accum[locId]!.totalCheckIns += members.length;
     accum[locId]!.sessionCount += 1;
   }
 
-  // Convert accumulators into LocationAttendanceData with average attendance
-  final List<LocationAttendanceData> result = accum.values.map((acc) {
-    final avg = acc.sessionCount == 0
-        ? 0
-        : acc.totalCheckIns / acc.sessionCount;
-    return LocationAttendanceData(
+  return accum.values.map((acc) {
+    final avg = acc.sessionCount > 0 ? acc.totalCheckIns / acc.sessionCount : 0;
+    return AverageLocationAttendanceData(
       locationId: acc.locationId,
       locationName: acc.locationName,
-      checkInCount: avg.round(), // round to nearest int for display
+      checkInCount: avg.toDouble(),
     );
-  }).toList();
-
-  result.sort((a, b) => b.checkInCount.compareTo(a.checkInCount));
-  return result;
+  }).toList()..sort((a, b) => b.checkInCount.compareTo(a.checkInCount));
 }
 
 AttendanceInsights computeInsights(
