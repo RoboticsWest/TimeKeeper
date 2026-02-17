@@ -27,7 +27,7 @@ class StatisticsLocationChart extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Attendance by Location',
+                  'Avg Attendance by Location',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

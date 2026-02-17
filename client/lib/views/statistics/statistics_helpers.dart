@@ -10,9 +10,8 @@ export 'package:time_keeper/utils/formatting.dart'
 /// Regular vs overtime for a single member session.
 ({double regularSecs, double overtimeSecs}) computeMemberSessionHours(
   TeamMemberSession ms,
-  Session session, {
-  List<TeamMemberSession>? allMembersForSession,
-}) {
+  Session session,
+) {
   final sessionStart = session.startTime.toDateTime();
   final sessionEnd = session.endTime.toDateTime();
   final checkIn = ms.checkInTime.toDateTime();
@@ -20,46 +19,16 @@ export 'package:time_keeper/utils/formatting.dart'
       ? ms.checkOutTime.toDateTime()
       : DateTime.now();
 
-  // Determine earliest check-in & latest checkout among all members if provided
-  DateTime earliestCheckIn = checkIn;
-  DateTime latestCheckOut = checkOut;
+  final totalSecs = checkOut.difference(checkIn).inSeconds.toDouble();
+  if (totalSecs <= 0) return (regularSecs: 0, overtimeSecs: 0);
 
-  if (allMembersForSession != null && allMembersForSession.isNotEmpty) {
-    for (final memberMs in allMembersForSession) {
-      final ci = memberMs.checkInTime.toDateTime();
-      final co = memberMs.hasCheckOutTime()
-          ? memberMs.checkOutTime.toDateTime()
-          : DateTime.now();
-      if (ci.isBefore(earliestCheckIn)) earliestCheckIn = ci;
-      if (co.isAfter(latestCheckOut)) latestCheckOut = co;
-    }
-  }
-
-  // Effective regular period inside session window
-  final effectiveStart = earliestCheckIn.isAfter(sessionStart)
-      ? earliestCheckIn
-      : sessionStart;
-  final effectiveEnd = latestCheckOut.isBefore(sessionEnd)
-      ? latestCheckOut
-      : sessionEnd;
-
-  final regularSecs = effectiveEnd.isAfter(effectiveStart)
-      ? effectiveEnd.difference(effectiveStart).inSeconds.toDouble()
+  final overlapStart = checkIn.isAfter(sessionStart) ? checkIn : sessionStart;
+  final overlapEnd = checkOut.isBefore(sessionEnd) ? checkOut : sessionEnd;
+  final regularSecs = overlapEnd.isAfter(overlapStart)
+      ? overlapEnd.difference(overlapStart).inSeconds.toDouble()
       : 0.0;
 
-  // Overtime: before sessionStart or after sessionEnd
-  double overtimeSecs = 0.0;
-  if (earliestCheckIn.isBefore(sessionStart)) {
-    overtimeSecs += sessionStart
-        .difference(earliestCheckIn)
-        .inSeconds
-        .toDouble();
-  }
-  if (latestCheckOut.isAfter(sessionEnd)) {
-    overtimeSecs += latestCheckOut.difference(sessionEnd).inSeconds.toDouble();
-  }
-
-  return (regularSecs: regularSecs, overtimeSecs: overtimeSecs);
+  return (regularSecs: regularSecs, overtimeSecs: totalSecs - regularSecs);
 }
 
 Map<String, MemberHoursData> computeMemberHours(
@@ -87,12 +56,9 @@ Map<String, MemberHoursData> computeMemberHours(
     final name = member?.displayName ?? ms.teamMemberId;
     final memberType = member?.memberType ?? TeamMemberType.STUDENT;
 
-    final allMembers = sessionsToMembers[ms.sessionId];
-
     final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
       ms,
       session,
-      allMembersForSession: allMembers,
     );
 
     final entry = result.putIfAbsent(
