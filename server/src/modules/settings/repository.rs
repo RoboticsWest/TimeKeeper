@@ -20,12 +20,12 @@ pub const DEFAULT_NEXT_SESSION_THRESHOLD_SECS: i64 = 4 * 60 * 60; // 4 hours
 pub const DEFAULT_START_REMINDER_MINS: i64 = 24 * 60; // 24 hours
 pub const DEFAULT_END_REMINDER_MINS: i64 = 15;
 pub const DEFAULT_START_REMINDER_MESSAGE: &str =
-  "@here Session on {date} from {start_time} to {end_time} @ {location} starting in ~{mins} minutes!";
+  "@here Session on {date} from {start_time} to {end_time} @ **{location}** starting in ~{mins} minutes!";
 pub const DEFAULT_END_REMINDER_MESSAGE: &str =
-  "@here Session at {location} is ending in ~{mins} minutes \u{2014} don't forget to sign out!";
+  "@here Session @ **{location}** is ending in ~{mins} minutes \u{2014} don't forget to sign out!";
 pub const DEFAULT_OVERTIME_DM_MINS: i64 = 10;
-pub const DEFAULT_OVERTIME_DM_MESSAGE: &str = "Hey {username}, you're now in overtime for the session at **{location}**. The session ended at **{end_time}**. Don't forget to check out!";
-pub const DEFAULT_AUTO_CHECKOUT_DM_MESSAGE: &str = "Hey {username}, you've been auto-checked-out from the session at **{location}** (ended at **{end_time}**) because a new session is starting soon.";
+pub const DEFAULT_OVERTIME_DM_MESSAGE: &str = "Hey {username}, you're now in overtime for the session @ **{location}**. The session ended at **{end_time}**. Don't forget to check out!";
+pub const DEFAULT_AUTO_CHECKOUT_DM_MESSAGE: &str = "Hey {username}, you've been auto-checked-out from the session @ **{location}** (ended at **{end_time}**) because a new session is starting soon.";
 
 pub trait SettingsRepository {
   fn set(record: &Settings) -> Result<()>;

@@ -312,6 +312,26 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           onUpdate: updateDiscordReminder,
         ),
         const SizedBox(height: 24),
+        SettingRow(
+          label: 'Start Reminder RSVP Reactions',
+          description:
+              'Add thumbs up/down reactions to session start reminders so members can RSVP. '
+              'RSVPs are tracked and visible in the Sessions view.',
+          child: Row(
+            children: [
+              Switch(
+                value: rsvpReactionsEnabled.value,
+                onChanged: (value) {
+                  rsvpReactionsEnabled.value = value;
+                  updateDiscordBehavior();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(rsvpReactionsEnabled.value ? 'Enabled' : 'Disabled'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
         TextFieldSetting(
           label: 'End Reminder (minutes before)',
           description:
@@ -332,26 +352,6 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
           multiline: true,
           onUpdate: updateDiscordReminder,
-        ),
-        const SizedBox(height: 24),
-        SettingRow(
-          label: 'RSVP Reactions',
-          description:
-              'Add thumbs up/down reactions to session start reminders so members can RSVP. '
-              'RSVPs are tracked and visible in the Sessions view.',
-          child: Row(
-            children: [
-              Switch(
-                value: rsvpReactionsEnabled.value,
-                onChanged: (value) {
-                  rsvpReactionsEnabled.value = value;
-                  updateDiscordBehavior();
-                },
-              ),
-              const SizedBox(width: 8),
-              Text(rsvpReactionsEnabled.value ? 'Enabled' : 'Disabled'),
-            ],
-          ),
         ),
         const SizedBox(height: 24),
         SettingRow(

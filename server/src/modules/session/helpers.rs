@@ -16,6 +16,7 @@ use crate::{
 pub struct PastEndSession {
   pub session_id: String,
   pub session: Session,
+  pub start_secs: i64, // <-- add this
   pub end_secs: i64,
   pub checked_in: Vec<(String, TeamMemberSession)>,
   pub next_start_secs: Option<i64>,
@@ -142,9 +143,15 @@ pub fn get_past_end_sessions() -> Result<Vec<PastEndSession>> {
     let checked_in = get_checked_in_members(id)?;
     let next_start_secs = unfinished.get(i + 1).and_then(|(_, next)| next.start_time.as_ref().map(|t| t.seconds));
 
+    let start_secs = match session.start_time.as_ref() {
+      Some(t) => t.seconds,
+      None => continue,
+    };
+
     results.push(PastEndSession {
       session_id: id.clone(),
       session: session.clone(),
+      start_secs,
       end_secs,
       checked_in,
       next_start_secs,

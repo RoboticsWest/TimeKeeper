@@ -75,27 +75,61 @@ List<DayHoursData> computeDailyHours(
 ) {
   final byDay = <String, DayHoursData>{};
 
-  for (final ms in teamMemberSessions.values) {
-    if (!ms.hasCheckInTime()) continue;
-    final session = sessions[ms.sessionId];
-    if (session == null || !session.hasStartTime() || !session.hasEndTime()) {
-      continue;
+  for (final entry in sessions.entries) {
+    final sessionId = entry.key;
+    final session = entry.value;
+
+    if (!session.hasStartTime() || !session.hasEndTime()) continue;
+    if (!session.finished) continue; // ignore unfinished sessions
+
+    final sessionStart = session.startTime.toDateTime();
+    final sessionEnd = session.endTime.toDateTime();
+
+    double sessionSecs = sessionEnd
+        .difference(sessionStart)
+        .inSeconds
+        .toDouble();
+
+    // Calculate overtime (earliest check-in & latest checkout)
+    DateTime? earliestCheckIn;
+    DateTime? latestCheckOut;
+
+    for (final ms in teamMemberSessions.values) {
+      if (ms.sessionId != sessionId || !ms.hasCheckInTime()) continue;
+
+      final checkIn = ms.checkInTime.toDateTime();
+      if (earliestCheckIn == null || checkIn.isBefore(earliestCheckIn)) {
+        earliestCheckIn = checkIn;
+      }
+
+      final checkOut = ms.hasCheckOutTime()
+          ? ms.checkOutTime.toDateTime()
+          : DateTime.now();
+
+      if (latestCheckOut == null || checkOut.isAfter(latestCheckOut)) {
+        latestCheckOut = checkOut;
+      }
     }
 
-    final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
-      ms,
-      session,
+    if (earliestCheckIn != null && earliestCheckIn.isBefore(sessionStart)) {
+      sessionSecs += sessionStart.difference(earliestCheckIn).inSeconds;
+    }
+
+    if (latestCheckOut != null && latestCheckOut.isAfter(sessionEnd)) {
+      sessionSecs += latestCheckOut.difference(sessionEnd).inSeconds;
+    }
+
+    final date = DateTime(
+      sessionStart.year,
+      sessionStart.month,
+      sessionStart.day,
     );
-    final date = ms.checkInTime.toDateTime();
+
     final key =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-    byDay.putIfAbsent(
-      key,
-      () => DayHoursData(date: DateTime(date.year, date.month, date.day)),
-    );
-    byDay[key]!.regularSecs += regularSecs;
-    byDay[key]!.overtimeSecs += overtimeSecs;
+    byDay.putIfAbsent(key, () => DayHoursData(date: date));
+    byDay[key]!.regularSecs += sessionSecs;
   }
 
   return byDay.values.toList()..sort((a, b) => a.date.compareTo(b.date));
@@ -184,30 +218,60 @@ List<DayMemberDetail> computeDayMemberDetails(
     ..sort((a, b) => b.totalSecs.compareTo(a.totalSecs));
 }
 
+// Helper class to accumulate totals per location
+class _LocationAccumulator {
+  final String locationId;
+  final String locationName;
+  int totalCheckIns = 0; // sum of unique members per session
+  int sessionCount = 0; // number of sessions counted
+
+  _LocationAccumulator(this.locationId, this.locationName);
+}
+
 List<LocationAttendanceData> computeLocationAttendance(
   Map<String, Session> sessions,
   Map<String, Location> locations,
   Map<String, TeamMemberSession> teamMemberSessions,
 ) {
-  final byLocation = <String, LocationAttendanceData>{};
+  final Map<String, _LocationAccumulator> accum = {};
 
-  for (final ms in teamMemberSessions.values) {
-    if (!ms.hasCheckInTime()) continue;
-    final session = sessions[ms.sessionId];
-    if (session == null) continue;
+  // Iterate over all finished sessions
+  for (final entry in sessions.entries) {
+    final sessionId = entry.key;
+    final session = entry.value;
+
+    if (!session.finished) continue; // ignore incomplete sessions
 
     final locId = session.locationId;
     final locName = locations[locId]?.location ?? locId;
 
-    byLocation.putIfAbsent(
-      locId,
-      () => LocationAttendanceData(locationId: locId, locationName: locName),
-    );
-    byLocation[locId]!.checkInCount += 1;
+    // Get all unique members who checked into this session
+    final members = teamMemberSessions.values
+        .where((ms) => ms.sessionId == sessionId && ms.hasCheckInTime())
+        .map((ms) => ms.teamMemberId)
+        .toSet(); // unique members
+
+    if (members.isEmpty) continue; // skip if nobody checked in
+
+    accum.putIfAbsent(locId, () => _LocationAccumulator(locId, locName));
+    accum[locId]!.totalCheckIns += members.length;
+    accum[locId]!.sessionCount += 1;
   }
 
-  return byLocation.values.toList()
-    ..sort((a, b) => b.checkInCount.compareTo(a.checkInCount));
+  // Convert accumulators into LocationAttendanceData with average attendance
+  final List<LocationAttendanceData> result = accum.values.map((acc) {
+    final avg = acc.sessionCount == 0
+        ? 0
+        : acc.totalCheckIns / acc.sessionCount;
+    return LocationAttendanceData(
+      locationId: acc.locationId,
+      locationName: acc.locationName,
+      checkInCount: avg.round(), // round to nearest int for display
+    );
+  }).toList();
+
+  result.sort((a, b) => b.checkInCount.compareTo(a.checkInCount));
+  return result;
 }
 
 AttendanceInsights computeInsights(
@@ -308,14 +372,24 @@ AttendanceInsights computeInsights(
     busiest = weekdayFull[topDay - 1];
   }
 
-  // Average attendance = sum of unique members per session / number of sessions
   double avgAttendance = 0;
-  if (sessions.isNotEmpty) {
+
+  final finishedSessions = sessions.entries
+      .where((e) => e.value.finished)
+      .map((e) => e.key)
+      .toSet();
+
+  if (finishedSessions.isNotEmpty) {
     int totalUniqueAttendance = 0;
-    for (final members in uniqueMembersPerSession.values) {
-      totalUniqueAttendance += members.length;
+
+    for (final sessionId in finishedSessions) {
+      final members = uniqueMembersPerSession[sessionId];
+      if (members != null) {
+        totalUniqueAttendance += members.length;
+      }
     }
-    avgAttendance = totalUniqueAttendance / sessions.length;
+
+    avgAttendance = totalUniqueAttendance / finishedSessions.length;
   }
 
   return AttendanceInsights(
