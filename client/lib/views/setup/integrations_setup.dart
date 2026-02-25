@@ -127,8 +127,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 discordStartReminderMessage:
                     startReminderMessageController.text,
                 discordEndReminderMessage: endReminderMessageController.text,
-                discordAutoDeleteStartReminder:
-                    autoDeleteStartReminder.value,
+                discordAutoDeleteStartReminder: autoDeleteStartReminder.value,
                 discordAutoDeleteEndReminder: autoDeleteEndReminder.value,
               ),
             ),
