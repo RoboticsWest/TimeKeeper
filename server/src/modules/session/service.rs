@@ -58,6 +58,7 @@ impl ScheduledService for SessionService {
             session_id: pes.session_id.clone(),
             team_member_id: Some(ms.team_member_id.clone()),
             sent: false,
+            discord_message_id: None,
           };
           if let Err(e) = Notification::add(&notification) {
             log::error!(

@@ -108,6 +108,7 @@ impl NotificationService for NotificationApi {
       session_id: req.session_id,
       team_member_id: req.team_member_id,
       sent: req.sent,
+      discord_message_id: None,
     };
     Notification::add(&notification).map_err(|e| Status::internal(format!("Failed to create notification: {e}")))?;
 
@@ -137,6 +138,7 @@ impl NotificationService for NotificationApi {
       session_id: req.session_id,
       team_member_id: req.team_member_id,
       sent: req.sent,
+      discord_message_id: None,
     };
     Notification::update(&req.id, &notification)
       .map_err(|e| Status::internal(format!("Failed to update notification: {e}")))?;

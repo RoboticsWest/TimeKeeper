@@ -126,83 +126,142 @@ impl ScheduledService for DiscordNotificationService {
 
     // --- Session Start/End Reminders ---
     for (id, session) in &sessions {
-      if session.finished {
-        continue;
-      }
-
       let start_secs = session.start_time.as_ref().map_or(0, |t| t.seconds);
       let end_secs = session.end_time.as_ref().map_or(0, |t| t.seconds);
-      let location = locations.get(&session.location_id).map_or("Unknown", |l| l.location.as_str());
 
-      // Session starting soon reminder
-      if start_reminder_secs > 0 {
-        let time_until_start = start_secs - now_secs;
-        if time_until_start > 0
-          && time_until_start <= start_reminder_secs
-          && !Notification::exists(NotificationType::SessionStartReminder, id, None)?
-        {
-          let mins = time_until_start / 60;
-          let msg = DiscordNotificationService::replace_placeholders(
-            start_msg_template,
-            location,
-            start_secs,
-            end_secs,
-            tz,
-            Some(mins),
-          );
+      // Send reminders only for sessions that haven't finished
+      if !session.finished {
+        let location = locations.get(&session.location_id).map_or("Unknown", |l| l.location.as_str());
 
-          match block_on(async { announcement_channel.say(&http, &msg).await }) {
-            Ok(sent_msg) => {
-              if settings.discord_rsvp_reactions_enabled {
-                let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👍".to_string())).await });
-                let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👎".to_string())).await });
+        // Session starting soon reminder
+        if start_reminder_secs > 0 {
+          let time_until_start = start_secs - now_secs;
+          if time_until_start > 0
+            && time_until_start <= start_reminder_secs
+            && !Notification::exists(NotificationType::SessionStartReminder, id, None)?
+          {
+            let mins = time_until_start / 60;
+            let msg = DiscordNotificationService::replace_placeholders(
+              start_msg_template,
+              location,
+              start_secs,
+              end_secs,
+              tz,
+              Some(mins),
+            );
 
-                if let Err(e) = SessionRsvpMessage::set(&sent_msg.id.to_string(), id) {
-                  log::error!("[DiscordNotificationService] Failed to store RSVP message mapping: {e}");
+            match block_on(async { announcement_channel.say(&http, &msg).await }) {
+              Ok(sent_msg) => {
+                let discord_message_id = sent_msg.id.to_string();
+
+                if settings.discord_rsvp_reactions_enabled {
+                  let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👍".to_string())).await });
+                  let _ = block_on(async { sent_msg.react(&http, ReactionType::Unicode("👎".to_string())).await });
+
+                  if let Err(e) = SessionRsvpMessage::set(&discord_message_id, id) {
+                    log::error!("[DiscordNotificationService] Failed to store RSVP message mapping: {e}");
+                  }
                 }
-              }
 
-              Notification::add(&Notification {
-                notification_type: NotificationType::SessionStartReminder as i32,
-                session_id: id.clone(),
-                team_member_id: None,
-                sent: true,
-              })?;
+                Notification::add(&Notification {
+                  notification_type: NotificationType::SessionStartReminder as i32,
+                  session_id: id.clone(),
+                  team_member_id: None,
+                  sent: true,
+                  discord_message_id: Some(discord_message_id),
+                })?;
+              }
+              Err(e) => {
+                log::error!("[DiscordNotificationService] Failed to send start reminder: {e}");
+              }
             }
-            Err(e) => {
-              log::error!("[DiscordNotificationService] Failed to send start reminder: {e}");
+          }
+        }
+
+        // Session ending soon reminder
+        if end_reminder_secs > 0 {
+          let time_until_end = end_secs - now_secs;
+          if time_until_end > 0
+            && time_until_end <= end_reminder_secs
+            && now_secs >= start_secs
+            && !Notification::exists(NotificationType::SessionEndReminder, id, None)?
+          {
+            let mins = time_until_end / 60;
+            let msg = DiscordNotificationService::replace_placeholders(
+              end_msg_template,
+              location,
+              start_secs,
+              end_secs,
+              tz,
+              Some(mins),
+            );
+
+            match block_on(async { announcement_channel.say(&http, &msg).await }) {
+              Ok(sent_msg) => {
+                Notification::add(&Notification {
+                  notification_type: NotificationType::SessionEndReminder as i32,
+                  session_id: id.clone(),
+                  team_member_id: None,
+                  sent: true,
+                  discord_message_id: Some(sent_msg.id.to_string()),
+                })?;
+              }
+              Err(e) => {
+                log::error!("[DiscordNotificationService] Failed to send end reminder: {e}");
+              }
             }
           }
         }
       }
 
-      // Session ending soon reminder
-      if end_reminder_secs > 0 {
-        let time_until_end = end_secs - now_secs;
-        if time_until_end > 0
-          && time_until_end <= end_reminder_secs
-          && now_secs >= start_secs
-          && !Notification::exists(NotificationType::SessionEndReminder, id, None)?
-        {
-          let mins = time_until_end / 60;
-          let msg = DiscordNotificationService::replace_placeholders(
-            end_msg_template,
-            location,
-            start_secs,
-            end_secs,
-            tz,
-            Some(mins),
-          );
+      // Auto-delete start reminder when session has started (time-based, independent of finished state)
+      if settings.discord_auto_delete_start_reminder && start_secs > 0 && now_secs >= start_secs {
+        let session_notifs = Notification::get_by_session_id(id)?;
+        if let Some((notif_id, notif)) = session_notifs.into_iter().find(|(_, n)| {
+          n.notification_type == NotificationType::SessionStartReminder as i32 && n.discord_message_id.is_some()
+        }) {
+          let discord_msg_id = notif.discord_message_id.as_ref().unwrap();
+          let msg_id: u64 = discord_msg_id.parse().unwrap_or(0);
+          if msg_id > 0
+            && let Err(e) = block_on(async {
+              announcement_channel
+                .delete_message(&http, serenity::model::id::MessageId::new(msg_id))
+                .await
+            })
+          {
+            log::warn!("[DiscordNotificationService] Failed to delete start reminder message {discord_msg_id}: {e}");
+          }
+          // Clear the message ID so we don't attempt deletion again
+          let mut updated = notif.clone();
+          updated.discord_message_id = None;
+          if let Err(e) = Notification::update(&notif_id, &updated) {
+            log::error!("[DiscordNotificationService] Failed to clear start reminder message ID: {e}");
+          }
+        }
+      }
 
-          if let Err(e) = block_on(async { announcement_channel.say(&http, &msg).await }) {
-            log::error!("[DiscordNotificationService] Failed to send end reminder: {e}");
-          } else {
-            Notification::add(&Notification {
-              notification_type: NotificationType::SessionEndReminder as i32,
-              session_id: id.clone(),
-              team_member_id: None,
-              sent: true,
-            })?;
+      // Auto-delete end reminder when session has ended (time-based, independent of finished state)
+      if settings.discord_auto_delete_end_reminder && end_secs > 0 && now_secs >= end_secs {
+        let session_notifs = Notification::get_by_session_id(id)?;
+        if let Some((notif_id, notif)) = session_notifs.into_iter().find(|(_, n)| {
+          n.notification_type == NotificationType::SessionEndReminder as i32 && n.discord_message_id.is_some()
+        }) {
+          let discord_msg_id = notif.discord_message_id.as_ref().unwrap();
+          let msg_id: u64 = discord_msg_id.parse().unwrap_or(0);
+          if msg_id > 0
+            && let Err(e) = block_on(async {
+              announcement_channel
+                .delete_message(&http, serenity::model::id::MessageId::new(msg_id))
+                .await
+            })
+          {
+            log::warn!("[DiscordNotificationService] Failed to delete end reminder message {discord_msg_id}: {e}");
+          }
+          // Clear the message ID so we don't attempt deletion again
+          let mut updated = notif.clone();
+          updated.discord_message_id = None;
+          if let Err(e) = Notification::update(&notif_id, &updated) {
+            log::error!("[DiscordNotificationService] Failed to clear end reminder message ID: {e}");
           }
         }
       }
@@ -271,6 +330,7 @@ impl ScheduledService for DiscordNotificationService {
                 session_id: pes.session_id.clone(),
                 team_member_id: Some(ms.team_member_id.clone()),
                 sent: true,
+                discord_message_id: None,
               })
             {
               log::error!(

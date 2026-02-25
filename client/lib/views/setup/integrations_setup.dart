@@ -27,6 +27,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     final endReminderMinsController = useTextEditingController();
     final startReminderMessageController = useTextEditingController();
     final endReminderMessageController = useTextEditingController();
+    final autoDeleteStartReminder = useState(false);
+    final autoDeleteEndReminder = useState(false);
     final rsvpReactionsEnabled = useState(true);
     final selfLinkEnabled = useState(false);
     final nameSyncEnabled = useState(true);
@@ -67,6 +69,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               : '15';
           startReminderMessageController.text = s.discordStartReminderMessage;
           endReminderMessageController.text = s.discordEndReminderMessage;
+          autoDeleteStartReminder.value = s.discordAutoDeleteStartReminder;
+          autoDeleteEndReminder.value = s.discordAutoDeleteEndReminder;
           rsvpReactionsEnabled.value = s.discordRsvpReactionsEnabled;
           selfLinkEnabled.value = s.discordSelfLinkEnabled;
           nameSyncEnabled.value = s.discordNameSyncEnabled;
@@ -123,6 +127,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
                 discordStartReminderMessage:
                     startReminderMessageController.text,
                 discordEndReminderMessage: endReminderMessageController.text,
+                discordAutoDeleteStartReminder:
+                    autoDeleteStartReminder.value,
+                discordAutoDeleteEndReminder: autoDeleteEndReminder.value,
               ),
             ),
       );
@@ -313,6 +320,25 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         SettingRow(
+          label: 'Auto Delete Start Reminders',
+          description:
+              'Automatically delete the start reminder message from Discord once the session start time has passed.',
+          child: Row(
+            children: [
+              Switch(
+                value: autoDeleteStartReminder.value,
+                onChanged: (value) {
+                  autoDeleteStartReminder.value = value;
+                  updateDiscordReminder();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(autoDeleteStartReminder.value ? 'Enabled' : 'Disabled'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        SettingRow(
           label: 'Start Reminder RSVP Reactions',
           description:
               'Add thumbs up/down reactions to session start reminders so members can RSVP. '
@@ -352,6 +378,25 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
           multiline: true,
           onUpdate: updateDiscordReminder,
+        ),
+        const SizedBox(height: 24),
+        SettingRow(
+          label: 'Auto Delete End Reminders',
+          description:
+              'Automatically delete the end reminder message from Discord once the session end time has passed.',
+          child: Row(
+            children: [
+              Switch(
+                value: autoDeleteEndReminder.value,
+                onChanged: (value) {
+                  autoDeleteEndReminder.value = value;
+                  updateDiscordReminder();
+                },
+              ),
+              const SizedBox(width: 8),
+              Text(autoDeleteEndReminder.value ? 'Enabled' : 'Disabled'),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
         SettingRow(

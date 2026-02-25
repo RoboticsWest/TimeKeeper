@@ -63,6 +63,7 @@ message Notification {
   string session_id = 2;
   optional string team_member_id = 3;
   bool sent = 4;
+  optional string discord_message_id = 5;
 }
 
 message Logo {
@@ -110,4 +111,6 @@ message Settings {
   bool leaderboard_show_overtime = 21;
   repeated TeamMemberType leaderboard_member_types = 22;
   bool discord_rsvp_reactions_enabled = 23;
+  bool discord_auto_delete_start_reminder = 25;
+  bool discord_auto_delete_end_reminder = 26;
 }

@@ -793,6 +793,8 @@ class UpdateDiscordReminderSettingsRequest extends $pb.GeneratedMessage {
     $fixnum.Int64? discordEndReminderMins,
     $core.String? discordStartReminderMessage,
     $core.String? discordEndReminderMessage,
+    $core.bool? discordAutoDeleteStartReminder,
+    $core.bool? discordAutoDeleteEndReminder,
   }) {
     final result = create();
     if (discordStartReminderMins != null)
@@ -803,6 +805,10 @@ class UpdateDiscordReminderSettingsRequest extends $pb.GeneratedMessage {
       result.discordStartReminderMessage = discordStartReminderMessage;
     if (discordEndReminderMessage != null)
       result.discordEndReminderMessage = discordEndReminderMessage;
+    if (discordAutoDeleteStartReminder != null)
+      result.discordAutoDeleteStartReminder = discordAutoDeleteStartReminder;
+    if (discordAutoDeleteEndReminder != null)
+      result.discordAutoDeleteEndReminder = discordAutoDeleteEndReminder;
     return result;
   }
 
@@ -824,6 +830,8 @@ class UpdateDiscordReminderSettingsRequest extends $pb.GeneratedMessage {
     ..aInt64(2, _omitFieldNames ? '' : 'discordEndReminderMins')
     ..aOS(3, _omitFieldNames ? '' : 'discordStartReminderMessage')
     ..aOS(4, _omitFieldNames ? '' : 'discordEndReminderMessage')
+    ..aOB(5, _omitFieldNames ? '' : 'discordAutoDeleteStartReminder')
+    ..aOB(6, _omitFieldNames ? '' : 'discordAutoDeleteEndReminder')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -884,6 +892,24 @@ class UpdateDiscordReminderSettingsRequest extends $pb.GeneratedMessage {
   $core.bool hasDiscordEndReminderMessage() => $_has(3);
   @$pb.TagNumber(4)
   void clearDiscordEndReminderMessage() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get discordAutoDeleteStartReminder => $_getBF(4);
+  @$pb.TagNumber(5)
+  set discordAutoDeleteStartReminder($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDiscordAutoDeleteStartReminder() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDiscordAutoDeleteStartReminder() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.bool get discordAutoDeleteEndReminder => $_getBF(5);
+  @$pb.TagNumber(6)
+  set discordAutoDeleteEndReminder($core.bool value) => $_setBool(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasDiscordAutoDeleteEndReminder() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearDiscordAutoDeleteEndReminder() => $_clearField(6);
 }
 
 class UpdateDiscordReminderSettingsResponse extends $pb.GeneratedMessage {

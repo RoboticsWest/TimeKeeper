@@ -3258,6 +3258,10 @@ pub struct UpdateDiscordReminderSettingsRequest {
     pub discord_end_reminder_message: ::core::option::Option<
         ::prost::alloc::string::String,
     >,
+    #[prost(bool, optional, tag = "5")]
+    pub discord_auto_delete_start_reminder: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "6")]
+    pub discord_auto_delete_end_reminder: ::core::option::Option<bool>,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateDiscordReminderSettingsResponse {}

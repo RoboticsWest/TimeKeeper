@@ -190,6 +190,14 @@ impl SettingsService for SettingsApi {
       settings.discord_end_reminder_message = v;
     }
 
+    if let Some(v) = req.discord_auto_delete_start_reminder {
+      settings.discord_auto_delete_start_reminder = v;
+    }
+
+    if let Some(v) = req.discord_auto_delete_end_reminder {
+      settings.discord_auto_delete_end_reminder = v;
+    }
+
     Self::save_settings(&settings)?;
     Ok(Response::new(UpdateDiscordReminderSettingsResponse {}))
   }
