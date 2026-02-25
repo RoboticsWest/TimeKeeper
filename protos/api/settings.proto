@@ -98,6 +98,8 @@ message UpdateDiscordReminderSettingsRequest {
   optional int64 discord_end_reminder_mins = 2;
   optional string discord_start_reminder_message = 3;
   optional string discord_end_reminder_message = 4;
+  optional bool discord_auto_delete_start_reminder = 5;
+  optional bool discord_auto_delete_end_reminder = 6;
 }
 
 message UpdateDiscordReminderSettingsResponse {}

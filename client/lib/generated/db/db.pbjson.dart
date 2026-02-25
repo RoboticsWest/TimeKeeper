@@ -268,9 +268,19 @@ const Notification$json = {
       '17': true
     },
     {'1': 'sent', '3': 4, '4': 1, '5': 8, '10': 'sent'},
+    {
+      '1': 'discord_message_id',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'discordMessageId',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_team_member_id'},
+    {'1': '_discord_message_id'},
   ],
 };
 
@@ -279,7 +289,8 @@ final $typed_data.Uint8List notificationDescriptor = $convert.base64Decode(
     'CgxOb3RpZmljYXRpb24SRAoRbm90aWZpY2F0aW9uX3R5cGUYASABKA4yFy50ay5kYi5Ob3RpZm'
     'ljYXRpb25UeXBlUhBub3RpZmljYXRpb25UeXBlEh0KCnNlc3Npb25faWQYAiABKAlSCXNlc3Np'
     'b25JZBIpCg50ZWFtX21lbWJlcl9pZBgDIAEoCUgAUgx0ZWFtTWVtYmVySWSIAQESEgoEc2VudB'
-    'gEIAEoCFIEc2VudEIRCg9fdGVhbV9tZW1iZXJfaWQ=');
+    'gEIAEoCFIEc2VudBIxChJkaXNjb3JkX21lc3NhZ2VfaWQYBSABKAlIAVIQZGlzY29yZE1lc3Nh'
+    'Z2VJZIgBAUIRCg9fdGVhbV9tZW1iZXJfaWRCFQoTX2Rpc2NvcmRfbWVzc2FnZV9pZA==');
 
 @$core.Deprecated('Use logoDescriptor instead')
 const Logo$json = {
@@ -473,6 +484,20 @@ const Settings$json = {
       '5': 8,
       '10': 'discordRsvpReactionsEnabled'
     },
+    {
+      '1': 'discord_auto_delete_start_reminder',
+      '3': 25,
+      '4': 1,
+      '5': 8,
+      '10': 'discordAutoDeleteStartReminder'
+    },
+    {
+      '1': 'discord_auto_delete_end_reminder',
+      '3': 26,
+      '4': 1,
+      '5': 8,
+      '10': 'discordAutoDeleteEndReminder'
+    },
   ],
 };
 
@@ -503,4 +528,7 @@ final $typed_data.Uint8List settingsDescriptor = $convert.base64Decode(
     'ZF9zaG93X292ZXJ0aW1lGBUgASgIUhdsZWFkZXJib2FyZFNob3dPdmVydGltZRJPChhsZWFkZX'
     'Jib2FyZF9tZW1iZXJfdHlwZXMYFiADKA4yFS50ay5kYi5UZWFtTWVtYmVyVHlwZVIWbGVhZGVy'
     'Ym9hcmRNZW1iZXJUeXBlcxJDCh5kaXNjb3JkX3JzdnBfcmVhY3Rpb25zX2VuYWJsZWQYFyABKA'
-    'hSG2Rpc2NvcmRSc3ZwUmVhY3Rpb25zRW5hYmxlZA==');
+    'hSG2Rpc2NvcmRSc3ZwUmVhY3Rpb25zRW5hYmxlZBJKCiJkaXNjb3JkX2F1dG9fZGVsZXRlX3N0'
+    'YXJ0X3JlbWluZGVyGBkgASgIUh5kaXNjb3JkQXV0b0RlbGV0ZVN0YXJ0UmVtaW5kZXISRgogZG'
+    'lzY29yZF9hdXRvX2RlbGV0ZV9lbmRfcmVtaW5kZXIYGiABKAhSHGRpc2NvcmRBdXRvRGVsZXRl'
+    'RW5kUmVtaW5kZXI=');

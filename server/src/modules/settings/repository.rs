@@ -83,6 +83,8 @@ impl SettingsRepository for Settings {
       leaderboard_show_overtime: true,
       leaderboard_member_types: vec![TeamMemberType::Student as i32, TeamMemberType::Mentor as i32],
       discord_rsvp_reactions_enabled: true,
+      discord_auto_delete_start_reminder: false,
+      discord_auto_delete_end_reminder: false,
     };
 
     if let Some(s) = table.get::<Settings>(SETTINGS_KEY)? {

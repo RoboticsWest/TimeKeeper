@@ -72,6 +72,8 @@ pub struct Notification {
     pub team_member_id: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(bool, tag = "4")]
     pub sent: bool,
+    #[prost(string, optional, tag = "5")]
+    pub discord_message_id: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Logo {
@@ -144,6 +146,10 @@ pub struct Settings {
     pub leaderboard_member_types: ::prost::alloc::vec::Vec<i32>,
     #[prost(bool, tag = "23")]
     pub discord_rsvp_reactions_enabled: bool,
+    #[prost(bool, tag = "25")]
+    pub discord_auto_delete_start_reminder: bool,
+    #[prost(bool, tag = "26")]
+    pub discord_auto_delete_end_reminder: bool,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

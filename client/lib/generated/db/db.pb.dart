@@ -579,12 +579,14 @@ class Notification extends $pb.GeneratedMessage {
     $core.String? sessionId,
     $core.String? teamMemberId,
     $core.bool? sent,
+    $core.String? discordMessageId,
   }) {
     final result = create();
     if (notificationType != null) result.notificationType = notificationType;
     if (sessionId != null) result.sessionId = sessionId;
     if (teamMemberId != null) result.teamMemberId = teamMemberId;
     if (sent != null) result.sent = sent;
+    if (discordMessageId != null) result.discordMessageId = discordMessageId;
     return result;
   }
 
@@ -606,6 +608,7 @@ class Notification extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'sessionId')
     ..aOS(3, _omitFieldNames ? '' : 'teamMemberId')
     ..aOB(4, _omitFieldNames ? '' : 'sent')
+    ..aOS(5, _omitFieldNames ? '' : 'discordMessageId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -662,6 +665,15 @@ class Notification extends $pb.GeneratedMessage {
   $core.bool hasSent() => $_has(3);
   @$pb.TagNumber(4)
   void clearSent() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.String get discordMessageId => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set discordMessageId($core.String value) => $_setString(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasDiscordMessageId() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDiscordMessageId() => $_clearField(5);
 }
 
 class Logo extends $pb.GeneratedMessage {
@@ -889,6 +901,8 @@ class Settings extends $pb.GeneratedMessage {
     $core.Iterable<TeamMemberType>? leaderboardMemberTypes,
     $core.bool? discordRsvpReactionsEnabled,
     $core.String? discordNotificationChannelId,
+    $core.bool? discordAutoDeleteStartReminder,
+    $core.bool? discordAutoDeleteEndReminder,
   }) {
     final result = create();
     if (nextSessionThresholdSecs != null)
@@ -933,6 +947,10 @@ class Settings extends $pb.GeneratedMessage {
       result.discordRsvpReactionsEnabled = discordRsvpReactionsEnabled;
     if (discordNotificationChannelId != null)
       result.discordNotificationChannelId = discordNotificationChannelId;
+    if (discordAutoDeleteStartReminder != null)
+      result.discordAutoDeleteStartReminder = discordAutoDeleteStartReminder;
+    if (discordAutoDeleteEndReminder != null)
+      result.discordAutoDeleteEndReminder = discordAutoDeleteEndReminder;
     return result;
   }
 
@@ -977,6 +995,8 @@ class Settings extends $pb.GeneratedMessage {
         defaultEnumValue: TeamMemberType.STUDENT)
     ..aOB(23, _omitFieldNames ? '' : 'discordRsvpReactionsEnabled')
     ..aOS(24, _omitFieldNames ? '' : 'discordNotificationChannelId')
+    ..aOB(25, _omitFieldNames ? '' : 'discordAutoDeleteStartReminder')
+    ..aOB(26, _omitFieldNames ? '' : 'discordAutoDeleteEndReminder')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1208,6 +1228,24 @@ class Settings extends $pb.GeneratedMessage {
   $core.bool hasDiscordNotificationChannelId() => $_has(23);
   @$pb.TagNumber(24)
   void clearDiscordNotificationChannelId() => $_clearField(24);
+
+  @$pb.TagNumber(25)
+  $core.bool get discordAutoDeleteStartReminder => $_getBF(24);
+  @$pb.TagNumber(25)
+  set discordAutoDeleteStartReminder($core.bool value) => $_setBool(24, value);
+  @$pb.TagNumber(25)
+  $core.bool hasDiscordAutoDeleteStartReminder() => $_has(24);
+  @$pb.TagNumber(25)
+  void clearDiscordAutoDeleteStartReminder() => $_clearField(25);
+
+  @$pb.TagNumber(26)
+  $core.bool get discordAutoDeleteEndReminder => $_getBF(25);
+  @$pb.TagNumber(26)
+  set discordAutoDeleteEndReminder($core.bool value) => $_setBool(25, value);
+  @$pb.TagNumber(26)
+  $core.bool hasDiscordAutoDeleteEndReminder() => $_has(25);
+  @$pb.TagNumber(26)
+  void clearDiscordAutoDeleteEndReminder() => $_clearField(26);
 }
 
 const $core.bool _omitFieldNames =

@@ -340,12 +340,32 @@ const UpdateDiscordReminderSettingsRequest$json = {
       '10': 'discordEndReminderMessage',
       '17': true
     },
+    {
+      '1': 'discord_auto_delete_start_reminder',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '9': 4,
+      '10': 'discordAutoDeleteStartReminder',
+      '17': true
+    },
+    {
+      '1': 'discord_auto_delete_end_reminder',
+      '3': 6,
+      '4': 1,
+      '5': 8,
+      '9': 5,
+      '10': 'discordAutoDeleteEndReminder',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_discord_start_reminder_mins'},
     {'1': '_discord_end_reminder_mins'},
     {'1': '_discord_start_reminder_message'},
     {'1': '_discord_end_reminder_message'},
+    {'1': '_discord_auto_delete_start_reminder'},
+    {'1': '_discord_auto_delete_end_reminder'},
   ],
 };
 
@@ -356,9 +376,14 @@ final $typed_data.Uint8List updateDiscordReminderSettingsRequestDescriptor = $co
     'aXNjb3JkX2VuZF9yZW1pbmRlcl9taW5zGAIgASgDSAFSFmRpc2NvcmRFbmRSZW1pbmRlck1pbn'
     'OIAQESSAoeZGlzY29yZF9zdGFydF9yZW1pbmRlcl9tZXNzYWdlGAMgASgJSAJSG2Rpc2NvcmRT'
     'dGFydFJlbWluZGVyTWVzc2FnZYgBARJEChxkaXNjb3JkX2VuZF9yZW1pbmRlcl9tZXNzYWdlGA'
-    'QgASgJSANSGWRpc2NvcmRFbmRSZW1pbmRlck1lc3NhZ2WIAQFCHgocX2Rpc2NvcmRfc3RhcnRf'
-    'cmVtaW5kZXJfbWluc0IcChpfZGlzY29yZF9lbmRfcmVtaW5kZXJfbWluc0IhCh9fZGlzY29yZF'
-    '9zdGFydF9yZW1pbmRlcl9tZXNzYWdlQh8KHV9kaXNjb3JkX2VuZF9yZW1pbmRlcl9tZXNzYWdl');
+    'QgASgJSANSGWRpc2NvcmRFbmRSZW1pbmRlck1lc3NhZ2WIAQESTwoiZGlzY29yZF9hdXRvX2Rl'
+    'bGV0ZV9zdGFydF9yZW1pbmRlchgFIAEoCEgEUh5kaXNjb3JkQXV0b0RlbGV0ZVN0YXJ0UmVtaW'
+    '5kZXKIAQESSwogZGlzY29yZF9hdXRvX2RlbGV0ZV9lbmRfcmVtaW5kZXIYBiABKAhIBVIcZGlz'
+    'Y29yZEF1dG9EZWxldGVFbmRSZW1pbmRlcogBAUIeChxfZGlzY29yZF9zdGFydF9yZW1pbmRlcl'
+    '9taW5zQhwKGl9kaXNjb3JkX2VuZF9yZW1pbmRlcl9taW5zQiEKH19kaXNjb3JkX3N0YXJ0X3Jl'
+    'bWluZGVyX21lc3NhZ2VCHwodX2Rpc2NvcmRfZW5kX3JlbWluZGVyX21lc3NhZ2VCJQojX2Rpc2'
+    'NvcmRfYXV0b19kZWxldGVfc3RhcnRfcmVtaW5kZXJCIwohX2Rpc2NvcmRfYXV0b19kZWxldGVf'
+    'ZW5kX3JlbWluZGVy');
 
 @$core.Deprecated('Use updateDiscordReminderSettingsResponseDescriptor instead')
 const UpdateDiscordReminderSettingsResponse$json = {
