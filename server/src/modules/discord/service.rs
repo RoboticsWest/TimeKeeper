@@ -224,9 +224,7 @@ impl ScheduledService for DiscordNotificationService {
           let msg_id: u64 = discord_msg_id.parse().unwrap_or(0);
           if msg_id > 0
             && let Err(e) = block_on(async {
-              announcement_channel
-                .delete_message(&http, serenity::model::id::MessageId::new(msg_id))
-                .await
+              announcement_channel.delete_message(&http, serenity::model::id::MessageId::new(msg_id)).await
             })
           {
             log::warn!("[DiscordNotificationService] Failed to delete start reminder message {discord_msg_id}: {e}");
@@ -250,9 +248,7 @@ impl ScheduledService for DiscordNotificationService {
           let msg_id: u64 = discord_msg_id.parse().unwrap_or(0);
           if msg_id > 0
             && let Err(e) = block_on(async {
-              announcement_channel
-                .delete_message(&http, serenity::model::id::MessageId::new(msg_id))
-                .await
+              announcement_channel.delete_message(&http, serenity::model::id::MessageId::new(msg_id)).await
             })
           {
             log::warn!("[DiscordNotificationService] Failed to delete end reminder message {discord_msg_id}: {e}");
