@@ -4,15 +4,15 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.8
+  sdk: ^3.11.5
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  hooks_riverpod: ^3.0.3
+  hooks_riverpod: 3.1.0
   flutter_hooks: ^0.21.3+1
-  riverpod_annotation: ^4.0.0
+  riverpod_annotation: 4.0.0
   grpc: ^5.1.0
   protobuf: ^6.0.0
   shared_preferences: ^2.5.4
@@ -32,10 +32,10 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  riverpod_generator: ^4.0.0+1
+  riverpod_generator: 4.0.0+1
   build_runner: ^2.10.4
   custom_lint: ^0.8.1
-  riverpod_lint: ^3.0.3
+  riverpod_lint: 3.1.0
 
 # run -> `dart run flutter_launcher_icons` to generate icons
 flutter_launcher_icons:
