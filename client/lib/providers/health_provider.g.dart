@@ -8,60 +8,17 @@ part of 'health_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-
-@ProviderFor(healthService)
-final healthServiceProvider = HealthServiceProvider._();
-
-final class HealthServiceProvider
-    extends
-        $FunctionalProvider<
-          HealthServiceClient,
-          HealthServiceClient,
-          HealthServiceClient
-        >
-    with $Provider<HealthServiceClient> {
-  HealthServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'healthServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$healthServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<HealthServiceClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  HealthServiceClient create(Ref ref) {
-    return healthService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(HealthServiceClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<HealthServiceClient>(value),
-    );
-  }
-}
-
-String _$healthServiceHash() => r'14d38fb6c1bdce03a96070f98ef74adf2a2d2e23';
+/// Polls the plain `/health` HTTP endpoint (not part of the GraphQL API) to report connectivity.
 
 @ProviderFor(isConnected)
 final isConnectedProvider = IsConnectedProvider._();
 
+/// Polls the plain `/health` HTTP endpoint (not part of the GraphQL API) to report connectivity.
+
 final class IsConnectedProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
     with $FutureModifier<bool>, $StreamProvider<bool> {
+  /// Polls the plain `/health` HTTP endpoint (not part of the GraphQL API) to report connectivity.
   IsConnectedProvider._()
     : super(
         from: null,
@@ -87,4 +44,4 @@ final class IsConnectedProvider
   }
 }
 
-String _$isConnectedHash() => r'e0561f30c954ed9fa13ec4144e995739b7d83ce2';
+String _$isConnectedHash() => r'7094d1d2b823804c01a8f4bf883a8b6815cea804';

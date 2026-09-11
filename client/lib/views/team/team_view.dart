@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/api.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
-import 'package:time_keeper/providers/entity_sync_provider.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/helpers/session_helper.dart';
 import 'package:time_keeper/views/team/check_in_out_button.dart';
 import 'package:time_keeper/views/team/member_type_chip.dart';
@@ -43,9 +41,9 @@ class TeamView extends HookConsumerWidget {
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final client = ref.read(teamMemberServiceProvider);
+        final notifier = ref.read(teamMembersProvider.notifier);
         for (final id in ids) {
-          await client.deleteTeamMember(DeleteTeamMemberRequest(id: id));
+          await notifier.delete(id);
         }
       },
       showResultDialog: true,
@@ -55,7 +53,8 @@ class TeamView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(entitySyncProvider);
+    ref.watch(teamMembersSyncProvider);
+    ref.watch(teamMemberSessionsSyncProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final currentLocation = ref.watch(currentLocationProvider) ?? '';
@@ -74,13 +73,13 @@ class TeamView extends HookConsumerWidget {
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
       final m = entry.value;
-      final type = m.memberType == TeamMemberType.STUDENT
+      final type = m.memberType == TeamMemberType.student
           ? 'student'
           : 'mentor';
       return m.firstName.toLowerCase().contains(filterText) ||
           m.lastName.toLowerCase().contains(filterText) ||
-          m.displayName.toLowerCase().contains(filterText) ||
-          m.discordUsername.toLowerCase().contains(filterText) ||
+          (m.displayName ?? '').toLowerCase().contains(filterText) ||
+          (m.discordUsername ?? '').toLowerCase().contains(filterText) ||
           type.contains(filterText);
     }).toList();
 
@@ -104,7 +103,7 @@ class TeamView extends HookConsumerWidget {
                   description: 'all students',
                   ids: teamMembers.entries
                       .where(
-                        (e) => e.value.memberType == TeamMemberType.STUDENT,
+                        (e) => e.value.memberType == TeamMemberType.student,
                       )
                       .map((e) => e.key)
                       .toList(),
@@ -121,7 +120,7 @@ class TeamView extends HookConsumerWidget {
                   title: 'Clear Mentors',
                   description: 'all mentors',
                   ids: teamMembers.entries
-                      .where((e) => e.value.memberType == TeamMemberType.MENTOR)
+                      .where((e) => e.value.memberType == TeamMemberType.mentor)
                       .map((e) => e.key)
                       .toList(),
                 ),
@@ -209,18 +208,14 @@ class TeamView extends HookConsumerWidget {
                     existingFirstName: member.firstName,
                     existingLastName: member.lastName,
                     existingMemberType: member.memberType,
-                    existingDisplayName: member.displayName.isNotEmpty
-                        ? member.displayName
-                        : null,
-                    existingDiscordUsername: member.discordUsername.isNotEmpty
-                        ? member.discordUsername
-                        : null,
+                    existingDisplayName: member.displayName,
+                    existingDiscordUsername: member.discordUsername,
                   ),
                   onDelete: () => showDeleteTeamMemberDialog(
                     context,
                     ref,
                     id: id,
-                    name: member.displayName,
+                    name: member.displayName ?? '${member.firstName} ${member.lastName}',
                   ),
                   cells: [
                     BaseTableCell(child: Text(member.firstName)),
@@ -229,37 +224,26 @@ class TeamView extends HookConsumerWidget {
                       child: MemberTypeChip(memberType: member.memberType),
                     ),
                     BaseTableCell(
-                      child: Text(
-                        member.displayName.isNotEmpty
-                            ? member.displayName
-                            : '—',
-                      ),
+                      child: Text(member.displayName ?? '—'),
                     ),
                     BaseTableCell(child: Text(tagDisplay)),
                     BaseTableCell(
-                      child: Text(
-                        member.discordUsername.isNotEmpty
-                            ? member.discordUsername
-                            : '—',
-                      ),
+                      child: Text(member.discordUsername ?? '—'),
                     ),
                     BaseTableCell(
                       child: CheckInOutButton(
                         checkedIn: checkedIn,
                         onPressed: () async {
-                          final req = CheckInOutRequest(
-                            teamMemberId: id,
-                            locationId: currentLocation,
-                          );
-                          final result = await callGrpcEndpoint(
-                            () => ref
-                                .read(sessionServiceProvider)
-                                .checkInOut(req),
-                          );
+                          final result = await ref
+                              .read(sessionCheckInOutProvider.notifier)
+                              .checkInOut(id, currentLocation);
                           if (context.mounted) {
-                            SnackBarDialog.fromGrpcStatus(
-                              result: result,
-                            ).show(context);
+                            switch (result) {
+                              case ApiSuccess():
+                                SnackBarDialog.success(message: 'Success').show(context);
+                              case ApiFailure(userMessage: final msg):
+                                SnackBarDialog.error(message: msg).show(context);
+                            }
                           }
                         },
                       ),

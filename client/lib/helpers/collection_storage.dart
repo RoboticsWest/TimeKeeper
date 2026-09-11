@@ -1,17 +1,18 @@
-import 'package:protobuf/protobuf.dart';
-import 'package:time_keeper/generated/common/common.pbenum.dart';
+import 'dart:convert';
+
 import 'package:time_keeper/helpers/local_storage.dart';
-import 'package:time_keeper/helpers/protobuf_helper.dart';
+import 'package:time_keeper/models/change_event.dart';
 
-/// Helper for storing and retrieving collections of protobuf messages.
+/// Helper for storing and retrieving collections of JSON-serializable models.
 ///
-/// Each item is stored individually with a prefixed key, making updates
-/// efficient. An index tracks all IDs in the collection.
-class CollectionStorage<T extends GeneratedMessage> {
+/// Each item is stored individually (as JSON) with a prefixed key, making updates efficient. An
+/// index tracks all IDs in the collection.
+class CollectionStorage<T> {
   final String tableName;
-  final T Function(List<int>) fromBuffer;
+  final T Function(Map<String, dynamic>) fromJson;
+  final Map<String, dynamic> Function(T) toJson;
 
-  CollectionStorage({required this.tableName, required this.fromBuffer});
+  CollectionStorage({required this.tableName, required this.fromJson, required this.toJson});
 
   String get _idsKey => '${tableName}_ids';
   String _itemKey(String id) => '${tableName}_$id';
@@ -36,7 +37,7 @@ class CollectionStorage<T extends GeneratedMessage> {
     if (encoded == null) return null;
 
     try {
-      return ProtobufHelper.decode(encoded, fromBuffer);
+      return fromJson(jsonDecode(encoded) as Map<String, dynamic>);
     } catch (e) {
       return null;
     }
@@ -44,28 +45,13 @@ class CollectionStorage<T extends GeneratedMessage> {
 
   /// Save a single item
   Future<void> set(String id, T item) async {
-    final encoded = ProtobufHelper.encode(item);
-    await localStorage.setString(_itemKey(id), encoded);
+    await localStorage.setString(_itemKey(id), jsonEncode(toJson(item)));
 
-    // Add to index if not already present
     final ids = localStorage.getStringList(_idsKey) ?? [];
     if (!ids.contains(id)) {
       ids.add(id);
       await localStorage.setStringList(_idsKey, ids);
     }
-  }
-
-  /// Save multiple items
-  Future<void> setAll(Map<String, T> items) async {
-    final ids = <String>[];
-
-    for (final entry in items.entries) {
-      final encoded = ProtobufHelper.encode(entry.value);
-      await localStorage.setString(_itemKey(entry.key), encoded);
-      ids.add(entry.key);
-    }
-
-    await localStorage.setStringList(_idsKey, ids);
   }
 
   /// Remove a single item
@@ -77,89 +63,22 @@ class CollectionStorage<T extends GeneratedMessage> {
     await localStorage.setStringList(_idsKey, ids);
   }
 
-  /// Clear all items in this collection
-  Future<void> clear() async {
-    final ids = localStorage.getStringList(_idsKey) ?? [];
-
-    // Remove all individual items
-    for (final id in ids) {
-      await localStorage.remove(_itemKey(id));
-    }
-
-    // Clear the index
-    await localStorage.remove(_idsKey);
-  }
-
   /// Get list of all IDs
   List<String> getIds() {
     return localStorage.getStringList(_idsKey) ?? [];
   }
 
-  /// Check if an item exists
-  bool exists(String id) {
-    final ids = localStorage.getStringList(_idsKey) ?? [];
-    return ids.contains(id);
-  }
+  /// Replaces the entire local collection with a fresh snapshot (e.g. from the initial GraphQL
+  /// query on load), clearing stale entries not present in [items]. Returns the new full map.
+  Map<String, T> seedFromList(List<T> items, String Function(T) getId) {
+    final incoming = <String, T>{for (final item in items) getId(item): item};
 
-  /// Process stream updates, handling both upserts and deletes.
-  ///
-  /// Takes an iterable of response items and callbacks:
-  /// - hasItem: Returns true if the response item contains data (false = delete)
-  /// - getId: Extracts the ID from a response item
-  /// - getItem: Extracts the data from a response item
-  ///
-  /// Returns a record of (updates, deletedIds).
-  ({Map<String, T> updates, Set<String> deletedIds}) processStreamUpdates<R>(
-    Iterable<R> responseItems, {
-    required bool Function(R) hasItem,
-    required String Function(R) getId,
-    required T Function(R) getItem,
-  }) {
-    final updates = <String, T>{};
-    final deletedIds = <String>{};
-
-    for (final responseItem in responseItems) {
-      final id = getId(responseItem);
-      if (hasItem(responseItem)) {
-        final item = getItem(responseItem);
-        set(id, item);
-        updates[id] = item;
-      } else {
-        remove(id);
-        deletedIds.add(id);
-      }
-    }
-
-    return (updates: updates, deletedIds: deletedIds);
-  }
-
-  /// Replaces the entire collection with the given items.
-  ///
-  /// Clears stale entries that are not in [items] and saves the new data.
-  /// Returns the new full map.
-  Map<String, T> replaceAll<R>(
-    Iterable<R> responseItems, {
-    required bool Function(R) hasItem,
-    required String Function(R) getId,
-    required T Function(R) getItem,
-  }) {
-    final incoming = <String, T>{};
-
-    for (final responseItem in responseItems) {
-      if (hasItem(responseItem)) {
-        incoming[getId(responseItem)] = getItem(responseItem);
-      }
-    }
-
-    // Remove stale entries not present in the server snapshot
-    final existingIds = getIds();
-    for (final id in existingIds) {
+    for (final id in getIds()) {
       if (!incoming.containsKey(id)) {
         remove(id);
       }
     }
 
-    // Save all incoming items
     for (final entry in incoming.entries) {
       set(entry.key, entry.value);
     }
@@ -167,42 +86,17 @@ class CollectionStorage<T extends GeneratedMessage> {
     return incoming;
   }
 
-  /// Processes a stream response and updates both local storage and provider state.
-  ///
-  /// Uses the server-provided [SyncType] to determine behavior:
-  /// - [SyncType.FULL]: Replace the entire local collection with the server snapshot.
-  /// - [SyncType.PARTIAL]: Merge incremental updates and remove deleted items.
-  ///
-  /// Call this from notifier `syncFromStream` methods or from sync bridge providers.
-  void syncResponse<ResponseItem>({
-    required SyncType syncType,
-    required Iterable<ResponseItem> items,
-    required bool Function(ResponseItem) hasItem,
-    required String Function(ResponseItem) getId,
-    required T Function(ResponseItem) getItem,
-    required Map<String, T> Function() getState,
-    required void Function(Map<String, T>) setState,
-  }) {
-    if (syncType == SyncType.FULL) {
-      final fullState = replaceAll(
-        items,
-        hasItem: hasItem,
-        getId: getId,
-        getItem: getItem,
-      );
-      setState(fullState);
+  /// Applies one incremental change (from a `*Changes` GraphQL subscription) to both local
+  /// storage and the given state map, returning the updated map.
+  Map<String, T> applyChange(ChangeEvent<T> change, Map<String, T> currentState) {
+    if (change.data != null) {
+      set(change.id, change.data as T);
+      return {...currentState, change.id: change.data as T};
     } else {
-      final (:updates, :deletedIds) = processStreamUpdates(
-        items,
-        hasItem: hasItem,
-        getId: getId,
-        getItem: getItem,
-      );
-      if (updates.isNotEmpty || deletedIds.isNotEmpty) {
-        final newState = {...getState(), ...updates};
-        newState.removeWhere((id, _) => deletedIds.contains(id));
-        setState(newState);
-      }
+      remove(change.id);
+      final newState = {...currentState};
+      newState.remove(change.id);
+      return newState;
     }
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/colors.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/widgets/dialogs/base_dialog.dart';
 
 class PopupDialog extends BaseDialog {
@@ -68,31 +68,20 @@ class PopupDialog extends BaseDialog {
     );
   }
 
-  static PopupDialog fromGrpcStatus<T>({
-    required GrpcResult<T> result,
+  static PopupDialog fromApiResult({
+    required ApiCallResult result,
     Widget? successMessage,
   }) {
-    switch (result) {
-      case GrpcSuccess():
-        return PopupDialog.success(
-          title: 'Success',
-          message: successMessage ?? const Text('Success'),
-        );
-      case GrpcFailure(userMessage: final msg, statusCode: final code):
-        return PopupDialog.error(
-          title: 'Error',
-          message: Column(
-            children: [
-              Text(
-                'Status: $code',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text('Failed: $msg'),
-            ],
-          ),
-        );
+    if (result.success) {
+      return PopupDialog.success(
+        title: 'Success',
+        message: successMessage ?? const Text('Success'),
+      );
     }
+    return PopupDialog.error(
+      title: 'Error',
+      message: Text('Failed: ${result.message}'),
+    );
   }
 
   Color get _bannerColor {

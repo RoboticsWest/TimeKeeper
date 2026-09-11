@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/common/common.pb.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
@@ -9,10 +7,12 @@ import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/views/kiosk/team_member_header.dart';
 import 'package:time_keeper/views/kiosk/team_member_row.dart';
 import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
+import 'package:time_keeper/models/location.dart';
+import 'package:time_keeper/models/team_member.dart';
 
 class CheckedInMember {
   final Location location;
-  final Timestamp timeIn;
+  final DateTime timeIn;
   final TeamMember teamMember;
 
   CheckedInMember({
@@ -35,7 +35,7 @@ class CheckedInList extends ConsumerWidget {
     final List<CheckedInMember> checkedInList = [];
 
     for (final ms in teamMemberSessions.values) {
-      if (!ms.hasCheckInTime() || ms.hasCheckOutTime()) {
+      if (ms.checkOutTime != null) {
         continue;
       }
 
@@ -56,8 +56,8 @@ class CheckedInList extends ConsumerWidget {
     }
 
     checkedInList.sort(
-      (a, b) => a.teamMember.displayName.toLowerCase().compareTo(
-        b.teamMember.displayName.toLowerCase(),
+      (a, b) => (a.teamMember.displayName ?? '').toLowerCase().compareTo(
+        (b.teamMember.displayName ?? '').toLowerCase(),
       ),
     );
 

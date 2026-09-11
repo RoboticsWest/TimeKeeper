@@ -4,20 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
-import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
-import 'package:time_keeper/generated/common/common.pbenum.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
-import 'package:time_keeper/providers/settings_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
-import 'package:time_keeper/utils/permissions.dart';
-import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
+import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/hooks/use_rfid_scanner.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/kiosk/checked_in_list.dart';
 import 'package:time_keeper/views/kiosk/kiosk_dialog.dart';
 import 'package:time_keeper/views/kiosk/kiosk_scan_handler.dart';
@@ -31,7 +24,10 @@ class HomeView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(entitySyncProvider);
+    ref.watch(sessionsSyncProvider);
+    ref.watch(locationsSyncProvider);
+    ref.watch(teamMembersSyncProvider);
+    ref.watch(teamMemberSessionsSyncProvider);
     final sessionList = ref.watch(sessionsProvider);
     final deviceLocationId = ref.watch(currentLocationProvider);
     final locations = ref.watch(locationsProvider);
@@ -46,15 +42,10 @@ class HomeView extends HookConsumerWidget {
             .where(
               (session) =>
                   !session.finished &&
-                  session.hasStartTime() &&
-                  (deviceLocationId == null ||
-                      session.locationId == deviceLocationId),
+                  (deviceLocationId == null || session.locationId == deviceLocationId),
             )
             .toList()
-          ..sort(
-            (a, b) =>
-                a.startTime.toDateTime().compareTo(b.startTime.toDateTime()),
-          );
+          ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
     final currentSession = unfinishedSessions.isNotEmpty
         ? unfinishedSessions.first
@@ -73,17 +64,11 @@ class HomeView extends HookConsumerWidget {
 
     final checkedInCount = currentSessionId != null
         ? teamMemberSessions.values
-              .where(
-                (ms) =>
-                    ms.sessionId == currentSessionId &&
-                    ms.hasCheckInTime() &&
-                    !ms.hasCheckOutTime(),
-              )
+              .where((ms) => ms.sessionId == currentSessionId && ms.checkOutTime == null)
               .length
         : 0;
 
-    final roles = ref.watch(rolesProvider);
-    final hasKiosk = roles.any((role) => role.hasPermission(Role.KIOSK));
+    final hasKiosk = ref.watch(hasAnyPermissionProvider);
 
     // RFID scanning (PCSC + keyboard) - only active when user has KIOSK permission
     useRfidScanner(
@@ -103,17 +88,9 @@ class HomeView extends HookConsumerWidget {
 
     useEffect(() {
       Future<void> loadSettings() async {
-        final result = await callGrpcEndpoint(
-          () => ref
-              .read(settingsServiceProvider)
-              .getSettings(GetSettingsRequest()),
-        );
-
-        if (result is GrpcSuccess<GetSettingsResponse>) {
-          final s = result.data.settings;
-          thresholdDuration.value = Duration(
-            seconds: s.nextSessionThresholdSecs.toInt(),
-          );
+        final settings = await ref.read(settingsQueryProvider.future);
+        if (settings != null) {
+          thresholdDuration.value = Duration(seconds: settings.nextSessionThresholdSecs);
         }
       }
 
@@ -128,7 +105,7 @@ class HomeView extends HookConsumerWidget {
       }
 
       final now = DateTime.now();
-      final sessionStart = currentSession.startTime.toDateTime();
+      final sessionStart = currentSession.startTime;
 
       final thresholdTime = sessionStart.subtract(thresholdDuration.value);
 

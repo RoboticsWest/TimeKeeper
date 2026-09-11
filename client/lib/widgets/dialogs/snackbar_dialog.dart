@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/colors.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/widgets/dialogs/base_dialog.dart';
 
 class SnackBarDialog extends BaseDialog {
@@ -25,13 +25,11 @@ class SnackBarDialog extends BaseDialog {
     return SnackBarDialog(message: message, type: DialogType.warn);
   }
 
-  static SnackBarDialog fromGrpcStatus<T>({required GrpcResult<T> result}) {
-    switch (result) {
-      case GrpcSuccess():
-        return SnackBarDialog.success(message: 'Success');
-      case GrpcFailure(userMessage: final msg):
-        return SnackBarDialog.error(message: msg);
+  static SnackBarDialog fromApiResult({required ApiCallResult result}) {
+    if (result.success) {
+      return SnackBarDialog.success(message: 'Success');
     }
+    return SnackBarDialog.error(message: result.message ?? 'An error occurred');
   }
 
   @override

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/team_member.dart';
 
 class MemberTypeChip extends StatelessWidget {
   final TeamMemberType memberType;
@@ -8,7 +8,7 @@ class MemberTypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isStudent = memberType == TeamMemberType.STUDENT;
+    final isStudent = memberType == TeamMemberType.student;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Chip(

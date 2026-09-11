@@ -1,34 +1,66 @@
+import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/generated/api/team_member.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/auth_interceptor.dart';
 import 'package:time_keeper/helpers/collection_storage.dart';
-import 'package:time_keeper/helpers/reconnecting_stream.dart';
-import 'package:time_keeper/providers/auth_provider.dart';
-import 'package:time_keeper/providers/grpc_channel_provider.dart';
+import 'package:time_keeper/models/change_event.dart';
+import 'package:time_keeper/models/team_member.dart';
+import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 
 part 'team_member_provider.g.dart';
 
-@Riverpod(keepAlive: true)
-TeamMemberServiceClient teamMemberService(Ref ref) {
-  final channel = ref.watch(grpcChannelProvider);
-  final token = ref.watch(tokenProvider);
-  final options = authCallOptions(token);
+const _teamMemberFields = 'id firstName lastName memberType displayName mobileNumber discordUsername';
 
-  return TeamMemberServiceClient(channel, options: options);
-}
+const _teamMembersQuery = '''
+  query TeamMembers {
+    teamMembers { $_teamMemberFields }
+  }
+''';
+
+const _teamMemberChangesSubscription = '''
+  subscription TeamMemberChanges {
+    teamMemberChanges { operation id data { $_teamMemberFields } }
+  }
+''';
+
+const _uploadStudentCsvMutation = r'''
+  mutation UploadStudentCsv($csvData: String!) {
+    uploadStudentCsv(csvData: $csvData)
+  }
+''';
+
+const _uploadMentorCsvMutation = r'''
+  mutation UploadMentorCsv($csvData: String!) {
+    uploadMentorCsv(csvData: $csvData)
+  }
+''';
+
+const _createTeamMemberMutation = '''
+  mutation CreateTeamMember(\$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordUsername: String) {
+    createTeamMember(firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordUsername: \$discordUsername) { $_teamMemberFields }
+  }
+''';
+
+const _updateTeamMemberMutation = '''
+  mutation UpdateTeamMember(\$id: UUID!, \$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordUsername: String) {
+    updateTeamMember(id: \$id, firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordUsername: \$discordUsername) { $_teamMemberFields }
+  }
+''';
+
+const _deleteTeamMemberMutation = r'''
+  mutation DeleteTeamMember($id: UUID!) {
+    deleteTeamMember(id: $id)
+  }
+''';
 
 @riverpod
-Stream<StreamTeamMembersResponse> teamMembersStream(Ref ref) {
-  final reconnectingStream = ReconnectingStream<StreamTeamMembersResponse>(
-    () async {
-      final client = ref.read(teamMemberServiceProvider);
-      return client.streamTeamMembers(StreamTeamMembersRequest());
-    },
-  );
-
-  ref.onDispose(reconnectingStream.close);
-  return reconnectingStream.stream;
+Stream<ChangeEvent<TeamMember>> teamMemberChanges(Ref ref) {
+  final client = ref.watch(timeKeeperGraphQLClientProvider);
+  return client
+      .subscribe(SubscriptionOptions(document: gql(_teamMemberChangesSubscription)))
+      .where((result) => result.data != null)
+      .map(
+        (result) => ChangeEvent.fromJson(result.data!['teamMemberChanges'] as Map<String, dynamic>, TeamMember.fromJson),
+      );
 }
 
 @Riverpod(keepAlive: true)
@@ -37,43 +69,94 @@ class TeamMembers extends _$TeamMembers {
 
   @override
   Map<String, TeamMember> build() {
-    _storage = CollectionStorage(
-      tableName: 'team_members',
-      fromBuffer: TeamMember.fromBuffer,
-    );
-
+    _storage = CollectionStorage(tableName: 'team_members', fromJson: TeamMember.fromJson, toJson: (m) => m.toJson());
+    _fetchInitial();
     return _storage.getAll();
   }
 
-  void syncFromStream(StreamTeamMembersResponse response) {
-    _storage.syncResponse(
-      syncType: response.syncType,
-      items: response.teamMembers,
-      hasItem: (item) => item.hasTeamMember(),
-      getId: (item) => item.id,
-      getItem: (item) => item.teamMember,
-      getState: () => state,
-      setState: (newState) => state = newState,
-    );
+  Future<void> _fetchInitial() async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.query(QueryOptions(document: gql(_teamMembersQuery), fetchPolicy: FetchPolicy.noCache));
+    if (result.hasException || result.data == null) return;
+
+    final items = (result.data!['teamMembers'] as List<dynamic>)
+        .map((e) => TeamMember.fromJson(e as Map<String, dynamic>))
+        .toList();
+    state = _storage.seedFromList(items, (m) => m.id);
   }
+
+  void applyChange(ChangeEvent<TeamMember> change) {
+    state = _storage.applyChange(change, state);
+  }
+
+  Future<ApiCallResult> uploadStudentCsv(String csvData) => _mutate(_uploadStudentCsvMutation, {'csvData': csvData});
+
+  Future<ApiCallResult> uploadMentorCsv(String csvData) => _mutate(_uploadMentorCsvMutation, {'csvData': csvData});
+
+  Future<ApiCallResult> create({
+    required String firstName,
+    required String lastName,
+    required String memberType,
+    String? displayName,
+    String? discordUsername,
+  }) => _mutate(_createTeamMemberMutation, {
+    'firstName': firstName,
+    'lastName': lastName,
+    'memberType': memberType,
+    'displayName': displayName,
+    'discordUsername': discordUsername,
+  });
+
+  Future<ApiCallResult> update({
+    required String id,
+    required String firstName,
+    required String lastName,
+    required String memberType,
+    String? displayName,
+    String? discordUsername,
+  }) => _mutate(_updateTeamMemberMutation, {
+    'id': id,
+    'firstName': firstName,
+    'lastName': lastName,
+    'memberType': memberType,
+    'displayName': displayName,
+    'discordUsername': discordUsername,
+  });
+
+  Future<ApiCallResult> delete(String id) => _mutate(_deleteTeamMemberMutation, {'id': id});
+
+  Future<ApiCallResult> _mutate(String document, Map<String, dynamic> variables) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(document: gql(document), variables: variables, fetchPolicy: FetchPolicy.noCache),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiCallResult(success: false, message: message);
+    }
+    return const ApiCallResult(success: true);
+  }
+}
+
+@riverpod
+void teamMembersSync(Ref ref) {
+  ref.listen(teamMemberChangesProvider, (previous, next) {
+    next.whenData((change) {
+      ref.read(teamMembersProvider.notifier).applyChange(change);
+    });
+  });
 }
 
 @Riverpod(keepAlive: true)
 Map<String, TeamMember> studentTeamMembers(Ref ref) {
   final members = ref.watch(teamMembersProvider);
-  return Map.fromEntries(
-    members.entries.where(
-      (entry) => entry.value.memberType == TeamMemberType.STUDENT,
-    ),
-  );
+  return Map.fromEntries(members.entries.where((entry) => entry.value.memberType == TeamMemberType.student));
 }
 
 @Riverpod(keepAlive: true)
 Map<String, TeamMember> mentorTeamMembers(Ref ref) {
   final members = ref.watch(teamMembersProvider);
-  return Map.fromEntries(
-    members.entries.where(
-      (entry) => entry.value.memberType == TeamMemberType.MENTOR,
-    ),
-  );
+  return Map.fromEntries(members.entries.where((entry) => entry.value.memberType == TeamMemberType.mentor));
 }

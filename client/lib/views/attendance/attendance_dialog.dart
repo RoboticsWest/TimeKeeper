@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -43,14 +39,7 @@ void showDeleteAttendanceDialog(
       'Are you sure you want to delete the check-in record for "$memberName"?',
     ),
     confirmText: 'Delete',
-    onConfirmAsyncGrpc: () async {
-      final client = ref.read(teamMemberSessionServiceProvider);
-      return await callGrpcEndpoint(
-        () => client.deleteTeamMemberSession(
-          DeleteTeamMemberSessionRequest(id: id),
-        ),
-      );
-    },
+    onConfirmAsyncApi: () => ref.read(teamMemberSessionsProvider.notifier).delete(id),
     showResultDialog: true,
     successMessage: Text('Check-in record for "$memberName" has been deleted'),
   ).show(context);
@@ -71,13 +60,13 @@ class _AttendanceForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final checkInDt = existing.checkInTime.toDateTime();
+    final checkInDt = existing.checkInTime;
 
     final checkInDate = useState(checkInDt);
     final checkInTime = useState(TimeOfDay.fromDateTime(checkInDt));
 
-    final hasCheckOut = existing.hasCheckOutTime();
-    final checkOutDt = hasCheckOut ? existing.checkOutTime.toDateTime() : null;
+    final hasCheckOut = existing.checkOutTime != null;
+    final checkOutDt = existing.checkOutTime;
 
     final checkOutEnabled = useState(hasCheckOut);
     final checkOutDate = useState(
@@ -199,56 +188,40 @@ class _AttendanceForm extends HookConsumerWidget {
                           checkInTime.value.minute,
                         );
 
+                        DateTime? outDt;
+                        if (checkOutEnabled.value) {
+                          outDt = DateTime(
+                            checkOutDate.value.year,
+                            checkOutDate.value.month,
+                            checkOutDate.value.day,
+                            checkOutTime.value.hour,
+                            checkOutTime.value.minute,
+                          );
+
+                          if (outDt.isBefore(inDt) || outDt.isAtSameMomentAs(inDt)) {
+                            if (context.mounted) {
+                              SnackBarDialog.info(
+                                message: 'Check-out must be after check-in time',
+                              ).show(context);
+                            }
+                            return;
+                          }
+                        }
+
                         isLoading.value = true;
                         try {
-                          final client = ref.read(
-                            teamMemberSessionServiceProvider,
-                          );
-
-                          final request = UpdateTeamMemberSessionRequest(
-                            id: id,
-                            checkInTime: inDt.toTimestamp(),
-                          );
-
-                          if (checkOutEnabled.value) {
-                            final outDt = DateTime(
-                              checkOutDate.value.year,
-                              checkOutDate.value.month,
-                              checkOutDate.value.day,
-                              checkOutTime.value.hour,
-                              checkOutTime.value.minute,
-                            );
-
-                            if (outDt.isBefore(inDt) ||
-                                outDt.isAtSameMomentAs(inDt)) {
-                              if (context.mounted) {
-                                SnackBarDialog.info(
-                                  message:
-                                      'Check-out must be after check-in time',
-                                ).show(context);
-                              }
-                              return;
-                            }
-
-                            request.checkOutTime = outDt.toTimestamp();
-                          }
-
-                          final GrpcResult<dynamic> result =
-                              await callGrpcEndpoint(
-                                () => client.updateTeamMemberSession(request),
-                              );
+                          final result = await ref
+                              .read(teamMemberSessionsProvider.notifier)
+                              .update(id, inDt, outDt);
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
-                            switch (result) {
-                              case GrpcSuccess():
-                                SnackBarDialog.success(
-                                  message: 'Check-in updated successfully',
-                                ).show(context);
-                              case GrpcFailure():
-                                SnackBarDialog.fromGrpcStatus(
-                                  result: result,
-                                ).show(context);
+                            if (result.success) {
+                              SnackBarDialog.success(
+                                message: 'Check-in updated successfully',
+                              ).show(context);
+                            } else {
+                              SnackBarDialog.fromApiResult(result: result).show(context);
                             }
                           }
                         } finally {

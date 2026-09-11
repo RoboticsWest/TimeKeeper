@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/utils/time.dart';
+import 'package:time_keeper/models/session.dart';
 
 enum SessionStatus { current, overtime, upcoming, finished }
 
@@ -8,8 +7,8 @@ SessionStatus getSessionStatus(Session session) {
   if (session.finished) return SessionStatus.finished;
 
   final now = DateTime.now();
-  final start = session.startTime.toDateTime();
-  final end = session.endTime.toDateTime();
+  final start = session.startTime;
+  final end = session.endTime;
 
   if (now.isBefore(start)) return SessionStatus.upcoming;
   if (now.isAfter(end)) return SessionStatus.overtime;
@@ -60,8 +59,8 @@ int compareSessionEntries(
   final statusCmp = order[aStatus]!.compareTo(order[bStatus]!);
   if (statusCmp != 0) return statusCmp;
 
-  final aTime = a.value.startTime.toDateTime();
-  final bTime = b.value.startTime.toDateTime();
+  final aTime = a.value.startTime;
+  final bTime = b.value.startTime;
 
   // Upcoming: soonest first. Current/Overtime/Finished: newest first.
   if (aStatus == SessionStatus.upcoming) {

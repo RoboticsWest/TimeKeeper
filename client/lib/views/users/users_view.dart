@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/providers/user_provider.dart';
-import 'package:time_keeper/views/users/role_chip.dart';
 import 'package:time_keeper/views/users/user_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
@@ -25,10 +24,7 @@ class UsersView extends HookConsumerWidget {
 
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
-      final user = entry.value;
-      final roleStr = user.roles.map((r) => r.name.toLowerCase()).join(' ');
-      return user.username.toLowerCase().contains(filterText) ||
-          roleStr.contains(filterText);
+      return entry.value.username.toLowerCase().contains(filterText);
     }).toList();
 
     return Padding(
@@ -50,10 +46,6 @@ class UsersView extends HookConsumerWidget {
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
-                const BaseTableCell(
-                  child: Text('Roles', style: TextStyle(color: Colors.white)),
-                  flex: 2,
-                ),
               ],
               headerDecoration: BoxDecoration(
                 color: theme.colorScheme.secondary,
@@ -71,7 +63,6 @@ class UsersView extends HookConsumerWidget {
                     ref,
                     id: id,
                     existingUsername: user.username,
-                    existingRoles: user.roles.toList(),
                   ),
                   onDelete: () => showDeleteUserDialog(
                     context,
@@ -79,18 +70,7 @@ class UsersView extends HookConsumerWidget {
                     id: id,
                     username: user.username,
                   ),
-                  cells: [
-                    BaseTableCell(child: Text(user.username)),
-                    BaseTableCell(
-                      child: Wrap(
-                        spacing: 6,
-                        children: user.roles
-                            .map((role) => RoleChip(role: role))
-                            .toList(),
-                      ),
-                      flex: 2,
-                    ),
-                  ],
+                  cells: [BaseTableCell(child: Text(user.username))],
                 );
               }).toList(),
               onAdd: () => showUserDialog(context, ref),

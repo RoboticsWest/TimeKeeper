@@ -1,91 +1,25 @@
-import 'package:time_keeper/generated/common/common.pbenum.dart';
+/// Mirrors the server's `permission_level` enum - ordered so `write` implies `read` and `delete`
+/// implies `write` (ceiling semantics), matching `database/migrations/0001_init/up.sql`.
+enum PermissionLevel implements Comparable<PermissionLevel> {
+  read,
+  write,
+  delete;
 
-/// RoleGraph represents the inheritance graph of roles
-class RoleGraph {
-  final Map<Role, Set<Role>> _inheritance = {};
+  @override
+  int compareTo(PermissionLevel other) => index.compareTo(other.index);
+}
 
-  RoleGraph();
+/// Checks whether a decoded JWT `permissions` claim list (`"<resource>:<level>"` strings) grants
+/// at least [required] on [resource].
+bool hasPermission(List<String> permissions, String resource, PermissionLevel required) {
+  for (final claim in permissions) {
+    final parts = claim.split(':');
+    if (parts.length != 2 || parts[0] != resource) continue;
 
-  /// Add a role with no inheritance
-  void addRole(Role role) {
-    _inheritance.putIfAbsent(role, () => {});
-  }
-
-  /// Add a role with inheritance
-  void addRoleWithInheritance(Role role, List<Role> inheritedRoles) {
-    final entry = _inheritance.putIfAbsent(role, () => {});
-    for (final parent in inheritedRoles) {
-      entry.add(parent);
-    }
-  }
-
-  /// Check if role has the required permissions, including inheritance
-  bool hasPermission(Role role, Role required) {
-    // If the role is admin, bypass all checks
-    if (role == Role.ADMIN) {
+    final level = PermissionLevel.values.where((l) => l.name == parts[1]).firstOrNull;
+    if (level != null && level.compareTo(required) >= 0) {
       return true;
     }
-
-    // Direct match
-    if (role == required) {
-      return true;
-    }
-
-    // BFS to check for inheritance
-    final queue = <Role>[role];
-    final visited = <Role>{role};
-
-    while (queue.isNotEmpty) {
-      final currentRole = queue.removeLast();
-
-      // Check direct inheritance
-      final inheritance = _inheritance[currentRole];
-      if (inheritance != null) {
-        for (final parent in inheritance) {
-          if (parent == required) {
-            return true;
-          }
-
-          if (visited.add(parent)) {
-            queue.add(parent);
-          }
-        }
-      }
-    }
-
-    return false;
   }
-}
-
-/// Global role graph instance
-final roleGraph = _initializeRoleGraph();
-
-RoleGraph _initializeRoleGraph() {
-  final graph = RoleGraph();
-
-  //
-  // Define roles that have parent roles
-  // (we don't care about dangling roles as they get checked 1:1)
-  //
-
-  // Team
-  graph.addRoleWithInheritance(Role.KIOSK, []);
-  graph.addRoleWithInheritance(Role.STUDENT, [Role.KIOSK]);
-  graph.addRoleWithInheritance(Role.MENTOR, [Role.STUDENT]);
-
-  return graph;
-}
-
-/// Extension on Role to provide permission checking
-extension RolePermissions on Role {
-  /// Check if this role has the required permission
-  bool hasPermission(Role required) {
-    return roleGraph.hasPermission(this, required);
-  }
-}
-
-extension RolePermission on List<Role> {
-  bool hasPermission(Role required) {
-    return any((role) => role.hasPermission(required));
-  }
+  return false;
 }

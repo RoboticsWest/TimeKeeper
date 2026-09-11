@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/models/session_status.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 
 class MemberCount extends StatelessWidget {
   final int total;
@@ -18,7 +18,7 @@ class MemberCount extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final activeCount = sessionMemberSessions
-        .where((ms) => ms.hasCheckInTime() && !ms.hasCheckOutTime())
+        .where((ms) => ms.checkOutTime == null)
         .length;
     final text =
         status == SessionStatus.current || status == SessionStatus.overtime

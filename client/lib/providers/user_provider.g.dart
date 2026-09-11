@@ -9,52 +9,51 @@ part of 'user_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(usersStream)
-final usersStreamProvider = UsersStreamProvider._();
+@ProviderFor(userChanges)
+final userChangesProvider = UserChangesProvider._();
 
-final class UsersStreamProvider
+final class UserChangesProvider
     extends
         $FunctionalProvider<
-          AsyncValue<StreamUsersResponse>,
-          StreamUsersResponse,
-          Stream<StreamUsersResponse>
+          AsyncValue<ChangeEvent<User>>,
+          ChangeEvent<User>,
+          Stream<ChangeEvent<User>>
         >
     with
-        $FutureModifier<StreamUsersResponse>,
-        $StreamProvider<StreamUsersResponse> {
-  UsersStreamProvider._()
+        $FutureModifier<ChangeEvent<User>>,
+        $StreamProvider<ChangeEvent<User>> {
+  UserChangesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'usersStreamProvider',
+        name: r'userChangesProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$usersStreamHash();
+  String debugGetCreateSourceHash() => _$userChangesHash();
 
   @$internal
   @override
-  $StreamProviderElement<StreamUsersResponse> $createElement(
+  $StreamProviderElement<ChangeEvent<User>> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<StreamUsersResponse> create(Ref ref) {
-    return usersStream(ref);
+  Stream<ChangeEvent<User>> create(Ref ref) {
+    return userChanges(ref);
   }
 }
 
-String _$usersStreamHash() => r'1572fee3a306bf9bebb41dd6912ce72a17bc9aa4';
+String _$userChangesHash() => r'202060cbfec6f505ec7c798f433f45175670bb26';
 
 @ProviderFor(Users)
 final usersProvider = UsersProvider._();
 
-final class UsersProvider
-    extends $NotifierProvider<Users, Map<String, UserResponse>> {
+final class UsersProvider extends $NotifierProvider<Users, Map<String, User>> {
   UsersProvider._()
     : super(
         from: null,
@@ -74,28 +73,27 @@ final class UsersProvider
   Users create() => Users();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Map<String, UserResponse> value) {
+  Override overrideWithValue(Map<String, User> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Map<String, UserResponse>>(value),
+      providerOverride: $SyncValueProvider<Map<String, User>>(value),
     );
   }
 }
 
-String _$usersHash() => r'f14dd30823b21375fa560a263d674d5462e4eccb';
+String _$usersHash() => r'c1b13187907fd8133aca3e013920b79f604679ad';
 
-abstract class _$Users extends $Notifier<Map<String, UserResponse>> {
-  Map<String, UserResponse> build();
+abstract class _$Users extends $Notifier<Map<String, User>> {
+  Map<String, User> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref as $Ref<Map<String, UserResponse>, Map<String, UserResponse>>;
+    final ref = this.ref as $Ref<Map<String, User>, Map<String, User>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<Map<String, UserResponse>, Map<String, UserResponse>>,
-              Map<String, UserResponse>,
+              AnyNotifier<Map<String, User>, Map<String, User>>,
+              Map<String, User>,
               Object?,
               Object?
             >;
@@ -103,19 +101,11 @@ abstract class _$Users extends $Notifier<Map<String, UserResponse>> {
   }
 }
 
-/// Auto-dispose provider that bridges [usersStreamProvider] to [usersProvider].
-/// Views watch this to activate the users stream.
-
 @ProviderFor(usersSync)
 final usersSyncProvider = UsersSyncProvider._();
 
-/// Auto-dispose provider that bridges [usersStreamProvider] to [usersProvider].
-/// Views watch this to activate the users stream.
-
 final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
     with $Provider<void> {
-  /// Auto-dispose provider that bridges [usersStreamProvider] to [usersProvider].
-  /// Views watch this to activate the users stream.
   UsersSyncProvider._()
     : super(
         from: null,
@@ -149,4 +139,4 @@ final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$usersSyncHash() => r'0fd2f91dbdcab05d2b9f44e3a36361c854e0db52';
+String _$usersSyncHash() => r'9a4d88ebd9f725e6792ad6e8c39cae0f487360b0';

@@ -79,15 +79,8 @@ jobs:
             artifact: timekeeper-server-macos-aarch64
             archive: tar.gz
     runs-on: ${{ matrix.runner }}
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
@@ -103,9 +96,13 @@ jobs:
         if: matrix.target == 'x86_64-pc-windows-gnu'
         run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
 
-      # Build the server
+      # Build the server. `static-pq` vendors and statically links libpq/OpenSSL from source
+      # instead of relying on a system libpq for the target - needed since these targets
+      # (musl, mingw-w64, and cross-arch macOS) don't reliably have one available. Only
+      # `diesel::PgConnection` (used to run migrations at startup) touches libpq at all - every
+      # other query goes through diesel-async's pure-Rust tokio-postgres backend.
       - name: Build server (release)
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }} -p server --features static-pq
 
       # Download the web client artifact
       - name: Download web client
@@ -325,6 +322,13 @@ jobs:
             RestartSec=10
 
             Environment="RUST_LOG=info"
+            # Optional, ops-managed, never touched by deploys (unlike this generated unit file
+            # itself, which is fully overwritten on every deploy). Set DATABASE_URL there to
+            # point at an external Postgres in production; leave the file absent/empty to keep
+            # using the zero-setup embedded Postgres under /root/.pgdata (same default as local
+            # dev - just make sure /root/.pgdata persists across deploys/restarts if so, since
+            # only /root/server itself is replaced each deploy).
+            EnvironmentFile=-/root/timekeeper.env
 
             [Install]
             WantedBy=default.target

@@ -1,7 +1,9 @@
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/location.dart';
+import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/models/statistics_data.dart';
+import 'package:time_keeper/models/team_member.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
 
 export 'package:time_keeper/models/statistics_data.dart';
 export 'package:time_keeper/utils/formatting.dart'
@@ -12,12 +14,10 @@ export 'package:time_keeper/utils/formatting.dart'
   TeamMemberSession ms,
   Session session,
 ) {
-  final sessionStart = session.startTime.toDateTime();
-  final sessionEnd = session.endTime.toDateTime();
-  final checkIn = ms.checkInTime.toDateTime();
-  final checkOut = ms.hasCheckOutTime()
-      ? ms.checkOutTime.toDateTime()
-      : DateTime.now();
+  final sessionStart = session.startTime;
+  final sessionEnd = session.endTime;
+  final checkIn = ms.checkInTime;
+  final checkOut = ms.checkOutTime ?? DateTime.now();
 
   final totalSecs = checkOut.difference(checkIn).inSeconds.toDouble();
   if (totalSecs <= 0) return (regularSecs: 0, overtimeSecs: 0);
@@ -41,20 +41,16 @@ Map<String, MemberHoursData> computeMemberHours(
   // Group member sessions by session ID for correct earliest/latest
   final sessionsToMembers = <String, List<TeamMemberSession>>{};
   for (final ms in teamMemberSessions.values) {
-    if (!ms.hasCheckInTime()) continue;
     sessionsToMembers.putIfAbsent(ms.sessionId, () => []).add(ms);
   }
 
   for (final ms in teamMemberSessions.values) {
-    if (!ms.hasCheckInTime()) continue;
     final session = sessions[ms.sessionId];
-    if (session == null || !session.hasStartTime() || !session.hasEndTime()) {
-      continue;
-    }
+    if (session == null) continue;
 
     final member = teamMembers[ms.teamMemberId];
     final name = member?.displayName ?? ms.teamMemberId;
-    final memberType = member?.memberType ?? TeamMemberType.STUDENT;
+    final memberType = member?.memberType ?? TeamMemberType.student;
 
     final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
       ms,
@@ -85,22 +81,20 @@ List<DayHoursData> computeDailyHours(
 
   for (final sessionEntry in sessions.entries) {
     final session = sessionEntry.value;
-    if (!session.hasStartTime() || !session.hasEndTime() || !session.finished) {
+    if (!session.finished) {
       continue;
     }
 
-    final sessionStart = session.startTime.toDateTime();
-    final sessionEnd = session.endTime.toDateTime();
+    final sessionStart = session.startTime;
+    final sessionEnd = session.endTime;
 
     DateTime? earliestCheckIn;
     DateTime? latestCheckOut;
 
     for (final ms in teamMemberSessions.values) {
-      if (ms.sessionId != sessionEntry.key || !ms.hasCheckInTime()) continue;
-      final checkIn = ms.checkInTime.toDateTime();
-      final checkOut = ms.hasCheckOutTime()
-          ? ms.checkOutTime.toDateTime()
-          : DateTime.now();
+      if (ms.sessionId != sessionEntry.key) continue;
+      final checkIn = ms.checkInTime;
+      final checkOut = ms.checkOutTime ?? DateTime.now();
 
       if (earliestCheckIn == null || checkIn.isBefore(earliestCheckIn)) {
         earliestCheckIn = checkIn;
@@ -152,8 +146,7 @@ List<DayAttendanceData> computeDailyAttendance(
   final dates = <String, DateTime>{};
 
   for (final ms in teamMemberSessions.values) {
-    if (!ms.hasCheckInTime()) continue;
-    final date = ms.checkInTime.toDateTime();
+    final date = ms.checkInTime;
     final key =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     byDay.putIfAbsent(key, () => <String>{});
@@ -183,8 +176,7 @@ List<DayMemberDetail> computeDayMemberDetails(
   final accum = <String, DayMemberDetail>{};
 
   for (final ms in teamMemberSessions.values) {
-    if (!ms.hasCheckInTime()) continue;
-    final checkInDate = ms.checkInTime.toDateTime();
+    final checkInDate = ms.checkInTime;
     if (checkInDate.year != day.year ||
         checkInDate.month != day.month ||
         checkInDate.day != day.day) {
@@ -192,13 +184,13 @@ List<DayMemberDetail> computeDayMemberDetails(
     }
 
     final session = sessions[ms.sessionId];
-    if (session == null || !session.hasStartTime() || !session.hasEndTime()) {
+    if (session == null) {
       continue;
     }
 
     final member = teamMembers[ms.teamMemberId];
     final name = member?.displayName ?? ms.teamMemberId;
-    final memberType = member?.memberType ?? TeamMemberType.STUDENT;
+    final memberType = member?.memberType ?? TeamMemberType.student;
     final (:regularSecs, :overtimeSecs) = computeMemberSessionHours(
       ms,
       session,
@@ -253,7 +245,7 @@ List<AverageLocationAttendanceData> computeLocationAttendance(
     final locName = locations[locId]?.location ?? locId;
 
     final members = teamMemberSessions.values
-        .where((ms) => ms.sessionId == entry.key && ms.hasCheckInTime())
+        .where((ms) => ms.sessionId == entry.key)
         .map((ms) => ms.teamMemberId)
         .toSet();
 
@@ -291,7 +283,6 @@ AttendanceInsights computeInsights(
   final finalCheckouts = <String, DateTime>{};
 
   for (final ms in teamMemberSessions.values) {
-    if (!ms.hasCheckInTime()) continue;
     // Only count member sessions that belong to a filtered session
     if (!sessions.containsKey(ms.sessionId)) continue;
 
@@ -302,15 +293,15 @@ AttendanceInsights computeInsights(
         .putIfAbsent(ms.sessionId, () => <String>{})
         .add(ms.teamMemberId);
 
-    final checkIn = ms.checkInTime.toDateTime();
+    final checkIn = ms.checkInTime;
     totalCheckInMinutes += checkIn.hour * 60 + checkIn.minute;
     checkInCount++;
 
     dayOfWeekCounts[checkIn.weekday] =
         (dayOfWeekCounts[checkIn.weekday] ?? 0) + 1;
 
-    if (ms.hasCheckOutTime()) {
-      final checkOut = ms.checkOutTime.toDateTime();
+    if (ms.checkOutTime != null) {
+      final checkOut = ms.checkOutTime!;
 
       totalVisitSecs += checkOut.difference(checkIn).inSeconds;
       visitCount++;
@@ -351,7 +342,6 @@ AttendanceInsights computeInsights(
   if (teamMemberSessions.isNotEmpty) {
     final locCounts = <String, int>{};
     for (final ms in teamMemberSessions.values) {
-      if (!ms.hasCheckInTime()) continue;
       final session = sessions[ms.sessionId];
       if (session == null) continue;
       locCounts[session.locationId] = (locCounts[session.locationId] ?? 0) + 1;
@@ -431,8 +421,7 @@ Map<String, Session> filterSessionsByRange(
 
   return Map.fromEntries(
     sessions.entries.where((entry) {
-      if (!entry.value.hasStartTime()) return false;
-      final dt = entry.value.startTime.toDateTime();
+      final dt = entry.value.startTime;
       return !dt.isBefore(start) && dt.isBefore(end);
     }),
   );

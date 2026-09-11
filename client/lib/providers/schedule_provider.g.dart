@@ -9,17 +9,11 @@ part of 'schedule_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(scheduleService)
+@ProviderFor(ScheduleService)
 final scheduleServiceProvider = ScheduleServiceProvider._();
 
 final class ScheduleServiceProvider
-    extends
-        $FunctionalProvider<
-          ScheduleServiceClient,
-          ScheduleServiceClient,
-          ScheduleServiceClient
-        >
-    with $Provider<ScheduleServiceClient> {
+    extends $NotifierProvider<ScheduleService, void> {
   ScheduleServiceProvider._()
     : super(
         from: null,
@@ -36,22 +30,33 @@ final class ScheduleServiceProvider
 
   @$internal
   @override
-  $ProviderElement<ScheduleServiceClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  ScheduleServiceClient create(Ref ref) {
-    return scheduleService(ref);
-  }
+  ScheduleService create() => ScheduleService();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ScheduleServiceClient value) {
+  Override overrideWithValue(void value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<ScheduleServiceClient>(value),
+      providerOverride: $SyncValueProvider<void>(value),
     );
   }
 }
 
-String _$scheduleServiceHash() => r'396cf1895752c49049d977d3449210f7cb3aed55';
+String _$scheduleServiceHash() => r'4930d5c6380c21c50dcc894f7715ead6d86550ed';
+
+abstract class _$ScheduleService extends $Notifier<void> {
+  void build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

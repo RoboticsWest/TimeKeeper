@@ -5,34 +5,46 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.101"
+base64 = "0.22"
+async-graphql = { version = "7", features = ["chrono", "uuid"] }
+async-graphql-axum = "7"
 async-stream = "0.3.6"
+async-trait = "0.1"
 axum = "0.8.8"
 chrono = "0.4.43"
 chrono-tz = "0.10"
-clap = { version = "4.5.57", features = ["derive"] }
+clap = { version = "4.5.57", features = ["derive", "env"] }
 dashmap = "6.1.0"
+diesel = { version = "2", default-features = false, features = ["postgres", "uuid", "chrono", "32-column-tables"] }
+diesel-async = { version = "0.5", features = ["postgres", "bb8"] }
+dotenvy = "0.15"
+futures-util = "0.3"
 icalendar = { version = "0.17", features = ["parser"] }
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 log = "0.4.29"
 log4rs = "1.4.0"
 once_cell = "1.21.3"
-prost = "0.14.3"
+postgresql_embedded = "0.21"
 rand = "0.10.0"
 regex = "1.12.3"
 serde = "1.0.228"
+serde_json = "1.0"
 thiserror = "2.0.18"
 tokio = { version = "1.49.0", features = ["rt-multi-thread", "macros", "signal"] }
+tokio-postgres = "0.7.18"
+tokio-util = "0.7"
 serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "model", "rustls_backend", "http"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio-stream = { version = "0.1.18", features = ["sync"] }
-tonic = "0.14.3"
-tonic-prost = "0.14.3"
-tonic-web = "0.14.3"
 tower = "0.5.3"
 tower-http = { version = "0.6.8", features = ["cors", "fs"] }
+uuid = { version = "1.19.0", features = ["v7"] }
 
 [dependencies.database]
 path = "../database"
 
-[build-dependencies]
-tonic-prost-build = "0.14.3"
+[features]
+# Statically link a vendored libpq/OpenSSL instead of relying on a system libpq being present -
+# needed for cross-compiled release targets (musl, mingw-w64) that don't have one. See
+# database/Cargo.toml's `static-pq` feature doc comment for why only migrations need this at all.
+static-pq = ["database/static-pq"]

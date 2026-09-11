@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/api.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
@@ -52,8 +51,10 @@ class _KioskDialogContent extends ConsumerWidget {
       child: MemberSearchList(
         teamMembers: teamMembers,
         trailingBuilder: (memberId, member) {
-          final checkedIn =
-              isMemberCheckedIn(memberId, teamMemberSessions.values);
+          final checkedIn = isMemberCheckedIn(
+            memberId,
+            teamMemberSessions.values,
+          );
 
           return FilledButton.icon(
             icon: Icon(
@@ -70,16 +71,17 @@ class _KioskDialogContent extends ConsumerWidget {
                   : Theme.of(context).colorScheme.primary,
             ),
             onPressed: () async {
-              final req = CheckInOutRequest(
-                teamMemberId: memberId,
-                locationId: currentLocation,
-              );
-              final result = await callGrpcEndpoint(
-                () => ref.read(sessionServiceProvider).checkInOut(req),
-              );
+              final result = await ref
+                  .read(sessionCheckInOutProvider.notifier)
+                  .checkInOut(memberId, currentLocation);
               if (context.mounted) {
                 Navigator.of(context).pop();
-                SnackBarDialog.fromGrpcStatus(result: result).show(context);
+                switch (result) {
+                  case ApiSuccess():
+                    SnackBarDialog.success(message: 'Success').show(context);
+                  case ApiFailure(userMessage: final msg):
+                    SnackBarDialog.error(message: msg).show(context);
+                }
               }
             },
           );

@@ -1,13 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/colors.dart';
-import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/helpers/local_storage.dart';
 import 'package:time_keeper/providers/health_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
 
 part 'branding_provider.g.dart';
 
@@ -74,38 +73,16 @@ class BrandingNotifier extends _$BrandingNotifier {
   }
 
   Future<void> _fetchBranding() async {
-    final client = ref.read(settingsServiceProvider);
+    final settings = await ref.read(settingsQueryProvider.future);
+    final logoBase64 = await ref.read(logoQueryProvider.future);
 
-    final settingsResult = await callGrpcEndpoint(
-      () => client.getSettings(GetSettingsRequest()),
-    );
+    final primaryColorHex = settings?.primaryColor;
+    final secondaryColorHex = settings?.secondaryColor;
 
-    final logoResult = await callGrpcEndpoint(
-      () => client.getLogo(GetLogoRequest()),
-    );
+    final primaryColor = primaryColorHex != null ? _parseHexColor(primaryColorHex) : null;
+    final secondaryColor = secondaryColorHex != null ? _parseHexColor(secondaryColorHex) : null;
 
-    final (
-      primaryColorHex,
-      secondaryColorHex,
-    ) = settingsResult is GrpcSuccess<GetSettingsResponse>
-        ? (
-            settingsResult.data.settings.primaryColor,
-            settingsResult.data.settings.secondaryColor,
-          )
-        : (null, null);
-
-    final primaryColor = primaryColorHex != null
-        ? _parseHexColor(primaryColorHex)
-        : null;
-    final secondaryColor = secondaryColorHex != null
-        ? _parseHexColor(secondaryColorHex)
-        : null;
-
-    Uint8List? logoBytes;
-    if (logoResult is GrpcSuccess<GetLogoResponse> &&
-        logoResult.data.logo.isNotEmpty) {
-      logoBytes = Uint8List.fromList(logoResult.data.logo);
-    }
+    final logoBytes = logoBase64 != null && logoBase64.isNotEmpty ? base64Decode(logoBase64) : null;
 
     // Set local storage
     localStorage.setString(_primaryColorKey, primaryColorHex ?? '');
