@@ -3,11 +3,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/base/base_scaffold.dart';
-import 'package:time_keeper/generated/common/common.pb.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/router/app_routes.dart';
 import 'package:time_keeper/router/deferred_widget.dart';
-import 'package:time_keeper/utils/permissions.dart';
 
 // Deferred
 import 'package:time_keeper/views/kiosk/kiosk_view.dart' deferred as kiosk;
@@ -107,7 +105,7 @@ CustomTransitionPage<void> _buildTransitionPage({
 @Riverpod(keepAlive: true)
 GoRouter router(Ref ref) {
   final isLoggedIn = ref.watch(isLoggedInProvider);
-  final roles = ref.watch(rolesProvider);
+  final isAdmin = ref.watch(isAdminProvider);
 
   return GoRouter(
     initialLocation: AppRoute.kiosk.path,
@@ -171,7 +169,7 @@ GoRouter router(Ref ref) {
               GoRoute(
                 path: '/admin',
                 redirect: (context, state) {
-                  if (!isLoggedIn && roles.hasPermission(Role.ADMIN)) {
+                  if (!isLoggedIn && isAdmin) {
                     return AppRoute.login.path;
                   }
                   return null;

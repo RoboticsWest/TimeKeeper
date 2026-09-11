@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/attendance/attendance_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -42,11 +39,9 @@ class AttendanceView extends HookConsumerWidget {
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final client = ref.read(teamMemberSessionServiceProvider);
+        final notifier = ref.read(teamMemberSessionsProvider.notifier);
         for (final id in ids) {
-          await client.deleteTeamMemberSession(
-            DeleteTeamMemberSessionRequest(id: id),
-          );
+          await notifier.delete(id);
         }
       },
       showResultDialog: true,
@@ -56,7 +51,10 @@ class AttendanceView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(entitySyncProvider);
+    ref.watch(teamMemberSessionsSyncProvider);
+    ref.watch(teamMembersSyncProvider);
+    ref.watch(sessionsSyncProvider);
+    ref.watch(locationsSyncProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final sessions = ref.watch(sessionsProvider);
@@ -74,9 +72,7 @@ class AttendanceView extends HookConsumerWidget {
       final session = entry.value;
       final location = locations[session.locationId];
       final locationName = location?.location ?? 'Unknown';
-      final dateStr = session.hasStartTime()
-          ? formatDate(session.startTime.toDateTime())
-          : 'Unknown date';
+      final dateStr = formatDate(session.startTime);
       final status = statusLabel(getSessionStatus(session));
       return (key: entry.key, label: '$dateStr @ $locationName ($status)');
     }).toList();
@@ -94,15 +90,7 @@ class AttendanceView extends HookConsumerWidget {
 
     // Sort by check-in time descending (most recent first)
     final sorted = teamMemberSessions.entries.toList()
-      ..sort((a, b) {
-        final aTime = a.value.hasCheckInTime()
-            ? a.value.checkInTime.seconds.toInt()
-            : 0;
-        final bTime = b.value.hasCheckInTime()
-            ? b.value.checkInTime.seconds.toInt()
-            : 0;
-        return bTime.compareTo(aTime);
-      });
+      ..sort((a, b) => b.value.checkInTime.compareTo(a.value.checkInTime));
 
     // Apply session filter
     final sessionFiltered = selectedSessionId.value != null
@@ -135,11 +123,9 @@ class AttendanceView extends HookConsumerWidget {
       final location = session != null ? locations[session.locationId] : null;
       final locationName = location?.location ?? '';
 
-      final sessionDate = session != null && session.hasStartTime()
-          ? formatDate(session.startTime.toDateTime())
-          : '';
+      final sessionDate = session != null ? formatDate(session.startTime) : '';
 
-      final status = ms.hasCheckOutTime() ? 'completed' : 'checked in';
+      final status = ms.checkOutTime != null ? 'completed' : 'checked in';
 
       return memberName.toLowerCase().contains(filterText) ||
           firstName.toLowerCase().contains(filterText) ||
@@ -282,20 +268,17 @@ class AttendanceView extends HookConsumerWidget {
                     ? locations[session.locationId]
                     : null;
 
-                final sessionLabel = session != null && session.hasStartTime()
-                    ? '${formatDate(session.startTime.toDateTime())} @ ${location?.location ?? 'Unknown'}'
+                final sessionLabel = session != null
+                    ? '${formatDate(session.startTime)} @ ${location?.location ?? 'Unknown'}'
                     : 'Unknown session';
 
-                final checkInStr = ms.hasCheckInTime()
-                    ? '${formatDate(ms.checkInTime.toDateTime())} ${formatTime(ms.checkInTime.toDateTime())}'
+                final checkInStr = '${formatDate(ms.checkInTime)} ${formatTime(ms.checkInTime)}';
+
+                final checkOutStr = ms.checkOutTime != null
+                    ? '${formatDate(ms.checkOutTime!)} ${formatTime(ms.checkOutTime!)}'
                     : '—';
 
-                final checkOutStr = ms.hasCheckOutTime()
-                    ? '${formatDate(ms.checkOutTime.toDateTime())} ${formatTime(ms.checkOutTime.toDateTime())}'
-                    : '—';
-
-                final isCheckedIn =
-                    ms.hasCheckInTime() && !ms.hasCheckOutTime();
+                final isCheckedIn = ms.checkOutTime == null;
 
                 return EditTableRow(
                   key: ValueKey(id),

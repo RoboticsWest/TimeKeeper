@@ -1,4 +1,4 @@
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/team_member.dart';
 
 /// Time range filter for the statistics dashboard.
 enum StatisticsRange { day, week, month, all }

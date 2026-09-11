@@ -17,9 +17,10 @@ pub struct ServerConfig {
   #[arg(long, default_value_t = 50051)]
   pub api_port: u16,
 
-  /// The path to the Key Value Store
-  #[arg(long, default_value = "tk.db")]
-  pub db_path: String,
+  /// Postgres connection URL. If unset, an embedded Postgres instance is started automatically
+  /// under `.pgdata/` and used instead.
+  #[arg(long, env = "DATABASE_URL")]
+  pub database_url: Option<String>,
 
   /// The path for the backups directory
   #[arg(long, default_value = "backups")]
@@ -38,20 +39,22 @@ pub struct ServerConfig {
   pub key_path: String,
 
   /// Admin password (if not provided, uses default or existing password in DB)
-  #[arg(long)]
+  #[arg(long, env = "TK_ADMIN_PASSWORD")]
   pub admin_password: Option<String>,
 
   /// TMS Mobi Reverse Proxy Token
-  #[arg(long)]
+  #[arg(long, env = "TK_PROXY_TOKEN")]
   pub proxy_token: Option<String>,
 
   /// TMS Mobi Reverse Proxy Sub-Domain
-  #[arg(long)]
+  #[arg(long, env = "TK_PROXY_DOMAIN")]
   pub proxy_domain: Option<String>,
 }
 
 impl ServerConfig {
   pub fn parse_from_cli() -> Self {
+    // Missing .env is not an error — flags/real env vars still work without one.
+    let _ = dotenvy::dotenv();
     Self::parse()
   }
 }

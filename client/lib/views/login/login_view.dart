@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/logo_widget.dart';
 
@@ -59,8 +59,8 @@ class LoginView extends HookConsumerWidget {
           .read(userServiceProvider.notifier)
           .login(usernameController.text, passwordController.text);
 
-      if (context.mounted && result is GrpcFailure) {
-        PopupDialog.fromGrpcStatus(result: result).show(context);
+      if (context.mounted && result is ApiFailure<String>) {
+        PopupDialog.error(title: 'Error', message: Text(result.userMessage)).show(context);
       } else if (context.mounted) {
         context.pop();
       }

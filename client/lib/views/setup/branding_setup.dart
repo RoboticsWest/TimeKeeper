@@ -1,12 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/branding_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/views/setup/common/file_upload_setting.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
@@ -36,19 +35,14 @@ class BrandingSetupTab extends HookConsumerWidget {
 
     useEffect(() {
       Future<void> loadSettings() async {
-        final result = await callGrpcEndpoint(
-          () => ref
-              .read(settingsServiceProvider)
-              .getSettings(GetSettingsRequest()),
-        );
-        if (result is GrpcSuccess<GetSettingsResponse>) {
-          final s = result.data.settings;
-          final primary = _parseHex(s.primaryColor);
+        final settings = await ref.read(settingsQueryProvider.future);
+        if (settings != null) {
+          final primary = _parseHex(settings.primaryColor);
           if (primary != null) {
             primaryController.text = _colorToHex(primary);
             primaryPreview.value = primary;
           }
-          final secondary = _parseHex(s.secondaryColor);
+          final secondary = _parseHex(settings.secondaryColor);
           if (secondary != null) {
             secondaryController.text = _colorToHex(secondary);
             secondaryPreview.value = secondary;
@@ -74,20 +68,15 @@ class BrandingSetupTab extends HookConsumerWidget {
       }
 
       final normalizedHex = _colorToHex(color);
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateBrandingSettings(
-              isPrimary
-                  ? UpdateBrandingSettingsRequest(primaryColor: normalizedHex)
-                  : UpdateBrandingSettingsRequest(
-                      secondaryColor: normalizedHex,
-                    ),
-            ),
-      );
+      final res = await ref
+          .read(settingsServiceProvider.notifier)
+          .updateBranding(
+            primaryColor: isPrimary ? normalizedHex : null,
+            secondaryColor: isPrimary ? null : normalizedHex,
+          );
 
       if (context.mounted) {
-        PopupDialog.fromGrpcStatus(result: res).show(context);
+        PopupDialog.fromApiResult(result: res).show(context);
       }
     }
 
@@ -121,14 +110,12 @@ class BrandingSetupTab extends HookConsumerWidget {
           uploadButtonLabel: 'Upload',
           onUpload: (file) async {
             if (file.bytes != null) {
-              final res = await callGrpcEndpoint(
-                () => ref
-                    .read(settingsServiceProvider)
-                    .uploadLogo(UploadLogoRequest(logo: file.bytes!)),
-              );
+              final res = await ref
+                  .read(settingsServiceProvider.notifier)
+                  .uploadLogo(base64Encode(file.bytes!));
               if (context.mounted) {
-                PopupDialog.fromGrpcStatus(result: res).show(context);
-                if (res is GrpcSuccess) {
+                PopupDialog.fromApiResult(result: res).show(context);
+                if (res.success) {
                   await ref.read(brandingProvider.notifier).refresh();
                 }
               }

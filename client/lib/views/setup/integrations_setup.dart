@@ -1,13 +1,11 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pbenum.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/settings.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
 import 'package:time_keeper/views/setup/common/text_field_setting.dart';
@@ -47,13 +45,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     // Load current settings on mount
     useEffect(() {
       Future<void> loadSettings() async {
-        final result = await callGrpcEndpoint(
-          () => ref
-              .read(settingsServiceProvider)
-              .getSettings(GetSettingsRequest()),
-        );
-        if (result is GrpcSuccess<GetSettingsResponse>) {
-          final s = result.data.settings;
+        final s = await ref.read(settingsQueryProvider.future);
+        if (s != null) {
           discordEnabled.value = s.discordEnabled;
           botTokenController.text = s.discordBotToken;
           guildIdController.text = s.discordGuildId;
@@ -91,123 +84,88 @@ class IntegrationsSetupTab extends HookConsumerWidget {
     }, const []);
 
     Future<void> updateDiscordCore() async {
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateDiscordCoreSettings(
-              UpdateDiscordCoreSettingsRequest(
-                discordEnabled: discordEnabled.value,
-                discordBotToken: botTokenController.text,
-                discordGuildId: guildIdController.text,
-                discordAnnouncementChannelId:
-                    channelAnnouncementIdController.text,
-                discordNotificationChannelId:
-                    channelNotificationIdController.text,
-              ),
-            ),
-      );
+      final res = await ref
+          .read(settingsServiceProvider.notifier)
+          .updateDiscordCore(
+            discordEnabled: discordEnabled.value,
+            discordBotToken: botTokenController.text,
+            discordGuildId: guildIdController.text,
+            discordAnnouncementChannelId: channelAnnouncementIdController.text,
+            discordNotificationChannelId: channelNotificationIdController.text,
+          );
 
       if (context.mounted) {
-        PopupDialog.fromGrpcStatus(result: res).show(context);
+        PopupDialog.fromApiResult(result: res).show(context);
       }
     }
 
     Future<void> updateDiscordReminder() async {
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateDiscordReminderSettings(
-              UpdateDiscordReminderSettingsRequest(
-                discordStartReminderMins: Int64(
-                  int.tryParse(startReminderMinsController.text) ?? 1440,
-                ),
-                discordEndReminderMins: Int64(
-                  int.tryParse(endReminderMinsController.text) ?? 15,
-                ),
-                discordStartReminderMessage:
-                    startReminderMessageController.text,
-                discordEndReminderMessage: endReminderMessageController.text,
-                discordAutoDeleteStartReminder: autoDeleteStartReminder.value,
-                discordAutoDeleteEndReminder: autoDeleteEndReminder.value,
-              ),
-            ),
-      );
+      final res = await ref
+          .read(settingsServiceProvider.notifier)
+          .updateDiscordReminder(
+            discordStartReminderMins: int.tryParse(startReminderMinsController.text) ?? 1440,
+            discordEndReminderMins: int.tryParse(endReminderMinsController.text) ?? 15,
+            discordStartReminderMessage: startReminderMessageController.text,
+            discordEndReminderMessage: endReminderMessageController.text,
+            discordAutoDeleteStartReminder: autoDeleteStartReminder.value,
+            discordAutoDeleteEndReminder: autoDeleteEndReminder.value,
+          );
 
       if (context.mounted) {
-        PopupDialog.fromGrpcStatus(result: res).show(context);
+        PopupDialog.fromApiResult(result: res).show(context);
       }
     }
 
     Future<void> updateDiscordBehavior() async {
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateDiscordBehaviorSettings(
-              UpdateDiscordBehaviorSettingsRequest(
-                discordRsvpReactionsEnabled: rsvpReactionsEnabled.value,
-                discordSelfLinkEnabled: selfLinkEnabled.value,
-                discordNameSyncEnabled: nameSyncEnabled.value,
-                discordOvertimeDmEnabled: overtimeDmEnabled.value,
-                discordOvertimeDmMins: Int64(
-                  int.tryParse(overtimeDmMinsController.text) ?? 10,
-                ),
-                discordOvertimeDmMessage: overtimeDmMessageController.text,
-                discordAutoCheckoutDmEnabled: autoCheckoutDmEnabled.value,
-                discordAutoCheckoutDmMessage:
-                    autoCheckoutDmMessageController.text,
-                discordCheckoutEnabled: checkoutEnabled.value,
-              ),
-            ),
-      );
+      final res = await ref
+          .read(settingsServiceProvider.notifier)
+          .updateDiscordBehavior(
+            discordRsvpReactionsEnabled: rsvpReactionsEnabled.value,
+            discordSelfLinkEnabled: selfLinkEnabled.value,
+            discordNameSyncEnabled: nameSyncEnabled.value,
+            discordOvertimeDmEnabled: overtimeDmEnabled.value,
+            discordOvertimeDmMins: int.tryParse(overtimeDmMinsController.text) ?? 10,
+            discordOvertimeDmMessage: overtimeDmMessageController.text,
+            discordAutoCheckoutDmEnabled: autoCheckoutDmEnabled.value,
+            discordAutoCheckoutDmMessage: autoCheckoutDmMessageController.text,
+            discordCheckoutEnabled: checkoutEnabled.value,
+          );
 
       if (context.mounted) {
-        PopupDialog.fromGrpcStatus(result: res).show(context);
+        PopupDialog.fromApiResult(result: res).show(context);
       }
     }
 
     Future<void> fetchDiscordRoles() async {
       isLoadingRoles.value = true;
-      final result = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .getDiscordRoles(GetDiscordRolesRequest()),
-      );
+      // Invalidate so the next read re-fetches from the server rather than using a stale future.
+      ref.invalidate(discordRolesQueryProvider);
+      final roles = await ref.read(discordRolesQueryProvider.future);
       isLoadingRoles.value = false;
 
-      if (result is GrpcSuccess<GetDiscordRolesResponse>) {
-        discordRoles.value = result.data.roles;
-        selectedRoleId.value = null;
-      } else if (context.mounted) {
-        PopupDialog.fromGrpcStatus(result: result).show(context);
-      }
+      discordRoles.value = roles;
+      selectedRoleId.value = null;
     }
 
     Future<void> importMembers(TeamMemberType memberType) async {
       if (selectedRoleId.value == null) return;
 
       importingType.value = memberType;
-      final result = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .importDiscordMembers(
-              ImportDiscordMembersRequest(
-                roleId: selectedRoleId.value!,
-                memberType: memberType,
-              ),
-            ),
-      );
+      final result = await ref
+          .read(settingsServiceProvider.notifier)
+          .importDiscordMembers(selectedRoleId.value!, memberType.toJson());
       importingType.value = null;
 
       if (!context.mounted) return;
 
-      if (result is GrpcSuccess<ImportDiscordMembersResponse>) {
-        final r = result.data;
-        SnackBarDialog.success(
-          message:
-              'Imported ${r.imported} new, linked ${r.linked} existing, ${r.alreadyLinked} already linked.',
-        ).show(context);
-      } else {
-        PopupDialog.fromGrpcStatus(result: result).show(context);
+      switch (result) {
+        case ApiSuccess(data: final r):
+          SnackBarDialog.success(
+            message:
+                'Imported ${r.imported} new, linked ${r.linked} existing, ${r.alreadyLinked} already linked.',
+          ).show(context);
+        case ApiFailure(userMessage: final msg):
+          PopupDialog.error(title: 'Error', message: Text(msg)).show(context);
       }
     }
 
@@ -604,8 +562,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               onPressed:
                   selectedRoleId.value == null || importingType.value != null
                   ? null
-                  : () => importMembers(TeamMemberType.STUDENT),
-              icon: importingType.value == TeamMemberType.STUDENT
+                  : () => importMembers(TeamMemberType.student),
+              icon: importingType.value == TeamMemberType.student
                   ? const SizedBox(
                       width: 16,
                       height: 16,
@@ -619,8 +577,8 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               onPressed:
                   selectedRoleId.value == null || importingType.value != null
                   ? null
-                  : () => importMembers(TeamMemberType.MENTOR),
-              icon: importingType.value == TeamMemberType.MENTOR
+                  : () => importMembers(TeamMemberType.mentor),
+              icon: importingType.value == TeamMemberType.mentor
                   ? const SizedBox(
                       width: 16,
                       height: 16,

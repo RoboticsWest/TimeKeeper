@@ -14,6 +14,11 @@ rustflags = [
   "-Aclippy::default_trait_access",
   "-Aclippy::too_many_lines",
   "-Aclippy::similar_names",
+  # async-graphql's #[Object]/#[Subscription]/derive macros generate async trait methods our own
+  # resolver bodies don't need to await - both lints fire on the macro-expanded code itself, not
+  # anything we wrote, and can't be fixed from the call site.
+  "-Aclippy::unused_async",
+  "-Aclippy::unused_async_trait_impl",
   # Enable specific nursery lints
   "-Wclippy::suboptimal_flops",
   "-Wclippy::imprecise_flops",

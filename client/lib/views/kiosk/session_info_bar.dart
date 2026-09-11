@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/widgets/time_until.dart';
+import 'package:time_keeper/models/location.dart';
+import 'package:time_keeper/models/session.dart';
 
 class SessionInfoBar extends StatelessWidget {
   final Session? currentSession;
@@ -87,8 +87,8 @@ class SessionInfoBar extends StatelessWidget {
   Widget _buildCurrentSession(ThemeData theme) {
     final color = theme.colorScheme.onPrimaryContainer;
     final session = currentSession!;
-    final start = session.startTime.toDateTime();
-    final end = session.endTime.toDateTime();
+    final start = session.startTime;
+    final end = session.endTime;
     final location = _locationName(session);
 
     return Column(
@@ -163,8 +163,8 @@ class SessionInfoBar extends StatelessWidget {
   Widget _buildUpcomingSession(ThemeData theme) {
     final color = theme.colorScheme.onSurfaceVariant;
     final session = currentSession!;
-    final start = session.startTime.toDateTime();
-    final end = session.endTime.toDateTime();
+    final start = session.startTime;
+    final end = session.endTime;
     final location = _locationName(session);
 
     return Column(
@@ -244,8 +244,8 @@ class SessionInfoBar extends StatelessWidget {
   Widget _buildNextSession(ThemeData theme) {
     final color = theme.colorScheme.onSurfaceVariant;
     final session = nextSession!;
-    final start = session.startTime.toDateTime();
-    final end = session.endTime.toDateTime();
+    final start = session.startTime;
+    final end = session.endTime;
     final location = _locationName(session);
 
     return Column(

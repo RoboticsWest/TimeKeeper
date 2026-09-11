@@ -9,93 +9,46 @@ part of 'location_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(locationService)
-final locationServiceProvider = LocationServiceProvider._();
+@ProviderFor(locationChanges)
+final locationChangesProvider = LocationChangesProvider._();
 
-final class LocationServiceProvider
+final class LocationChangesProvider
     extends
         $FunctionalProvider<
-          LocationServiceClient,
-          LocationServiceClient,
-          LocationServiceClient
-        >
-    with $Provider<LocationServiceClient> {
-  LocationServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'locationServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$locationServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<LocationServiceClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  LocationServiceClient create(Ref ref) {
-    return locationService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(LocationServiceClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<LocationServiceClient>(value),
-    );
-  }
-}
-
-String _$locationServiceHash() => r'7c87fbb460cafb839977ed7c0e3206a9fc2bebab';
-
-@ProviderFor(locationsStream)
-final locationsStreamProvider = LocationsStreamProvider._();
-
-final class LocationsStreamProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<StreamLocationsResponse>,
-          StreamLocationsResponse,
-          Stream<StreamLocationsResponse>
+          AsyncValue<ChangeEvent<Location>>,
+          ChangeEvent<Location>,
+          Stream<ChangeEvent<Location>>
         >
     with
-        $FutureModifier<StreamLocationsResponse>,
-        $StreamProvider<StreamLocationsResponse> {
-  LocationsStreamProvider._()
+        $FutureModifier<ChangeEvent<Location>>,
+        $StreamProvider<ChangeEvent<Location>> {
+  LocationChangesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'locationsStreamProvider',
+        name: r'locationChangesProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$locationsStreamHash();
+  String debugGetCreateSourceHash() => _$locationChangesHash();
 
   @$internal
   @override
-  $StreamProviderElement<StreamLocationsResponse> $createElement(
+  $StreamProviderElement<ChangeEvent<Location>> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<StreamLocationsResponse> create(Ref ref) {
-    return locationsStream(ref);
+  Stream<ChangeEvent<Location>> create(Ref ref) {
+    return locationChanges(ref);
   }
 }
 
-String _$locationsStreamHash() => r'2d2c1bed2910f88823319959dcae6d02f831a2b3';
+String _$locationChangesHash() => r'0088a00f2b2b46759654948bab508a46685af7b2';
 
 @ProviderFor(Locations)
 final locationsProvider = LocationsProvider._();
@@ -129,7 +82,7 @@ final class LocationsProvider
   }
 }
 
-String _$locationsHash() => r'c1f5b42366a0df1bd8bedafba48732355df48227';
+String _$locationsHash() => r'db4a621b4b144a02482a4c0f3b8c13bc56c22c6a';
 
 abstract class _$Locations extends $Notifier<Map<String, Location>> {
   Map<String, Location> build();
@@ -148,6 +101,54 @@ abstract class _$Locations extends $Notifier<Map<String, Location>> {
     element.handleCreate(ref, build);
   }
 }
+
+/// Bridges [locationChangesProvider] to [locationsProvider]. Views watch this to activate the
+/// live-update subscription.
+
+@ProviderFor(locationsSync)
+final locationsSyncProvider = LocationsSyncProvider._();
+
+/// Bridges [locationChangesProvider] to [locationsProvider]. Views watch this to activate the
+/// live-update subscription.
+
+final class LocationsSyncProvider extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  /// Bridges [locationChangesProvider] to [locationsProvider]. Views watch this to activate the
+  /// live-update subscription.
+  LocationsSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'locationsSyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$locationsSyncHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return locationsSync(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$locationsSyncHash() => r'78efe843d0298cd5ff569f4e890382bb3a3ac29c';
 
 @ProviderFor(CurrentLocation)
 final currentLocationProvider = CurrentLocationProvider._();

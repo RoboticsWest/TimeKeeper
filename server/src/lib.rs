@@ -1,5 +1,14 @@
+pub mod api;
 pub mod auth;
 pub mod config;
-pub mod core;
-pub mod generated;
-pub mod modules;
+pub mod db;
+pub mod domains;
+pub mod events;
+pub mod gql_common;
+pub mod integrations;
+pub mod logging;
+pub mod scheduler;
+pub mod schema;
+pub mod server;
+pub mod time;
+pub mod web;

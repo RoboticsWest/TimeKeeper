@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/team_member.dart';
 
 /// A reusable searchable list of team members with a customizable
 /// trailing widget per row.
@@ -27,11 +27,11 @@ class MemberSearchList extends HookWidget {
                   final query = searchText.value.toLowerCase();
                   return member.firstName.toLowerCase().contains(query) ||
                       member.lastName.toLowerCase().contains(query) ||
-                      member.displayName.toLowerCase().contains(query);
+                      (member.displayName ?? '').toLowerCase().contains(query);
                 }).toList()
           ..sort(
-            (a, b) => a.value.displayName.toLowerCase().compareTo(
-              b.value.displayName.toLowerCase(),
+            (a, b) => (a.value.displayName ?? '').toLowerCase().compareTo(
+              (b.value.displayName ?? '').toLowerCase(),
             ),
           );
 
@@ -70,7 +70,7 @@ class MemberSearchList extends HookWidget {
                     final member = entry.value;
                     final memberId = entry.key;
                     return ListTile(
-                      title: Text(member.displayName),
+                      title: Text(member.displayName ?? '${member.firstName} ${member.lastName}'),
                       subtitle: Text(member.memberType.name),
                       trailing: trailingBuilder(memberId, member),
                     );

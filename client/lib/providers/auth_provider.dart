@@ -1,14 +1,25 @@
+import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/generated/api/user.pbgrpc.dart';
-import 'package:time_keeper/generated/common/common.pbenum.dart';
-import 'package:time_keeper/helpers/auth_interceptor.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/helpers/local_storage.dart';
-import 'package:time_keeper/providers/grpc_channel_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
+import 'package:time_keeper/utils/jwt.dart';
 import 'package:time_keeper/utils/logger.dart';
+import 'package:time_keeper/utils/permissions.dart';
 
 part 'auth_provider.g.dart';
+
+const _loginMutation = r'''
+  mutation Login($username: String!, $password: String!) {
+    login(username: $username, password: $password) { token }
+  }
+''';
+
+const _meQuery = r'''
+  query Me {
+    me { id username }
+  }
+''';
 
 @Riverpod(keepAlive: true)
 class Token extends _$Token {
@@ -52,98 +63,105 @@ class Username extends _$Username {
   }
 }
 
+/// Decoded straight from the current JWT's `permissions` claim - not independently stored, so it
+/// always reflects whatever token is currently active.
 @Riverpod(keepAlive: true)
-class Roles extends _$Roles {
-  final _rolesKey = 'user_roles';
-
-  Future<void> set(List<Role> roles) async {
-    await localStorage.setStringList(
-      _rolesKey,
-      roles.map((role) => role.value.toString()).toList(),
-    );
-    state = roles;
-  }
-
-  Future<void> clear() async {
-    await localStorage.remove(_rolesKey);
-    state = [];
-  }
-
-  @override
-  List<Role> build() {
-    final roleStrings = localStorage.getStringList(_rolesKey) ?? [];
-    return roleStrings
-        .map((str) => int.tryParse(str))
-        .whereType<int>()
-        .map((value) => Role.valueOf(value))
-        .whereType<Role>()
-        .toList();
-  }
+List<String> permissions(Ref ref) {
+  final token = ref.watch(tokenProvider);
+  return decodeJwtPermissions(token);
 }
 
 @Riverpod(keepAlive: true)
 class UserService extends _$UserService {
-  Future<GrpcResult<LoginResponse>> login(
-    String username,
-    String password,
-  ) async {
-    final response = await callGrpcEndpoint(() async {
-      final request = LoginRequest(username: username, password: password);
-      return await state.login(request);
-    });
+  Future<ApiResult<String>> login(String username, String password) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(_loginMutation),
+        variables: {'username': username, 'password': password},
+        fetchPolicy: FetchPolicy.noCache,
+      ),
+    );
 
-    if (response is GrpcSuccess<LoginResponse>) {
-      final loginResponse = response.data;
-      ref.read(usernameProvider.notifier).set(username);
-      ref.read(tokenProvider.notifier).set(loginResponse.token);
-      ref.read(rolesProvider.notifier).set(loginResponse.roles.toList());
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiFailure(userMessage: message);
     }
 
-    return response;
+    final token = result.data!['login']['token'] as String;
+    await ref.read(usernameProvider.notifier).set(username);
+    await ref.read(tokenProvider.notifier).set(token);
+
+    return ApiSuccess(token);
   }
 
+  /// Queries `me` to check whether the current token is still valid. Returns `true` on a network
+  /// error too (assume the token is still valid rather than logging the user out over a blip) -
+  /// only an explicit `null` result (bad/missing token) counts as invalid.
   Future<bool> validateToken() async {
-    final response = await callGrpcEndpoint(() async {
-      final request = ValidateTokenRequest();
-      return await state.validateToken(request);
-    });
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.query(QueryOptions(document: gql(_meQuery), fetchPolicy: FetchPolicy.noCache));
 
-    // On success, token is valid
-    if (response is GrpcSuccess<ValidateTokenResponse>) {
-      logger.i('Validated Auth Token');
+    if (result.hasException) {
+      logger.w('Failed to validate token (assuming still valid): ${result.exception}');
       return true;
     }
 
-    if (response is GrpcFailure<ValidateTokenResponse>) {
-      // If it's an unauthenticated error (status code 16), the token is invalid
-      if (response.statusCode == 16) {
-        logger.i('Invalid Auth Token');
-        return false;
-      }
-      // For other errors (network, timeout, etc), assume token is still valid
-      return true;
-    }
-
-    return true;
+    final isValid = result.data?['me'] != null;
+    logger.i(isValid ? 'Validated Auth Token' : 'Invalid Auth Token');
+    return isValid;
   }
 
   void logout() {
     ref.read(usernameProvider.notifier).clear();
     ref.read(tokenProvider.notifier).clear();
-    ref.read(rolesProvider.notifier).clear();
+  }
+
+  Future<ApiCallResult> updateAdminPassword(String password) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(r'''
+          mutation UpdateAdminPassword($password: String!) {
+            updateAdminPassword(password: $password)
+          }
+        '''),
+        variables: {'password': password},
+        fetchPolicy: FetchPolicy.noCache,
+      ),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiCallResult(success: false, message: message);
+    }
+    return const ApiCallResult(success: true);
   }
 
   @override
-  UserServiceClient build() {
-    final channel = ref.watch(grpcChannelProvider);
-    final token = ref.watch(tokenProvider);
-    final options = authCallOptions(token);
-    return UserServiceClient(channel, options: options);
-  }
+  void build() {}
 }
 
 @Riverpod(keepAlive: true)
 bool isLoggedIn(Ref ref) {
   final token = ref.watch(tokenProvider);
   return token?.isNotEmpty ?? false;
+}
+
+/// UI-gating helper mirroring the server's `require_permission` checks - not a security boundary,
+/// just controls what the client shows/hides. The server independently enforces every request.
+@Riverpod(keepAlive: true)
+bool isAdmin(Ref ref) {
+  final perms = ref.watch(permissionsProvider);
+  return hasPermission(perms, 'settings', PermissionLevel.write);
+}
+
+/// Whether the current token grants any permission at all (vs. being unauthenticated) - used to
+/// gate the main navigation rail and RFID scanning.
+@Riverpod(keepAlive: true)
+bool hasAnyPermission(Ref ref) {
+  return ref.watch(permissionsProvider).isNotEmpty;
 }

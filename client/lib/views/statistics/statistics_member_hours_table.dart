@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/models/team_member.dart';
 
 class StatisticsMemberHoursTable extends StatelessWidget {
   final Map<String, MemberHoursData> memberHours;
@@ -92,7 +92,7 @@ class StatisticsMemberHoursTable extends StatelessWidget {
                   itemCount: sorted.length,
                   itemBuilder: (context, i) {
                     final m = sorted[i];
-                    final memberType = m.memberType == TeamMemberType.STUDENT
+                    final memberType = m.memberType == TeamMemberType.student
                         ? 'Student'
                         : 'Mentor';
 

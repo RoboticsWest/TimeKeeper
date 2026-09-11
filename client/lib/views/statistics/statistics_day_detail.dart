@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/models/team_member.dart';
 
 class StatisticsDayDetail extends StatelessWidget {
   final DateTime selectedDay;
@@ -136,7 +136,7 @@ class StatisticsDayDetail extends StatelessWidget {
               ...members.asMap().entries.map((entry) {
                 final i = entry.key;
                 final m = entry.value;
-                final memberType = m.memberType == TeamMemberType.STUDENT
+                final memberType = m.memberType == TeamMemberType.student
                     ? 'Student'
                     : 'Mentor';
 

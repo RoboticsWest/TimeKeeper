@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/stat_card.dart';
+import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 
 class StatisticsOverviewCards extends StatelessWidget {
   final Map<String, Session> filteredSessions;
@@ -22,17 +22,14 @@ class StatisticsOverviewCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final sessionsWithTimes = filteredSessions.entries
-        .where((e) => e.value.hasStartTime() && e.value.hasEndTime())
-        .toList();
+    final sessionsWithTimes = filteredSessions.entries.toList();
 
     // Total hours = sum of scheduled session durations
     double totalScheduledSecs = 0;
     double avgSessionDuration = 0;
     for (final e in sessionsWithTimes) {
       totalScheduledSecs += e.value.endTime
-          .toDateTime()
-          .difference(e.value.startTime.toDateTime())
+          .difference(e.value.startTime)
           .inSeconds;
     }
     if (sessionsWithTimes.isNotEmpty) {
@@ -46,21 +43,19 @@ class StatisticsOverviewCards extends StatelessWidget {
     double totalOvertimeSecs = 0;
     for (final e in sessionsWithTimes) {
       final session = e.value;
-      final sessionStart = session.startTime.toDateTime();
-      final sessionEnd = session.endTime.toDateTime();
+      final sessionStart = session.startTime;
+      final sessionEnd = session.endTime;
 
       DateTime? earliestCheckIn;
       DateTime? latestCheckOut;
 
       for (final ms in teamMemberSessions.values) {
-        if (ms.sessionId != e.key || !ms.hasCheckInTime()) continue;
-        final checkIn = ms.checkInTime.toDateTime();
+        if (ms.sessionId != e.key) continue;
+        final checkIn = ms.checkInTime;
         if (earliestCheckIn == null || checkIn.isBefore(earliestCheckIn)) {
           earliestCheckIn = checkIn;
         }
-        final checkOut = ms.hasCheckOutTime()
-            ? ms.checkOutTime.toDateTime()
-            : DateTime.now();
+        final checkOut = ms.checkOutTime ?? DateTime.now();
         if (latestCheckOut == null || checkOut.isAfter(latestCheckOut)) {
           latestCheckOut = checkOut;
         }

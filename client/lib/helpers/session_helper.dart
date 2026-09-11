@@ -1,13 +1,8 @@
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 
-bool isMemberCheckedIn(
-  String memberId,
-  Iterable<TeamMemberSession> teamMemberSessions,
-) {
+bool isMemberCheckedIn(String memberId, Iterable<TeamMemberSession> teamMemberSessions) {
   for (final ms in teamMemberSessions) {
-    if (ms.teamMemberId == memberId &&
-        ms.hasCheckInTime() &&
-        !ms.hasCheckOutTime()) {
+    if (ms.teamMemberId == memberId && ms.checkOutTime == null) {
       return true;
     }
   }

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/location.dart';
+import 'package:time_keeper/models/rfid_tag.dart';
+import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/team_member.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/csv_utils.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -34,7 +37,7 @@ class DataSetupTab extends ConsumerWidget {
           .where((t) => t.teamMemberId == entry.key)
           .map((t) => t.tag)
           .join(';');
-      return [m.firstName, m.lastName, m.displayName, tags, m.discordUsername];
+      return [m.firstName, m.lastName, m.displayName ?? '', tags, m.discordUsername ?? ''];
     }).toList();
   }
 
@@ -44,7 +47,7 @@ class DataSetupTab extends ConsumerWidget {
     Map<String, RfidTag> allTags,
     TeamMemberType type,
   ) async {
-    final label = type == TeamMemberType.STUDENT ? 'students' : 'mentors';
+    final label = type == TeamMemberType.student ? 'students' : 'mentors';
     final rows = _buildMemberRows(members, allTags, type);
 
     if (rows.isEmpty) {
@@ -86,27 +89,13 @@ class DataSetupTab extends ConsumerWidget {
     }
 
     final sorted = sessions.entries.toList()
-      ..sort((a, b) {
-        final aTime = a.value.hasStartTime()
-            ? a.value.startTime.seconds.toInt()
-            : 0;
-        final bTime = b.value.hasStartTime()
-            ? b.value.startTime.seconds.toInt()
-            : 0;
-        return aTime.compareTo(bTime);
-      });
+      ..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
 
     final headers = ['LOCATION', 'START_DATE_TIME', 'END_DATE_TIME'];
     final rows = sorted.map((entry) {
       final s = entry.value;
       final locationName = locations[s.locationId]?.location ?? 'Unknown';
-      final startStr = s.hasStartTime()
-          ? formatRfc3339(s.startTime.toDateTime())
-          : '';
-      final endStr = s.hasEndTime()
-          ? formatRfc3339(s.endTime.toDateTime())
-          : '';
-      return [locationName, startStr, endStr];
+      return [locationName, formatRfc3339(s.startTime), formatRfc3339(s.endTime)];
     }).toList();
 
     final csv = buildCsv(headers, rows);
@@ -136,15 +125,7 @@ class DataSetupTab extends ConsumerWidget {
     }
 
     final sorted = teamMemberSessions.entries.toList()
-      ..sort((a, b) {
-        final aTime = a.value.hasCheckInTime()
-            ? a.value.checkInTime.seconds.toInt()
-            : 0;
-        final bTime = b.value.hasCheckInTime()
-            ? b.value.checkInTime.seconds.toInt()
-            : 0;
-        return aTime.compareTo(bTime);
-      });
+      ..sort((a, b) => a.value.checkInTime.compareTo(b.value.checkInTime));
 
     final headers = [
       'FIRST_NAME',
@@ -163,8 +144,8 @@ class DataSetupTab extends ConsumerWidget {
         member?.firstName ?? '',
         member?.lastName ?? '',
         location?.location ?? '',
-        ms.hasCheckInTime() ? formatRfc3339(ms.checkInTime.toDateTime()) : '',
-        ms.hasCheckOutTime() ? formatRfc3339(ms.checkOutTime.toDateTime()) : '',
+        formatRfc3339(ms.checkInTime),
+        ms.checkOutTime != null ? formatRfc3339(ms.checkOutTime!) : '',
       ];
     }).toList();
 
@@ -187,10 +168,10 @@ class DataSetupTab extends ConsumerWidget {
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
 
     final studentCount = teamMembers.values
-        .where((m) => m.memberType == TeamMemberType.STUDENT)
+        .where((m) => m.memberType == TeamMemberType.student)
         .length;
     final mentorCount = teamMembers.values
-        .where((m) => m.memberType == TeamMemberType.MENTOR)
+        .where((m) => m.memberType == TeamMemberType.mentor)
         .length;
 
     return SettingsPageLayout(
@@ -209,7 +190,7 @@ class DataSetupTab extends ConsumerWidget {
               context,
               teamMembers,
               rfidTags,
-              TeamMemberType.STUDENT,
+              TeamMemberType.student,
             ),
             icon: const Icon(Icons.download),
             label: const Text('Export CSV'),
@@ -225,7 +206,7 @@ class DataSetupTab extends ConsumerWidget {
               context,
               teamMembers,
               rfidTags,
-              TeamMemberType.MENTOR,
+              TeamMemberType.mentor,
             ),
             icon: const Icon(Icons.download),
             label: const Text('Export CSV'),

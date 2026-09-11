@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/user.pbgrpc.dart';
-import 'package:time_keeper/generated/common/common.pbenum.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
-import 'package:time_keeper/providers/auth_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/providers/user_provider.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -15,18 +11,12 @@ void showUserDialog(
   WidgetRef ref, {
   String? id,
   String? existingUsername,
-  List<Role>? existingRoles,
 }) {
   final isEdit = id != null;
 
   PopupDialog.info(
     title: isEdit ? 'Edit User' : 'Add User',
-    message: _UserForm(
-      isEdit: isEdit,
-      userId: id,
-      initialUsername: existingUsername,
-      initialRoles: existingRoles,
-    ),
+    message: _UserForm(isEdit: isEdit, userId: id, initialUsername: existingUsername),
     actions: const [],
   ).show(context);
 }
@@ -41,12 +31,7 @@ void showDeleteUserDialog(
     title: 'Delete User',
     message: Text('Are you sure you want to delete "$username"?'),
     confirmText: 'Delete',
-    onConfirmAsyncGrpc: () async {
-      final client = ref.read(userServiceProvider);
-      return await callGrpcEndpoint(
-        () => client.deleteUser(DeleteUserRequest(id: id)),
-      );
-    },
+    onConfirmAsyncApi: () => ref.read(usersProvider.notifier).delete(id),
     showResultDialog: true,
     successMessage: Text('"$username" has been deleted'),
   ).show(context);
@@ -56,22 +41,13 @@ class _UserForm extends HookConsumerWidget {
   final bool isEdit;
   final String? userId;
   final String? initialUsername;
-  final List<Role>? initialRoles;
 
-  const _UserForm({
-    required this.isEdit,
-    this.userId,
-    this.initialUsername,
-    this.initialRoles,
-  });
+  const _UserForm({required this.isEdit, this.userId, this.initialUsername});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final usernameController = useTextEditingController(
-      text: initialUsername ?? '',
-    );
+    final usernameController = useTextEditingController(text: initialUsername ?? '');
     final passwordController = useTextEditingController();
-    final selectedRoles = useState<Set<Role>>((initialRoles ?? []).toSet());
     final isLoading = useState(false);
 
     return SizedBox(
@@ -96,36 +72,12 @@ class _UserForm extends HookConsumerWidget {
               border: const OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 16),
-          Text('Roles', style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: Role.values.map((role) {
-              final isSelected = selectedRoles.value.contains(role);
-              return FilterChip(
-                label: Text(role.name),
-                selected: isSelected,
-                onSelected: (selected) {
-                  final updated = Set<Role>.from(selectedRoles.value);
-                  if (selected) {
-                    updated.add(role);
-                  } else {
-                    updated.remove(role);
-                  }
-                  selectedRoles.value = updated;
-                },
-              );
-            }).toList(),
-          ),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: isLoading.value
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                onPressed: isLoading.value ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
@@ -135,51 +87,31 @@ class _UserForm extends HookConsumerWidget {
                     : () async {
                         final username = usernameController.text.trim();
                         final password = passwordController.text;
-                        final roles = selectedRoles.value.toList();
 
                         if (username.isEmpty) return;
                         if (!isEdit && password.isEmpty) return;
 
                         isLoading.value = true;
                         try {
-                          final client = ref.read(userServiceProvider);
-                          final GrpcResult<dynamic> result;
-                          if (isEdit) {
-                            result = await callGrpcEndpoint(
-                              () => client.updateUser(
-                                UpdateUserRequest(
-                                  id: userId,
+                          final notifier = ref.read(usersProvider.notifier);
+                          final result = isEdit
+                              ? await notifier.update(
+                                  userId!,
                                   username: username,
-                                  password: password,
-                                  roles: roles,
-                                ),
-                              ),
-                            );
-                          } else {
-                            result = await callGrpcEndpoint(
-                              () => client.createUser(
-                                CreateUserRequest(
-                                  username: username,
-                                  password: password,
-                                  roles: roles,
-                                ),
-                              ),
-                            );
-                          }
+                                  password: password.isNotEmpty ? password : null,
+                                )
+                              : await notifier.create(username, password);
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
-                            switch (result) {
-                              case GrpcSuccess():
-                                SnackBarDialog.success(
-                                  message: isEdit
-                                      ? '"$username" updated successfully'
-                                      : '"$username" created successfully',
-                                ).show(context);
-                              case GrpcFailure():
-                                SnackBarDialog.fromGrpcStatus(
-                                  result: result,
-                                ).show(context);
+                            if (result.success) {
+                              SnackBarDialog.success(
+                                message: isEdit
+                                    ? '"$username" updated successfully'
+                                    : '"$username" created successfully',
+                              ).show(context);
+                            } else {
+                              SnackBarDialog.fromApiResult(result: result).show(context);
                             }
                           }
                         } finally {
