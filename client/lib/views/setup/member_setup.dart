@@ -1,16 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
-import 'package:time_keeper/generated/api/team_member.pbgrpc.dart';
-import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pbenum.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/views/setup/common/file_upload_setting.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
@@ -30,16 +28,11 @@ class MemberSetupTab extends HookConsumerWidget {
     // Load current settings on mount
     useEffect(() {
       Future<void> loadSettings() async {
-        final result = await callGrpcEndpoint(
-          () => ref
-              .read(settingsServiceProvider)
-              .getSettings(GetSettingsRequest()),
-        );
-        if (result is GrpcSuccess<GetSettingsResponse>) {
-          final s = result.data.settings;
+        final s = await ref.read(settingsQueryProvider.future);
+        if (s != null) {
           showOvertime.value = s.leaderboardShowOvertime;
           if (s.leaderboardMemberTypes.isNotEmpty) {
-            selectedMemberTypes.value = Set.from(s.leaderboardMemberTypes);
+            selectedMemberTypes.value = s.leaderboardMemberTypes.map(TeamMemberType.fromJson).toSet();
           }
         }
       }
@@ -49,48 +42,32 @@ class MemberSetupTab extends HookConsumerWidget {
     }, const []);
 
     Future<void> updateLeaderboardSettings() async {
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateLeaderboardSettings(
-              UpdateLeaderboardSettingsRequest(
-                leaderboardShowOvertime: showOvertime.value,
-                leaderboardMemberTypes: selectedMemberTypes.value,
-              ),
-            ),
-      );
+      final res = await ref
+          .read(settingsServiceProvider.notifier)
+          .updateLeaderboard(
+            showOvertime: showOvertime.value,
+            memberTypes: selectedMemberTypes.value.map((t) => t.toJson()).toList(),
+          );
 
       if (context.mounted) {
-        PopupDialog.fromGrpcStatus(result: res).show(context);
+        PopupDialog.fromApiResult(result: res).show(context);
       }
     }
 
-    Future<GrpcResult<UploadStudentCsvResponse>> uploadStudentCsv(
-      Uint8List bytes,
-    ) async {
-      final req = UploadStudentCsvRequest(csvData: bytes);
-      return await callGrpcEndpoint(
-        () => ref.read(teamMemberServiceProvider).uploadStudentCsv(req),
-      );
+    Future<ApiCallResult> uploadStudentCsv(Uint8List bytes) {
+      return ref.read(teamMembersProvider.notifier).uploadStudentCsv(utf8.decode(bytes));
     }
 
-    Future<GrpcResult<UploadMentorCsvResponse>> uploadMentorCsv(
-      Uint8List bytes,
-    ) async {
-      final req = UploadMentorCsvRequest(csvData: bytes);
-      return await callGrpcEndpoint(
-        () => ref.read(teamMemberServiceProvider).uploadMentorCsv(req),
-      );
+    Future<ApiCallResult> uploadMentorCsv(Uint8List bytes) {
+      return ref.read(teamMembersProvider.notifier).uploadMentorCsv(utf8.decode(bytes));
     }
 
     String memberTypeName(TeamMemberType type) {
       switch (type) {
-        case TeamMemberType.STUDENT:
+        case TeamMemberType.student:
           return 'Students';
-        case TeamMemberType.MENTOR:
+        case TeamMemberType.mentor:
           return 'Mentors';
-        default:
-          return type.name;
       }
     }
 
@@ -110,7 +87,7 @@ class MemberSetupTab extends HookConsumerWidget {
                 message: const Text(
                   'Uploading students can have impacts on existing data integrity',
                 ),
-                onConfirmAsyncGrpc: () async {
+                onConfirmAsyncApi: () async {
                   return await uploadStudentCsv(file.bytes!);
                 },
                 showResultDialog: true,
@@ -132,7 +109,7 @@ class MemberSetupTab extends HookConsumerWidget {
                 message: const Text(
                   'Uploading mentors can have impacts on existing data integrity',
                 ),
-                onConfirmAsyncGrpc: () async {
+                onConfirmAsyncApi: () async {
                   return await uploadMentorCsv(file.bytes!);
                 },
                 showResultDialog: true,
@@ -157,13 +134,10 @@ class MemberSetupTab extends HookConsumerWidget {
                   'Importing attendance can have impacts on existing data integrity. '
                   'Duplicate records (same member + session) will be skipped.',
                 ),
-                onConfirmAsyncGrpc: () async {
-                  final req = ImportAttendanceCsvRequest(csvData: file.bytes!);
-                  return await callGrpcEndpoint(
-                    () => ref
-                        .read(teamMemberSessionServiceProvider)
-                        .importAttendanceCsv(req),
-                  );
+                onConfirmAsyncApi: () async {
+                  return await ref
+                      .read(teamMemberSessionsProvider.notifier)
+                      .importAttendanceCsv(utf8.decode(file.bytes!));
                 },
                 showResultDialog: true,
                 successMessage: const Text('Attendance imported successfully!'),

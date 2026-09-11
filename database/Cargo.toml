@@ -5,7 +5,21 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.100"
-log = "0.4.29"
-prost = "0.14.1"
-sled = "0.34.7"
+diesel = { version = "2", default-features = false, features = ["postgres", "uuid", "chrono", "32-column-tables"] }
+diesel-async = { version = "0.5", features = ["postgres", "bb8"] }
+diesel_migrations = "2"
 uuid = { version = "1.19.0", features = ["v7"] }
+
+# diesel-async 0.5.2 uses futures_util::try_join! but doesn't request the feature that gates it —
+# pull it in ourselves so feature unification covers the gap.
+futures-util = { version = "0.3", features = ["async-await", "async-await-macro"] }
+
+# Only `diesel::PgConnection` (used solely to run migrations at startup, via diesel_migrations —
+# every other query goes through diesel-async's pure-Rust tokio-postgres backend) links libpq at
+# all, and only pulls it in dynamically by default. The `static-pq` feature switches that one
+# link to a vendored, statically-linked libpq/OpenSSL build instead, for targets (e.g. musl,
+# mingw-w64) that can't rely on a system libpq being present.
+pq-sys = { version = "0.7", optional = true }
+
+[features]
+static-pq = ["dep:pq-sys", "pq-sys/bundled"]

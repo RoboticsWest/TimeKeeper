@@ -4,24 +4,20 @@ use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{
-  auth::permissions::RolePermissions,
-  generated::{common::Role, db::Secret},
-  modules::secret::SecretRepository,
-};
+use crate::auth::permissions::{PermissionLevel, parse_claim};
 
 static JWT_SECRET: OnceCell<Vec<u8>> = OnceCell::new();
 
-pub fn init_jwt_secret() -> Result<()> {
+/// `secret_bytes` comes from the `secret` domain's `SecretRepository::get()` (which
+/// generates-and-persists one on first run) - resolved by the caller so this module doesn't need
+/// to know about the DB layer.
+pub fn init_jwt_secret(secret_bytes: Vec<u8>) -> Result<()> {
   log::info!("Initializing JWT secret");
 
-  // check if JWT_SECRET is already set
   if JWT_SECRET.get().is_some() {
     log::warn!("JWT_SECRET already initialized");
   } else {
-    // check if JWT exists in the db
-    let secret = Secret::get()?;
-    JWT_SECRET.set(secret.secret_bytes).map_err(|_| {
+    JWT_SECRET.set(secret_bytes).map_err(|_| {
       log::error!("Failed to set JWT_SECRET");
       anyhow::anyhow!("Failed to set JWT_SECRET")
     })?;
@@ -30,38 +26,22 @@ pub fn init_jwt_secret() -> Result<()> {
   Ok(())
 }
 
+/// `permissions` is a snapshot of `"<resource_slug>:<level>"` strings, resolved from the
+/// `user_permissions` view once at sign time (login/refresh) - not re-checked against the DB per
+/// request, so a role change only takes effect on the user's next login.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
-  pub sub: String,        // User ID
-  pub roles: Vec<String>, // Roles
-  pub exp: i64,           // Expiration timestamp
-  pub iat: i64,           // Issued at
+  pub sub: String,
+  pub permissions: Vec<String>,
+  pub exp: i64,
+  pub iat: i64,
 }
 
 impl Claims {
-  pub fn roles(&self) -> Vec<Role> {
-    // Convert role str to Role type, skipping invalid roles
-    self.roles.iter().filter_map(|role| Role::from_str_name(role)).collect()
-  }
-
-  /// Check if user has a specific permission in any of their roles
-  pub fn has_permission(&self, required: &Role) -> bool {
-    self.roles().iter().any(|role| role.has_permission(required))
-  }
-
-  /// Check if user has ALL required permissions
-  pub fn has_all_permissions(&self, required: &[Role]) -> bool {
-    required.iter().all(|req| self.has_permission(req))
-  }
-
-  /// Check if user has a specific role (exact match, not inheritance)
-  pub fn has_role(&self, role: &Role) -> bool {
-    self.roles().contains(role)
-  }
-
-  /// Check if user is an admin
-  pub fn is_admin(&self) -> bool {
-    self.has_role(&Role::Admin)
+  /// Checks whether the token grants at least `required` on `resource` (ceiling semantics -
+  /// `Write` satisfies a `Read` requirement, etc).
+  pub fn has_permission(&self, resource: &str, required: PermissionLevel) -> bool {
+    self.permissions.iter().filter_map(|c| parse_claim(c)).any(|(slug, level)| slug == resource && level >= required)
   }
 }
 
@@ -92,16 +72,15 @@ impl Auth {
     Ok(DecodingKey::from_secret(secret))
   }
 
-  pub fn generate_token(user_id: &str, roles: &[Role]) -> Result<String> {
+  pub fn generate_token(user_id: &str, permissions: &[String]) -> Result<String> {
     // Expiration time is set to 7 days from now
     let exp = match chrono::Utc::now().checked_add_signed(chrono::Duration::days(7)) {
       Some(exp) => exp.timestamp(),
       None => return Err(anyhow::anyhow!("Failed to calculate expiration time")),
     };
 
-    let roles: Vec<String> = roles.iter().map(|r| r.as_str_name().to_string()).collect();
-
-    let claims = Claims { sub: user_id.to_string(), roles, exp, iat: chrono::Utc::now().timestamp() };
+    let claims =
+      Claims { sub: user_id.to_string(), permissions: permissions.to_vec(), exp, iat: chrono::Utc::now().timestamp() };
 
     let encoding_key = Self::encoding_key()?;
     let header = jsonwebtoken::Header::default();

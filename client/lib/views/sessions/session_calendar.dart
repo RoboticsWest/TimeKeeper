@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/utils/time.dart';
+import 'package:time_keeper/models/session.dart';
 
 class SessionCalendar extends HookWidget {
   final Map<String, Session> sessions;
@@ -26,7 +25,7 @@ class SessionCalendar extends HookWidget {
     // Build event map: normalized date -> list of sessions
     final eventMap = <DateTime, List<Session>>{};
     for (final session in sessions.values) {
-      final dt = session.startTime.toDateTime();
+      final dt = session.startTime;
       final key = DateTime(dt.year, dt.month, dt.day);
       eventMap.putIfAbsent(key, () => []).add(session);
     }

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/notification.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/providers/entity_sync_provider.dart';
+import 'package:time_keeper/models/location.dart';
+import 'package:time_keeper/models/notification.dart';
+import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/notification_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/notifications/notification_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -39,9 +39,9 @@ class NotificationsView extends HookConsumerWidget {
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final client = ref.read(notificationServiceProvider);
+        final notifier = ref.read(notificationsProvider.notifier);
         for (final id in ids) {
-          await client.deleteNotification(DeleteNotificationRequest(id: id));
+          await notifier.delete(id);
         }
       },
       showResultDialog: true,
@@ -56,8 +56,8 @@ class NotificationsView extends HookConsumerWidget {
   ) {
     final session = sessions[sessionId];
     if (session == null) return sessionId;
-    final start = session.startTime.toDateTime();
-    final end = session.endTime.toDateTime();
+    final start = session.startTime;
+    final end = session.endTime;
     final location = locations[session.locationId]?.location ?? '';
     if (location.isNotEmpty) {
       return '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)} @ $location';
@@ -72,13 +72,16 @@ class NotificationsView extends HookConsumerWidget {
     if (memberId == null || memberId.isEmpty) return '-';
     final member = teamMembers[memberId];
     if (member == null) return memberId;
-    if (member.displayName.isNotEmpty) return member.displayName;
+    if (member.displayName != null && member.displayName!.isNotEmpty) return member.displayName!;
     return '${member.firstName} ${member.lastName}';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(entitySyncProvider);
+    ref.watch(notificationsSyncProvider);
+    ref.watch(sessionsSyncProvider);
+    ref.watch(locationsSyncProvider);
+    ref.watch(teamMembersSyncProvider);
     final notifications = ref.watch(notificationsProvider);
     final sessions = ref.watch(sessionsProvider);
     final locations = ref.watch(locationsProvider);
@@ -93,13 +96,11 @@ class NotificationsView extends HookConsumerWidget {
         // Sort by session start time descending, then by type
         final sessionA = sessions[a.value.sessionId];
         final sessionB = sessions[b.value.sessionId];
-        final startA = sessionA?.startTime.seconds.toInt() ?? 0;
-        final startB = sessionB?.startTime.seconds.toInt() ?? 0;
+        final startA = sessionA?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final startB = sessionB?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
         final cmp = startB.compareTo(startA);
         if (cmp != 0) return cmp;
-        return a.value.notificationType.value.compareTo(
-          b.value.notificationType.value,
-        );
+        return a.value.notificationType.compareTo(b.value.notificationType);
       });
 
     final filtered = sorted.where((entry) {
@@ -113,7 +114,7 @@ class NotificationsView extends HookConsumerWidget {
       );
       final memberLabel = _formatMemberName(
         teamMembers,
-        n.hasTeamMemberId() ? n.teamMemberId : null,
+        n.teamMemberId,
       );
       final sentLabel = n.sent ? 'sent' : 'pending';
       return typeLabel.toLowerCase().contains(filterText) ||
@@ -195,7 +196,7 @@ class NotificationsView extends HookConsumerWidget {
                       child: Text(
                         _formatMemberName(
                           teamMembers,
-                          n.hasTeamMemberId() ? n.teamMemberId : null,
+                          n.teamMemberId,
                         ),
                       ),
                       flex: 2,

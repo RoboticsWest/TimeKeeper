@@ -1,23 +1,29 @@
+import 'dart:async';
+
+import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/generated/api/api.pbgrpc.dart';
-import 'package:time_keeper/helpers/reconnecting_stream.dart';
-import 'package:time_keeper/providers/grpc_channel_provider.dart';
+import 'package:time_keeper/providers/network_config_provider.dart';
 
 part 'health_provider.g.dart';
 
+/// Polls the plain `/health` HTTP endpoint (not part of the GraphQL API) to report connectivity.
 @Riverpod(keepAlive: true)
-HealthServiceClient healthService(Ref ref) {
-  final channel = ref.watch(grpcChannelProvider);
-  return HealthServiceClient(channel);
-}
+Stream<bool> isConnected(Ref ref) async* {
+  final serverIp = ref.watch(serverIpProvider);
+  final apiPort = ref.watch(serverApiPortProvider);
+  final tls = ref.watch(tlsProvider);
+  final scheme = tls ? 'https' : 'http';
+  final uri = Uri.parse('$scheme://$serverIp:$apiPort/health');
 
-@Riverpod(keepAlive: true)
-Stream<bool> isConnected(Ref ref) {
-  final reconnectingStream = ReconnectingStream<GetHealthResponse>(() async {
-    final client = ref.read(healthServiceProvider);
-    return client.streamHealth(GetHealthRequest());
-  });
-
-  ref.onDispose(reconnectingStream.close);
-  return reconnectingStream.connectionState;
+  while (true) {
+    bool connected;
+    try {
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      connected = response.statusCode == 200;
+    } catch (_) {
+      connected = false;
+    }
+    yield connected;
+    await Future<void>.delayed(const Duration(seconds: 10));
+  }
 }

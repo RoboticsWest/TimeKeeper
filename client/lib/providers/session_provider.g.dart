@@ -9,93 +9,46 @@ part of 'session_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(sessionService)
-final sessionServiceProvider = SessionServiceProvider._();
+@ProviderFor(sessionChanges)
+final sessionChangesProvider = SessionChangesProvider._();
 
-final class SessionServiceProvider
+final class SessionChangesProvider
     extends
         $FunctionalProvider<
-          SessionServiceClient,
-          SessionServiceClient,
-          SessionServiceClient
-        >
-    with $Provider<SessionServiceClient> {
-  SessionServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'sessionServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$sessionServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<SessionServiceClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  SessionServiceClient create(Ref ref) {
-    return sessionService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SessionServiceClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SessionServiceClient>(value),
-    );
-  }
-}
-
-String _$sessionServiceHash() => r'98770a0f26c90f5472060e01c54ccc583fd5573e';
-
-@ProviderFor(sessionsStream)
-final sessionsStreamProvider = SessionsStreamProvider._();
-
-final class SessionsStreamProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<StreamSessionsResponse>,
-          StreamSessionsResponse,
-          Stream<StreamSessionsResponse>
+          AsyncValue<ChangeEvent<Session>>,
+          ChangeEvent<Session>,
+          Stream<ChangeEvent<Session>>
         >
     with
-        $FutureModifier<StreamSessionsResponse>,
-        $StreamProvider<StreamSessionsResponse> {
-  SessionsStreamProvider._()
+        $FutureModifier<ChangeEvent<Session>>,
+        $StreamProvider<ChangeEvent<Session>> {
+  SessionChangesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'sessionsStreamProvider',
+        name: r'sessionChangesProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$sessionsStreamHash();
+  String debugGetCreateSourceHash() => _$sessionChangesHash();
 
   @$internal
   @override
-  $StreamProviderElement<StreamSessionsResponse> $createElement(
+  $StreamProviderElement<ChangeEvent<Session>> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<StreamSessionsResponse> create(Ref ref) {
-    return sessionsStream(ref);
+  Stream<ChangeEvent<Session>> create(Ref ref) {
+    return sessionChanges(ref);
   }
 }
 
-String _$sessionsStreamHash() => r'2ee228c811e72583e7463ee56be412866ae5c22e';
+String _$sessionChangesHash() => r'6f4d879aa536883ab6676d85ada36110134394f7';
 
 @ProviderFor(Sessions)
 final sessionsProvider = SessionsProvider._();
@@ -129,7 +82,7 @@ final class SessionsProvider
   }
 }
 
-String _$sessionsHash() => r'f3d932f0dc5b6f89ec879c764d9b30e7104f9893';
+String _$sessionsHash() => r'0c30c3938d53641363b3d5d7dc30c3922aa9e111';
 
 abstract class _$Sessions extends $Notifier<Map<String, Session>> {
   Map<String, Session> build();
@@ -142,6 +95,104 @@ abstract class _$Sessions extends $Notifier<Map<String, Session>> {
             as $ClassProviderElement<
               AnyNotifier<Map<String, Session>, Map<String, Session>>,
               Map<String, Session>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(sessionsSync)
+final sessionsSyncProvider = SessionsSyncProvider._();
+
+final class SessionsSyncProvider extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  SessionsSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sessionsSyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionsSyncHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return sessionsSync(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$sessionsSyncHash() => r'f86d40f354e058e1c2548616f5c6227ff17542d7';
+
+/// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
+
+@ProviderFor(SessionCheckInOut)
+final sessionCheckInOutProvider = SessionCheckInOutProvider._();
+
+/// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
+final class SessionCheckInOutProvider
+    extends $NotifierProvider<SessionCheckInOut, void> {
+  /// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
+  SessionCheckInOutProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sessionCheckInOutProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionCheckInOutHash();
+
+  @$internal
+  @override
+  SessionCheckInOut create() => SessionCheckInOut();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$sessionCheckInOutHash() => r'10522ee3340118027dbeb78fd180e047c4d3c9db';
+
+/// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
+
+abstract class _$SessionCheckInOut extends $Notifier<void> {
+  void build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
               Object?,
               Object?
             >;

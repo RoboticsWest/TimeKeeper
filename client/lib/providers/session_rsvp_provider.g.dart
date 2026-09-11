@@ -9,53 +9,47 @@ part of 'session_rsvp_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(sessionRsvpService)
-final sessionRsvpServiceProvider = SessionRsvpServiceProvider._();
+@ProviderFor(sessionRsvpChanges)
+final sessionRsvpChangesProvider = SessionRsvpChangesProvider._();
 
-final class SessionRsvpServiceProvider
+final class SessionRsvpChangesProvider
     extends
         $FunctionalProvider<
-          SessionRsvpServiceClient,
-          SessionRsvpServiceClient,
-          SessionRsvpServiceClient
+          AsyncValue<ChangeEvent<SessionRsvp>>,
+          ChangeEvent<SessionRsvp>,
+          Stream<ChangeEvent<SessionRsvp>>
         >
-    with $Provider<SessionRsvpServiceClient> {
-  SessionRsvpServiceProvider._()
+    with
+        $FutureModifier<ChangeEvent<SessionRsvp>>,
+        $StreamProvider<ChangeEvent<SessionRsvp>> {
+  SessionRsvpChangesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'sessionRsvpServiceProvider',
-        isAutoDispose: false,
+        name: r'sessionRsvpChangesProvider',
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$sessionRsvpServiceHash();
+  String debugGetCreateSourceHash() => _$sessionRsvpChangesHash();
 
   @$internal
   @override
-  $ProviderElement<SessionRsvpServiceClient> $createElement(
+  $StreamProviderElement<ChangeEvent<SessionRsvp>> $createElement(
     $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  ) => $StreamProviderElement(pointer);
 
   @override
-  SessionRsvpServiceClient create(Ref ref) {
-    return sessionRsvpService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SessionRsvpServiceClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SessionRsvpServiceClient>(value),
-    );
+  Stream<ChangeEvent<SessionRsvp>> create(Ref ref) {
+    return sessionRsvpChanges(ref);
   }
 }
 
-String _$sessionRsvpServiceHash() =>
-    r'40b97534679c94875f885ce39f538641174b011e';
+String _$sessionRsvpChangesHash() =>
+    r'0477c1e0a5132d01ab7046700ae502f33e8e6e54';
 
 @ProviderFor(SessionRsvps)
 final sessionRsvpsProvider = SessionRsvpsProvider._();
@@ -89,7 +83,7 @@ final class SessionRsvpsProvider
   }
 }
 
-String _$sessionRsvpsHash() => r'9f00706ad25296303811aab025c410f896ca9c05';
+String _$sessionRsvpsHash() => r'f7a759a8ee971482c8c073648468fe0f8221647c';
 
 abstract class _$SessionRsvps extends $Notifier<Map<String, SessionRsvp>> {
   Map<String, SessionRsvp> build();
@@ -109,3 +103,44 @@ abstract class _$SessionRsvps extends $Notifier<Map<String, SessionRsvp>> {
     element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(sessionRsvpsSync)
+final sessionRsvpsSyncProvider = SessionRsvpsSyncProvider._();
+
+final class SessionRsvpsSyncProvider
+    extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  SessionRsvpsSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sessionRsvpsSyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionRsvpsSyncHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return sessionRsvpsSync(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$sessionRsvpsSyncHash() => r'01d3d4ed7e9315b917bed0cad64a8c67a0acc5f4';

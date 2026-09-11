@@ -9,97 +9,47 @@ part of 'team_member_session_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(teamMemberSessionService)
-final teamMemberSessionServiceProvider = TeamMemberSessionServiceProvider._();
+@ProviderFor(teamMemberSessionChanges)
+final teamMemberSessionChangesProvider = TeamMemberSessionChangesProvider._();
 
-final class TeamMemberSessionServiceProvider
+final class TeamMemberSessionChangesProvider
     extends
         $FunctionalProvider<
-          TeamMemberSessionServiceClient,
-          TeamMemberSessionServiceClient,
-          TeamMemberSessionServiceClient
-        >
-    with $Provider<TeamMemberSessionServiceClient> {
-  TeamMemberSessionServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'teamMemberSessionServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$teamMemberSessionServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<TeamMemberSessionServiceClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  TeamMemberSessionServiceClient create(Ref ref) {
-    return teamMemberSessionService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(TeamMemberSessionServiceClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<TeamMemberSessionServiceClient>(
-        value,
-      ),
-    );
-  }
-}
-
-String _$teamMemberSessionServiceHash() =>
-    r'68f85afad038bd1ffd2b6a773c675ab958746c0b';
-
-@ProviderFor(teamMemberSessionsStream)
-final teamMemberSessionsStreamProvider = TeamMemberSessionsStreamProvider._();
-
-final class TeamMemberSessionsStreamProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<StreamTeamMemberSessionsResponse>,
-          StreamTeamMemberSessionsResponse,
-          Stream<StreamTeamMemberSessionsResponse>
+          AsyncValue<ChangeEvent<TeamMemberSession>>,
+          ChangeEvent<TeamMemberSession>,
+          Stream<ChangeEvent<TeamMemberSession>>
         >
     with
-        $FutureModifier<StreamTeamMemberSessionsResponse>,
-        $StreamProvider<StreamTeamMemberSessionsResponse> {
-  TeamMemberSessionsStreamProvider._()
+        $FutureModifier<ChangeEvent<TeamMemberSession>>,
+        $StreamProvider<ChangeEvent<TeamMemberSession>> {
+  TeamMemberSessionChangesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'teamMemberSessionsStreamProvider',
+        name: r'teamMemberSessionChangesProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$teamMemberSessionsStreamHash();
+  String debugGetCreateSourceHash() => _$teamMemberSessionChangesHash();
 
   @$internal
   @override
-  $StreamProviderElement<StreamTeamMemberSessionsResponse> $createElement(
+  $StreamProviderElement<ChangeEvent<TeamMemberSession>> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<StreamTeamMemberSessionsResponse> create(Ref ref) {
-    return teamMemberSessionsStream(ref);
+  Stream<ChangeEvent<TeamMemberSession>> create(Ref ref) {
+    return teamMemberSessionChanges(ref);
   }
 }
 
-String _$teamMemberSessionsStreamHash() =>
-    r'84cd5a8b6f32ecee0c19e38aba37408adb6546bc';
+String _$teamMemberSessionChangesHash() =>
+    r'd4c306695fec6a0cac13daa460754eb134de8710';
 
 @ProviderFor(TeamMemberSessions)
 final teamMemberSessionsProvider = TeamMemberSessionsProvider._();
@@ -137,7 +87,7 @@ final class TeamMemberSessionsProvider
 }
 
 String _$teamMemberSessionsHash() =>
-    r'98e225bcadeb484c63da3030dbfca984a18a0381';
+    r'e36f9e320de5c79a6873e3954bd612fe19c5ea10';
 
 abstract class _$TeamMemberSessions
     extends $Notifier<Map<String, TeamMemberSession>> {
@@ -165,3 +115,45 @@ abstract class _$TeamMemberSessions
     element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(teamMemberSessionsSync)
+final teamMemberSessionsSyncProvider = TeamMemberSessionsSyncProvider._();
+
+final class TeamMemberSessionsSyncProvider
+    extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  TeamMemberSessionsSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'teamMemberSessionsSyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamMemberSessionsSyncHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return teamMemberSessionsSync(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$teamMemberSessionsSyncHash() =>
+    r'09b1f66284aa3f51fe7778b6e8a4dd9e9e1577b3';

@@ -6,7 +6,6 @@ import 'package:time_keeper/helpers/kiosk_mode_stub.dart'
     if (dart.library.io) 'package:time_keeper/helpers/kiosk_mode_native.dart'
     if (dart.library.js_interop) 'package:time_keeper/helpers/kiosk_mode_web.dart';
 import 'package:time_keeper/providers/kiosk_mode_provider.dart';
-import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/network_config_provider.dart';
 import 'package:time_keeper/providers/scan_debounce_provider.dart';
@@ -24,7 +23,7 @@ class SettingsView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(entitySyncProvider);
+    ref.watch(locationsSyncProvider);
     final serverIp = ref.watch(serverIpProvider);
     final apiPort = ref.watch(serverApiPortProvider);
     final locations = ref.watch(locationsProvider);

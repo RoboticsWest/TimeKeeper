@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/statistics.pb.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/leaderboard.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/statistics_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
@@ -16,7 +16,7 @@ class LeaderboardView extends ConsumerWidget {
     return leaderboard.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(child: Text('Failed to load leaderboard')),
-      data: (response) => _LeaderboardTable(entries: response.entries),
+      data: (entries) => _LeaderboardTable(entries: entries),
     );
   }
 }
@@ -139,8 +139,8 @@ class _LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final member = entry.teamMember;
-    final name = member.displayName;
-    final memberType = member.memberType == TeamMemberType.STUDENT
+    final name = member.displayName ?? '${member.firstName} ${member.lastName}';
+    final memberType = member.memberType == TeamMemberType.student
         ? 'Student'
         : 'Mentor';
 

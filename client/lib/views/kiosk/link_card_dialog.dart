@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/rfid_tag.pbgrpc.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/toast_overlay.dart';
 import 'package:time_keeper/widgets/member_search_list.dart';
@@ -61,34 +58,25 @@ class _LinkCardContent extends ConsumerWidget {
                     style: TextStyle(color: Colors.white),
                   ),
                   onPressed: () async {
-                    final client = ref.read(rfidTagServiceProvider);
-                    final result = await callGrpcEndpoint(
-                      () => client.createRfidTag(
-                        CreateRfidTagRequest(
-                          teamMemberId: memberId,
-                          tag: scannedUid,
-                        ),
-                      ),
-                    );
+                    final result = await ref.read(rfidTagsProvider.notifier).create(memberId, scannedUid);
 
                     if (!context.mounted) return;
 
                     final name = member.displayName;
 
-                    switch (result) {
-                      case GrpcSuccess():
-                        Navigator.of(context).pop();
-                        ToastOverlay.success(
-                          context,
-                          title: 'Card Linked',
-                          message: 'Linked card to $name',
-                        );
-                      case GrpcFailure(userMessage: final msg):
-                        ToastOverlay.error(
-                          context,
-                          title: 'Link Failed',
-                          message: msg,
-                        );
+                    if (result.success) {
+                      Navigator.of(context).pop();
+                      ToastOverlay.success(
+                        context,
+                        title: 'Card Linked',
+                        message: 'Linked card to $name',
+                      );
+                    } else {
+                      ToastOverlay.error(
+                        context,
+                        title: 'Link Failed',
+                        message: result.message ?? 'An error occurred',
+                      );
                     }
                   },
                 );

@@ -9,93 +9,46 @@ part of 'rfid_tag_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(rfidTagService)
-final rfidTagServiceProvider = RfidTagServiceProvider._();
+@ProviderFor(rfidTagChanges)
+final rfidTagChangesProvider = RfidTagChangesProvider._();
 
-final class RfidTagServiceProvider
+final class RfidTagChangesProvider
     extends
         $FunctionalProvider<
-          RfidTagServiceClient,
-          RfidTagServiceClient,
-          RfidTagServiceClient
-        >
-    with $Provider<RfidTagServiceClient> {
-  RfidTagServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'rfidTagServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$rfidTagServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<RfidTagServiceClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  RfidTagServiceClient create(Ref ref) {
-    return rfidTagService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(RfidTagServiceClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<RfidTagServiceClient>(value),
-    );
-  }
-}
-
-String _$rfidTagServiceHash() => r'cc13184c89749caeccc45c33f996ec55f1711918';
-
-@ProviderFor(rfidTagsStream)
-final rfidTagsStreamProvider = RfidTagsStreamProvider._();
-
-final class RfidTagsStreamProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<StreamRfidTagsResponse>,
-          StreamRfidTagsResponse,
-          Stream<StreamRfidTagsResponse>
+          AsyncValue<ChangeEvent<RfidTag>>,
+          ChangeEvent<RfidTag>,
+          Stream<ChangeEvent<RfidTag>>
         >
     with
-        $FutureModifier<StreamRfidTagsResponse>,
-        $StreamProvider<StreamRfidTagsResponse> {
-  RfidTagsStreamProvider._()
+        $FutureModifier<ChangeEvent<RfidTag>>,
+        $StreamProvider<ChangeEvent<RfidTag>> {
+  RfidTagChangesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'rfidTagsStreamProvider',
+        name: r'rfidTagChangesProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$rfidTagsStreamHash();
+  String debugGetCreateSourceHash() => _$rfidTagChangesHash();
 
   @$internal
   @override
-  $StreamProviderElement<StreamRfidTagsResponse> $createElement(
+  $StreamProviderElement<ChangeEvent<RfidTag>> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<StreamRfidTagsResponse> create(Ref ref) {
-    return rfidTagsStream(ref);
+  Stream<ChangeEvent<RfidTag>> create(Ref ref) {
+    return rfidTagChanges(ref);
   }
 }
 
-String _$rfidTagsStreamHash() => r'8b49900ecb3a39e428eec35aa4953f074c4a81b1';
+String _$rfidTagChangesHash() => r'cc04948f4f520a7413d2ca43dc97dbdea7c6584e';
 
 @ProviderFor(RfidTags)
 final rfidTagsProvider = RfidTagsProvider._();
@@ -129,7 +82,7 @@ final class RfidTagsProvider
   }
 }
 
-String _$rfidTagsHash() => r'25fce69832cd01e7f2a5ed4bb562e5c7a4406e2f';
+String _$rfidTagsHash() => r'5cc936e2e7768710ffc29baecec0c98a8937fea0';
 
 abstract class _$RfidTags extends $Notifier<Map<String, RfidTag>> {
   Map<String, RfidTag> build();
@@ -148,6 +101,46 @@ abstract class _$RfidTags extends $Notifier<Map<String, RfidTag>> {
     element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(rfidTagsSync)
+final rfidTagsSyncProvider = RfidTagsSyncProvider._();
+
+final class RfidTagsSyncProvider extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  RfidTagsSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'rfidTagsSyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$rfidTagsSyncHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return rfidTagsSync(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$rfidTagsSyncHash() => r'29bbfff88f9dbd2a2b79026aab398290e11ea9b7';
 
 @ProviderFor(rfidTagsByMember)
 final rfidTagsByMemberProvider = RfidTagsByMemberFamily._();

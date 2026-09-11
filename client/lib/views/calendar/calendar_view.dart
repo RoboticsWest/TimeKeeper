@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/calendar/calendar_table.dart';
 import 'package:time_keeper/views/sessions/session_calendar.dart';
 
@@ -14,7 +12,7 @@ class CalendarView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(entitySyncProvider);
+    ref.watch(sessionsSyncProvider);
     final sessions = ref.watch(sessionsProvider);
     final theme = Theme.of(context);
 
@@ -25,7 +23,7 @@ class CalendarView extends HookConsumerWidget {
 
     final filtered = selectedDate.value != null
         ? sorted.where((entry) {
-            final dt = entry.value.startTime.toDateTime();
+            final dt = entry.value.startTime;
             final sel = selectedDate.value!;
             return dt.year == sel.year &&
                 dt.month == sel.month &&

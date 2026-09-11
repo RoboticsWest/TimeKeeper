@@ -9,93 +9,46 @@ part of 'team_member_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(teamMemberService)
-final teamMemberServiceProvider = TeamMemberServiceProvider._();
+@ProviderFor(teamMemberChanges)
+final teamMemberChangesProvider = TeamMemberChangesProvider._();
 
-final class TeamMemberServiceProvider
+final class TeamMemberChangesProvider
     extends
         $FunctionalProvider<
-          TeamMemberServiceClient,
-          TeamMemberServiceClient,
-          TeamMemberServiceClient
-        >
-    with $Provider<TeamMemberServiceClient> {
-  TeamMemberServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'teamMemberServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$teamMemberServiceHash();
-
-  @$internal
-  @override
-  $ProviderElement<TeamMemberServiceClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  TeamMemberServiceClient create(Ref ref) {
-    return teamMemberService(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(TeamMemberServiceClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<TeamMemberServiceClient>(value),
-    );
-  }
-}
-
-String _$teamMemberServiceHash() => r'48972679a448b0913d9af3390c07705fdd11bc77';
-
-@ProviderFor(teamMembersStream)
-final teamMembersStreamProvider = TeamMembersStreamProvider._();
-
-final class TeamMembersStreamProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<StreamTeamMembersResponse>,
-          StreamTeamMembersResponse,
-          Stream<StreamTeamMembersResponse>
+          AsyncValue<ChangeEvent<TeamMember>>,
+          ChangeEvent<TeamMember>,
+          Stream<ChangeEvent<TeamMember>>
         >
     with
-        $FutureModifier<StreamTeamMembersResponse>,
-        $StreamProvider<StreamTeamMembersResponse> {
-  TeamMembersStreamProvider._()
+        $FutureModifier<ChangeEvent<TeamMember>>,
+        $StreamProvider<ChangeEvent<TeamMember>> {
+  TeamMemberChangesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'teamMembersStreamProvider',
+        name: r'teamMemberChangesProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$teamMembersStreamHash();
+  String debugGetCreateSourceHash() => _$teamMemberChangesHash();
 
   @$internal
   @override
-  $StreamProviderElement<StreamTeamMembersResponse> $createElement(
+  $StreamProviderElement<ChangeEvent<TeamMember>> $createElement(
     $ProviderPointer pointer,
   ) => $StreamProviderElement(pointer);
 
   @override
-  Stream<StreamTeamMembersResponse> create(Ref ref) {
-    return teamMembersStream(ref);
+  Stream<ChangeEvent<TeamMember>> create(Ref ref) {
+    return teamMemberChanges(ref);
   }
 }
 
-String _$teamMembersStreamHash() => r'e39aee18a610b3bc588fae24dfc7b50de8e75228';
+String _$teamMemberChangesHash() => r'5aae68de4ba20618ad8a9eebd81844f72a62297e';
 
 @ProviderFor(TeamMembers)
 final teamMembersProvider = TeamMembersProvider._();
@@ -129,7 +82,7 @@ final class TeamMembersProvider
   }
 }
 
-String _$teamMembersHash() => r'01fb493ba3a0a02a6f21cc6039d48b8e4a1df97f';
+String _$teamMembersHash() => r'2fb6d4e0609e8b8c8bb25f8dfdd8c8aa67017a5d';
 
 abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
   Map<String, TeamMember> build();
@@ -149,6 +102,47 @@ abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
     element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(teamMembersSync)
+final teamMembersSyncProvider = TeamMembersSyncProvider._();
+
+final class TeamMembersSyncProvider
+    extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  TeamMembersSyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'teamMembersSyncProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$teamMembersSyncHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return teamMembersSync(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$teamMembersSyncHash() => r'6359aecf8e33b5b617f75e5a24397a1ecd5bf717';
 
 @ProviderFor(studentTeamMembers)
 final studentTeamMembersProvider = StudentTeamMembersProvider._();
@@ -196,7 +190,7 @@ final class StudentTeamMembersProvider
 }
 
 String _$studentTeamMembersHash() =>
-    r'b5f4bad9fcc8b430290ea1ba212df2de77d94f17';
+    r'446391af205ad0b6eac2fc93dbb9e1c002179043';
 
 @ProviderFor(mentorTeamMembers)
 final mentorTeamMembersProvider = MentorTeamMembersProvider._();
@@ -243,4 +237,4 @@ final class MentorTeamMembersProvider
   }
 }
 
-String _$mentorTeamMembersHash() => r'8d22e36a1b928df7955493ff033b95b0986340fe';
+String _$mentorTeamMembersHash() => r'8f7b59ce2d225850bd8306e1a9a115a88e417f2d';

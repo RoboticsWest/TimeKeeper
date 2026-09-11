@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_rsvp_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/views/sessions/session_detail_dialog.dart';
 import 'package:time_keeper/views/sessions/session_dialog.dart';
 import 'package:time_keeper/widgets/member_count.dart';
 import 'package:time_keeper/widgets/status_chip.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/session_rsvp.dart';
 
 class SessionTable extends ConsumerWidget {
   final List<MapEntry<String, Session>> sessions;
@@ -65,8 +65,8 @@ class SessionTable extends ConsumerWidget {
       editRows: sessions.map((entry) {
         final id = entry.key;
         final session = entry.value;
-        final start = session.startTime.toDateTime();
-        final end = session.endTime.toDateTime();
+        final start = session.startTime;
+        final end = session.endTime;
         final duration = end.difference(start);
         final locationName =
             locations[session.locationId]?.location ?? session.locationId;
@@ -140,9 +140,9 @@ class _RsvpCount extends StatelessWidget {
     final rsvps = sessionRsvps.values
         .where((r) => r.sessionId == sessionId)
         .toList();
-    final going = rsvps.where((r) => r.status == RsvpStatus.GOING).length;
+    final going = rsvps.where((r) => r.status == RsvpStatus.going).length;
     final notGoing = rsvps
-        .where((r) => r.status == RsvpStatus.NOT_GOING)
+        .where((r) => r.status == RsvpStatus.notGoing)
         .length;
 
     if (rsvps.isEmpty) {

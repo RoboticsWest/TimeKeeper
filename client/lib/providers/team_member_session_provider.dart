@@ -1,35 +1,57 @@
+import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/generated/api/team_member_session.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/auth_interceptor.dart';
 import 'package:time_keeper/helpers/collection_storage.dart';
-import 'package:time_keeper/helpers/reconnecting_stream.dart';
-import 'package:time_keeper/providers/auth_provider.dart';
-import 'package:time_keeper/providers/grpc_channel_provider.dart';
+import 'package:time_keeper/models/change_event.dart';
+import 'package:time_keeper/models/team_member_session.dart';
+import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 
 part 'team_member_session_provider.g.dart';
 
-@Riverpod(keepAlive: true)
-TeamMemberSessionServiceClient teamMemberSessionService(Ref ref) {
-  final channel = ref.watch(grpcChannelProvider);
-  final token = ref.watch(tokenProvider);
-  final options = authCallOptions(token);
+const _teamMemberSessionFields = 'id teamMemberId sessionId checkInTime checkOutTime';
 
-  return TeamMemberSessionServiceClient(channel, options: options);
-}
+const _teamMemberSessionsQuery = '''
+  query TeamMemberSessions {
+    teamMemberSessions { $_teamMemberSessionFields }
+  }
+''';
+
+const _teamMemberSessionChangesSubscription = '''
+  subscription TeamMemberSessionChanges {
+    teamMemberSessionChanges { operation id data { $_teamMemberSessionFields } }
+  }
+''';
+
+const _updateTeamMemberSessionMutation = '''
+  mutation UpdateTeamMemberSession(\$id: UUID!, \$checkInTime: DateTime!, \$checkOutTime: DateTime) {
+    updateTeamMemberSession(id: \$id, checkInTime: \$checkInTime, checkOutTime: \$checkOutTime) { $_teamMemberSessionFields }
+  }
+''';
+
+const _deleteTeamMemberSessionMutation = r'''
+  mutation DeleteTeamMemberSession($id: UUID!) {
+    deleteTeamMemberSession(id: $id)
+  }
+''';
+
+const _importAttendanceCsvMutation = r'''
+  mutation ImportAttendanceCsv($csvData: String!) {
+    importAttendanceCsv(csvData: $csvData)
+  }
+''';
 
 @riverpod
-Stream<StreamTeamMemberSessionsResponse> teamMemberSessionsStream(Ref ref) {
-  final reconnectingStream =
-      ReconnectingStream<StreamTeamMemberSessionsResponse>(() async {
-        final client = ref.read(teamMemberSessionServiceProvider);
-        return client.streamTeamMemberSessions(
-          StreamTeamMemberSessionsRequest(),
-        );
-      });
-
-  ref.onDispose(reconnectingStream.close);
-  return reconnectingStream.stream;
+Stream<ChangeEvent<TeamMemberSession>> teamMemberSessionChanges(Ref ref) {
+  final client = ref.watch(timeKeeperGraphQLClientProvider);
+  return client
+      .subscribe(SubscriptionOptions(document: gql(_teamMemberSessionChangesSubscription)))
+      .where((result) => result.data != null)
+      .map(
+        (result) => ChangeEvent.fromJson(
+          result.data!['teamMemberSessionChanges'] as Map<String, dynamic>,
+          TeamMemberSession.fromJson,
+        ),
+      );
 }
 
 @Riverpod(keepAlive: true)
@@ -40,21 +62,62 @@ class TeamMemberSessions extends _$TeamMemberSessions {
   Map<String, TeamMemberSession> build() {
     _storage = CollectionStorage(
       tableName: 'team_member_sessions',
-      fromBuffer: TeamMemberSession.fromBuffer,
+      fromJson: TeamMemberSession.fromJson,
+      toJson: (s) => s.toJson(),
     );
-
+    _fetchInitial();
     return _storage.getAll();
   }
 
-  void syncFromStream(StreamTeamMemberSessionsResponse response) {
-    _storage.syncResponse(
-      syncType: response.syncType,
-      items: response.teamMemberSessions,
-      hasItem: (item) => item.hasTeamMemberSession(),
-      getId: (item) => item.id,
-      getItem: (item) => item.teamMemberSession,
-      getState: () => state,
-      setState: (newState) => state = newState,
+  Future<void> _fetchInitial() async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.query(
+      QueryOptions(document: gql(_teamMemberSessionsQuery), fetchPolicy: FetchPolicy.noCache),
     );
+    if (result.hasException || result.data == null) return;
+
+    final items = (result.data!['teamMemberSessions'] as List<dynamic>)
+        .map((e) => TeamMemberSession.fromJson(e as Map<String, dynamic>))
+        .toList();
+    state = _storage.seedFromList(items, (s) => s.id);
   }
+
+  void applyChange(ChangeEvent<TeamMemberSession> change) {
+    state = _storage.applyChange(change, state);
+  }
+
+  Future<ApiCallResult> update(String id, DateTime checkInTime, DateTime? checkOutTime) =>
+      _mutate(_updateTeamMemberSessionMutation, {
+        'id': id,
+        'checkInTime': checkInTime.toUtc().toIso8601String(),
+        'checkOutTime': checkOutTime?.toUtc().toIso8601String(),
+      });
+
+  Future<ApiCallResult> delete(String id) => _mutate(_deleteTeamMemberSessionMutation, {'id': id});
+
+  Future<ApiCallResult> importAttendanceCsv(String csvData) =>
+      _mutate(_importAttendanceCsvMutation, {'csvData': csvData});
+
+  Future<ApiCallResult> _mutate(String document, Map<String, dynamic> variables) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(document: gql(document), variables: variables, fetchPolicy: FetchPolicy.noCache),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiCallResult(success: false, message: message);
+    }
+    return const ApiCallResult(success: true);
+  }
+}
+
+@riverpod
+void teamMemberSessionsSync(Ref ref) {
+  ref.listen(teamMemberSessionChangesProvider, (previous, next) {
+    next.whenData((change) {
+      ref.read(teamMemberSessionsProvider.notifier).applyChange(change);
+    });
+  });
 }

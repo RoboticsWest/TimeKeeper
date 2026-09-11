@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/widgets/dialogs/base_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -14,7 +14,7 @@ class ConfirmDialog extends BaseDialog {
     required DialogType type,
     VoidCallback? onConfirm,
     Future<void> Function()? onConfirmAsync,
-    Future<GrpcResult<dynamic>> Function()? onConfirmAsyncGrpc,
+    Future<ApiCallResult> Function()? onConfirmAsyncApi,
     VoidCallback? onCancel,
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
@@ -27,7 +27,7 @@ class ConfirmDialog extends BaseDialog {
          actions: _buildActions(
            onConfirm: onConfirm,
            onConfirmAsync: onConfirmAsync,
-           onConfirmAsyncGrpc: onConfirmAsyncGrpc,
+           onConfirmAsyncApi: onConfirmAsyncApi,
            onCancel: onCancel,
            confirmText: confirmText,
            cancelText: cancelText,
@@ -46,7 +46,7 @@ class ConfirmDialog extends BaseDialog {
     required Widget message,
     VoidCallback? onConfirm,
     Future<void> Function()? onConfirmAsync,
-    Future<GrpcResult<dynamic>> Function()? onConfirmAsyncGrpc,
+    Future<ApiCallResult> Function()? onConfirmAsyncApi,
     VoidCallback? onCancel,
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
@@ -59,7 +59,7 @@ class ConfirmDialog extends BaseDialog {
       type: DialogType.info,
       onConfirm: onConfirm,
       onConfirmAsync: onConfirmAsync,
-      onConfirmAsyncGrpc: onConfirmAsyncGrpc,
+      onConfirmAsyncApi: onConfirmAsyncApi,
       onCancel: onCancel,
       confirmText: confirmText,
       cancelText: cancelText,
@@ -73,7 +73,7 @@ class ConfirmDialog extends BaseDialog {
     required Widget message,
     VoidCallback? onConfirm,
     Future<void> Function()? onConfirmAsync,
-    Future<GrpcResult<dynamic>> Function()? onConfirmAsyncGrpc,
+    Future<ApiCallResult> Function()? onConfirmAsyncApi,
     VoidCallback? onCancel,
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
@@ -86,7 +86,7 @@ class ConfirmDialog extends BaseDialog {
       type: DialogType.warn,
       onConfirm: onConfirm,
       onConfirmAsync: onConfirmAsync,
-      onConfirmAsyncGrpc: onConfirmAsyncGrpc,
+      onConfirmAsyncApi: onConfirmAsyncApi,
       onCancel: onCancel,
       confirmText: confirmText,
       cancelText: cancelText,
@@ -100,7 +100,7 @@ class ConfirmDialog extends BaseDialog {
     required Widget message,
     VoidCallback? onConfirm,
     Future<void> Function()? onConfirmAsync,
-    Future<GrpcResult<dynamic>> Function()? onConfirmAsyncGrpc,
+    Future<ApiCallResult> Function()? onConfirmAsyncApi,
     VoidCallback? onCancel,
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
@@ -113,7 +113,7 @@ class ConfirmDialog extends BaseDialog {
       type: DialogType.error,
       onConfirm: onConfirm,
       onConfirmAsync: onConfirmAsync,
-      onConfirmAsyncGrpc: onConfirmAsyncGrpc,
+      onConfirmAsyncApi: onConfirmAsyncApi,
       onCancel: onCancel,
       confirmText: confirmText,
       cancelText: cancelText,
@@ -125,7 +125,7 @@ class ConfirmDialog extends BaseDialog {
   static List<Widget> _buildActions({
     VoidCallback? onConfirm,
     Future<void> Function()? onConfirmAsync,
-    Future<GrpcResult<dynamic>> Function()? onConfirmAsyncGrpc,
+    Future<ApiCallResult> Function()? onConfirmAsyncApi,
     VoidCallback? onCancel,
     required String confirmText,
     required String cancelText,
@@ -133,13 +133,13 @@ class ConfirmDialog extends BaseDialog {
     Widget? successMessage,
   }) {
     assert(
-      onConfirm != null || onConfirmAsync != null || onConfirmAsyncGrpc != null,
+      onConfirm != null || onConfirmAsync != null || onConfirmAsyncApi != null,
       'Either onConfirm, onConfirmAsync, or onConfirmAsyncGrpc must be provided',
     );
     assert(
       (onConfirm != null ? 1 : 0) +
               (onConfirmAsync != null ? 1 : 0) +
-              (onConfirmAsyncGrpc != null ? 1 : 0) ==
+              (onConfirmAsyncApi != null ? 1 : 0) ==
           1,
       'Only one of onConfirm, onConfirmAsync, or onConfirmAsyncGrpc can be provided',
     );
@@ -172,10 +172,10 @@ class ConfirmDialog extends BaseDialog {
           showResultDialog: showResultDialog,
           successMessage: successMessage,
         )
-      else if (onConfirmAsyncGrpc != null)
-        _AsyncGrpcConfirmButton(
+      else if (onConfirmAsyncApi != null)
+        _AsyncApiConfirmButton(
           confirmText: confirmText,
-          onConfirmAsyncGrpc: onConfirmAsyncGrpc,
+          onConfirmAsyncApi: onConfirmAsyncApi,
           showResultDialog: showResultDialog,
           successMessage: successMessage,
         ),
@@ -247,15 +247,15 @@ class _AsyncConfirmButton extends HookWidget {
   }
 }
 
-class _AsyncGrpcConfirmButton extends HookWidget {
+class _AsyncApiConfirmButton extends HookWidget {
   final String confirmText;
-  final Future<GrpcResult<dynamic>> Function() onConfirmAsyncGrpc;
+  final Future<ApiCallResult> Function() onConfirmAsyncApi;
   final bool showResultDialog;
   final Widget? successMessage;
 
-  const _AsyncGrpcConfirmButton({
+  const _AsyncApiConfirmButton({
     required this.confirmText,
-    required this.onConfirmAsyncGrpc,
+    required this.onConfirmAsyncApi,
     required this.showResultDialog,
     this.successMessage,
   });
@@ -270,21 +270,20 @@ class _AsyncGrpcConfirmButton extends HookWidget {
       isLoading.value = true;
 
       try {
-        final result = await onConfirmAsyncGrpc();
+        final result = await onConfirmAsyncApi();
 
         if (context.mounted) {
           Navigator.of(context).pop();
 
           if (showResultDialog) {
-            switch (result) {
-              case GrpcSuccess():
-                SnackBarDialog.success(
-                  message: successMessage is Text
-                      ? (successMessage as Text).data ?? 'Success'
-                      : 'Success',
-                ).show(context);
-              case GrpcFailure():
-                PopupDialog.fromGrpcStatus(result: result).show(context);
+            if (result.success) {
+              SnackBarDialog.success(
+                message: successMessage is Text
+                    ? (successMessage as Text).data ?? 'Success'
+                    : 'Success',
+              ).show(context);
+            } else {
+              PopupDialog.fromApiResult(result: result).show(context);
             }
           }
         }

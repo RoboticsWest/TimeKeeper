@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/notification.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/notification.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/notification_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/searchable_dropdown.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
 const _notificationTypeLabels = {
-  NotificationType.SESSION_START_REMINDER: 'Session Start Reminder',
-  NotificationType.SESSION_END_REMINDER: 'Session End Reminder',
-  NotificationType.OVERTIME: 'Overtime',
-  NotificationType.AUTO_CHECKOUT: 'Auto Checkout',
+  NotificationType.sessionStartReminder: 'Session Start Reminder',
+  NotificationType.sessionEndReminder: 'Session End Reminder',
+  NotificationType.overtime: 'Overtime',
+  NotificationType.autoCheckout: 'Auto Checkout',
 };
 
-String notificationTypeLabel(NotificationType type) {
+String notificationTypeLabel(String type) {
   return _notificationTypeLabels[type] ?? 'Unknown';
 }
 
@@ -55,12 +51,7 @@ void showDeleteNotificationDialog(
     title: 'Delete Notification',
     message: const Text('Are you sure you want to delete this notification?'),
     confirmText: 'Delete',
-    onConfirmAsyncGrpc: () async {
-      final client = ref.read(notificationServiceProvider);
-      return await callGrpcEndpoint(
-        () => client.deleteNotification(DeleteNotificationRequest(id: id)),
-      );
-    },
+    onConfirmAsyncApi: () => ref.read(notificationsProvider.notifier).delete(id),
     showResultDialog: true,
     successMessage: const Text('Notification has been deleted'),
   ).show(context);
@@ -84,31 +75,25 @@ class _NotificationForm extends HookConsumerWidget {
     final teamMembers = ref.watch(teamMembersProvider);
 
     final selectedType = useState(
-      existing?.notificationType ?? NotificationType.SESSION_START_REMINDER,
+      existing?.notificationType ?? NotificationType.sessionStartReminder,
     );
     final selectedSessionId = useState<String?>(existing?.sessionId);
-    final selectedMemberId = useState<String?>(
-      existing?.hasTeamMemberId() == true ? existing!.teamMemberId : null,
-    );
+    final selectedMemberId = useState<String?>(existing?.teamMemberId);
     final sent = useState(existing?.sent ?? false);
     final isLoading = useState(false);
 
     // Build sorted session list (oldest first)
     final sortedSessions = sessions.entries.toList()
-      ..sort(
-        (a, b) => a.value.startTime.seconds.toInt().compareTo(
-          b.value.startTime.seconds.toInt(),
-        ),
-      );
+      ..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
 
     // Build sorted member list
     final sortedMembers = teamMembers.entries.toList()
       ..sort((a, b) {
-        final aName = a.value.displayName.isNotEmpty
-            ? a.value.displayName
+        final aName = (a.value.displayName?.isNotEmpty ?? false)
+            ? a.value.displayName!
             : a.value.firstName;
-        final bName = b.value.displayName.isNotEmpty
-            ? b.value.displayName
+        final bName = (b.value.displayName?.isNotEmpty ?? false)
+            ? b.value.displayName!
             : b.value.firstName;
         return aName.compareTo(bName);
       });
@@ -120,7 +105,7 @@ class _NotificationForm extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Notification type
-          DropdownButtonFormField<NotificationType>(
+          DropdownButtonFormField<String>(
             initialValue: selectedType.value,
             decoration: const InputDecoration(
               labelText: 'Type',
@@ -146,8 +131,8 @@ class _NotificationForm extends HookConsumerWidget {
                   key: entry.key,
                   label: () {
                     final s = entry.value;
-                    final start = s.startTime.toDateTime();
-                    final end = s.endTime.toDateTime();
+                    final start = s.startTime;
+                    final end = s.endTime;
                     final loc = locations[s.locationId]?.location ?? '';
                     return loc.isNotEmpty
                         ? '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)} @ $loc'
@@ -168,8 +153,8 @@ class _NotificationForm extends HookConsumerWidget {
               for (final entry in sortedMembers)
                 (
                   key: entry.key,
-                  label: entry.value.displayName.isNotEmpty
-                      ? entry.value.displayName
+                  label: (entry.value.displayName?.isNotEmpty ?? false)
+                      ? entry.value.displayName!
                       : '${entry.value.firstName} ${entry.value.lastName}',
                 ),
             ],
@@ -207,46 +192,30 @@ class _NotificationForm extends HookConsumerWidget {
 
                         isLoading.value = true;
                         try {
-                          final client = ref.read(notificationServiceProvider);
-                          final GrpcResult<dynamic> result;
-                          if (isEdit) {
-                            result = await callGrpcEndpoint(
-                              () => client.updateNotification(
-                                UpdateNotificationRequest(
-                                  id: notificationId,
-                                  notificationType: selectedType.value,
-                                  sessionId: selectedSessionId.value,
-                                  teamMemberId: selectedMemberId.value,
-                                  sent: sent.value,
-                                ),
-                              ),
-                            );
-                          } else {
-                            result = await callGrpcEndpoint(
-                              () => client.createNotification(
-                                CreateNotificationRequest(
+                          final notifier = ref.read(notificationsProvider.notifier);
+                          final result = isEdit
+                              ? await notifier.update(
+                                  id: notificationId!,
                                   notificationType: selectedType.value,
                                   sessionId: selectedSessionId.value!,
                                   teamMemberId: selectedMemberId.value,
                                   sent: sent.value,
-                                ),
-                              ),
-                            );
-                          }
+                                )
+                              : await notifier.create(
+                                  notificationType: selectedType.value,
+                                  sessionId: selectedSessionId.value!,
+                                  teamMemberId: selectedMemberId.value,
+                                  sent: sent.value,
+                                );
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
-                            switch (result) {
-                              case GrpcSuccess():
-                                SnackBarDialog.success(
-                                  message: isEdit
-                                      ? 'Notification updated'
-                                      : 'Notification created',
-                                ).show(context);
-                              case GrpcFailure():
-                                SnackBarDialog.fromGrpcStatus(
-                                  result: result,
-                                ).show(context);
+                            if (result.success) {
+                              SnackBarDialog.success(
+                                message: isEdit ? 'Notification updated' : 'Notification created',
+                              ).show(context);
+                            } else {
+                              SnackBarDialog.fromApiResult(result: result).show(context);
                             }
                           }
                         } finally {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/providers/entity_sync_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
@@ -20,7 +19,10 @@ class StatisticsView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(entitySyncProvider);
+    ref.watch(sessionsSyncProvider);
+    ref.watch(teamMembersSyncProvider);
+    ref.watch(locationsSyncProvider);
+    ref.watch(teamMemberSessionsSyncProvider);
     final sessions = ref.watch(sessionsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
     final locations = ref.watch(locationsProvider);

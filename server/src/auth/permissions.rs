@@ -1,107 +1,72 @@
-use std::{
-  collections::{HashMap, HashSet},
-  fmt, vec,
-};
+use std::io::Write;
 
-use once_cell::sync::Lazy;
+use diesel::deserialize::{self, FromSql, FromSqlRow};
+use diesel::expression::AsExpression;
+use diesel::pg::{Pg, PgValue};
+use diesel::serialize::{self, IsNull, Output, ToSql};
 
-use crate::generated::common::Role;
+use database::schema::sql_types::PermissionLevel as PgPermissionLevel;
 
-impl fmt::Display for Role {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{}", self.as_str_name())
-  }
+/// Mirrors Postgres' `permission_level` enum (`database/migrations/0001_init/up.sql`) - ordered so
+/// `Write` implies `Read` and `Delete` implies `Write`, matching the ceiling semantics of the
+/// `user_permissions`/`permissions_effective` views.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, AsExpression, FromSqlRow)]
+#[diesel(sql_type = PgPermissionLevel)]
+pub enum PermissionLevel {
+  Read,
+  Write,
+  Delete,
 }
 
-// RoleGraph represents the inheritance graph of roles
-pub struct RoleGraph {
-  inheritance: HashMap<Role, HashSet<Role>>,
-}
-
-impl Default for RoleGraph {
-  fn default() -> Self {
-    Self::new()
-  }
-}
-
-impl RoleGraph {
-  pub fn new() -> Self {
-    Self { inheritance: HashMap::new() }
-  }
-
-  // Add a role with no inheritance
-  pub fn add_role(&mut self, role: Role) {
-    self.inheritance.entry(role).or_default();
-  }
-
-  // Add a role with inheritance
-  pub fn add_role_with_inheritance(&mut self, role: Role, inherited_roles: Vec<Role>) {
-    let entry = self.inheritance.entry(role).or_default();
-    for parent in inherited_roles {
-      entry.insert(parent);
+impl PermissionLevel {
+  pub fn as_str(self) -> &'static str {
+    match self {
+      Self::Read => "read",
+      Self::Write => "write",
+      Self::Delete => "delete",
     }
   }
 
-  // Check if role has the required permissions, including inheritance
-  pub fn has_permission(&self, role: &Role, required: &Role) -> bool {
-    // If the role is admin, bypass all checks
-    if role == &Role::Admin {
-      return true;
+  pub fn parse(s: &str) -> Option<Self> {
+    match s {
+      "read" => Some(Self::Read),
+      "write" => Some(Self::Write),
+      "delete" => Some(Self::Delete),
+      _ => None,
     }
-
-    // Direct match
-    if role == required {
-      return true;
-    }
-
-    // BFS to check for inheritance
-    let mut queue = vec![*role];
-    let mut visited = HashSet::new();
-    visited.insert(*role);
-
-    while let Some(current_role) = queue.pop() {
-      // Check direct inheritance
-      if let Some(inheritance) = self.inheritance.get(&current_role) {
-        for parent in inheritance {
-          if parent == required {
-            return true;
-          }
-
-          if visited.insert(*parent) {
-            queue.push(*parent);
-          }
-        }
-      }
-    }
-
-    false
   }
 }
 
-pub static ROLE_GRAPH: Lazy<RoleGraph> = Lazy::new(|| {
-  log::info!("Initializing role graph");
-  let mut graph = RoleGraph::new();
-
-  //
-  // Define roles that have parent roles
-  // (we don't care about dangling roles as they get checked 1:1)
-  //
-
-  // Team
-  graph.add_role_with_inheritance(Role::Kiosk, vec![]);
-  graph.add_role_with_inheritance(Role::Student, vec![Role::Kiosk]);
-  graph.add_role_with_inheritance(Role::Mentor, vec![Role::Student]);
-
-  graph
-});
-
-pub trait RolePermissions {
-  fn has_permission(&self, required: &Role) -> bool;
+impl ToSql<PgPermissionLevel, Pg> for PermissionLevel {
+  fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> serialize::Result {
+    out.write_all(self.as_str().as_bytes())?;
+    Ok(IsNull::No)
+  }
 }
 
-impl RolePermissions for Role {
-  fn has_permission(&self, required: &Role) -> bool {
-    // Check against the role graph
-    ROLE_GRAPH.has_permission(self, required)
+impl FromSql<PgPermissionLevel, Pg> for PermissionLevel {
+  fn from_sql(bytes: PgValue<'_>) -> deserialize::Result<Self> {
+    Self::parse(std::str::from_utf8(bytes.as_bytes())?).ok_or_else(|| "Unrecognized permission_level value".into())
   }
+}
+
+/// One row of a user's effective permission for a resource - read from the `user_permissions` view.
+#[derive(Debug, Clone, diesel::Queryable, diesel::Selectable)]
+#[diesel(table_name = database::views::user_permissions)]
+#[diesel(check_for_backend(Pg))]
+pub struct UserPermission {
+  pub resource_slug: String,
+  pub level: PermissionLevel,
+}
+
+/// Flattens permissions into the `"<resource_slug>:<level>"` strings baked into JWT claims at
+/// sign time (see `auth::jwt::Claims`).
+pub fn to_claim_strings(permissions: &[UserPermission]) -> Vec<String> {
+  permissions.iter().map(|p| format!("{}:{}", p.resource_slug, p.level.as_str())).collect()
+}
+
+/// Parses a single `"<resource_slug>:<level>"` claim string.
+pub fn parse_claim(claim: &str) -> Option<(&str, PermissionLevel)> {
+  let (resource, level) = claim.split_once(':')?;
+  Some((resource, PermissionLevel::parse(level)?))
 }

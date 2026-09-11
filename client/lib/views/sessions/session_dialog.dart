@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/session.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
@@ -38,19 +34,14 @@ void showDeleteSessionDialog(
   required String id,
   required Session session,
 }) {
-  final start = session.startTime.toDateTime();
+  final start = session.startTime;
   final label = '${formatDate(start)} ${formatTime(start)}';
 
   ConfirmDialog.warn(
     title: 'Delete Session',
     message: Text('Are you sure you want to delete the session on $label?'),
     confirmText: 'Delete',
-    onConfirmAsyncGrpc: () async {
-      final client = ref.read(sessionServiceProvider);
-      return await callGrpcEndpoint(
-        () => client.deleteSession(DeleteSessionRequest(id: id)),
-      );
-    },
+    onConfirmAsyncApi: () => ref.read(sessionsProvider.notifier).delete(id),
     showResultDialog: true,
     successMessage: const Text('Session has been deleted'),
   ).show(context);
@@ -72,8 +63,8 @@ class _SessionForm extends HookConsumerWidget {
     final locations = ref.watch(locationsProvider);
 
     final now = DateTime.now();
-    final existingStart = existingSession?.startTime.toDateTime();
-    final existingEnd = existingSession?.endTime.toDateTime();
+    final existingStart = existingSession?.startTime;
+    final existingEnd = existingSession?.endTime;
 
     final startDate = useState(existingStart ?? now);
     final startTime = useState(TimeOfDay.fromDateTime(existingStart ?? now));
@@ -224,45 +215,27 @@ class _SessionForm extends HookConsumerWidget {
 
                         isLoading.value = true;
                         try {
-                          final client = ref.read(sessionServiceProvider);
-                          final GrpcResult<dynamic> result;
-                          if (isEdit) {
-                            result = await callGrpcEndpoint(
-                              () => client.updateSession(
-                                UpdateSessionRequest(
-                                  id: sessionId,
-                                  startTime: startDt.toTimestamp(),
-                                  endTime: endDt.toTimestamp(),
-                                  locationId: locationId,
-                                  finished: finished.value,
-                                ),
-                              ),
-                            );
-                          } else {
-                            result = await callGrpcEndpoint(
-                              () => client.createSession(
-                                CreateSessionRequest(
-                                  startTime: startDt.toTimestamp(),
-                                  endTime: endDt.toTimestamp(),
-                                  locationId: locationId,
-                                ),
-                              ),
-                            );
-                          }
+                          final notifier = ref.read(sessionsProvider.notifier);
+                          final result = isEdit
+                              ? await notifier.update(
+                                  sessionId!,
+                                  startDt,
+                                  endDt,
+                                  locationId,
+                                  finished.value,
+                                )
+                              : await notifier.create(startDt, endDt, locationId);
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
-                            switch (result) {
-                              case GrpcSuccess():
-                                SnackBarDialog.success(
-                                  message: isEdit
-                                      ? 'Session updated successfully'
-                                      : 'Session created successfully',
-                                ).show(context);
-                              case GrpcFailure():
-                                SnackBarDialog.fromGrpcStatus(
-                                  result: result,
-                                ).show(context);
+                            if (result.success) {
+                              SnackBarDialog.success(
+                                message: isEdit
+                                    ? 'Session updated successfully'
+                                    : 'Session created successfully',
+                              ).show(context);
+                            } else {
+                              SnackBarDialog.fromApiResult(result: result).show(context);
                             }
                           }
                         } finally {

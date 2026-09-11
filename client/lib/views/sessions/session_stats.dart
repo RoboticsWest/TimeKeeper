@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/widgets/stat_card.dart';
+import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 
 class SessionStats extends StatelessWidget {
   final Map<String, Session> sessions;
@@ -28,7 +28,7 @@ class SessionStats extends StatelessWidget {
         .where((s) => getSessionStatus(s) == SessionStatus.upcoming)
         .length;
     final thisMonth = sessions.values.where((s) {
-      final dt = s.startTime.toDateTime();
+      final dt = s.startTime;
       return dt.year == now.year && dt.month == now.month;
     }).length;
 

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
+import 'package:time_keeper/models/location.dart';
+import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/session_rsvp.dart';
 import 'package:time_keeper/models/session_status.dart';
+import 'package:time_keeper/models/team_member.dart';
+import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/time.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 
 void showSessionDetailDialog(
@@ -16,8 +19,8 @@ void showSessionDetailDialog(
   required Map<String, TeamMemberSession> teamMemberSessions,
   required Map<String, SessionRsvp> sessionRsvps,
 }) {
-  final start = session.startTime.toDateTime();
-  final end = session.endTime.toDateTime();
+  final start = session.startTime;
+  final end = session.endTime;
   final duration = end.difference(start);
   final locationName =
       locations[session.locationId]?.location ?? session.locationId;
@@ -27,18 +30,10 @@ void showSessionDetailDialog(
       teamMemberSessions.values
           .where((ms) => ms.sessionId == sessionId)
           .toList()
-        ..sort((a, b) {
-          final aTime = a.hasCheckInTime()
-              ? a.checkInTime.toDateTime()
-              : DateTime(0);
-          final bTime = b.hasCheckInTime()
-              ? b.checkInTime.toDateTime()
-              : DateTime(0);
-          return aTime.compareTo(bTime);
-        });
+        ..sort((a, b) => a.checkInTime.compareTo(b.checkInTime));
 
   final checkedOutCount = memberSessions
-      .where((ms) => ms.hasCheckInTime() && ms.hasCheckOutTime())
+      .where((ms) => ms.checkOutTime != null)
       .length;
 
   PopupDialog.info(
@@ -63,10 +58,10 @@ void showSessionDetailDialog(
                   .where((r) => r.sessionId == sessionId)
                   .toList();
               final going = rsvps
-                  .where((r) => r.status == RsvpStatus.GOING)
+                  .where((r) => r.status == RsvpStatus.going)
                   .length;
               final notGoing = rsvps
-                  .where((r) => r.status == RsvpStatus.NOT_GOING)
+                  .where((r) => r.status == RsvpStatus.notGoing)
                   .length;
               if (rsvps.isEmpty) return const SizedBox.shrink();
               return _InfoRow(
@@ -95,17 +90,15 @@ void showSessionDetailDialog(
                     final member = teamMembers[ms.teamMemberId];
                     final name = member?.displayName ?? ms.teamMemberId;
 
-                    final checkIn = ms.hasCheckInTime()
-                        ? formatTime(ms.checkInTime.toDateTime())
-                        : '\u2014';
-                    final checkOut = ms.hasCheckOutTime()
-                        ? formatTime(ms.checkOutTime.toDateTime())
+                    final checkIn = formatTime(ms.checkInTime);
+                    final checkOut = ms.checkOutTime != null
+                        ? formatTime(ms.checkOutTime!)
                         : '\u2014';
 
                     Duration? memberDuration;
-                    if (ms.hasCheckInTime() && ms.hasCheckOutTime()) {
-                      memberDuration = ms.checkOutTime.toDateTime().difference(
-                        ms.checkInTime.toDateTime(),
+                    if (ms.checkOutTime != null) {
+                      memberDuration = ms.checkOutTime!.difference(
+                        ms.checkInTime,
                       );
                     }
 
@@ -114,11 +107,11 @@ void showSessionDetailDialog(
                       child: Row(
                         children: [
                           Icon(
-                            ms.hasCheckOutTime()
+                            ms.checkOutTime != null
                                 ? Icons.check_circle
                                 : Icons.radio_button_checked,
                             size: 16,
-                            color: ms.hasCheckOutTime()
+                            color: ms.checkOutTime != null
                                 ? Colors.grey
                                 : Colors.green,
                           ),

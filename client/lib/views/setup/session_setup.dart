@@ -1,16 +1,13 @@
-import 'package:fixnum/fixnum.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/schedule.pbgrpc.dart';
-import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
-import 'package:time_keeper/generated/api/user.pbgrpc.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/schedule_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/views/setup/common/file_upload_setting.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
@@ -58,16 +55,11 @@ class SessionSetupTab extends HookConsumerWidget {
     // Load current settings on mount
     useEffect(() {
       Future<void> loadSettings() async {
-        final result = await callGrpcEndpoint(
-          () => ref
-              .read(settingsServiceProvider)
-              .getSettings(GetSettingsRequest()),
-        );
-        if (result is GrpcSuccess<GetSettingsResponse>) {
-          final s = result.data.settings;
-          final hours = s.nextSessionThresholdSecs.toInt() / 3600;
+        final settings = await ref.read(settingsQueryProvider.future);
+        if (settings != null) {
+          final hours = settings.nextSessionThresholdSecs / 3600;
           thresholdController.text = hours.toString();
-          selectedTimezone.value = s.timezone.isEmpty ? 'UTC' : s.timezone;
+          selectedTimezone.value = settings.timezone.isEmpty ? 'UTC' : settings.timezone;
         }
       }
 
@@ -76,35 +68,19 @@ class SessionSetupTab extends HookConsumerWidget {
     }, const []);
 
     Future<void> updateTimezone(String timezone) async {
-      final res = await callGrpcEndpoint(
-        () => ref
-            .read(settingsServiceProvider)
-            .updateGeneralSettings(
-              UpdateGeneralSettingsRequest(timezone: timezone),
-            ),
-      );
+      final res = await ref.read(settingsServiceProvider.notifier).updateGeneral(timezone: timezone);
 
       if (context.mounted) {
-        PopupDialog.fromGrpcStatus(result: res).show(context);
+        PopupDialog.fromApiResult(result: res).show(context);
       }
     }
 
-    Future<GrpcResult<UploadScheduleCsvResponse>> uploadCsvSchedule(
-      Uint8List bytes,
-    ) async {
-      final req = UploadScheduleCsvRequest(csvData: bytes);
-      return await callGrpcEndpoint(
-        () => ref.read(scheduleServiceProvider).uploadScheduleCsv(req),
-      );
+    Future<ApiCallResult> uploadCsvSchedule(Uint8List bytes) {
+      return ref.read(scheduleServiceProvider.notifier).uploadCsv(utf8.decode(bytes));
     }
 
-    Future<GrpcResult<UploadScheduleIcsResponse>> uploadIcsSchedule(
-      Uint8List bytes,
-    ) async {
-      final req = UploadScheduleIcsRequest(icsData: bytes);
-      return await callGrpcEndpoint(
-        () => ref.read(scheduleServiceProvider).uploadScheduleIcs(req),
-      );
+    Future<ApiCallResult> uploadIcsSchedule(Uint8List bytes) {
+      return ref.read(scheduleServiceProvider.notifier).uploadIcs(utf8.decode(bytes));
     }
 
     return SettingsPageLayout(
@@ -118,19 +94,13 @@ class SessionSetupTab extends HookConsumerWidget {
           hintText: 'Enter password',
           obscureText: true,
           onUpdate: () async {
-            final res = await callGrpcEndpoint(
-              () => ref
-                  .read(userServiceProvider)
-                  .updateAdminPassword(
-                    UpdateAdminPasswordRequest(
-                      password: adminPasswordController.text,
-                    ),
-                  ),
-            );
+            final res = await ref
+                .read(userServiceProvider.notifier)
+                .updateAdminPassword(adminPasswordController.text);
 
             // Show error dialog if request failed
             if (context.mounted) {
-              PopupDialog.fromGrpcStatus(result: res).show(context);
+              PopupDialog.fromApiResult(result: res).show(context);
             }
           },
         ),
@@ -149,20 +119,14 @@ class SessionSetupTab extends HookConsumerWidget {
             final hours = double.tryParse(thresholdController.text);
             if (hours == null || hours <= 0) return;
 
-            final secs = Int64((hours * 3600).round());
+            final secs = (hours * 3600).round();
 
-            final res = await callGrpcEndpoint(
-              () => ref
-                  .read(settingsServiceProvider)
-                  .updateGeneralSettings(
-                    UpdateGeneralSettingsRequest(
-                      nextSessionThresholdSecs: secs,
-                    ),
-                  ),
-            );
+            final res = await ref
+                .read(settingsServiceProvider.notifier)
+                .updateGeneral(nextSessionThresholdSecs: secs);
 
             if (context.mounted) {
-              PopupDialog.fromGrpcStatus(result: res).show(context);
+              PopupDialog.fromApiResult(result: res).show(context);
             }
           },
         ),
@@ -217,7 +181,7 @@ class SessionSetupTab extends HookConsumerWidget {
                 message: const Text(
                   'Uploading a schedule can have impacts on existing data integrity',
                 ),
-                onConfirmAsyncGrpc: () async {
+                onConfirmAsyncApi: () async {
                   return await uploadCsvSchedule(file.bytes!);
                 },
                 showResultDialog: true,
@@ -239,7 +203,7 @@ class SessionSetupTab extends HookConsumerWidget {
                 message: const Text(
                   'Uploading a schedule can have impacts on existing data integrity',
                 ),
-                onConfirmAsyncGrpc: () async {
+                onConfirmAsyncApi: () async {
                   return await uploadIcsSchedule(file.bytes!);
                 },
                 showResultDialog: true,

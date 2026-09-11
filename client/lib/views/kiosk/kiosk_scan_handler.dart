@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:grpc/grpc.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
-import 'package:time_keeper/generated/api/api.pbgrpc.dart';
-import 'package:time_keeper/generated/common/common.pbenum.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/rfid_tag.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
@@ -13,10 +10,8 @@ import 'package:time_keeper/providers/scan_debounce_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/utils/formatting.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
-import 'package:time_keeper/utils/time.dart';
-import 'package:time_keeper/utils/permissions.dart';
 import 'package:time_keeper/views/kiosk/link_card_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/toast_overlay.dart';
 
@@ -42,7 +37,7 @@ Future<void> handleKioskScan({
       'No member matched scan: $input (tried ${variants.length} variants)',
     );
     if (context.mounted) {
-      final isAdmin = ref.read(rolesProvider).hasPermission(Role.ADMIN);
+      final isAdmin = ref.read(isAdminProvider);
       if (isAdmin) {
         showLinkCardDialog(context, ref, trimmed);
       } else {
@@ -73,14 +68,10 @@ Future<void> handleKioskScan({
     DateTime? mostRecent;
     for (final ms in sessions.values) {
       if (ms.teamMemberId != memberId) continue;
-      if (ms.hasCheckInTime()) {
-        final t = ms.checkInTime.toDateTime();
-        if (mostRecent == null || t.isAfter(mostRecent)) mostRecent = t;
-      }
-      if (ms.hasCheckOutTime()) {
-        final t = ms.checkOutTime.toDateTime();
-        if (mostRecent == null || t.isAfter(mostRecent)) mostRecent = t;
-      }
+      final checkIn = ms.checkInTime;
+      if (mostRecent == null || checkIn.isAfter(mostRecent)) mostRecent = checkIn;
+      final checkOut = ms.checkOutTime;
+      if (checkOut != null && checkOut.isAfter(mostRecent)) mostRecent = checkOut;
     }
 
     if (mostRecent != null && now.difference(mostRecent) < debounceWindow) {
@@ -100,16 +91,7 @@ Future<void> handleKioskScan({
   }
 
   final currentLocation = ref.read(currentLocationProvider) ?? '';
-  final result = await callGrpcEndpoint(
-    () => ref
-        .read(sessionServiceProvider)
-        .checkInOut(
-          CheckInOutRequest(
-            teamMemberId: memberId,
-            locationId: currentLocation,
-          ),
-        ),
-  );
+  final result = await ref.read(sessionCheckInOutProvider.notifier).checkInOut(memberId, currentLocation);
 
   if (!context.mounted) return;
 
@@ -117,8 +99,8 @@ Future<void> handleKioskScan({
   final timeStr = formatTime(now);
 
   switch (result) {
-    case GrpcSuccess(data: final response):
-      if (response.checkedIn) {
+    case ApiSuccess(data: final checkedIn):
+      if (checkedIn) {
         ToastOverlay.success(
           context,
           title: 'Checked In',
@@ -131,8 +113,8 @@ Future<void> handleKioskScan({
           message: '$name\n$timeStr',
         );
       }
-    case GrpcFailure(userMessage: final msg, statusCode: final code):
-      if (code == StatusCode.notFound) {
+    case ApiFailure(userMessage: final msg):
+      if (msg.toLowerCase().contains('no active session')) {
         ToastOverlay.info(
           context,
           title: 'No Session',

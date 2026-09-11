@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/rfid_tag.pbgrpc.dart';
-import 'package:time_keeper/generated/api/team_member.pbgrpc.dart';
-import 'package:time_keeper/generated/db/db.pb.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
+import 'package:time_keeper/models/rfid_tag.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/utils/grpc_result.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -50,12 +47,7 @@ void showDeleteTeamMemberDialog(
     title: 'Delete Team Member',
     message: Text('Are you sure you want to delete "$name"?'),
     confirmText: 'Delete',
-    onConfirmAsyncGrpc: () async {
-      final client = ref.read(teamMemberServiceProvider);
-      return await callGrpcEndpoint(
-        () => client.deleteTeamMember(DeleteTeamMemberRequest(id: id)),
-      );
-    },
+    onConfirmAsyncApi: () => ref.read(teamMembersProvider.notifier).delete(id),
     showResultDialog: true,
     successMessage: Text('"$name" has been deleted'),
   ).show(context);
@@ -96,7 +88,7 @@ class _TeamMemberForm extends HookConsumerWidget {
       text: initialDiscordUsername ?? '',
     );
     final memberType = useState<TeamMemberType>(
-      initialMemberType ?? TeamMemberType.STUDENT,
+      initialMemberType ?? TeamMemberType.student,
     );
     final isLoading = useState(false);
 
@@ -140,11 +132,11 @@ class _TeamMemberForm extends HookConsumerWidget {
           SegmentedButton<TeamMemberType>(
             segments: const [
               ButtonSegment(
-                value: TeamMemberType.STUDENT,
+                value: TeamMemberType.student,
                 label: Text('Student'),
               ),
               ButtonSegment(
-                value: TeamMemberType.MENTOR,
+                value: TeamMemberType.mentor,
                 label: Text('Mentor'),
               ),
             ],
@@ -180,12 +172,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () async {
-                        final rfidClient = ref.read(rfidTagServiceProvider);
-                        await callGrpcEndpoint(
-                          () => rfidClient.deleteRfidTag(
-                            DeleteRfidTagRequest(id: entry.key),
-                          ),
-                        );
+                        await ref.read(rfidTagsProvider.notifier).delete(entry.key);
                       },
                     ),
                   ],
@@ -223,13 +210,8 @@ class _TeamMemberForm extends HookConsumerWidget {
                   onPressed: () async {
                     final tag = newRfidTagController.text.trim();
                     if (tag.isEmpty) return;
-                    final rfidClient = ref.read(rfidTagServiceProvider);
-                    final result = await callGrpcEndpoint(
-                      () => rfidClient.createRfidTag(
-                        CreateRfidTagRequest(teamMemberId: memberId!, tag: tag),
-                      ),
-                    );
-                    if (result is GrpcSuccess) {
+                    final result = await ref.read(rfidTagsProvider.notifier).create(memberId!, tag);
+                    if (result.success) {
                       newRfidTagController.clear();
                     }
                   },
@@ -273,82 +255,51 @@ class _TeamMemberForm extends HookConsumerWidget {
 
                         isLoading.value = true;
                         try {
-                          final client = ref.read(teamMemberServiceProvider);
-                          final GrpcResult<dynamic> result;
-                          if (isEdit) {
-                            result = await callGrpcEndpoint(
-                              () => client.updateTeamMember(
-                                UpdateTeamMemberRequest(
-                                  id: memberId,
+                          final notifier = ref.read(teamMembersProvider.notifier);
+                          final result = isEdit
+                              ? await notifier.update(
+                                  id: memberId!,
                                   firstName: firstName,
                                   lastName: lastName,
-                                  memberType: type,
-                                  displayName: displayName.isNotEmpty
-                                      ? displayName
-                                      : null,
-                                  discordUsername: discordUsername.isNotEmpty
-                                      ? discordUsername
-                                      : null,
-                                ),
-                              ),
-                            );
-                          } else {
-                            result = await callGrpcEndpoint(
-                              () => client.createTeamMember(
-                                CreateTeamMemberRequest(
+                                  memberType: type.toJson(),
+                                  displayName: displayName.isNotEmpty ? displayName : null,
+                                  discordUsername: discordUsername.isNotEmpty ? discordUsername : null,
+                                )
+                              : await notifier.create(
                                   firstName: firstName,
                                   lastName: lastName,
-                                  memberType: type,
-                                  displayName: displayName.isNotEmpty
-                                      ? displayName
-                                      : null,
-                                  discordUsername: discordUsername.isNotEmpty
-                                      ? discordUsername
-                                      : null,
-                                ),
-                              ),
-                            );
+                                  memberType: type.toJson(),
+                                  displayName: displayName.isNotEmpty ? displayName : null,
+                                  discordUsername: discordUsername.isNotEmpty ? discordUsername : null,
+                                );
 
-                            // Create RFID tag for new member if provided
-                            if (result is GrpcSuccess &&
-                                newRfidTag.isNotEmpty) {
-                              // We need the member ID — get it from the latest state
-                              // Since team members sync via stream, we find the newly created member by name
-                              final members = ref.read(teamMembersProvider);
-                              final newEntry = members.entries.where(
-                                (e) =>
-                                    e.value.firstName == firstName &&
-                                    e.value.lastName == lastName,
-                              );
-                              if (newEntry.isNotEmpty) {
-                                final rfidClient = ref.read(
-                                  rfidTagServiceProvider,
-                                );
-                                await callGrpcEndpoint(
-                                  () => rfidClient.createRfidTag(
-                                    CreateRfidTagRequest(
-                                      teamMemberId: newEntry.first.key,
-                                      tag: newRfidTag,
-                                    ),
-                                  ),
-                                );
-                              }
+                          // Create RFID tag for new member if provided
+                          if (!isEdit && result.success && newRfidTag.isNotEmpty) {
+                            // We need the member ID — get it from the latest state
+                            // Since team members sync via subscription, we find the newly created member by name
+                            final members = ref.read(teamMembersProvider);
+                            final newEntry = members.entries.where(
+                              (e) =>
+                                  e.value.firstName == firstName &&
+                                  e.value.lastName == lastName,
+                            );
+                            if (newEntry.isNotEmpty) {
+                              await ref
+                                  .read(rfidTagsProvider.notifier)
+                                  .create(newEntry.first.key, newRfidTag);
                             }
                           }
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
-                            switch (result) {
-                              case GrpcSuccess():
-                                SnackBarDialog.success(
-                                  message: isEdit
-                                      ? '"$label" updated successfully'
-                                      : '"$label" created successfully',
-                                ).show(context);
-                              case GrpcFailure():
-                                SnackBarDialog.fromGrpcStatus(
-                                  result: result,
-                                ).show(context);
+                            if (result.success) {
+                              SnackBarDialog.success(
+                                message: isEdit
+                                    ? '"$label" updated successfully'
+                                    : '"$label" created successfully',
+                              ).show(context);
+                            } else {
+                              SnackBarDialog.fromApiResult(result: result).show(context);
                             }
                           }
                         } finally {

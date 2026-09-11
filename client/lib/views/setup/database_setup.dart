@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/generated/api/settings.pbgrpc.dart';
-import 'package:time_keeper/helpers/grpc_call_wrapper.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/views/setup/common/locked_button_setting.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
@@ -33,13 +31,7 @@ class DatabaseSetupTab extends ConsumerWidget {
                 'Are you absolutely sure you want to purge the entire database? '
                 'This will delete all data and cannot be undone.',
               ),
-              onConfirmAsyncGrpc: () async {
-                return await callGrpcEndpoint(
-                  () => ref
-                      .read(settingsServiceProvider)
-                      .purgeDatabase(PurgeDatabaseRequest()),
-                );
-              },
+              onConfirmAsyncApi: () => ref.read(settingsServiceProvider.notifier).purgeDatabase(),
               showResultDialog: true,
               successMessage: const Text('Database purged successfully'),
             ).show(context);
