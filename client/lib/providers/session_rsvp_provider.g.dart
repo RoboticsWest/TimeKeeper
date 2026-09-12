@@ -83,7 +83,7 @@ final class SessionRsvpsProvider
   }
 }
 
-String _$sessionRsvpsHash() => r'f7a759a8ee971482c8c073648468fe0f8221647c';
+String _$sessionRsvpsHash() => r'7c740a3ba3d0da2c571f415557c7b99979f7f1c3';
 
 abstract class _$SessionRsvps extends $Notifier<Map<String, SessionRsvp>> {
   Map<String, SessionRsvp> build();
@@ -116,7 +116,7 @@ final class SessionRsvpsSyncProvider
         argument: null,
         retry: null,
         name: r'sessionRsvpsSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -143,4 +143,4 @@ final class SessionRsvpsSyncProvider
   }
 }
 
-String _$sessionRsvpsSyncHash() => r'01d3d4ed7e9315b917bed0cad64a8c67a0acc5f4';
+String _$sessionRsvpsSyncHash() => r'888a8773566662b79d563f297f823df61016e4ee';

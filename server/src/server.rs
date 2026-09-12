@@ -214,7 +214,7 @@ impl Server {
 
     let graphql_addr: std::net::SocketAddr =
       format!("{}:{}", config.addr, config.graphql_port).parse().expect("Error parsing API address");
-    let graphql_server = Api::new(graphql_addr, schema);
+    let graphql_server = Api::new(graphql_addr, schema.clone());
     let api_cancel = cancel.clone();
     let mut graphql_handle = tokio::spawn(async move {
       if let Err(e) = graphql_server.serve(api_cancel).await {
@@ -227,7 +227,7 @@ impl Server {
       None
     } else {
       let web_addr = format!("{}:{}", config.addr, config.web_port).parse().expect("Error parsing web address");
-      let web_server = Web::new(web_addr, config.web_dir.clone());
+      let web_server = Web::new(web_addr, config.web_dir.clone(), schema.clone());
       let web_cancel = cancel.clone();
       Some(tokio::spawn(async move {
         if let Err(e) = web_server.serve(web_cancel).await {

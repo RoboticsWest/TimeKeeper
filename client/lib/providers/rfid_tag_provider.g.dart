@@ -82,7 +82,7 @@ final class RfidTagsProvider
   }
 }
 
-String _$rfidTagsHash() => r'5cc936e2e7768710ffc29baecec0c98a8937fea0';
+String _$rfidTagsHash() => r'd29a6030bdf15bd814ca282e7aada40a2019e65a';
 
 abstract class _$RfidTags extends $Notifier<Map<String, RfidTag>> {
   Map<String, RfidTag> build();
@@ -113,7 +113,7 @@ final class RfidTagsSyncProvider extends $FunctionalProvider<void, void, void>
         argument: null,
         retry: null,
         name: r'rfidTagsSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -140,7 +140,7 @@ final class RfidTagsSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$rfidTagsSyncHash() => r'29bbfff88f9dbd2a2b79026aab398290e11ea9b7';
+String _$rfidTagsSyncHash() => r'91f21816580bdbd8fcfc4d4d1367796fde2cc331';
 
 @ProviderFor(rfidTagsByMember)
 final rfidTagsByMemberProvider = RfidTagsByMemberFamily._();

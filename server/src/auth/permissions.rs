@@ -50,6 +50,18 @@ impl FromSql<PgPermissionLevel, Pg> for PermissionLevel {
   }
 }
 
+/// An assignable role. `is_super` roles bypass per-resource grants entirely (see the
+/// `permissions_effective` view), which is how `admin` gets everything without rows of its own.
+#[derive(Debug, Clone, diesel::Queryable, diesel::Selectable, async_graphql::SimpleObject)]
+#[diesel(table_name = database::schema::roles)]
+#[diesel(check_for_backend(Pg))]
+pub struct Role {
+  pub id: i16,
+  pub name: String,
+  pub description: Option<String>,
+  pub is_super: bool,
+}
+
 /// One row of a user's effective permission for a resource - read from the `user_permissions` view.
 #[derive(Debug, Clone, diesel::Queryable, diesel::Selectable)]
 #[diesel(table_name = database::views::user_permissions)]

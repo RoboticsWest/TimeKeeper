@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/providers/user_provider.dart';
+import 'package:time_keeper/views/users/role_chip.dart';
 import 'package:time_keeper/views/users/user_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
@@ -20,12 +21,21 @@ class UsersView extends HookConsumerWidget {
     final filterController = useTextEditingController();
     final filterText = useValueListenable(filterController).text.toLowerCase();
 
+    final refreshing = useState(false);
+    Future<void> refreshUsers() async {
+      refreshing.value = true;
+      await ref.read(usersProvider.notifier).refresh();
+      refreshing.value = false;
+    }
+
     final sorted = users.entries.toList()
       ..sort((a, b) => a.value.username.compareTo(b.value.username));
 
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
-      return entry.value.username.toLowerCase().contains(filterText);
+      final user = entry.value;
+      final roleText = user.roles.map((r) => r.name.toLowerCase()).join(' ');
+      return user.username.toLowerCase().contains(filterText) || roleText.contains(filterText);
     }).toList();
 
     return Padding(
@@ -34,8 +44,31 @@ class UsersView extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Users', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 16),
-          TableFilter(controller: filterController),
+          const SizedBox(height: 4),
+          Text(
+            '(The default admin user is hidden from this list)',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: TableFilter(controller: filterController)),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Refresh users',
+                onPressed: refreshing.value ? null : refreshUsers,
+                icon: refreshing.value
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: EditTable(
@@ -43,6 +76,10 @@ class UsersView extends HookConsumerWidget {
               headers: [
                 const BaseTableCell(
                   child: TableHeaderText('Username'),
+                ),
+                const BaseTableCell(
+                  flex: 2,
+                  child: TableHeaderText('Roles'),
                 ),
               ],
               headerDecoration: tableHeaderDecoration(context),
@@ -56,6 +93,7 @@ class UsersView extends HookConsumerWidget {
                     ref,
                     id: id,
                     existingUsername: user.username,
+                    existingRoles: user.roles,
                   ),
                   onDelete: () => showDeleteUserDialog(
                     context,
@@ -63,7 +101,10 @@ class UsersView extends HookConsumerWidget {
                     id: id,
                     username: user.username,
                   ),
-                  cells: [BaseTableCell(child: Text(user.username))],
+                  cells: [
+                    BaseTableCell(child: Text(user.username)),
+                    BaseTableCell(flex: 2, child: RoleChips(roles: user.roles)),
+                  ],
                 );
               }).toList(),
               onAdd: () => showUserDialog(context, ref),

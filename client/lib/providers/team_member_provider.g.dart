@@ -82,7 +82,7 @@ final class TeamMembersProvider
   }
 }
 
-String _$teamMembersHash() => r'26ae8ba61283699b00330dee177497b220d13944';
+String _$teamMembersHash() => r'b3edc969f4620e74ff52d5ffc2657a7b66722b0b';
 
 abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
   Map<String, TeamMember> build();
@@ -115,7 +115,7 @@ final class TeamMembersSyncProvider
         argument: null,
         retry: null,
         name: r'teamMembersSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -142,7 +142,7 @@ final class TeamMembersSyncProvider
   }
 }
 
-String _$teamMembersSyncHash() => r'6359aecf8e33b5b617f75e5a24397a1ecd5bf717';
+String _$teamMembersSyncHash() => r'e68052e99354dad8be3b5543bb0cbf2e35ef593e';
 
 @ProviderFor(studentTeamMembers)
 final studentTeamMembersProvider = StudentTeamMembersProvider._();

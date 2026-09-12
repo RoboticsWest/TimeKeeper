@@ -65,6 +65,13 @@ class TeamView extends HookConsumerWidget {
     final filterController = useTextEditingController();
     final filterText = useValueListenable(filterController).text.toLowerCase();
 
+    final refreshing = useState(false);
+    Future<void> refreshMembers() async {
+      refreshing.value = true;
+      await ref.read(teamMembersProvider.notifier).refresh();
+      refreshing.value = false;
+    }
+
     final sorted = teamMembers.entries.toList()
       ..sort((a, b) {
         final lastCmp = a.value.lastName.compareTo(b.value.lastName);
@@ -149,6 +156,18 @@ class TeamView extends HookConsumerWidget {
                       description: 'all team members',
                       ids: teamMembers.keys.toList(),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Refresh team members',
+                    onPressed: refreshing.value ? null : refreshMembers,
+                    icon: refreshing.value
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh),
                   ),
                 ],
               ),

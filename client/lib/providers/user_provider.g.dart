@@ -81,7 +81,7 @@ final class UsersProvider extends $NotifierProvider<Users, Map<String, User>> {
   }
 }
 
-String _$usersHash() => r'c1b13187907fd8133aca3e013920b79f604679ad';
+String _$usersHash() => r'46e82aef68f92b9366e5516144c3e0751df0fe96';
 
 abstract class _$Users extends $Notifier<Map<String, User>> {
   Map<String, User> build();
@@ -101,6 +101,49 @@ abstract class _$Users extends $Notifier<Map<String, User>> {
   }
 }
 
+/// The assignable roles, fetched once - they only change with a migration.
+
+@ProviderFor(roles)
+final rolesProvider = RolesProvider._();
+
+/// The assignable roles, fetched once - they only change with a migration.
+
+final class RolesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Role>>,
+          List<Role>,
+          FutureOr<List<Role>>
+        >
+    with $FutureModifier<List<Role>>, $FutureProvider<List<Role>> {
+  /// The assignable roles, fetched once - they only change with a migration.
+  RolesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'rolesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$rolesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Role>> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Role>> create(Ref ref) {
+    return roles(ref);
+  }
+}
+
+String _$rolesHash() => r'9a162f0e13477a25038d17cbc15f92e3badd679a';
+
 @ProviderFor(usersSync)
 final usersSyncProvider = UsersSyncProvider._();
 
@@ -112,7 +155,7 @@ final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
         argument: null,
         retry: null,
         name: r'usersSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -139,4 +182,4 @@ final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$usersSyncHash() => r'9a4d88ebd9f725e6792ad6e8c39cae0f487360b0';
+String _$usersSyncHash() => r'977e557d2064e49debc773039180b4806083265d';

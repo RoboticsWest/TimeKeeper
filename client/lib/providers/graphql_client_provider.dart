@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:gql/ast.dart';
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -11,6 +13,14 @@ bool _isSubscription(Request request) => request.operation.getOperationType() ==
 
 @Riverpod(keepAlive: true)
 class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
+  // WebSocketLink owns a SocketClient that only stops reconnecting when the
+  // link is disposed; nothing else closes it. Every rebuild here (server
+  // switch, TLS toggle, login/logout, reconnect()) creates a new link, so the
+  // previous one would keep a socket alive against the OLD endpoint - printing
+  // "connection lost / Disconnected from websocket." forever. Track and close
+  // it explicitly, and never leave more than one web socket per client.
+  WebSocketLink? _wsLink;
+
   void reconnect() {
     logger.i('Reconnecting GraphQL client on next access...');
     ref.invalidateSelf();
@@ -18,6 +28,11 @@ class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
 
   @override
   GraphQLClient build() {
+    if (_wsLink != null) {
+      unawaited(_wsLink!.dispose());
+      _wsLink = null;
+    }
+
     final baseUri = ref.watch(serverBaseUriProvider);
     final tls = ref.watch(tlsProvider);
     final token = ref.watch(tokenProvider);
@@ -39,9 +54,14 @@ class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
             ? <String, String>{'Authorization': 'Bearer $token'}
             : <String, String>{},
         autoReconnect: true,
+        // Without this graphql retries on a zero timer and spams the console
+        // with a "connection lost" error on every failed attempt while the
+        // server is unreachable.
+        delayBetweenReconnectionAttempts: const Duration(seconds: 2),
         inactivityTimeout: const Duration(seconds: 30),
       ),
     );
+    _wsLink = wsLink;
 
     final link = Link.split(_isSubscription, wsLink, httpLink);
 

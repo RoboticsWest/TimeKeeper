@@ -52,10 +52,15 @@ jobs:
           retention-days: 1
 
   # ── Build server binaries ───────────────────────────────────────────
+  # No Windows server target: the bundled libpq C build doesn't link under mingw-w64
+  # (undefined `localtime_r`), and MSVC would make the .exe depend on the VC++ redistributable,
+  # which defeats the point of shipping a self-contained binary. The Windows *client* still ships.
   build-server:
     name: Build Server (${{ matrix.name }})
     needs: [read-vars, build-web-client]
     strategy:
+      # One target failing shouldn't cancel the others and hide their result.
+      fail-fast: false
       matrix:
         include:
           - name: linux-x86_64
@@ -63,11 +68,6 @@ jobs:
             target: x86_64-unknown-linux-musl
             artifact: timekeeper-server-linux-x86_64
             archive: tar.gz
-          - name: windows-x86_64
-            runner: ubuntu-latest
-            target: x86_64-pc-windows-gnu
-            artifact: timekeeper-server-windows-x86_64
-            archive: zip
           - name: macos-x86_64
             runner: macos-latest
             target: x86_64-apple-darwin
@@ -91,18 +91,10 @@ jobs:
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
-      # Windows cross-compile: install mingw-w64
-      - name: Install mingw-w64
-        if: matrix.target == 'x86_64-pc-windows-gnu'
-        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
-
-      # Build the server. `static-pq` vendors and statically links libpq/OpenSSL from source
-      # instead of relying on a system libpq for the target - needed since these targets
-      # (musl, mingw-w64, and cross-arch macOS) don't reliably have one available. Only
-      # `diesel::PgConnection` (used to run migrations at startup) touches libpq at all - every
-      # other query goes through diesel-async's pure-Rust tokio-postgres backend.
+      # No extra system libraries needed: the server links no C dependencies at all, so
+      # every target here cross-compiles straight out of the box.
       - name: Build server (release)
-        run: cargo build --release --target ${{ matrix.target }} -p server --features static-pq
+        run: cargo build --release --target ${{ matrix.target }} -p server
 
       # Download the web client artifact
       - name: Download web client
@@ -121,14 +113,6 @@ jobs:
           cd staging
           tar -czf ../${{ matrix.artifact }}.tar.gz .
 
-      - name: Prepare archive (zip)
-        if: matrix.archive == 'zip'
-        run: |
-          mkdir -p staging
-          cp target/${{ matrix.target }}/release/main.exe staging/server.exe
-          cd staging
-          zip -r ../${{ matrix.artifact }}.zip .
-
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
@@ -141,6 +125,7 @@ jobs:
     name: Build Client (${{ matrix.name }})
     needs: [read-vars]
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: linux-x86_64

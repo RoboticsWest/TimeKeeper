@@ -1,6 +1,5 @@
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/helpers/collection_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
@@ -65,13 +64,10 @@ Stream<ChangeEvent<TeamMember>> teamMemberChanges(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class TeamMembers extends _$TeamMembers {
-  late final CollectionStorage<TeamMember> _storage;
-
   @override
   Map<String, TeamMember> build() {
-    _storage = CollectionStorage(tableName: 'team_members', fromJson: TeamMember.fromJson, toJson: (m) => m.toJson());
     _fetchInitial();
-    return _storage.getAll();
+    return {};
   }
 
   Future<void> _fetchInitial() async {
@@ -82,11 +78,16 @@ class TeamMembers extends _$TeamMembers {
     final items = (result.data!['teamMembers'] as List<dynamic>)
         .map((e) => TeamMember.fromJson(e as Map<String, dynamic>))
         .toList();
-    state = _storage.seedFromList(items, (m) => m.id);
+    state = {for (final item in items) item.id: item};
   }
 
+  /// Team members only re-syncs via the `teamMemberChanges` subscription. If that connection is
+  /// down (or the app started before a server-side change like a Discord import), the local cache
+  /// stays stale until a manual refresh.
+  Future<void> refresh() => _fetchInitial();
+
   void applyChange(ChangeEvent<TeamMember> change) {
-    state = _storage.applyChange(change, state);
+    state = applyChangeToMap(state, change);
   }
 
   Future<ApiCallResult> uploadStudentCsv(String csvData) => _mutate(_uploadStudentCsvMutation, {'csvData': csvData});
@@ -144,7 +145,7 @@ class TeamMembers extends _$TeamMembers {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 void teamMembersSync(Ref ref) {
   ref.listen(teamMemberChangesProvider, (previous, next) {
     next.whenData((change) {
