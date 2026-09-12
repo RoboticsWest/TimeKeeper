@@ -13,9 +13,9 @@ pub struct ServerConfig {
   #[arg(short, long, default_value_t = 8080)]
   pub web_port: u16,
 
-  /// Binding Port for the gRPC endpoint
-  #[arg(long, default_value_t = 50051)]
-  pub api_port: u16,
+  /// Binding Port for the GraphQL API endpoint (HTTP `/graphql` and WebSocket `/graphql/ws`)
+  #[arg(long, default_value_t = 4000)]
+  pub graphql_port: u16,
 
   /// Postgres connection URL. If unset, an embedded Postgres instance is started automatically
   /// under `.pgdata/` and used instead.
@@ -41,14 +41,6 @@ pub struct ServerConfig {
   /// Admin password (if not provided, uses default or existing password in DB)
   #[arg(long, env = "TK_ADMIN_PASSWORD")]
   pub admin_password: Option<String>,
-
-  /// TMS Mobi Reverse Proxy Token
-  #[arg(long, env = "TK_PROXY_TOKEN")]
-  pub proxy_token: Option<String>,
-
-  /// TMS Mobi Reverse Proxy Sub-Domain
-  #[arg(long, env = "TK_PROXY_DOMAIN")]
-  pub proxy_domain: Option<String>,
 }
 
 impl ServerConfig {

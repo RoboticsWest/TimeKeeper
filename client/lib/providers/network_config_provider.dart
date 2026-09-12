@@ -38,11 +38,11 @@ class ServerIp extends _$ServerIp {
   }
 }
 
-// Api Port
+// GraphQL API Port
 @Riverpod(keepAlive: true)
-class ServerApiPort extends _$ServerApiPort {
-  static const String _key = 'server_api_port';
-  static const int _defaultPort = 50051;
+class ServerGraphqlPort extends _$ServerGraphqlPort {
+  static const String _key = 'server_graphql_port';
+  static const int _defaultPort = 4000;
   void setPort(int port) {
     localStorage.setInt(_key, port);
     state = port;

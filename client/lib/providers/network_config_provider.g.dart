@@ -60,28 +60,28 @@ abstract class _$ServerIp extends $Notifier<String> {
   }
 }
 
-@ProviderFor(ServerApiPort)
-final serverApiPortProvider = ServerApiPortProvider._();
+@ProviderFor(ServerGraphqlPort)
+final serverGraphqlPortProvider = ServerGraphqlPortProvider._();
 
-final class ServerApiPortProvider
-    extends $NotifierProvider<ServerApiPort, int> {
-  ServerApiPortProvider._()
+final class ServerGraphqlPortProvider
+    extends $NotifierProvider<ServerGraphqlPort, int> {
+  ServerGraphqlPortProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'serverApiPortProvider',
+        name: r'serverGraphqlPortProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$serverApiPortHash();
+  String debugGetCreateSourceHash() => _$serverGraphqlPortHash();
 
   @$internal
   @override
-  ServerApiPort create() => ServerApiPort();
+  ServerGraphqlPort create() => ServerGraphqlPort();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(int value) {
@@ -92,9 +92,9 @@ final class ServerApiPortProvider
   }
 }
 
-String _$serverApiPortHash() => r'a4326dfe367dad316d896915d0dd63d0eee0e811';
+String _$serverGraphqlPortHash() => r'42768c0c0575ff802d06622944630fb25c161510';
 
-abstract class _$ServerApiPort extends $Notifier<int> {
+abstract class _$ServerGraphqlPort extends $Notifier<int> {
   int build();
   @$mustCallSuper
   @override
