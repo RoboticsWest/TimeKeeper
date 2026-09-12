@@ -11,7 +11,7 @@ const _settingsFields =
     'discordNotificationChannelId discordSelfLinkEnabled discordNameSyncEnabled discordStartReminderMins '
     'discordEndReminderMins discordStartReminderMessage discordEndReminderMessage discordOvertimeDmEnabled '
     'discordOvertimeDmMins discordOvertimeDmMessage discordAutoCheckoutDmEnabled discordAutoCheckoutDmMessage '
-    'discordCheckoutEnabled discordEnabled timezone primaryColor secondaryColor leaderboardShowOvertime '
+    'discordCheckoutEnabled discordEnabled timezone leaderboardShowOvertime '
     'leaderboardMemberTypes discordRsvpReactionsEnabled discordAutoDeleteStartReminder discordAutoDeleteEndReminder';
 
 const _settingsQuery = '''
@@ -70,15 +70,6 @@ class SettingsService extends _$SettingsService {
       }
     ''',
     {'nextSessionThresholdSecs': nextSessionThresholdSecs, 'timezone': timezone},
-  );
-
-  Future<ApiCallResult> updateBranding({String? primaryColor, String? secondaryColor}) => _mutate(
-    r'''
-      mutation UpdateBrandingSettings($primaryColor: String, $secondaryColor: String) {
-        updateBrandingSettings(primaryColor: $primaryColor, secondaryColor: $secondaryColor)
-      }
-    ''',
-    {'primaryColor': primaryColor, 'secondaryColor': secondaryColor},
   );
 
   Future<ApiCallResult> updateLeaderboard({bool? showOvertime, required List<String> memberTypes}) => _mutate(

@@ -14,6 +14,7 @@ import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/models/session_rsvp.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class SessionTable extends ConsumerWidget {
   final List<MapEntry<String, Session>> sessions;
@@ -58,10 +59,7 @@ class SessionTable extends ConsumerWidget {
           child: Text('', style: TextStyle(color: Colors.white)),
         ),
       ],
-      headerDecoration: BoxDecoration(
-        color: theme.colorScheme.secondary,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-      ),
+      headerDecoration: tableHeaderDecoration(context),
       editRows: sessions.map((entry) {
         final id = entry.key;
         final session = entry.value;

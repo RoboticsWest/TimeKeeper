@@ -14,6 +14,7 @@ import 'package:time_keeper/widgets/searchable_dropdown.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class AttendanceView extends HookConsumerWidget {
   const AttendanceView({super.key});
@@ -246,12 +247,7 @@ class AttendanceView extends HookConsumerWidget {
                   child: Text('Status', style: TextStyle(color: Colors.white)),
                 ),
               ],
-              headerDecoration: BoxDecoration(
-                color: theme.colorScheme.secondary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8),
-                ),
-              ),
+              headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
                 final id = entry.key;
                 final ms = entry.value;

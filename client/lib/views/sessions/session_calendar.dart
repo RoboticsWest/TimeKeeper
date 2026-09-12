@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/shapes.dart';
 
 class SessionCalendar extends HookWidget {
   final Map<String, Session> sessions;
@@ -38,7 +39,7 @@ class SessionCalendar extends HookWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(kRadiusCard),
       ),
       child: TableCalendar<Session>(
         firstDay: DateTime(2020),

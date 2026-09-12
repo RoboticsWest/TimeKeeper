@@ -7,7 +7,7 @@ use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
 
 use super::logic::{
-  BrandingUpdate, DiscordBehaviorUpdate, DiscordCoreUpdate, DiscordReminderUpdate, DiscordRole, GeneralUpdate,
+  DiscordBehaviorUpdate, DiscordCoreUpdate, DiscordReminderUpdate, DiscordRole, GeneralUpdate,
   ImportDiscordMembersResult, LeaderboardUpdate, SettingsLogic,
 };
 use super::model::Settings;
@@ -60,17 +60,6 @@ impl SettingsMutation {
   ) -> Result<bool> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     logic(ctx)?.update_general(GeneralUpdate { next_session_threshold_secs, timezone }).await?;
-    Ok(true)
-  }
-
-  async fn update_branding_settings(
-    &self,
-    ctx: &Context<'_>,
-    primary_color: Option<String>,
-    secondary_color: Option<String>,
-  ) -> Result<bool> {
-    require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
-    logic(ctx)?.update_branding(BrandingUpdate { primary_color, secondary_color }).await?;
     Ok(true)
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/providers/branding_provider.dart';
+import 'package:time_keeper/providers/logo_provider.dart';
 
 class LogoWidget extends ConsumerWidget {
   final double? width;
@@ -10,7 +10,7 @@ class LogoWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final logoBytes = ref.watch(brandingProvider.select((b) => b.logoBytes));
+    final logoBytes = ref.watch(logoProvider);
 
     if (logoBytes != null) {
       return Image.memory(logoBytes, width: width, height: height);

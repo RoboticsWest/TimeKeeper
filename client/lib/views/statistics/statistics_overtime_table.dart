@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 import 'package:time_keeper/models/team_member.dart';
+import 'package:time_keeper/shapes.dart';
 
 class StatisticsOvertimeTable extends StatelessWidget {
   final Map<String, MemberHoursData> memberHours;
@@ -67,12 +68,7 @@ class StatisticsOvertimeTable extends StatelessWidget {
             else ...[
               // Header
               Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondary,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
-                ),
+                decoration: tableHeaderDecoration(context),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 10,
@@ -230,7 +226,7 @@ class _InsightCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(kRadiusRow),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(

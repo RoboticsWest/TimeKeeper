@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class TeamMemberHeader extends StatelessWidget {
   const TeamMemberHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
 
     return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondary,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-      ),
+      decoration: tableHeaderDecoration(context),
       child: const Row(
         children: [
           Expanded(

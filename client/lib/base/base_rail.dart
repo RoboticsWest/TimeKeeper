@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/router/app_routes.dart';
+import 'package:time_keeper/shapes.dart';
 
 class BaseRail extends HookConsumerWidget {
   const BaseRail({super.key});
@@ -34,7 +35,7 @@ class BaseRail extends HookConsumerWidget {
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(kRadiusRow),
                   ),
                 ),
                 icon: Icon(isExtended.value ? Icons.chevron_left : Icons.menu),
