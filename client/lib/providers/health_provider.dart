@@ -10,10 +10,10 @@ part 'health_provider.g.dart';
 @Riverpod(keepAlive: true)
 Stream<bool> isConnected(Ref ref) async* {
   final serverIp = ref.watch(serverIpProvider);
-  final apiPort = ref.watch(serverApiPortProvider);
+  final graphqlPort = ref.watch(serverGraphqlPortProvider);
   final tls = ref.watch(tlsProvider);
   final scheme = tls ? 'https' : 'http';
-  final uri = Uri.parse('$scheme://$serverIp:$apiPort/health');
+  final uri = Uri.parse('$scheme://$serverIp:$graphqlPort/health');
 
   while (true) {
     bool connected;

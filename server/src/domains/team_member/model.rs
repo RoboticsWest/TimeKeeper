@@ -12,7 +12,7 @@ pub struct TeamMember {
   pub first_name: String,
   pub last_name: String,
   /// Plain string holding one of the lowercase values enforced by the DB CHECK constraint:
-  /// `'student'` | `'mentor'`. Proto enum <-> string conversion happens in a later grpc.rs layer.
+  /// `'student'` | `'mentor'`.
   pub member_type: String,
   pub display_name: Option<String>,
   pub mobile_number: Option<String>,
