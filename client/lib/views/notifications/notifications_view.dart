@@ -16,6 +16,7 @@ import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class NotificationsView extends HookConsumerWidget {
   const NotificationsView({super.key});
@@ -166,12 +167,7 @@ class NotificationsView extends HookConsumerWidget {
                   flex: 1,
                 ),
               ],
-              headerDecoration: BoxDecoration(
-                color: theme.colorScheme.secondary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8),
-                ),
-              ),
+              headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
                 final id = entry.key;
                 final n = entry.value;

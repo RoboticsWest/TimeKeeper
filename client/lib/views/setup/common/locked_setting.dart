@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:time_keeper/views/setup/common/locked_setting_severity.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
+import 'package:time_keeper/shapes.dart';
 
 /// Generic locked setting with unlock/action functionality
 /// Supports custom content via builder pattern
@@ -84,7 +85,7 @@ class LockedSetting extends HookWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: containerColor.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(kRadiusRow),
                 border: Border.all(color: severityColor, width: 1),
               ),
               child: Row(

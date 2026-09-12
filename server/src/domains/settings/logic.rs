@@ -22,11 +22,6 @@ pub struct GeneralUpdate {
   pub timezone: Option<String>,
 }
 
-pub struct BrandingUpdate {
-  pub primary_color: Option<String>,
-  pub secondary_color: Option<String>,
-}
-
 pub struct LeaderboardUpdate {
   pub leaderboard_show_overtime: Option<bool>,
   pub leaderboard_member_types: Vec<String>,
@@ -78,7 +73,6 @@ pub struct ImportDiscordMembersResult {
 pub trait SettingsLogic: Send + Sync {
   async fn get(&self) -> anyhow::Result<Settings>;
   async fn update_general(&self, update: GeneralUpdate) -> anyhow::Result<()>;
-  async fn update_branding(&self, update: BrandingUpdate) -> anyhow::Result<()>;
   async fn update_leaderboard(&self, update: LeaderboardUpdate) -> anyhow::Result<()>;
   async fn update_discord_core(&self, update: DiscordCoreUpdate) -> anyhow::Result<()>;
   async fn update_discord_reminder(&self, update: DiscordReminderUpdate) -> anyhow::Result<()>;
@@ -161,17 +155,6 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
     }
     if let Some(v) = update.timezone {
       settings.timezone = v;
-    }
-    self.save(&settings).await
-  }
-
-  async fn update_branding(&self, update: BrandingUpdate) -> anyhow::Result<()> {
-    let mut settings = self.repo.get().await?;
-    if let Some(v) = update.primary_color {
-      settings.primary_color = v;
-    }
-    if let Some(v) = update.secondary_color {
-      settings.secondary_color = v;
     }
     self.save(&settings).await
   }

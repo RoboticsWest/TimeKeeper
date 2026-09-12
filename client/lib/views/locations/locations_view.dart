@@ -8,6 +8,7 @@ import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class LocationsView extends HookConsumerWidget {
   const LocationsView({super.key});
@@ -92,12 +93,7 @@ class LocationsView extends HookConsumerWidget {
                   flex: 3,
                 ),
               ],
-              headerDecoration: BoxDecoration(
-                color: theme.colorScheme.secondary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(8),
-                ),
-              ),
+              headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
                 final id = entry.key;
                 final location = entry.value;

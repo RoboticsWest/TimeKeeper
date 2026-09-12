@@ -63,12 +63,7 @@ class StatisticsMemberHoursTable extends StatelessWidget {
             else ...[
               // Header
               Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondary,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
-                ),
+                decoration: tableHeaderDecoration(context),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 10,

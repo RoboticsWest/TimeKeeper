@@ -5,6 +5,7 @@ import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/statistics_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class LeaderboardView extends ConsumerWidget {
   const LeaderboardView({super.key});
@@ -63,12 +64,7 @@ class _LeaderboardTable extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.secondary,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(8),
-              ),
-            ),
+            decoration: tableHeaderDecoration(context),
             child: const Row(
               children: [
                 SizedBox(width: 40, child: Center(child: _HeaderText('#'))),

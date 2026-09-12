@@ -3,6 +3,7 @@ import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/statistics/statistics_helpers.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 import 'package:time_keeper/models/team_member.dart';
+import 'package:time_keeper/shapes.dart';
 
 class StatisticsDayDetail extends StatelessWidget {
   final DateTime selectedDay;
@@ -41,7 +42,7 @@ class StatisticsDayDetail extends StatelessWidget {
     return Card(
       color: theme.colorScheme.primary.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(kRadiusCard),
         side: BorderSide(
           color: theme.colorScheme.primary.withValues(alpha: 0.3),
         ),
@@ -112,12 +113,7 @@ class StatisticsDayDetail extends StatelessWidget {
             else ...[
               // Header row
               Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondary,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(8),
-                  ),
-                ),
+                decoration: tableHeaderDecoration(context),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,

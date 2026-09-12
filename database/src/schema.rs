@@ -122,8 +122,6 @@ diesel::table! {
         discord_checkout_enabled -> Bool,
         discord_enabled -> Bool,
         timezone -> Text,
-        primary_color -> Text,
-        secondary_color -> Text,
         leaderboard_show_overtime -> Bool,
         leaderboard_member_types -> Array<Nullable<Text>>,
         discord_rsvp_reactions_enabled -> Bool,

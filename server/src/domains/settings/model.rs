@@ -3,8 +3,6 @@ use diesel::prelude::*;
 
 use database::schema::{logos, settings};
 
-pub const DEFAULT_PRIMARY_COLOR: &str = "#009485";
-pub const DEFAULT_SECONDARY_COLOR: &str = "#005994";
 pub const DEFAULT_NEXT_SESSION_THRESHOLD_SECS: i64 = 4 * 60 * 60; // 4 hours
 pub const DEFAULT_START_REMINDER_MINS: i64 = 24 * 60; // 24 hours
 pub const DEFAULT_END_REMINDER_MINS: i64 = 15;
@@ -41,8 +39,6 @@ pub struct Settings {
   pub discord_checkout_enabled: bool,
   pub discord_enabled: bool,
   pub timezone: String,
-  pub primary_color: String,
-  pub secondary_color: String,
   pub leaderboard_show_overtime: bool,
   pub leaderboard_member_types: Vec<Option<String>>,
   pub discord_rsvp_reactions_enabled: bool,
