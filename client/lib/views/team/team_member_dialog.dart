@@ -213,7 +213,10 @@ class _TeamMemberForm extends HookConsumerWidget {
               if (isEdit) ...[
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(
+                    Icons.add,
+                    color: Colors.green,
+                  ),
                   onPressed: () async {
                     final tag = newRfidTagController.text.trim();
                     if (tag.isEmpty) return;
