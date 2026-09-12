@@ -67,17 +67,17 @@ fn inline_fields(mut embed: CreateEmbed, items: &[(String, String)]) -> CreateEm
   embed
 }
 
-pub fn help() -> CreateEmbed {
-  base("TimeKeeper commands", BRAND_BLUE)
-    .description("Prefix every command with `!`.")
-    .field("`ping`", "Check if the bot is alive", true)
-    .field("`leaderboard`", "Hours leaderboard — `!leaderboard help` for filters", true)
-    .field("`sessions`", "Active and upcoming sessions", true)
-    .field("`checkedin`", "Who is currently checked in", true)
-    .field("`locations`", "List all locations", true)
-    .field("`link Name`", "Link your Discord account to a team member", true)
-    .field("`checkout`", "Check yourself out of the current session", true)
-    .field("`help`", "Show this message", true)
+pub fn help_text() -> String {
+  "**TimeKeeper commands** — prefix every command with `!`\n\
+   `!ping` — Check if the bot is alive\n\
+   `!leaderboard` — Hours leaderboard (`!leaderboard help` for filters)\n\
+   `!sessions` — Active and upcoming sessions\n\
+   `!checkedin` — Who is currently checked in\n\
+   `!locations` — List all locations\n\
+   `!link Name` — Link your Discord account to a team member\n\
+   `!checkout` — Check yourself out of the current session\n\
+   `!help` — Show this message"
+    .to_string()
 }
 
 pub fn leaderboard_help() -> CreateEmbed {
@@ -186,6 +186,15 @@ mod tests {
   #[test]
   fn error_is_red() {
     assert_eq!(json(error("boom"))["color"], 0x00D9_2B2B);
+  }
+
+  #[test]
+  fn help_is_a_plain_text_command_list() {
+    let text = help_text();
+    assert!(text.starts_with("**TimeKeeper commands**"));
+    for command in ["!ping", "!leaderboard", "!sessions", "!checkedin", "!locations", "!link", "!checkout", "!help"] {
+      assert!(text.contains(command), "help should mention {command}");
+    }
   }
 
   #[test]

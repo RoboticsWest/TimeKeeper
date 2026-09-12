@@ -1,6 +1,5 @@
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/helpers/collection_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
@@ -56,17 +55,10 @@ Stream<ChangeEvent<TeamMemberSession>> teamMemberSessionChanges(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class TeamMemberSessions extends _$TeamMemberSessions {
-  late final CollectionStorage<TeamMemberSession> _storage;
-
   @override
   Map<String, TeamMemberSession> build() {
-    _storage = CollectionStorage(
-      tableName: 'team_member_sessions',
-      fromJson: TeamMemberSession.fromJson,
-      toJson: (s) => s.toJson(),
-    );
     _fetchInitial();
-    return _storage.getAll();
+    return {};
   }
 
   Future<void> _fetchInitial() async {
@@ -79,11 +71,13 @@ class TeamMemberSessions extends _$TeamMemberSessions {
     final items = (result.data!['teamMemberSessions'] as List<dynamic>)
         .map((e) => TeamMemberSession.fromJson(e as Map<String, dynamic>))
         .toList();
-    state = _storage.seedFromList(items, (s) => s.id);
+    state = {for (final item in items) item.id: item};
   }
 
+  Future<void> refresh() => _fetchInitial();
+
   void applyChange(ChangeEvent<TeamMemberSession> change) {
-    state = _storage.applyChange(change, state);
+    state = applyChangeToMap(state, change);
   }
 
   Future<ApiCallResult> update(String id, DateTime checkInTime, DateTime? checkOutTime) =>
@@ -113,7 +107,7 @@ class TeamMemberSessions extends _$TeamMemberSessions {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 void teamMemberSessionsSync(Ref ref) {
   ref.listen(teamMemberSessionChangesProvider, (previous, next) {
     next.whenData((change) {

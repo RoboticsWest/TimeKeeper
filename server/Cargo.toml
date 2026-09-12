@@ -15,7 +15,7 @@ chrono = "0.4.43"
 chrono-tz = "0.10"
 clap = { version = "4.5.57", features = ["derive", "env"] }
 dashmap = "6.1.0"
-diesel = { version = "2", default-features = false, features = ["postgres", "uuid", "chrono", "32-column-tables"] }
+diesel = { version = "2", default-features = false, features = ["postgres_backend", "uuid", "chrono", "32-column-tables"] }
 diesel-async = { version = "0.5", features = ["postgres", "bb8"] }
 dotenvy = "0.15"
 futures-util = "0.3"
@@ -42,9 +42,3 @@ uuid = { version = "1.19.0", features = ["v7"] }
 
 [dependencies.database]
 path = "../database"
-
-[features]
-# Statically link a vendored libpq/OpenSSL instead of relying on a system libpq being present -
-# needed for cross-compiled release targets (musl, mingw-w64) that don't have one. See
-# database/Cargo.toml's `static-pq` feature doc comment for why only migrations need this at all.
-static-pq = ["database/static-pq"]

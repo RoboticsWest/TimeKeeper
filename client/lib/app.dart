@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/helpers/debug_window.dart';
+import 'package:time_keeper/providers/app_sync_provider.dart';
 import 'package:time_keeper/providers/theme_provider.dart';
 import 'package:time_keeper/providers/token_validator_provider.dart';
 import 'package:time_keeper/router/router.dart';
@@ -16,6 +17,10 @@ class App extends ConsumerWidget {
 
     // Initialize token validator to monitor app lifecycle
     ref.watch(tokenValidatorProvider);
+
+    // Start every dataset + change subscription for the app lifetime so data stays current
+    // without reopening views or restarting the app.
+    ref.watch(appDataSyncProvider);
 
     return MaterialApp.router(
       title: 'TimeKeeper',

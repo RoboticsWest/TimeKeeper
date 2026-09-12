@@ -20,6 +20,13 @@ class DropdownSetting<T> extends StatelessWidget {
     required this.onUpdate,
   });
 
+  /// [DropdownButton] asserts that its value is present in [items]. The
+  /// settings page can pass a value before its options have loaded (or one
+  /// that no longer exists), so fall back to a null selection — for
+  /// `DropdownSetting<String?>` that maps to the "None" item.
+  bool _contains(Object? candidate) =>
+      items.any((item) => item.value == candidate);
+
   @override
   Widget build(BuildContext context) {
     return SettingRow(
@@ -28,22 +35,32 @@ class DropdownSetting<T> extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<T>(
-              initialValue: value,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-              isExpanded: true,
-              items: items,
-              onChanged: onChanged,
-              selectedItemBuilder: (context) => items.map((item) {
-                return Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    (item.child is Text) ? (item.child as Text).data ?? '' : '',
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                );
-              }).toList(),
+            child: InputDecorator(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<T>(
+                  value: _contains(value) ? value : null,
+                  isExpanded: true,
+                  items: items,
+                  onChanged: onChanged,
+                  selectedItemBuilder: (context) => items.map((item) {
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        (item.child is Text) ? (item.child as Text).data ?? '' : '',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 12),

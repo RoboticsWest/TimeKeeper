@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -98,49 +99,50 @@ class SettingsView extends HookConsumerWidget {
             _showConfirmation(context, 'Scan debounce updated');
           },
         ),
-        const SizedBox(height: 24),
-        SwitchListTile(
-          title: const Text('Use TLS (HTTPS/WSS)'),
-          subtitle: Text(
-            'Enable secure connections to the server. '
-            'When the web app is served through a reverse proxy (Caddy/nginx), '
-            'this is derived automatically from the page origin.',
+        // Web builds talk to the origin they were served from, so there is nothing
+        // here to point at a server - and a wrong value could only break the app.
+        if (!kIsWeb) ...[
+          const SizedBox(height: 24),
+          SwitchListTile(
+            title: const Text('Use TLS (HTTPS/WSS)'),
+            subtitle: const Text('Enable secure connections to the server.'),
+            value: tls,
+            onChanged: (value) {
+              ref.read(tlsProvider.notifier).setTls(value);
+              _showConfirmation(context, 'TLS ${value ? 'enabled' : 'disabled'}');
+            },
           ),
-          value: tls,
-          onChanged: (value) {
-            ref.read(tlsProvider.notifier).setTls(value);
-            _showConfirmation(context, 'TLS ${value ? 'enabled' : 'disabled'}');
-          },
-        ),
-        const SizedBox(height: 24),
-        const Divider(),
-        const SizedBox(height: 24),
-        TextFieldSetting(
-          label: 'Server Address',
-          description: 'The address of the TimeKeeper server',
-          controller: addressController,
-          hintText: '127.0.0.1',
-          onUpdate: () {
-            ref.read(serverIpProvider.notifier).setIp(addressController.text);
-            _showConfirmation(context, 'Server address updated');
-          },
-        ),
-        const SizedBox(height: 24),
-        TextFieldSetting(
-          label: 'GraphQL Port',
-          description: 'The port used for GraphQL API connections',
-          controller: graphqlPortController,
-          hintText: '4000',
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onUpdate: () {
-            final port = int.tryParse(graphqlPortController.text);
-            if (port != null) {
-              ref.read(serverGraphqlPortProvider.notifier).setPort(port);
-              _showConfirmation(context, 'GraphQL port updated');
-            }
-          },
-        ),
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 24),
+          TextFieldSetting(
+            label: 'Server Address',
+            description: 'The address of the TimeKeeper server',
+            controller: addressController,
+            hintText: '127.0.0.1',
+            onUpdate: () {
+              ref.read(serverIpProvider.notifier).setIp(addressController.text);
+              _showConfirmation(context, 'Server address updated');
+            },
+          ),
+          const SizedBox(height: 24),
+          TextFieldSetting(
+            label: 'GraphQL Port',
+            description: 'The port used for GraphQL API connections',
+            controller: graphqlPortController,
+            hintText: '4000',
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onUpdate: () {
+              final port = int.tryParse(graphqlPortController.text);
+              if (port != null) {
+                ref.read(serverGraphqlPortProvider.notifier).setPort(port);
+                _showConfirmation(context, 'GraphQL port updated');
+              }
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
       ],
     );
   }

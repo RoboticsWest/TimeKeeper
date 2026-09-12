@@ -52,14 +52,14 @@ pub async fn init(config: &ServerConfig) -> Result<AppDb> {
     }
 
     let url = postgresql.settings().url(EMBEDDED_DB_NAME);
-    database::migrate(&url)?;
+    database::migrate(&url).await?;
     let pool = database::open(&url).await?;
 
     return Ok(AppDb { pool, database_url: url, embedded: Some(postgresql) });
   };
 
   log::info!("Connecting to configured Postgres database");
-  database::migrate(url)?;
+  database::migrate(url).await?;
   let pool = database::open(url).await?;
   Ok(AppDb { pool, database_url: url.clone(), embedded: None })
 }

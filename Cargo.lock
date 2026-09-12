@@ -812,7 +812,7 @@ dependencies = [
  "diesel-async",
  "diesel_migrations",
  "futures-util",
- "pq-sys",
+ "tokio",
  "uuid",
 ]
 
@@ -907,7 +907,6 @@ dependencies = [
  "chrono",
  "diesel_derives",
  "itoa",
- "pq-sys",
  "uuid",
 ]
 
@@ -2516,12 +2515,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pkg-config"
-version = "0.3.34"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
-
-[[package]]
 name = "polling"
 version = "3.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2641,27 +2634,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
 dependencies = [
  "zerocopy",
-]
-
-[[package]]
-name = "pq-src"
-version = "0.3.11+libpq-18.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fb5bfbe0c3445d371dd8acf7d6c912ece8baf2f61f7c571af85a1d7687c2d0f"
-dependencies = [
- "cc",
-]
-
-[[package]]
-name = "pq-sys"
-version = "0.7.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "574ddd6a267294433f140b02a726b0640c43cf7c6f717084684aaa3b285aba61"
-dependencies = [
- "libc",
- "pkg-config",
- "pq-src",
- "vcpkg",
 ]
 
 [[package]]
@@ -4483,12 +4455,6 @@ name = "valuable"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
-
-[[package]]
-name = "vcpkg"
-version = "0.2.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version_check"

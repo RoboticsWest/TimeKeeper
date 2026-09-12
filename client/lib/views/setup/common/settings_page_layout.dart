@@ -17,27 +17,30 @@ class SettingsPageLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Only `maxWidth` is constrained. A `SingleChildScrollView` hands its child unbounded
+    // height so the child can exceed the viewport and the view scrolls; clamping the height
+    // here instead made tall pages (Integrations especially) clip their overflow and report
+    // that everything fit, leaving nothing to scroll to.
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: maxWidth,
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            ...children,
-          ],
+              const SizedBox(height: 32),
+              ...children,
+            ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,5 @@
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/helpers/collection_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/notification.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
@@ -53,17 +52,10 @@ Stream<ChangeEvent<Notification>> notificationChanges(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class Notifications extends _$Notifications {
-  late final CollectionStorage<Notification> _storage;
-
   @override
   Map<String, Notification> build() {
-    _storage = CollectionStorage(
-      tableName: 'notifications',
-      fromJson: Notification.fromJson,
-      toJson: (n) => n.toJson(),
-    );
     _fetchInitial();
-    return _storage.getAll();
+    return {};
   }
 
   Future<void> _fetchInitial() async {
@@ -76,11 +68,13 @@ class Notifications extends _$Notifications {
     final items = (result.data!['notifications'] as List<dynamic>)
         .map((e) => Notification.fromJson(e as Map<String, dynamic>))
         .toList();
-    state = _storage.seedFromList(items, (n) => n.id);
+    state = {for (final item in items) item.id: item};
   }
 
+  Future<void> refresh() => _fetchInitial();
+
   void applyChange(ChangeEvent<Notification> change) {
-    state = _storage.applyChange(change, state);
+    state = applyChangeToMap(state, change);
   }
 
   Future<ApiCallResult> create({
@@ -126,7 +120,7 @@ class Notifications extends _$Notifications {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 void notificationsSync(Ref ref) {
   ref.listen(notificationChangesProvider, (previous, next) {
     next.whenData((change) {

@@ -1,6 +1,5 @@
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/helpers/collection_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/session_rsvp.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
@@ -34,17 +33,10 @@ Stream<ChangeEvent<SessionRsvp>> sessionRsvpChanges(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class SessionRsvps extends _$SessionRsvps {
-  late final CollectionStorage<SessionRsvp> _storage;
-
   @override
   Map<String, SessionRsvp> build() {
-    _storage = CollectionStorage(
-      tableName: 'session_rsvps',
-      fromJson: SessionRsvp.fromJson,
-      toJson: (r) => r.toJson(),
-    );
     _fetchInitial();
-    return _storage.getAll();
+    return {};
   }
 
   Future<void> _fetchInitial() async {
@@ -57,15 +49,17 @@ class SessionRsvps extends _$SessionRsvps {
     final items = (result.data!['sessionRsvps'] as List<dynamic>)
         .map((e) => SessionRsvp.fromJson(e as Map<String, dynamic>))
         .toList();
-    state = _storage.seedFromList(items, (r) => r.id);
+    state = {for (final item in items) item.id: item};
   }
 
+  Future<void> refresh() => _fetchInitial();
+
   void applyChange(ChangeEvent<SessionRsvp> change) {
-    state = _storage.applyChange(change, state);
+    state = applyChangeToMap(state, change);
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 void sessionRsvpsSync(Ref ref) {
   ref.listen(sessionRsvpChangesProvider, (previous, next) {
     next.whenData((change) {

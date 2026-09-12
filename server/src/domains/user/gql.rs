@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::jwt::Auth;
-use crate::auth::permissions::{PermissionLevel, to_claim_strings};
+use crate::auth::permissions::{PermissionLevel, Role, to_claim_strings};
 use crate::auth::permissions_repository::PermissionsRepository;
 use crate::events::{ChangeOperation, EVENT_BUS};
 use crate::gql_common::Change;
@@ -51,6 +51,12 @@ impl UserQuery {
     require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
     Ok(logic(ctx)?.get_all().await?.into_iter().filter(|u| u.username != DEFAULT_ADMIN_USERNAME).collect())
   }
+
+  /// Every assignable role, for populating the role picker.
+  async fn roles(&self, ctx: &Context<'_>) -> Result<Vec<Role>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    Ok(permissions_repo(ctx)?.list_roles().await?)
+  }
 }
 
 #[derive(Default)]
@@ -83,7 +89,13 @@ impl UserMutation {
     Ok(true)
   }
 
-  async fn create_user(&self, ctx: &Context<'_>, username: String, password: String) -> Result<User> {
+  async fn create_user(
+    &self,
+    ctx: &Context<'_>,
+    username: String,
+    password: String,
+    role_ids: Option<Vec<i16>>,
+  ) -> Result<User> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
 
     if username.is_empty() || password.is_empty() {
@@ -98,7 +110,13 @@ impl UserMutation {
       return Err(Error::new("A user with that username already exists"));
     }
 
-    Ok(logic.add(&username, &password).await?)
+    let user = logic.add(&username, &password).await?;
+
+    // Roles are set even when the list is empty, so "no roles" is an explicit choice rather
+    // than something that silently happens to every new user.
+    permissions_repo(ctx)?.set_user_roles(user.id, &role_ids.unwrap_or_default()).await?;
+
+    Ok(user)
   }
 
   async fn update_user(
@@ -107,6 +125,7 @@ impl UserMutation {
     id: Uuid,
     username: Option<String>,
     password: Option<String>,
+    role_ids: Option<Vec<i16>>,
   ) -> Result<User> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
 
@@ -119,6 +138,12 @@ impl UserMutation {
 
     let username = username.filter(|u| !u.is_empty()).unwrap_or(existing.username);
     let password = password.filter(|p| !p.is_empty()).unwrap_or(existing.password);
+
+    // `None` leaves the user's roles untouched; `Some(..)` replaces them, including with an
+    // empty list to strip every permission.
+    if let Some(role_ids) = role_ids {
+      permissions_repo(ctx)?.set_user_roles(id, &role_ids).await?;
+    }
 
     logic.update(id, &username, &password).await?.ok_or_else(|| Error::new("User not found"))
   }

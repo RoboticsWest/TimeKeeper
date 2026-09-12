@@ -9,6 +9,19 @@ use super::embeds;
 
 const PREFIX: &str = "!";
 
+/// A reply is either a rich embed or plain message content. `!help` stays a
+/// regular list — a grid of inline fields reads poorly in a command reference.
+enum Reply {
+  Embed(Box<CreateEmbed>),
+  Content(String),
+}
+
+impl From<CreateEmbed> for Reply {
+  fn from(embed: CreateEmbed) -> Self {
+    Reply::Embed(Box::new(embed))
+  }
+}
+
 fn member_name(member: &TeamMember) -> &str {
   member.display_name.as_deref().unwrap_or("Unknown")
 }
@@ -22,22 +35,26 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
   let cmd = parts[0].to_lowercase();
   let args = parts.get(1).unwrap_or(&"").trim();
 
-  let response = match cmd.as_str() {
-    "ping" => Some(embeds::success("Pong!", "The bot is alive.")),
-    "help" => Some(embeds::help()),
-    "leaderboard" => Some(leaderboard(args, deps).await),
-    "sessions" => Some(sessions(deps).await),
-    "checkedin" => Some(checked_in(deps).await),
-    "locations" => Some(locations(deps).await),
-    "link" => Some(link_member(msg, args, deps).await),
-    "checkout" => Some(checkout(msg, deps).await),
+  let response: Option<Reply> = match cmd.as_str() {
+    "ping" => Some(embeds::success("Pong!", "The bot is alive.").into()),
+    "help" => Some(Reply::Content(embeds::help_text())),
+    "leaderboard" => Some(leaderboard(args, deps).await.into()),
+    "sessions" => Some(sessions(deps).await.into()),
+    "checkedin" => Some(checked_in(deps).await.into()),
+    "locations" => Some(locations(deps).await.into()),
+    "link" => Some(link_member(msg, args, deps).await.into()),
+    "checkout" => Some(checkout(msg, deps).await.into()),
     _ => None,
   };
 
-  if let Some(embed) = response
-    && let Err(e) = msg.channel_id.send_message(&ctx.http, CreateMessage::new().embed(embed)).await
-  {
-    log::error!("Failed to send Discord message: {e}");
+  if let Some(reply) = response {
+    let message = match reply {
+      Reply::Embed(embed) => CreateMessage::new().embed(*embed),
+      Reply::Content(text) => CreateMessage::new().content(text),
+    };
+    if let Err(e) = msg.channel_id.send_message(&ctx.http, message).await {
+      log::error!("Failed to send Discord message: {e}");
+    }
   }
 }
 

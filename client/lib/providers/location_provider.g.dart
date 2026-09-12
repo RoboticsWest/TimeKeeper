@@ -82,7 +82,7 @@ final class LocationsProvider
   }
 }
 
-String _$locationsHash() => r'db4a621b4b144a02482a4c0f3b8c13bc56c22c6a';
+String _$locationsHash() => r'731d184b6192831b1d06f5049e5905607c61a627';
 
 abstract class _$Locations extends $Notifier<Map<String, Location>> {
   Map<String, Location> build();
@@ -121,7 +121,7 @@ final class LocationsSyncProvider extends $FunctionalProvider<void, void, void>
         argument: null,
         retry: null,
         name: r'locationsSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -148,7 +148,7 @@ final class LocationsSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$locationsSyncHash() => r'78efe843d0298cd5ff569f4e890382bb3a3ac29c';
+String _$locationsSyncHash() => r'a5a8da9846eab6c3010f9c34fbd8446af00400be';
 
 @ProviderFor(CurrentLocation)
 final currentLocationProvider = CurrentLocationProvider._();

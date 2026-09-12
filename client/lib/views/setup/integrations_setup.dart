@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/settings.dart';
 import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
+import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
@@ -160,6 +161,10 @@ class IntegrationsSetupTab extends HookConsumerWidget {
 
       switch (result) {
         case ApiSuccess(data: final r):
+          // Re-fetch so the Team Members tab reflects the import immediately even if the
+          // change-event subscription is down or the app started before the import.
+          await ref.read(teamMembersProvider.notifier).refresh();
+          if (!context.mounted) return;
           SnackBarDialog.success(
             message:
                 'Imported ${r.imported} new, linked ${r.linked} existing, ${r.alreadyLinked} already linked.',

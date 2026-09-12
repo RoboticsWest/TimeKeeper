@@ -166,13 +166,19 @@ abstract class _$Tls extends $Notifier<bool> {
 /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
 /// probe).
 ///
-/// On the web, when the app is served from the same host as the API (a reverse
-/// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
-/// backend), the API is reached through the *same origin the page was served
-/// from* instead of a separately configured `host:port`. Overriding the host or
-/// the port in settings switches back to explicit `scheme://host:port` mode.
-/// The TLS toggle applies to native builds and to explicit host/port mode only;
-/// on the web behind a proxy the scheme always follows the page origin.
+/// On the web this is *always* the origin the page was served from, with no
+/// configuration involved: a web app should never have to be told where its own
+/// backend is. Both deployments serve the API on that origin - behind a reverse
+/// proxy Caddy routes `/graphql`, `/graphql/ws` and `/health` to the API
+/// container, and the all-in-one binary's built-in web server exposes the same
+/// three routes on its own port.
+///
+/// Deriving it rather than storing it also means the scheme always matches the
+/// page, so an `https://` page can never end up issuing blocked `http://`
+/// requests, and stale settings from an earlier version can't strand the app.
+///
+/// Native builds (desktop, Android) genuinely do have to be pointed at a
+/// server, so there the configured host, port and TLS toggle apply.
 
 @ProviderFor(ServerBaseUri)
 final serverBaseUriProvider = ServerBaseUriProvider._();
@@ -180,25 +186,37 @@ final serverBaseUriProvider = ServerBaseUriProvider._();
 /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
 /// probe).
 ///
-/// On the web, when the app is served from the same host as the API (a reverse
-/// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
-/// backend), the API is reached through the *same origin the page was served
-/// from* instead of a separately configured `host:port`. Overriding the host or
-/// the port in settings switches back to explicit `scheme://host:port` mode.
-/// The TLS toggle applies to native builds and to explicit host/port mode only;
-/// on the web behind a proxy the scheme always follows the page origin.
+/// On the web this is *always* the origin the page was served from, with no
+/// configuration involved: a web app should never have to be told where its own
+/// backend is. Both deployments serve the API on that origin - behind a reverse
+/// proxy Caddy routes `/graphql`, `/graphql/ws` and `/health` to the API
+/// container, and the all-in-one binary's built-in web server exposes the same
+/// three routes on its own port.
+///
+/// Deriving it rather than storing it also means the scheme always matches the
+/// page, so an `https://` page can never end up issuing blocked `http://`
+/// requests, and stale settings from an earlier version can't strand the app.
+///
+/// Native builds (desktop, Android) genuinely do have to be pointed at a
+/// server, so there the configured host, port and TLS toggle apply.
 final class ServerBaseUriProvider
     extends $NotifierProvider<ServerBaseUri, Uri> {
   /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
   /// probe).
   ///
-  /// On the web, when the app is served from the same host as the API (a reverse
-  /// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
-  /// backend), the API is reached through the *same origin the page was served
-  /// from* instead of a separately configured `host:port`. Overriding the host or
-  /// the port in settings switches back to explicit `scheme://host:port` mode.
-  /// The TLS toggle applies to native builds and to explicit host/port mode only;
-  /// on the web behind a proxy the scheme always follows the page origin.
+  /// On the web this is *always* the origin the page was served from, with no
+  /// configuration involved: a web app should never have to be told where its own
+  /// backend is. Both deployments serve the API on that origin - behind a reverse
+  /// proxy Caddy routes `/graphql`, `/graphql/ws` and `/health` to the API
+  /// container, and the all-in-one binary's built-in web server exposes the same
+  /// three routes on its own port.
+  ///
+  /// Deriving it rather than storing it also means the scheme always matches the
+  /// page, so an `https://` page can never end up issuing blocked `http://`
+  /// requests, and stale settings from an earlier version can't strand the app.
+  ///
+  /// Native builds (desktop, Android) genuinely do have to be pointed at a
+  /// server, so there the configured host, port and TLS toggle apply.
   ServerBaseUriProvider._()
     : super(
         from: null,
@@ -226,18 +244,24 @@ final class ServerBaseUriProvider
   }
 }
 
-String _$serverBaseUriHash() => r'e1d17a6de90f6faf4eb3a14b9ef84a76a0d79844';
+String _$serverBaseUriHash() => r'635dfeb72dc9e65a783ee09acc49e7771901ffa9';
 
 /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
 /// probe).
 ///
-/// On the web, when the app is served from the same host as the API (a reverse
-/// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
-/// backend), the API is reached through the *same origin the page was served
-/// from* instead of a separately configured `host:port`. Overriding the host or
-/// the port in settings switches back to explicit `scheme://host:port` mode.
-/// The TLS toggle applies to native builds and to explicit host/port mode only;
-/// on the web behind a proxy the scheme always follows the page origin.
+/// On the web this is *always* the origin the page was served from, with no
+/// configuration involved: a web app should never have to be told where its own
+/// backend is. Both deployments serve the API on that origin - behind a reverse
+/// proxy Caddy routes `/graphql`, `/graphql/ws` and `/health` to the API
+/// container, and the all-in-one binary's built-in web server exposes the same
+/// three routes on its own port.
+///
+/// Deriving it rather than storing it also means the scheme always matches the
+/// page, so an `https://` page can never end up issuing blocked `http://`
+/// requests, and stale settings from an earlier version can't strand the app.
+///
+/// Native builds (desktop, Android) genuinely do have to be pointed at a
+/// server, so there the configured host, port and TLS toggle apply.
 
 abstract class _$ServerBaseUri extends $Notifier<Uri> {
   Uri build();

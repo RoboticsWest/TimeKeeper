@@ -82,7 +82,7 @@ final class SessionsProvider
   }
 }
 
-String _$sessionsHash() => r'0c30c3938d53641363b3d5d7dc30c3922aa9e111';
+String _$sessionsHash() => r'd5300950745a746dabca20f999ee67f89c2a0e21';
 
 abstract class _$Sessions extends $Notifier<Map<String, Session>> {
   Map<String, Session> build();
@@ -113,7 +113,7 @@ final class SessionsSyncProvider extends $FunctionalProvider<void, void, void>
         argument: null,
         retry: null,
         name: r'sessionsSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -140,7 +140,7 @@ final class SessionsSyncProvider extends $FunctionalProvider<void, void, void>
   }
 }
 
-String _$sessionsSyncHash() => r'f86d40f354e058e1c2548616f5c6227ff17542d7';
+String _$sessionsSyncHash() => r'ef8645c9b792c5fbfb0bdd05e3bc836a1d2885fd';
 
 /// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
 
