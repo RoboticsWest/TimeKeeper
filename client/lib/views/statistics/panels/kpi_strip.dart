@@ -8,10 +8,25 @@ class KpiStrip extends StatelessWidget {
   final StatsKpis kpis;
   final StatsKpis? previous;
 
-  /// Two columns instead of eight, for narrow layouts.
-  final bool compact;
+  const KpiStrip({super.key, required this.kpis, this.previous});
 
-  const KpiStrip({super.key, required this.kpis, this.previous, this.compact = false});
+  /// Fixed row height. The strip sizes itself from this and its column count,
+  /// which is the point — the caller used to wrap it in a hardcoded SizedBox
+  /// that did not match the grid's real height, so half the tiles were sliced
+  /// off at narrow widths.
+  static const double _rowHeight = 72;
+  static const double _spacing = 8;
+
+  /// Columns for [width]. Eight across only pays off on a genuinely wide pane:
+  /// a tile has to hold a value like "448h 14m" next to a delta chip, which
+  /// wants ~160px, and below that the headline number starts ellipsising —
+  /// which is the one thing a KPI tile must never do.
+  static int columnsFor(double width) {
+    if (width >= 1460) return 8;
+    if (width >= 760) return 4;
+    if (width >= 480) return 3;
+    return 2;
+  }
 
   KpiDelta? _delta(num current, num? before, {bool higherIsBetter = true}) {
     if (before == null) return null;
@@ -79,13 +94,21 @@ class KpiStrip extends StatelessWidget {
       ),
     ];
 
-    return GridView.count(
-      crossAxisCount: compact ? 2 : 8,
-      childAspectRatio: compact ? 3.4 : 1.9,
-      crossAxisSpacing: 8,
-      mainAxisSpacing: 8,
-      physics: const NeverScrollableScrollPhysics(),
-      children: tiles,
+    return LayoutBuilder(
+      builder: (context, constraints) => GridView(
+        // A fixed main-axis extent rather than an aspect ratio: the tile's
+        // content is a fixed height, so tying it to the column width made the
+        // tiles squash or stretch every time the column count changed.
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columnsFor(constraints.maxWidth),
+          crossAxisSpacing: _spacing,
+          mainAxisSpacing: _spacing,
+          mainAxisExtent: _rowHeight,
+        ),
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        children: tiles,
+      ),
     );
   }
 }

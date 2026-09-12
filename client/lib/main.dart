@@ -1,12 +1,19 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:marionette_flutter/marionette_flutter.dart';
 import 'package:time_keeper/app.dart';
+import 'package:time_keeper/helpers/debug_window.dart';
 import 'package:time_keeper/helpers/local_storage.dart';
 import 'package:time_keeper/utils/logger.dart';
 
 void main() async {
-  // Ensure flutter binding is initialized
-  WidgetsFlutterBinding.ensureInitialized();
+  if (kDebugMode) {
+    MarionetteBinding.ensureInitialized();
+    registerDebugWindowExtension();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
 
   TkLogger().i('Starting TK Client...');
 

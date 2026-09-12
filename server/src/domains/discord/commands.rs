@@ -1,10 +1,11 @@
 use chrono::Utc;
-use serenity::all::{Context, Message};
+use serenity::all::{Context, CreateEmbed, CreateMessage, Message};
 
 use crate::domains::team_member::TeamMember;
 use crate::time::{format_datetime, parse_tz};
 
 use super::deps::DiscordDeps;
+use super::embeds;
 
 const PREFIX: &str = "!";
 
@@ -22,8 +23,8 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
   let args = parts.get(1).unwrap_or(&"").trim();
 
   let response = match cmd.as_str() {
-    "ping" => Some("Pong!".to_string()),
-    "help" => Some(help()),
+    "ping" => Some(embeds::success("Pong!", "The bot is alive.")),
+    "help" => Some(embeds::help()),
     "leaderboard" => Some(leaderboard(args, deps).await),
     "sessions" => Some(sessions(deps).await),
     "checkedin" => Some(checked_in(deps).await),
@@ -33,26 +34,11 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
     _ => None,
   };
 
-  if let Some(text) = response
-    && let Err(e) = msg.channel_id.say(&ctx.http, &text).await
+  if let Some(embed) = response
+    && let Err(e) = msg.channel_id.send_message(&ctx.http, CreateMessage::new().embed(embed)).await
   {
     log::error!("Failed to send Discord message: {e}");
   }
-}
-
-fn help() -> String {
-  [
-    "**TimeKeeper Bot Commands**",
-    "`!ping` - Check if the bot is alive",
-    "`!leaderboard` - Show the hours leaderboard, use `!leaderboard help` for options",
-    "`!sessions` - Show active and upcoming sessions",
-    "`!checkedin` - Show who is currently checked in",
-    "`!locations` - List all locations",
-    "`!link Name` - Link your Discord account to a team member",
-    "`!checkout` - Check yourself out of the current session",
-    "`!help` - Show this help message",
-  ]
-  .join("\n")
 }
 
 fn format_secs(secs: f64) -> String {
@@ -63,69 +49,56 @@ fn format_secs(secs: f64) -> String {
   format!("{hours}h {mins}m")
 }
 
-async fn leaderboard(args: &str, deps: &DiscordDeps) -> String {
+async fn leaderboard(args: &str, deps: &DiscordDeps) -> CreateEmbed {
   let arg = args.trim();
 
   if arg.eq_ignore_ascii_case("help") {
-    return [
-      "**Leaderboard Options**",
-      "`!leaderboard` — Show leaderboard (default filter from settings)",
-      "`!leaderboard students` — Show only students",
-      "`!leaderboard mentors` — Show only mentors",
-    ]
-    .join("\n");
+    return embeds::leaderboard_help();
   }
 
-  let member_type_filter = match arg {
-    "" => None,
-    a if a.eq_ignore_ascii_case("students") || a.eq_ignore_ascii_case("student") => Some("student"),
-    a if a.eq_ignore_ascii_case("mentors") || a.eq_ignore_ascii_case("mentor") => Some("mentor"),
-    other => return format!("Unknown filter \"{other}\". Use `!leaderboard help` for options."),
+  let (member_type_filter, subtitle) = match arg {
+    "" => (None, "All members"),
+    a if a.eq_ignore_ascii_case("students") || a.eq_ignore_ascii_case("student") => (Some("student"), "Students"),
+    a if a.eq_ignore_ascii_case("mentors") || a.eq_ignore_ascii_case("mentor") => (Some("mentor"), "Mentors"),
+    other => {
+      return embeds::warning(
+        "Unknown filter",
+        &format!("`{other}` is not a leaderboard filter. Try `!leaderboard help`."),
+      );
+    }
   };
 
   let entries = match deps.statistics.get_leaderboard().await {
     Ok(e) => e,
-    Err(e) => return format!("Error computing leaderboard: {e}"),
+    Err(e) => return embeds::error(&format!("Error computing leaderboard: {e}")),
   };
 
-  let entries: Vec<_> =
-    entries.into_iter().filter(|e| member_type_filter.is_none_or(|t| e.team_member.member_type == t)).collect();
+  let rows: Vec<embeds::LeaderboardRow> = entries
+    .into_iter()
+    .filter(|e| member_type_filter.is_none_or(|t| e.team_member.member_type == t))
+    .take(15)
+    .map(|entry| embeds::LeaderboardRow {
+      name: member_name(&entry.team_member).to_string(),
+      all_time: format_secs(entry.all_time.regular_secs + entry.all_time.overtime_secs),
+      this_week: format_secs(entry.this_week.regular_secs + entry.this_week.overtime_secs),
+    })
+    .collect();
 
-  if entries.is_empty() {
-    return "No attendance data yet.".to_string();
+  if rows.is_empty() {
+    return embeds::info("Leaderboard", "No attendance data yet.");
   }
 
-  let mut lines = vec!["**Leaderboard**".to_string()];
-  for (i, entry) in entries.iter().enumerate().take(15) {
-    let name = member_name(&entry.team_member);
-    let all_time = entry.all_time.regular_secs + entry.all_time.overtime_secs;
-    let this_week = entry.this_week.regular_secs + entry.this_week.overtime_secs;
-
-    let medal = match i {
-      0 => "🥇 ",
-      1 => "🥈 ",
-      2 => "🥉 ",
-      _ => "",
-    };
-    lines.push(format!(
-      "{medal}**{}.** {name} - {} (this week: {})",
-      i + 1,
-      format_secs(all_time),
-      format_secs(this_week)
-    ));
-  }
-
-  lines.join("\n")
+  embeds::leaderboard(&rows, subtitle)
 }
 
-async fn sessions(deps: &DiscordDeps) -> String {
+async fn sessions(deps: &DiscordDeps) -> CreateEmbed {
   let sessions = match deps.sessions.get_all().await {
     Ok(s) => s,
-    Err(e) => return format!("Error loading sessions: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading sessions: {e}")),
   };
   let locations = match deps.locations.get_all().await {
     Ok(l) => l,
-    Err(e) => return format!("Error loading locations: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading locations: {e}")),
   };
 
   let now_secs = Utc::now().timestamp();
@@ -146,46 +119,39 @@ async fn sessions(deps: &DiscordDeps) -> String {
   }
 
   if active.is_empty() && upcoming.is_empty() {
-    return "No active or upcoming sessions.".to_string();
+    return embeds::info("Sessions", "No active or upcoming sessions.");
   }
 
-  let mut lines = Vec::new();
+  upcoming.sort_by_key(|(start, _, _)| *start);
 
-  if !active.is_empty() {
-    lines.push("**Active Sessions**".to_string());
-    for (start, end, loc) in &active {
-      lines.push(format!("<t:{start}:F> – <t:{end}:t> @ **{loc}**"));
-    }
-  }
+  let row = |(start, end, loc): &(i64, i64, String)| embeds::SessionRow {
+    location: loc.clone(),
+    when: format!("<t:{start}:F> \u{2013} <t:{end}:t>"),
+  };
 
-  if !upcoming.is_empty() {
-    upcoming.sort_by_key(|(start, _, _)| *start);
-    lines.push("**Upcoming Sessions**".to_string());
-    for (start, end, loc) in upcoming.iter().take(5) {
-      lines.push(format!("<t:{start}:F> – <t:{end}:t> @ **{loc}**"));
-    }
-  }
+  let active_rows: Vec<_> = active.iter().map(row).collect();
+  let upcoming_rows: Vec<_> = upcoming.iter().take(5).map(row).collect();
 
-  lines.join("\n")
+  embeds::sessions(&active_rows, &upcoming_rows)
 }
 
-async fn checked_in(deps: &DiscordDeps) -> String {
+async fn checked_in(deps: &DiscordDeps) -> CreateEmbed {
   let sessions = match deps.sessions.get_all().await {
     Ok(s) => s,
-    Err(e) => return format!("Error loading sessions: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading sessions: {e}")),
   };
   let members = match deps.team_members.get_all().await {
     Ok(m) => m,
-    Err(e) => return format!("Error loading team members: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading team members: {e}")),
   };
   let member_sessions = match deps.team_member_sessions.get_all().await {
     Ok(ms) => ms,
-    Err(e) => return format!("Error loading attendance: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading attendance: {e}")),
   };
 
   let active_session_ids: Vec<_> = sessions.iter().filter(|s| !s.finished).map(|s| s.id).collect();
   if active_session_ids.is_empty() {
-    return "No active session right now.".to_string();
+    return embeds::info("Checked in", "No active session right now.");
   }
 
   let mut checked_in_names: Vec<String> = Vec::new();
@@ -199,50 +165,42 @@ async fn checked_in(deps: &DiscordDeps) -> String {
   }
 
   if checked_in_names.is_empty() {
-    return "No one is currently checked in.".to_string();
+    return embeds::info("Checked in", "No one is currently checked in.");
   }
 
   checked_in_names.sort();
-  let mut lines = vec![format!("**Currently Checked In ({}):**", checked_in_names.len())];
-  for name in &checked_in_names {
-    lines.push(format!("- {name}"));
-  }
-  lines.join("\n")
+  embeds::checked_in(&checked_in_names)
 }
 
-async fn locations(deps: &DiscordDeps) -> String {
+async fn locations(deps: &DiscordDeps) -> CreateEmbed {
   let locations = match deps.locations.get_all().await {
     Ok(l) => l,
-    Err(e) => return format!("Error loading locations: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading locations: {e}")),
   };
 
   if locations.is_empty() {
-    return "No locations configured.".to_string();
+    return embeds::info("Locations", "No locations configured.");
   }
 
-  let mut names: Vec<_> = locations.iter().map(|l| l.location.as_str()).collect();
+  let mut names: Vec<String> = locations.iter().map(|l| l.location.clone()).collect();
   names.sort_unstable();
 
-  let mut lines = vec!["**Locations**".to_string()];
-  for name in names {
-    lines.push(format!("- {name}"));
-  }
-  lines.join("\n")
+  embeds::locations(&names)
 }
 
-async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> String {
+async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> CreateEmbed {
   let settings = match deps.settings.get().await {
     Ok(s) => s,
-    Err(e) => return format!("Error loading settings: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading settings: {e}")),
   };
 
   if !settings.discord_self_link_enabled {
-    return "Self-linking is not enabled. Ask an admin to enable it in settings.".to_string();
+    return embeds::warning("Self-linking is off", "Ask an admin to enable it in settings.");
   }
 
   let search_text = args.trim();
   if search_text.is_empty() {
-    return "Usage: `!link Name` (e.g. `!link John Smith` or `!link DisplayName`)".to_string();
+    return embeds::info("Link your account", "Usage: `!link Name` — for example `!link John Smith`.");
   }
 
   let discord_id = msg.author.id.to_string();
@@ -266,13 +224,13 @@ async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> String {
   }
 
   let Some(member) = found else {
-    return format!("No team member found matching \"{search_text}\".");
+    return embeds::warning("No match", &format!("No team member found matching `{search_text}`."));
   };
 
   let name = member_name(&member).to_string();
 
   if member.discord_id.as_ref().is_some_and(|id| !id.is_empty()) {
-    return format!("{name} is already linked to a Discord account.");
+    return embeds::warning("Already linked", &format!("**{name}** is already linked to a Discord account."));
   }
 
   if let Err(e) = deps
@@ -289,56 +247,59 @@ async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> String {
     )
     .await
   {
-    return format!("Error linking account: {e}");
+    return embeds::error(&format!("Error linking account: {e}"));
   }
 
   // Store the ID, but show the humans a name they recognise.
-  format!("Linked **{name}** to Discord user **{}**.", msg.author.name)
+  embeds::success("Account linked", &format!("**{name}** is now linked to **{}**.", msg.author.name))
 }
 
-async fn checkout(msg: &Message, deps: &DiscordDeps) -> String {
+async fn checkout(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   let settings = match deps.settings.get().await {
     Ok(s) => s,
-    Err(e) => return format!("Error loading settings: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading settings: {e}")),
   };
 
   let tz = parse_tz(&settings.timezone);
 
   if !settings.discord_checkout_enabled {
-    return "Discord checkout is not enabled. Contact an admin to enable it in settings.".to_string();
+    return embeds::warning("Checkout is off", "Contact an admin to enable Discord checkout in settings.");
   }
 
   // Indexed lookup on the snowflake, rather than scanning every member.
   let found = match deps.team_members.get_by_discord_id(&msg.author.id.to_string()).await {
     Ok(m) => m,
-    Err(e) => return format!("Error loading team members: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading team members: {e}")),
   };
 
   let Some(member) = found else {
-    return if settings.discord_self_link_enabled {
-      "Your Discord account is not linked to a team member. Use `!link Name` to link it.".to_string()
-    } else {
-      "Your Discord account is not linked to a team member. Contact an admin to link your account.".to_string()
-    };
+    return embeds::warning(
+      "Not linked",
+      if settings.discord_self_link_enabled {
+        "Your Discord account is not linked to a team member. Use `!link Name` to link it."
+      } else {
+        "Your Discord account is not linked to a team member. Ask an admin to link it."
+      },
+    );
   };
 
   let name = member_name(&member).to_string();
 
   let member_sessions = match deps.team_member_sessions.get_by_member_id(member.id).await {
     Ok(ms) => ms,
-    Err(e) => return format!("Error loading attendance: {e}"),
+    Err(e) => return embeds::error(&format!("Error loading attendance: {e}")),
   };
 
   let active = member_sessions.into_iter().find(|ms| ms.check_out_time.is_none());
 
   let Some(ms) = active else {
-    return format!("{name} is not currently checked in.");
+    return embeds::warning("Not checked in", &format!("**{name}** is not currently checked in."));
   };
 
   let session = match deps.sessions.get(ms.session_id).await {
     Ok(Some(s)) => s,
-    Ok(None) => return "Error: session not found.".to_string(),
-    Err(e) => return format!("Error loading session: {e}"),
+    Ok(None) => return embeds::error("Session not found."),
+    Err(e) => return embeds::error(&format!("Error loading session: {e}")),
   };
 
   let now = Utc::now();
@@ -349,15 +310,21 @@ async fn checkout(msg: &Message, deps: &DiscordDeps) -> String {
     .update(ms.id, ms.team_member_id, ms.session_id, ms.check_in_time, Some(checkout_time))
     .await
   {
-    return format!("Error checking out: {e}");
+    return embeds::error(&format!("Error checking out: {e}"));
   }
 
   if late {
-    format!(
-      "Checked out **{name}** at session end time ({}) since the session has already ended.",
-      format_datetime(session.end_time.timestamp(), tz)
+    embeds::success(
+      "Checked out",
+      &format!(
+        "**{name}** was checked out at the session's end time ({}), since the session had already ended.",
+        format_datetime(session.end_time.timestamp(), tz)
+      ),
     )
   } else {
-    format!("Checked out **{name}** at {}.", format_datetime(checkout_time.timestamp(), tz))
+    embeds::success(
+      "Checked out",
+      &format!("**{name}** was checked out at {}.", format_datetime(checkout_time.timestamp(), tz)),
+    )
   }
 }

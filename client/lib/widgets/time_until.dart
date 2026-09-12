@@ -24,6 +24,8 @@ class TimeUntil extends ConsumerWidget {
   final String? negativeLeader;
   final DateTime time;
   final bool timeOfDayOnly;
+  final int? maxLines;
+  final TextOverflow? overflow;
 
   const TimeUntil({
     super.key,
@@ -33,6 +35,8 @@ class TimeUntil extends ConsumerWidget {
     this.negativeStyle,
     this.negativeLeader = '-',
     this.timeOfDayOnly = false,
+    this.maxLines,
+    this.overflow,
   });
 
   int _calculateDifference(DateTime now) {
@@ -59,6 +63,8 @@ class TimeUntil extends ConsumerWidget {
     return Text(
       isNegative ? '$negativeLeader$timeString' : '$positiveLeader$timeString',
       style: isNegative ? negativeStyle : positiveStyle,
+      maxLines: maxLines,
+      overflow: overflow,
     );
   }
 }
