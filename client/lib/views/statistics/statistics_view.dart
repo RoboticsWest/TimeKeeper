@@ -26,9 +26,8 @@ import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 class StatisticsView extends HookConsumerWidget {
   const StatisticsView({super.key});
 
-  /// Layout breakpoints.
+  /// Above this the charts pair up two to a row; below it they stack.
   static const double _wide = 1280;
-  static const double _medium = 900;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -169,21 +168,19 @@ class StatisticsView extends HookConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final isWide = width >= _wide;
-        final isNarrow = width < _medium;
+        final isWide = constraints.maxWidth >= _wide;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(height: 44, child: StatsToolbar(query: query, onExport: exportCsv)),
+              // Both of these size themselves — the toolbar wraps to a second
+              // line when it runs out of room and the strip's height follows
+              // its column count, so neither can be pinned to a fixed height.
+              StatsToolbar(query: query, onExport: exportCsv),
               const SizedBox(height: 8),
-              SizedBox(
-                height: isNarrow ? 4 * 46 : 72,
-                child: KpiStrip(kpis: kpis, previous: previous, compact: isNarrow),
-              ),
+              KpiStrip(kpis: kpis, previous: previous),
               const SizedBox(height: 8),
               if (isWide)
                 SizedBox(

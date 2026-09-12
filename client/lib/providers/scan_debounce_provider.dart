@@ -14,6 +14,6 @@ class ScanDebounceMins extends _$ScanDebounceMins {
 
   @override
   int build() {
-    return localStorage.getInt(_key) ?? 0;
+    return localStorage.getInt(_key) ?? 5;
   }
 }

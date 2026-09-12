@@ -91,55 +91,66 @@ class TeamView extends HookConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Team Members', style: theme.textTheme.headlineMedium),
-              const Spacer(),
-              _ClearButton(
-                label: 'Clear Students',
-                icon: Icons.school,
-                color: supportWarningColor.shade700,
-                onPressed: () => _showClearDialog(
-                  context,
-                  ref,
-                  title: 'Clear Students',
-                  description: 'all students',
-                  ids: teamMembers.entries
-                      .where(
-                        (e) => e.value.memberType == TeamMemberType.student,
-                      )
-                      .map((e) => e.key)
-                      .toList(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _ClearButton(
-                label: 'Clear Mentors',
-                icon: Icons.person,
-                color: supportWarningColor.shade700,
-                onPressed: () => _showClearDialog(
-                  context,
-                  ref,
-                  title: 'Clear Mentors',
-                  description: 'all mentors',
-                  ids: teamMembers.entries
-                      .where((e) => e.value.memberType == TeamMemberType.mentor)
-                      .map((e) => e.key)
-                      .toList(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _ClearButton(
-                label: 'Clear All',
-                icon: Icons.delete_sweep,
-                color: theme.colorScheme.error,
-                onPressed: () => _showClearDialog(
-                  context,
-                  ref,
-                  title: 'Clear All Members',
-                  description: 'all team members',
-                  ids: teamMembers.keys.toList(),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ClearButton(
+                    label: 'Clear Students',
+                    icon: Icons.school,
+                    color: supportWarningColor.shade700,
+                    onPressed: () => _showClearDialog(
+                      context,
+                      ref,
+                      title: 'Clear Students',
+                      description: 'all students',
+                      ids: teamMembers.entries
+                          .where(
+                            (e) =>
+                                e.value.memberType == TeamMemberType.student,
+                          )
+                          .map((e) => e.key)
+                          .toList(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _ClearButton(
+                    label: 'Clear Mentors',
+                    icon: Icons.person,
+                    color: supportWarningColor.shade700,
+                    onPressed: () => _showClearDialog(
+                      context,
+                      ref,
+                      title: 'Clear Mentors',
+                      description: 'all mentors',
+                      ids: teamMembers.entries
+                          .where(
+                            (e) => e.value.memberType == TeamMemberType.mentor,
+                          )
+                          .map((e) => e.key)
+                          .toList(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _ClearButton(
+                    label: 'Clear All',
+                    icon: Icons.delete_sweep,
+                    color: theme.colorScheme.error,
+                    onPressed: () => _showClearDialog(
+                      context,
+                      ref,
+                      title: 'Clear All Members',
+                      description: 'all team members',
+                      ids: teamMembers.keys.toList(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

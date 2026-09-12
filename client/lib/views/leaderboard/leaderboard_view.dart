@@ -33,11 +33,11 @@ class _LeaderboardTable extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final evenColor = isDark
-        ? Colors.white.withValues(alpha: 0.03)
-        : Colors.black.withValues(alpha: 0.02);
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.03)
+        : theme.colorScheme.onSurface.withValues(alpha: 0.02);
     final oddColor = isDark
-        ? Colors.white.withValues(alpha: 0.07)
-        : Colors.black.withValues(alpha: 0.05);
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.07)
+        : theme.colorScheme.onSurface.withValues(alpha: 0.05);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 25),
@@ -66,7 +66,7 @@ class _LeaderboardTable extends StatelessWidget {
           const SizedBox(height: 16),
           Container(
             decoration: tableHeaderDecoration(context),
-            child: const Row(
+            child: Row(
               children: [
                 SizedBox(width: 40, child: Center(child: _HeaderText('#'))),
                 Expanded(flex: 3, child: _HeaderText('Member')),
@@ -117,9 +117,9 @@ class _HeaderText extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         child: Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ),
@@ -185,18 +185,21 @@ class _HoursCell extends StatelessWidget {
     }
 
     return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(formatSecsAsHoursMinutes(bucket.regularSecs)),
-          if (bucket.overtimeSecs > 0) ...[
-            const SizedBox(width: 4),
-            Text(
-              '+${formatSecsAsHoursMinutes(bucket.overtimeSecs)}',
-              style: TextStyle(color: supportErrorColor.shade400, fontSize: 12),
-            ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(formatSecsAsHoursMinutes(bucket.regularSecs)),
+            if (bucket.overtimeSecs > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                '+${formatSecsAsHoursMinutes(bucket.overtimeSecs)}',
+                style: TextStyle(color: supportErrorColor.shade400, fontSize: 12),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

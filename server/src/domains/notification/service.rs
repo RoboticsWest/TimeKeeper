@@ -2,9 +2,10 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use chrono::{FixedOffset, Utc};
-use serenity::all::{ChannelId, GuildId, Member as GuildMember, MessageId, ReactionType};
+use serenity::all::{ChannelId, CreateEmbed, CreateMessage, GuildId, Member as GuildMember, MessageId, ReactionType};
 use serenity::http::Http;
 
+use crate::domains::discord::embeds;
 use crate::domains::location::LocationLogic;
 use crate::domains::session::SessionLogic;
 use crate::domains::session_rsvp::SessionRsvpMessageLogic;
@@ -87,8 +88,15 @@ impl DiscordNotificationService {
     Some(format!("<@{discord_id}>"))
   }
 
-  async fn send_member_notification(http: &Http, channel: ChannelId, message: &str) -> bool {
-    match channel.say(http, message).await {
+  /// Sends an operator-authored message with a structured embed beside it.
+  ///
+  /// The template stays in the message *content* on purpose: it is where the
+  /// `@here` and `<@id>` mentions live, and Discord only fires a notification
+  /// for a mention in the content — one inside an embed renders as a link but
+  /// pings nobody. The embed adds the session facts and the brand colour
+  /// without taking the ping away.
+  async fn send_with_facts(http: &Http, channel: ChannelId, message: &str, facts: CreateEmbed) -> bool {
+    match channel.send_message(http, CreateMessage::new().content(message).embed(facts)).await {
       Ok(_) => true,
       Err(e) => {
         log::error!("[DiscordNotificationService] Failed to send notification: {e}");
@@ -201,8 +209,13 @@ impl Service for DiscordNotificationService {
           {
             let mins = time_until_start / 60;
             let msg = Self::replace_placeholders(start_msg_template, location, start_secs, end_secs, tz, Some(mins));
+            let facts =
+              embeds::session_facts("Session starting soon", embeds::SUPPORT_INFO, location, start_secs, end_secs);
 
-            match announcement_channel.say(&http, &msg).await {
+            match announcement_channel
+              .send_message(&http, CreateMessage::new().content(&msg).embed(facts))
+              .await
+            {
               Ok(sent_msg) => {
                 let discord_message_id = sent_msg.id.to_string();
 
@@ -234,8 +247,13 @@ impl Service for DiscordNotificationService {
           {
             let mins = time_until_end / 60;
             let msg = Self::replace_placeholders(end_msg_template, location, start_secs, end_secs, tz, Some(mins));
+            let facts =
+              embeds::session_facts("Session ending soon", embeds::SUPPORT_WARNING, location, start_secs, end_secs);
 
-            match announcement_channel.say(&http, &msg).await {
+            match announcement_channel
+              .send_message(&http, CreateMessage::new().content(&msg).embed(facts))
+              .await
+            {
               Ok(sent_msg) => {
                 self
                   .notifications
@@ -348,7 +366,16 @@ impl Service for DiscordNotificationService {
               .replace("{username}", &mention)
               .replace("{name}", member_name);
 
-            if Self::send_member_notification(&http, notification_channel, &msg).await
+            let facts = embeds::session_facts(
+              "In overtime",
+              embeds::SUPPORT_WARNING,
+              location,
+              pes.start_secs,
+              pes.end_secs,
+            )
+            .field("Member", member_name, true);
+
+            if Self::send_with_facts(&http, notification_channel, &msg, facts).await
               && let Err(e) =
                 self.notifications.add("overtime", pes.session_id, Some(ms.team_member_id), true, None).await
             {
@@ -387,7 +414,11 @@ impl Service for DiscordNotificationService {
             .replace("{username}", &mention)
             .replace("{name}", member_name);
 
-          if Self::send_member_notification(&http, notification_channel, &msg).await
+          let facts =
+            embeds::session_facts("Auto checked out", embeds::SUPPORT_INFO, location, start_secs, end_secs)
+              .field("Member", member_name, true);
+
+          if Self::send_with_facts(&http, notification_channel, &msg, facts).await
             && let Err(e) = self
               .notifications
               .update(
