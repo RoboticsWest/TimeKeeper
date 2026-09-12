@@ -5,8 +5,8 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.100"
-diesel = { version = "2", default-features = false, features = ["postgres", "uuid", "chrono", "32-column-tables"] }
-diesel-async = { version = "0.5", features = ["postgres", "bb8"] }
+diesel = { version = "2", default-features = false, features = ["postgres_backend", "uuid", "chrono", "32-column-tables"] }
+diesel-async = { version = "0.5", features = ["postgres", "bb8", "async-connection-wrapper"] }
 diesel_migrations = "2"
 uuid = { version = "1.19.0", features = ["v7"] }
 
@@ -14,17 +14,5 @@ uuid = { version = "1.19.0", features = ["v7"] }
 # pull it in ourselves so feature unification covers the gap.
 futures-util = { version = "0.3", features = ["async-await", "async-await-macro"] }
 
-# Only `diesel::PgConnection` (used solely to run migrations at startup, via diesel_migrations —
-# every other query goes through diesel-async's pure-Rust tokio-postgres backend) links libpq at
-# all, and only pulls it in dynamically by default. The `static-pq` feature switches that one
-# link to a vendored, statically-linked libpq build instead, for targets (e.g. musl, mingw-w64)
-# that can't rely on a system libpq being present.
-#
-# `bundled_without_openssl` rather than `bundled`: the latter drags in openssl-sys, which needs a
-# target-appropriate OpenSSL that cross-compile hosts don't have. Nothing is lost — the async
-# pool connects through tokio-postgres with no TLS connector configured, so SSL connections to
-# Postgres aren't supported on any path regardless.
-pq-sys = { version = "0.7", optional = true }
-
-[features]
-static-pq = ["dep:pq-sys", "pq-sys/bundled_without_openssl"]
+# Needed only for `spawn_blocking` in `migrate`.
+tokio = { version = "1", features = ["rt"] }

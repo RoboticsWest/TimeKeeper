@@ -7,7 +7,6 @@ use axum::{
   http::{HeaderValue, Request, header},
   middleware::{self, Next},
   response::Response,
-  routing::get,
 };
 use tokio_util::sync::CancellationToken;
 use tower::ServiceBuilder;
@@ -15,6 +14,8 @@ use tower_http::{
   cors::{Any, CorsLayer},
   services::{ServeDir, ServeFile},
 };
+
+use crate::schema::AppSchema;
 
 async fn set_wasm_headers(req: Request<Body>, next: Next) -> Response {
   let is_wasm = std::path::Path::new(req.uri().path()).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("wasm"));
@@ -39,11 +40,12 @@ async fn set_wasm_headers(req: Request<Body>, next: Next) -> Response {
 pub struct Web {
   addr: SocketAddr,
   static_dir: String,
+  schema: AppSchema,
 }
 
 impl Web {
-  pub fn new(addr: SocketAddr, static_dir: String) -> Self {
-    Self { addr, static_dir }
+  pub fn new(addr: SocketAddr, static_dir: String, schema: AppSchema) -> Self {
+    Self { addr, static_dir, schema }
   }
 
   pub async fn serve(&self, cancel: CancellationToken) -> Result<()> {
@@ -51,7 +53,9 @@ impl Web {
 
     // Create router with static file serving
     let app = Router::new()
-      .route("/health", get(|| async { "OK" }))
+      // The API answers on this port too, so a browser served the app from here reaches
+      // `/graphql`, `/graphql/ws` and `/health` same-origin without any configuration.
+      .merge(crate::api::routes(self.schema.clone()))
       // Static file serving as fallback
       .fallback_service(
         ServiceBuilder::new().layer(cors).service(

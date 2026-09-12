@@ -77,6 +77,19 @@ class BaseAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
     return AppBar(
       backgroundColor: isConnected ? null : supportErrorColor,
+      // The disconnected state is always the error banner: red background,
+      // white ink — never the theme's onSurface, which is black in dark mode.
+      foregroundColor: isConnected ? null : Colors.white,
+      titleTextStyle: isConnected
+          ? null
+          : const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+      iconTheme: isConnected
+          ? null
+          : const IconThemeData(color: Colors.white, size: 20),
       leadingWidth: 120,
       leading: _leading(context),
       title: _title(isConnected, ref),

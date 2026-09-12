@@ -1,6 +1,5 @@
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/helpers/collection_storage.dart';
 import 'package:time_keeper/helpers/local_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/location.dart';
@@ -50,13 +49,10 @@ Stream<ChangeEvent<Location>> locationChanges(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class Locations extends _$Locations {
-  late final CollectionStorage<Location> _storage;
-
   @override
   Map<String, Location> build() {
-    _storage = CollectionStorage(tableName: 'locations', fromJson: Location.fromJson, toJson: (l) => l.toJson());
     _fetchInitial();
-    return _storage.getAll();
+    return {};
   }
 
   Future<void> _fetchInitial() async {
@@ -69,11 +65,13 @@ class Locations extends _$Locations {
     final items = (result.data!['locations'] as List<dynamic>)
         .map((e) => Location.fromJson(e as Map<String, dynamic>))
         .toList();
-    state = _storage.seedFromList(items, (l) => l.id);
+    state = {for (final item in items) item.id: item};
   }
 
+  Future<void> refresh() => _fetchInitial();
+
   void applyChange(ChangeEvent<Location> change) {
-    state = _storage.applyChange(change, state);
+    state = applyChangeToMap(state, change);
   }
 
   Future<ApiCallResult> create(String location) => _mutate(_createLocationMutation, {'location': location});
@@ -100,7 +98,7 @@ class Locations extends _$Locations {
 
 /// Bridges [locationChangesProvider] to [locationsProvider]. Views watch this to activate the
 /// live-update subscription.
-@riverpod
+@Riverpod(keepAlive: true)
 void locationsSync(Ref ref) {
   ref.listen(locationChangesProvider, (previous, next) {
     next.whenData((change) {

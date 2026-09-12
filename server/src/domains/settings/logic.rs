@@ -325,6 +325,8 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
     let guild_id: u64 = settings.discord_guild_id.parse().map_err(|_| anyhow::anyhow!("Invalid server ID"))?;
     let role_id: u64 = role_id.parse().map_err(|_| anyhow::anyhow!("Invalid role ID"))?;
 
+    log::info!("Discord member import: role_id={role_id} member_type={member_type}");
+
     let http = Http::new(&settings.discord_bot_token);
     let guild = serenity::all::GuildId::new(guild_id);
     let target_role = serenity::all::RoleId::new(role_id);
@@ -335,6 +337,12 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
       .map_err(|e| anyhow::anyhow!("Failed to fetch Discord members: {e}"))?;
 
     let existing_members: Vec<TeamMember> = self.team_members.get_all().await?;
+
+    log::info!(
+      "Discord member import: fetched {} guild members, {} existing team members",
+      guild_members.len(),
+      existing_members.len()
+    );
 
     let mut imported = 0;
     let mut linked = 0;
@@ -349,7 +357,11 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
       let discord_id = guild_member.user.id.to_string();
 
       let existing = existing_members.iter().find(|m| m.discord_id.as_deref() == Some(discord_id.as_str()));
-      if existing.is_some() {
+      if let Some(existing) = existing {
+        log::debug!(
+          "Discord member import: '{display_name}' (discord={discord_id}) already linked to member {}, skipping",
+          existing.id
+        );
         already_linked += 1;
         continue;
       }
@@ -376,11 +388,23 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
           )
           .await?;
         linked += 1;
+        log::info!(
+          "Discord member import: linked '{display_name}' (discord={discord_id}) to existing member {} ({})",
+          member.id,
+          member.member_type
+        );
       } else {
-        self.team_members.add("", "", member_type, Some(&display_name), None, Some(&discord_id), None).await?;
+        let member =
+          self.team_members.add("", "", member_type, Some(&display_name), None, Some(&discord_id), None).await?;
         imported += 1;
+        log::info!(
+          "Discord member import: imported new {member_type} '{display_name}' (discord={discord_id}) as member {}",
+          member.id
+        );
       }
     }
+
+    log::info!("Discord member import: complete imported={imported} linked={linked} already_linked={already_linked}");
 
     Ok(ImportDiscordMembersResult { imported, linked, already_linked })
   }

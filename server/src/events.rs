@@ -47,6 +47,7 @@ impl EventBus {
   }
 
   fn publish(&self, table: &str, change: TableChange) {
+    log::debug!("Change event: table={table} op={:?} id={}", change.operation, change.id);
     if let Some(sender) = self.channels.get(table) {
       let _ = sender.send(change);
     }

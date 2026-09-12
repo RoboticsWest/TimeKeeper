@@ -83,7 +83,7 @@ final class NotificationsProvider
   }
 }
 
-String _$notificationsHash() => r'ec9c59e39dfdf674498601064174d76c83280a65';
+String _$notificationsHash() => r'ac2d971f8bc1eb177a0ab5012d0762ad3ba5732b';
 
 abstract class _$Notifications extends $Notifier<Map<String, Notification>> {
   Map<String, Notification> build();
@@ -116,7 +116,7 @@ final class NotificationsSyncProvider
         argument: null,
         retry: null,
         name: r'notificationsSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -143,4 +143,4 @@ final class NotificationsSyncProvider
   }
 }
 
-String _$notificationsSyncHash() => r'e8083e412db7c8e13ab8736732452ea0330831c3';
+String _$notificationsSyncHash() => r'04feb325d012d16b44e6e733241774c9f6987f47';

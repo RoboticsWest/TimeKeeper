@@ -77,14 +77,7 @@ impl Api {
   }
 
   pub async fn serve(&self, cancel: CancellationToken) -> Result<()> {
-    let cors = CorsLayer::new().allow_origin(Any).allow_headers(Any).allow_methods(Any).expose_headers(Any);
-
-    let app = Router::new()
-      .route("/graphql", get(graphiql).post(graphql_handler))
-      .route("/graphql/ws", get(graphql_ws_handler))
-      .route("/health", get(|| async { "OK" }))
-      .layer(cors)
-      .with_state(self.schema.clone());
+    let app = routes(self.schema.clone());
 
     let listener = tokio::net::TcpListener::bind(self.addr).await?;
     log::info!("API server listening on http://{}", self.addr);
@@ -92,6 +85,23 @@ impl Api {
     axum::serve(listener, app).with_graceful_shutdown(async move { cancel.cancelled().await }).await?;
     Ok(())
   }
+}
+
+/// The API's routes: `/graphql`, `/graphql/ws` and `/health`.
+///
+/// Shared with the built-in web server (`web.rs`), which mounts these alongside the static
+/// Flutter build so the all-in-one binary answers API calls on its web port too. That keeps
+/// the web client same-origin in every deployment, which is what lets it derive the API
+/// address from the page it was served from instead of being configured.
+pub fn routes(schema: AppSchema) -> Router {
+  let cors = CorsLayer::new().allow_origin(Any).allow_headers(Any).allow_methods(Any).expose_headers(Any);
+
+  Router::new()
+    .route("/graphql", get(graphiql).post(graphql_handler))
+    .route("/graphql/ws", get(graphql_ws_handler))
+    .route("/health", get(|| async { "OK" }))
+    .layer(cors)
+    .with_state(schema)
 }
 
 async fn graphiql() -> impl IntoResponse {

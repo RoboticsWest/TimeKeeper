@@ -24,7 +24,7 @@ class BaseScaffold extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasPermission = ref.watch(hasAnyPermissionProvider);
+    final hasPermission = ref.watch(isAdminProvider);
     // Owned here rather than in BaseRail so the click-away barrier below can
     // collapse the rail too.
     final isExtended = useState(false);

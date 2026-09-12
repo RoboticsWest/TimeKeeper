@@ -1,6 +1,5 @@
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/helpers/collection_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
@@ -63,13 +62,10 @@ Stream<ChangeEvent<Session>> sessionChanges(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class Sessions extends _$Sessions {
-  late final CollectionStorage<Session> _storage;
-
   @override
   Map<String, Session> build() {
-    _storage = CollectionStorage(tableName: 'sessions', fromJson: Session.fromJson, toJson: (s) => s.toJson());
     _fetchInitial();
-    return _storage.getAll();
+    return {};
   }
 
   Future<void> _fetchInitial() async {
@@ -78,11 +74,15 @@ class Sessions extends _$Sessions {
     if (result.hasException || result.data == null) return;
 
     final items = (result.data!['sessions'] as List<dynamic>).map((e) => Session.fromJson(e as Map<String, dynamic>)).toList();
-    state = _storage.seedFromList(items, (s) => s.id);
+    state = {for (final item in items) item.id: item};
   }
 
+  /// Re-fetches the full list. Subscriptions only apply delta events, so a re-fetch heals any
+  /// change that happened while the connection was down.
+  Future<void> refresh() => _fetchInitial();
+
   void applyChange(ChangeEvent<Session> change) {
-    state = _storage.applyChange(change, state);
+    state = applyChangeToMap(state, change);
   }
 
   Future<ApiCallResult> create(DateTime startTime, DateTime endTime, String locationId) => _mutate(_createSessionMutation, {
@@ -117,7 +117,7 @@ class Sessions extends _$Sessions {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 void sessionsSync(Ref ref) {
   ref.listen(sessionChangesProvider, (previous, next) {
     next.whenData((change) {

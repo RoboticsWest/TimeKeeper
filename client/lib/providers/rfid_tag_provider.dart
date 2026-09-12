@@ -1,6 +1,5 @@
 import 'package:graphql/client.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:time_keeper/helpers/collection_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/rfid_tag.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
@@ -51,13 +50,10 @@ Stream<ChangeEvent<RfidTag>> rfidTagChanges(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class RfidTags extends _$RfidTags {
-  late final CollectionStorage<RfidTag> _storage;
-
   @override
   Map<String, RfidTag> build() {
-    _storage = CollectionStorage(tableName: 'rfid_tags', fromJson: RfidTag.fromJson, toJson: (t) => t.toJson());
     _fetchInitial();
-    return _storage.getAll();
+    return {};
   }
 
   Future<void> _fetchInitial() async {
@@ -66,11 +62,13 @@ class RfidTags extends _$RfidTags {
     if (result.hasException || result.data == null) return;
 
     final items = (result.data!['rfidTags'] as List<dynamic>).map((e) => RfidTag.fromJson(e as Map<String, dynamic>)).toList();
-    state = _storage.seedFromList(items, (t) => t.id);
+    state = {for (final item in items) item.id: item};
   }
 
+  Future<void> refresh() => _fetchInitial();
+
   void applyChange(ChangeEvent<RfidTag> change) {
-    state = _storage.applyChange(change, state);
+    state = applyChangeToMap(state, change);
   }
 
   Future<ApiCallResult> create(String teamMemberId, String tag) =>
@@ -96,7 +94,7 @@ class RfidTags extends _$RfidTags {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 void rfidTagsSync(Ref ref) {
   ref.listen(rfidTagChangesProvider, (previous, next) {
     next.whenData((change) {

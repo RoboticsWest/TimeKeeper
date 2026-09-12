@@ -87,7 +87,7 @@ final class TeamMemberSessionsProvider
 }
 
 String _$teamMemberSessionsHash() =>
-    r'e36f9e320de5c79a6873e3954bd612fe19c5ea10';
+    r'c46867693cad5856ac10717f46607b69e7aaf224';
 
 abstract class _$TeamMemberSessions
     extends $Notifier<Map<String, TeamMemberSession>> {
@@ -128,7 +128,7 @@ final class TeamMemberSessionsSyncProvider
         argument: null,
         retry: null,
         name: r'teamMemberSessionsSyncProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -156,4 +156,4 @@ final class TeamMemberSessionsSyncProvider
 }
 
 String _$teamMemberSessionsSyncHash() =>
-    r'09b1f66284aa3f51fe7778b6e8a4dd9e9e1577b3';
+    r'8b127802320ed08d20c1097495e61215a1353a9a';

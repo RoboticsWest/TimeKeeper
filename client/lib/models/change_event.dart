@@ -34,3 +34,16 @@ class ChangeEvent<T> {
     );
   }
 }
+
+/// Applies one change event to an in-memory id-keyed map without any persistence: an event with
+/// a payload sets/overwrites that key, a delete (payload `null`) removes it.
+Map<String, T> applyChangeToMap<T>(Map<String, T> current, ChangeEvent<T> change) {
+  final next = Map<String, T>.of(current);
+  final data = change.data;
+  if (data != null) {
+    next[change.id] = data;
+  } else {
+    next.remove(change.id);
+  }
+  return next;
+}
