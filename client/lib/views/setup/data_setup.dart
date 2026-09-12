@@ -37,7 +37,7 @@ class DataSetupTab extends ConsumerWidget {
           .where((t) => t.teamMemberId == entry.key)
           .map((t) => t.tag)
           .join(';');
-      return [m.firstName, m.lastName, m.displayName ?? '', tags, m.discordUsername ?? ''];
+      return [m.firstName, m.lastName, m.displayName ?? '', tags, m.discordId ?? ''];
     }).toList();
   }
 
@@ -62,7 +62,7 @@ class DataSetupTab extends ConsumerWidget {
       'LAST_NAME',
       'DISPLAY_NAME',
       'RFID_TAG',
-      'DISCORD_USERNAME',
+      'DISCORD_ID',
     ];
     final csv = buildCsv(headers, rows);
     final saved = await saveCsvFile(csv, '$label.csv');

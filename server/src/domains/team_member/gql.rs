@@ -72,13 +72,13 @@ impl TeamMemberMutation {
     last_name: String,
     member_type: String,
     display_name: Option<String>,
-    discord_username: Option<String>,
+    discord_id: Option<String>,
   ) -> Result<TeamMember> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     validate_member_type(&member_type)?;
     Ok(
       logic(ctx)?
-        .add(&first_name, &last_name, &member_type, display_name.as_deref(), None, discord_username.as_deref())
+        .add(&first_name, &last_name, &member_type, display_name.as_deref(), None, discord_id.as_deref())
         .await?,
     )
   }
@@ -92,7 +92,7 @@ impl TeamMemberMutation {
     last_name: String,
     member_type: String,
     display_name: Option<String>,
-    discord_username: Option<String>,
+    discord_id: Option<String>,
   ) -> Result<TeamMember> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     validate_member_type(&member_type)?;
@@ -102,7 +102,7 @@ impl TeamMemberMutation {
     }
     Ok(
       logic
-        .update(id, &first_name, &last_name, &member_type, display_name.as_deref(), None, discord_username.as_deref())
+        .update(id, &first_name, &last_name, &member_type, display_name.as_deref(), None, discord_id.as_deref())
         .await?,
     )
   }

@@ -9,7 +9,7 @@ const _leaderboardQuery = r'''
   query Leaderboard {
     leaderboard {
       teamMemberId
-      teamMember { id firstName lastName memberType displayName mobileNumber discordUsername }
+      teamMember { id firstName lastName memberType displayName mobileNumber discordId }
       activeSession { regularSecs overtimeSecs }
       thisWeek { regularSecs overtimeSecs }
       allTime { regularSecs overtimeSecs }

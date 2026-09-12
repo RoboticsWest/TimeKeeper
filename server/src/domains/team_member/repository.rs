@@ -14,7 +14,7 @@ pub trait TeamMemberRepository: Send + Sync {
   /// Filters by the `member_type` column (`"student"` or `"mentor"`).
   async fn get_by_member_type(&self, member_type: &str) -> anyhow::Result<Vec<TeamMember>>;
   /// Used to link Discord reactions/roles to a team member by their Discord username.
-  async fn get_by_discord_username(&self, discord_username: &str) -> anyhow::Result<Option<TeamMember>>;
+  async fn get_by_discord_id(&self, discord_id: &str) -> anyhow::Result<Option<TeamMember>>;
   /// Used by CSV import (dedup) and attendance import (name -> member lookup).
   async fn get_by_name(&self, first_name: &str, last_name: &str) -> anyhow::Result<Vec<TeamMember>>;
   #[allow(clippy::too_many_arguments)]
@@ -25,7 +25,7 @@ pub trait TeamMemberRepository: Send + Sync {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<TeamMember>;
   #[allow(clippy::too_many_arguments)]
   async fn update(
@@ -36,7 +36,7 @@ pub trait TeamMemberRepository: Send + Sync {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<Option<TeamMember>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
   async fn clear(&self) -> anyhow::Result<()>;
@@ -82,11 +82,11 @@ impl TeamMemberRepository for PgTeamMemberRepository {
     )
   }
 
-  async fn get_by_discord_username(&self, discord_username: &str) -> anyhow::Result<Option<TeamMember>> {
+  async fn get_by_discord_id(&self, discord_id: &str) -> anyhow::Result<Option<TeamMember>> {
     let mut conn = self.pool.get().await?;
     Ok(
       team_members::table
-        .filter(team_members::discord_username.eq(discord_username))
+        .filter(team_members::discord_id.eq(discord_id))
         .select(TeamMember::as_select())
         .first(&mut conn)
         .await
@@ -113,7 +113,7 @@ impl TeamMemberRepository for PgTeamMemberRepository {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<TeamMember> {
     let mut conn = self.pool.get().await?;
     let id = Uuid::now_v7();
@@ -126,7 +126,7 @@ impl TeamMemberRepository for PgTeamMemberRepository {
           team_members::member_type.eq(member_type),
           team_members::display_name.eq(display_name),
           team_members::mobile_number.eq(mobile_number),
-          team_members::discord_username.eq(discord_username),
+          team_members::discord_id.eq(discord_id),
         ))
         .returning(TeamMember::as_select())
         .get_result(&mut conn)
@@ -142,7 +142,7 @@ impl TeamMemberRepository for PgTeamMemberRepository {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<Option<TeamMember>> {
     let mut conn = self.pool.get().await?;
     Ok(
@@ -153,7 +153,7 @@ impl TeamMemberRepository for PgTeamMemberRepository {
           team_members::member_type.eq(member_type),
           team_members::display_name.eq(display_name),
           team_members::mobile_number.eq(mobile_number),
-          team_members::discord_username.eq(discord_username),
+          team_members::discord_id.eq(discord_id),
         ))
         .returning(TeamMember::as_select())
         .get_result(&mut conn)

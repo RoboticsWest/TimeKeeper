@@ -342,16 +342,19 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
       }
 
       let display_name = guild_member.display_name().to_string();
-      let discord_username = guild_member.user.name.clone();
+      let discord_id = guild_member.user.id.to_string();
 
-      let existing = existing_members.iter().find(|m| m.discord_username.as_deref() == Some(discord_username.as_str()));
+      let existing = existing_members.iter().find(|m| m.discord_id.as_deref() == Some(discord_id.as_str()));
       if existing.is_some() {
         already_linked += 1;
         continue;
       }
 
+      // Display-name matching is kept for *new* links only, and now records an
+      // ID - so re-running the import re-links members whose old username-based
+      // link was dropped by the 0003 migration. No separate backfill needed.
       let by_display_name = existing_members.iter().find(|m| {
-        m.discord_username.as_ref().is_none_or(String::is_empty)
+        m.discord_id.as_ref().is_none_or(String::is_empty)
           && m.display_name.as_deref() == Some(display_name.as_str())
       });
 
@@ -365,12 +368,12 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
             &member.member_type,
             member.display_name.as_deref(),
             member.mobile_number.as_deref(),
-            Some(&discord_username),
+            Some(&discord_id),
           )
           .await?;
         linked += 1;
       } else {
-        self.team_members.add("", "", member_type, Some(&display_name), None, Some(&discord_username)).await?;
+        self.team_members.add("", "", member_type, Some(&display_name), None, Some(&discord_id)).await?;
         imported += 1;
       }
     }

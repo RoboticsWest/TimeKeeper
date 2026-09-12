@@ -8,13 +8,13 @@ pub struct TeamMemberCsvRow {
   pub last_name: String,
   pub display_name: Option<String>,
   pub rfid_tag: Option<String>,
-  pub discord_username: Option<String>,
+  pub discord_id: Option<String>,
 }
 
 pub struct TeamMemberCsvParser;
 
 impl TeamMemberCsvParser {
-  /// Parses a CSV of the form `FIRST_NAME,LAST_NAME,DISPLAY_NAME,RFID_TAG,DISCORD_USERNAME`
+  /// Parses a CSV of the form `FIRST_NAME,LAST_NAME,DISPLAY_NAME,RFID_TAG,DISCORD_ID`
   /// (header row optional - skipped automatically if present). Used by
   /// `UploadStudentCsv`/`UploadMentorCsv`.
   pub fn parse(csv: &str) -> Result<Vec<TeamMemberCsvRow>> {
@@ -43,9 +43,9 @@ impl TeamMemberCsvParser {
 
       let display_name = fields.get(2).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
       let rfid_tag = fields.get(3).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
-      let discord_username = fields.get(4).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
+      let discord_id = fields.get(4).map(|a| a.trim().to_string()).filter(|a| !a.is_empty());
 
-      members.push(TeamMemberCsvRow { first_name, last_name, display_name, rfid_tag, discord_username });
+      members.push(TeamMemberCsvRow { first_name, last_name, display_name, rfid_tag, discord_id });
     }
 
     Ok(members)
