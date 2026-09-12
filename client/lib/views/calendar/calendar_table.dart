@@ -6,6 +6,7 @@ import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/status_chip.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class CalendarTable extends ConsumerWidget {
   final List<MapEntry<String, Session>> sessions;
@@ -15,14 +16,10 @@ class CalendarTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locations = ref.watch(locationsProvider);
-    final theme = Theme.of(context);
 
     return BaseTable(
       alternatingRows: true,
-      headerDecoration: BoxDecoration(
-        color: theme.colorScheme.secondary,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-      ),
+      headerDecoration: tableHeaderDecoration(context),
       headers: [
         BaseTableCell(
           child: Text('Date', style: TextStyle(color: Colors.white)),

@@ -3,6 +3,7 @@ import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/time_until.dart';
 import 'package:time_keeper/models/location.dart';
 import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/shapes.dart';
 
 class SessionInfoBar extends StatelessWidget {
   final Session? currentSession;
@@ -44,7 +45,7 @@ class SessionInfoBar extends StatelessWidget {
                 color: currentSession != null && !isUpcoming
                     ? theme.colorScheme.primaryContainer
                     : theme.colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(kRadiusRow),
                 border: currentSession == null || isUpcoming
                     ? Border.all(
                         color: theme.colorScheme.outlineVariant,
@@ -68,7 +69,7 @@ class SessionInfoBar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(kRadiusRow),
                 border: Border.all(
                   color: theme.colorScheme.outlineVariant,
                   width: 1,

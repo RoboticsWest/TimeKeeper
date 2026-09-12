@@ -9,8 +9,8 @@ use database::{
 
 use super::model::{
   DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_END_REMINDER_MESSAGE, DEFAULT_END_REMINDER_MINS,
-  DEFAULT_NEXT_SESSION_THRESHOLD_SECS, DEFAULT_OVERTIME_DM_MESSAGE, DEFAULT_OVERTIME_DM_MINS, DEFAULT_PRIMARY_COLOR,
-  DEFAULT_SECONDARY_COLOR, DEFAULT_START_REMINDER_MESSAGE, DEFAULT_START_REMINDER_MINS, Logo, Settings,
+  DEFAULT_NEXT_SESSION_THRESHOLD_SECS, DEFAULT_OVERTIME_DM_MESSAGE, DEFAULT_OVERTIME_DM_MINS,
+  DEFAULT_START_REMINDER_MESSAGE, DEFAULT_START_REMINDER_MINS, Logo, Settings,
 };
 
 fn default_settings() -> Settings {
@@ -35,8 +35,6 @@ fn default_settings() -> Settings {
     discord_checkout_enabled: false,
     discord_enabled: false,
     timezone: String::new(),
-    primary_color: DEFAULT_PRIMARY_COLOR.to_string(),
-    secondary_color: DEFAULT_SECONDARY_COLOR.to_string(),
     leaderboard_show_overtime: true,
     leaderboard_member_types: vec![Some("student".to_string()), Some("mentor".to_string())],
     discord_rsvp_reactions_enabled: true,
@@ -96,8 +94,6 @@ impl SettingsRepository for PgSettingsRepository {
           settings::discord_checkout_enabled.eq(defaults.discord_checkout_enabled),
           settings::discord_enabled.eq(defaults.discord_enabled),
           settings::timezone.eq(&defaults.timezone),
-          settings::primary_color.eq(&defaults.primary_color),
-          settings::secondary_color.eq(&defaults.secondary_color),
           settings::leaderboard_show_overtime.eq(defaults.leaderboard_show_overtime),
           settings::leaderboard_member_types.eq(&defaults.leaderboard_member_types),
           settings::discord_rsvp_reactions_enabled.eq(defaults.discord_rsvp_reactions_enabled),
@@ -138,8 +134,6 @@ impl SettingsRepository for PgSettingsRepository {
           settings::discord_checkout_enabled.eq(record.discord_checkout_enabled),
           settings::discord_enabled.eq(record.discord_enabled),
           settings::timezone.eq(&record.timezone),
-          settings::primary_color.eq(&record.primary_color),
-          settings::secondary_color.eq(&record.secondary_color),
           settings::leaderboard_show_overtime.eq(record.leaderboard_show_overtime),
           settings::leaderboard_member_types.eq(&record.leaderboard_member_types),
           settings::discord_rsvp_reactions_enabled.eq(record.discord_rsvp_reactions_enabled),
@@ -168,8 +162,6 @@ impl SettingsRepository for PgSettingsRepository {
           settings::discord_checkout_enabled.eq(record.discord_checkout_enabled),
           settings::discord_enabled.eq(record.discord_enabled),
           settings::timezone.eq(&record.timezone),
-          settings::primary_color.eq(&record.primary_color),
-          settings::secondary_color.eq(&record.secondary_color),
           settings::leaderboard_show_overtime.eq(record.leaderboard_show_overtime),
           settings::leaderboard_member_types.eq(&record.leaderboard_member_types),
           settings::discord_rsvp_reactions_enabled.eq(record.discord_rsvp_reactions_enabled),

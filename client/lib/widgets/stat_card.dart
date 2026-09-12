@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:time_keeper/shapes.dart';
 
 class StatCard extends StatelessWidget {
   final IconData icon;
@@ -21,7 +22,7 @@ class StatCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(kRadiusCard),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(

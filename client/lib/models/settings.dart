@@ -18,8 +18,6 @@ class Settings {
   final bool discordCheckoutEnabled;
   final bool discordEnabled;
   final String timezone;
-  final String primaryColor;
-  final String secondaryColor;
   final bool leaderboardShowOvertime;
   final List<String> leaderboardMemberTypes;
   final bool discordRsvpReactionsEnabled;
@@ -46,8 +44,6 @@ class Settings {
     required this.discordCheckoutEnabled,
     required this.discordEnabled,
     required this.timezone,
-    required this.primaryColor,
-    required this.secondaryColor,
     required this.leaderboardShowOvertime,
     required this.leaderboardMemberTypes,
     required this.discordRsvpReactionsEnabled,
@@ -76,8 +72,6 @@ class Settings {
       discordCheckoutEnabled: json['discordCheckoutEnabled'] as bool,
       discordEnabled: json['discordEnabled'] as bool,
       timezone: json['timezone'] as String,
-      primaryColor: json['primaryColor'] as String,
-      secondaryColor: json['secondaryColor'] as String,
       leaderboardShowOvertime: json['leaderboardShowOvertime'] as bool,
       leaderboardMemberTypes: (json['leaderboardMemberTypes'] as List<dynamic>).cast<String>(),
       discordRsvpReactionsEnabled: json['discordRsvpReactionsEnabled'] as bool,
