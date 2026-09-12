@@ -13,11 +13,15 @@ pub struct ServerConfig {
   #[arg(short, long, default_value_t = 8080)]
   pub web_port: u16,
 
-  /// Disable the built-in web server entirely. Use when the frontend is hosted
-  /// separately (e.g. an nginx reverse proxy serving the Flutter build and
-  /// forwarding API paths to this server).
+  /// Disable the built-in web server, leaving only the GraphQL API. Use when the Flutter
+  /// build is served by something else (e.g. a reverse proxy that serves the static files
+  /// and forwards `/graphql`, `/graphql/ws` and `/health` here).
   #[arg(long)]
   pub no_web: bool,
+
+  /// Directory holding the built Flutter web app, served by the built-in web server.
+  #[arg(long, default_value = "client/build/web")]
+  pub web_dir: String,
 
   /// Binding Port for the GraphQL API endpoint (HTTP `/graphql` and WebSocket `/graphql/ws`)
   #[arg(long, default_value_t = 4000)]
@@ -31,18 +35,6 @@ pub struct ServerConfig {
   /// The path for the backups directory
   #[arg(long, default_value = "backups")]
   pub backups_path: String,
-
-  /// Enable TLS Security (HTTPS)
-  #[arg(long, default_value_t = false)]
-  pub tls: bool,
-
-  /// The path to the certificate
-  #[arg(long, default_value = "cert.pem")]
-  pub cert_path: String,
-
-  /// The path to the private key
-  #[arg(long, default_value = "key.pem")]
-  pub key_path: String,
 
   /// Admin password (if not provided, uses default or existing password in DB)
   #[arg(long, env = "TK_ADMIN_PASSWORD")]

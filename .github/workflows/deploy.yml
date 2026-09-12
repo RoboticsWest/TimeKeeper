@@ -2,26 +2,29 @@ name: Deploy
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "server/**"
       - "database/**"
       - "client/**"
       - "deploy/timekeeper/**"
+      - ".github/workflows/deploy.yml"
       - "vars.yml"
       - "Cargo.toml"
       - "Cargo.lock"
       - "rust-toolchain.toml"
+  workflow_dispatch:
 
 jobs:
-  build:
+  # API image. The Flutter build is deliberately not in it — see build-web.
+  build-api:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    outputs:
-      tag: ${{ steps.image.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: docker/login-action@v3
         with:
@@ -29,37 +32,52 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: image
-        run: echo "tag=ghcr.io/roboticswest/timekeeper:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/timekeeper/Dockerfile
           push: true
-          tags: ${{ steps.image.outputs.tag }}
+          tags: ghcr.io/roboticswest/timekeeper:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      # Web image: nginx serving the Flutter build from the main image + proxying
-      # API paths to the timekeeper container. Built last since it copies the web
-      # build out of the main image (via the TK_IMAGE build arg).
-      - id: web-image
-        run: echo "tag=ghcr.io/roboticswest/timekeeper-web:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+  # Static Flutter web build, uploaded to the server and served directly by Caddy.
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
 
-      - uses: docker/build-push-action@v6
+      - uses: subosito/flutter-action@v2
         with:
-          context: .
-          file: deploy/timekeeper/web/Dockerfile
-          build-args: TK_IMAGE=${{ steps.image.outputs.tag }}
-          push: true
-          tags: ${{ steps.web-image.outputs.tag }}
+          channel: stable
+          cache: true
+
+      - working-directory: client
+        run: flutter pub get
+
+      - working-directory: client
+        run: dart run flutter_launcher_icons
+
+      - working-directory: client
+        run: flutter build web --release --wasm --no-web-resources-cdn
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: client/build/web
+          retention-days: 1
 
   deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main'
+    needs: [build-api, build-web]
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web
 
       - uses: tailscale/github-action@v3
         with:
@@ -67,26 +85,53 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      # keeps the server's compose file identical to what's in git
-      - uses: appleboy/scp-action@v1
+      # Emptied first so files removed between builds don't linger and get served.
+      - name: Prepare target directories
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "deploy/timekeeper/production/docker-compose.yml"
+          script: |
+            mkdir -p /srv/timekeeper/web
+            find /srv/timekeeper/web -mindepth 1 -delete
+
+      # Keeps the server's compose file identical to what's in git.
+      - name: Upload compose file
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deploy/timekeeper/docker-compose.yml"
           target: "/srv/timekeeper"
-          strip_components: 3
+          strip_components: 2
           overwrite: true
 
-      - uses: appleboy/ssh-action@v1
+      - name: Upload web build
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: IMAGE_TAG,DATABASE_URL,TK_ADMIN_PASSWORD,GH_TOKEN,GH_ACTOR,TLS
+          source: "web/*"
+          target: "/srv/timekeeper/web"
+          strip_components: 1
+          overwrite: true
+
+      - name: Roll out API container
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: IMAGE_TAG,DATABASE_URL,TK_ADMIN_PASSWORD,GH_TOKEN,GH_ACTOR
           script: |
+            set -e
             cat > /srv/timekeeper/.env <<ENVEOF
             IMAGE_TAG=${IMAGE_TAG}
             DATABASE_URL=${DATABASE_URL}
@@ -96,7 +141,7 @@ jobs:
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
             cd /srv/timekeeper
             docker compose pull
-            docker compose up -d
+            docker compose up -d --remove-orphans
             docker logout ghcr.io
         env:
           IMAGE_TAG: ${{ github.sha }}
@@ -104,4 +149,3 @@ jobs:
           TK_ADMIN_PASSWORD: ${{ secrets.TK_ADMIN_PASSWORD }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
-          TLS: true

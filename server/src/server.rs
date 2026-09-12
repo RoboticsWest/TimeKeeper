@@ -227,7 +227,7 @@ impl Server {
       None
     } else {
       let web_addr = format!("{}:{}", config.addr, config.web_port).parse().expect("Error parsing web address");
-      let web_server = Web::new(web_addr, "client/build/web".to_string());
+      let web_server = Web::new(web_addr, config.web_dir.clone());
       let web_cancel = cancel.clone();
       Some(tokio::spawn(async move {
         if let Err(e) = web_server.serve(web_cancel).await {
