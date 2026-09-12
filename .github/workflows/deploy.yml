@@ -71,7 +71,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: IMAGE_TAG,DATABASE_URL,TK_ADMIN_PASSWORD,GH_TOKEN,GH_ACTOR
+          envs: IMAGE_TAG,DATABASE_URL,TK_ADMIN_PASSWORD,GH_TOKEN,GH_ACTOR,TLS
           script: |
             cat > /srv/timekeeper/.env <<ENVEOF
             IMAGE_TAG=${IMAGE_TAG}
@@ -90,3 +90,4 @@ jobs:
           TK_ADMIN_PASSWORD: ${{ secrets.TK_ADMIN_PASSWORD }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
+          TLS: true
