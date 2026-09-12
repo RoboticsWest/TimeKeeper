@@ -81,6 +81,10 @@ class Tls extends _$Tls {
   }
 
   bool _getStoredTls() {
+    // Auto-detect TLS from the current page scheme if not explicitly set
+    if (kIsWeb && !localStorage.containsKey(_key)) {
+      return Uri.base.isSecure;
+    }
     bool tls = _defaultTls;
     if (localStorage.containsKey(_key)) {
       tls = localStorage.getBool(_key) ?? _defaultTls;
