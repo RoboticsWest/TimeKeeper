@@ -18,6 +18,7 @@ import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/colors.dart';
 
 class TeamView extends HookConsumerWidget {
   const TeamView({super.key});
@@ -97,7 +98,7 @@ class TeamView extends HookConsumerWidget {
               _ClearButton(
                 label: 'Clear Students',
                 icon: Icons.school,
-                color: Colors.orange,
+                color: supportWarningColor.shade700,
                 onPressed: () => _showClearDialog(
                   context,
                   ref,
@@ -115,7 +116,7 @@ class TeamView extends HookConsumerWidget {
               _ClearButton(
                 label: 'Clear Mentors',
                 icon: Icons.person,
-                color: Colors.orange,
+                color: supportWarningColor.shade700,
                 onPressed: () => _showClearDialog(
                   context,
                   ref,
@@ -131,7 +132,7 @@ class TeamView extends HookConsumerWidget {
               _ClearButton(
                 label: 'Clear All',
                 icon: Icons.delete_sweep,
-                color: Colors.red,
+                color: theme.colorScheme.error,
                 onPressed: () => _showClearDialog(
                   context,
                   ref,

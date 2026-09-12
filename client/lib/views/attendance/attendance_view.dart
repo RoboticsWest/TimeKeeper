@@ -15,6 +15,7 @@ import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/colors.dart';
 
 class AttendanceView extends HookConsumerWidget {
   const AttendanceView({super.key});
@@ -151,10 +152,10 @@ class AttendanceView extends HookConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () =>
                     _showClearDialog(context, ref, teamMemberSessions),
-                icon: Icon(Icons.delete_sweep, size: 18, color: Colors.red),
-                label: Text('Clear All', style: TextStyle(color: Colors.red)),
+                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
+                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.red),
+                  side: BorderSide(color: theme.colorScheme.error),
                 ),
               ),
             ],
@@ -295,7 +296,7 @@ class AttendanceView extends HookConsumerWidget {
                       child: Text(
                         isCheckedIn ? 'Checked In' : 'Completed',
                         style: TextStyle(
-                          color: isCheckedIn ? Colors.green : null,
+                          color: isCheckedIn ? supportSuccessColor.shade700 : null,
                           fontWeight: isCheckedIn
                               ? FontWeight.w600
                               : FontWeight.normal,

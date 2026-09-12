@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/widgets/stat_card.dart';
 import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/models/team_member_session.dart';
+import 'package:time_keeper/widgets/dashboard/kpi_tile.dart';
 
 class SessionStats extends StatelessWidget {
   final Map<String, Session> sessions;
@@ -16,7 +16,6 @@ class SessionStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final now = DateTime.now();
 
     final activeSessions = sessions.values.where((s) {
@@ -39,40 +38,19 @@ class SessionStats extends StatelessWidget {
 
     return Row(
       children: [
-        StatCard(
-          icon: Icons.event,
-          label: 'Total',
-          value: '${sessions.length}',
-          color: theme.colorScheme.primary,
-        ),
-        const SizedBox(width: 12),
-        StatCard(
-          icon: Icons.play_circle,
-          label: 'Active',
-          value: '$activeSessions',
-          color: Colors.green,
-        ),
-        const SizedBox(width: 12),
-        StatCard(
-          icon: Icons.schedule,
-          label: 'Upcoming',
-          value: '$upcomingSessions',
-          color: Colors.blue,
-        ),
-        const SizedBox(width: 12),
-        StatCard(
-          icon: Icons.calendar_month,
-          label: 'This Month',
-          value: '$thisMonth',
-          color: theme.colorScheme.tertiary,
-        ),
-        const SizedBox(width: 12),
-        StatCard(
-          icon: Icons.people,
-          label: 'Unique Members',
-          value: '${uniqueMembers.length}',
-          color: theme.colorScheme.secondary,
-        ),
+        for (final tile in [
+          (icon: Icons.event, label: 'Total', value: '${sessions.length}'),
+          (icon: Icons.play_circle, label: 'Active', value: '$activeSessions'),
+          (icon: Icons.schedule, label: 'Upcoming', value: '$upcomingSessions'),
+          (icon: Icons.calendar_month, label: 'This Month', value: '$thisMonth'),
+          (icon: Icons.people, label: 'Unique Members', value: '${uniqueMembers.length}'),
+        ])
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: KpiTile(icon: tile.icon, label: tile.label, value: tile.value),
+            ),
+          ),
       ],
     );
   }
