@@ -212,10 +212,7 @@ impl Service for DiscordNotificationService {
             let facts =
               embeds::session_facts("Session starting soon", embeds::SUPPORT_INFO, location, start_secs, end_secs);
 
-            match announcement_channel
-              .send_message(&http, CreateMessage::new().content(&msg).embed(facts))
-              .await
-            {
+            match announcement_channel.send_message(&http, CreateMessage::new().content(&msg).embed(facts)).await {
               Ok(sent_msg) => {
                 let discord_message_id = sent_msg.id.to_string();
 
@@ -250,10 +247,7 @@ impl Service for DiscordNotificationService {
             let facts =
               embeds::session_facts("Session ending soon", embeds::SUPPORT_WARNING, location, start_secs, end_secs);
 
-            match announcement_channel
-              .send_message(&http, CreateMessage::new().content(&msg).embed(facts))
-              .await
-            {
+            match announcement_channel.send_message(&http, CreateMessage::new().content(&msg).embed(facts)).await {
               Ok(sent_msg) => {
                 self
                   .notifications
@@ -366,14 +360,9 @@ impl Service for DiscordNotificationService {
               .replace("{username}", &mention)
               .replace("{name}", member_name);
 
-            let facts = embeds::session_facts(
-              "In overtime",
-              embeds::SUPPORT_WARNING,
-              location,
-              pes.start_secs,
-              pes.end_secs,
-            )
-            .field("Member", member_name, true);
+            let facts =
+              embeds::session_facts("In overtime", embeds::SUPPORT_WARNING, location, pes.start_secs, pes.end_secs)
+                .field("Member", member_name, true);
 
             if Self::send_with_facts(&http, notification_channel, &msg, facts).await
               && let Err(e) =
@@ -414,9 +403,8 @@ impl Service for DiscordNotificationService {
             .replace("{username}", &mention)
             .replace("{name}", member_name);
 
-          let facts =
-            embeds::session_facts("Auto checked out", embeds::SUPPORT_INFO, location, start_secs, end_secs)
-              .field("Member", member_name, true);
+          let facts = embeds::session_facts("Auto checked out", embeds::SUPPORT_INFO, location, start_secs, end_secs)
+            .field("Member", member_name, true);
 
           if Self::send_with_facts(&http, notification_channel, &msg, facts).await
             && let Err(e) = self
