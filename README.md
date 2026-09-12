@@ -18,6 +18,7 @@ Conceptualised from other attendance systems like 254's [Cheesy Hours](https://g
 2. Run it on a device of your choice (cloud server, local, rpi etc...)
 - Note: (Run the command `server.exe --help` for start config commands. I.e `server.exe --web-port 80`)
 - The server binds two ports: `--web-port` (default `8080`) serves the Flutter web client, and `--graphql-port` (default `4000`) serves the GraphQL API at `/graphql` and subscriptions at `/graphql/ws`. Clients must be pointed at the GraphQL port under Settings.
+- Behind a reverse proxy that already serves the Flutter build, pass `--no-web` to run API-only. The web client then reaches the API on the origin it was served from, so no host/port needs configuring. See [`deploy/`](deploy/) for the Docker + Caddy setup used for `tk.roboticswest.org`.
 3. Navigate to the servers address using the set port or default port 8080. I.e (`http://10.128.22.120:8080`)
 4. Login using the button in the top right of the app bar (default username `admin`, default password `admin`)
 5. Using the left rail navigation bar enter the setup page and configure the setup (import ICS or CSV calendar, student and mentor data, notifications etc...)
