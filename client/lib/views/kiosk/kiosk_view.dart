@@ -161,7 +161,7 @@ class HomeView extends HookConsumerWidget {
                     OutlinedButton.icon(
                       icon: const Icon(Icons.dialpad),
                       label: const Text('Sign In With PIN'),
-                      onPressed: () => PinEntryDialog.show(context),
+                      onPressed: () => PinEntryDialog.show(context, ref),
                     ),
                 ],
               ),

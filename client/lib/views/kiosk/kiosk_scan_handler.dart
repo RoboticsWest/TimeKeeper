@@ -17,6 +17,17 @@ import 'package:time_keeper/widgets/dialogs/toast_overlay.dart';
 
 final _log = Logger();
 
+/// Shown when a check-in is attempted on a device with no location selected.
+///
+/// No location is a legitimate state — the kiosk view falls back to showing
+/// every location's sessions — but a check-in is recorded *against* a location
+/// and the server takes a UUID. Sending `''` made it answer with a raw parse
+/// error ("Failed to parse \"UUID\": invalid length: expected length 32 for
+/// simple format, found 0"), which told the person at the kiosk nothing. Both
+/// the RFID and PIN paths stop here instead and name the actual problem.
+const String kNoDeviceLocationMessage =
+    'This device has no location set. Choose one in Settings before checking in.';
+
 /// Handles a PCSC card scan by matching the UID against team members
 /// and checking them in/out.
 Future<void> handleKioskScan({
@@ -90,7 +101,18 @@ Future<void> handleKioskScan({
     }
   }
 
-  final currentLocation = ref.read(currentLocationProvider) ?? '';
+  final currentLocation = ref.read(currentLocationProvider);
+  if (currentLocation == null || currentLocation.isEmpty) {
+    if (context.mounted) {
+      ToastOverlay.error(
+        context,
+        title: 'No location set',
+        message: kNoDeviceLocationMessage,
+      );
+    }
+    return;
+  }
+
   final result = await ref.read(sessionCheckInOutProvider.notifier).checkInOut(memberId, currentLocation);
 
   if (!context.mounted) return;
@@ -107,7 +129,7 @@ void showCheckInOutResult({
   required String? name,
   required ApiResult<bool> result,
 }) {
-  final timeStr = formatTime(DateTime.now());
+  final timeStr = formatTime(DateTime.now().toUtc());
 
   switch (result) {
     case ApiSuccess(data: final checkedIn):

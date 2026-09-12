@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod deps;
+pub mod embeds;
 pub mod listener;
 pub mod service;
 

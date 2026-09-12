@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 
+/// Action columns hold a single [IconButton], so they take a fixed width
+/// rather than a share of the row. Giving them flex made them as wide as a
+/// data column and, on narrow layouts, stole space from columns that needed it.
+const double _actionColumnWidth = 52;
+
 class EditTableRow extends BaseTableRow {
   final Key? key;
   final void Function()? onDelete;
@@ -40,10 +45,10 @@ class EditTable extends BaseTable {
     // Add blank columns to headers for the action buttons
     if (headers != null) {
       if (onDelete != null || editRows.any((r) => r.onDelete != null)) {
-        headers.insert(0, const BaseTableCell(child: SizedBox.shrink()));
+        headers.insert(0, const BaseTableCell(child: SizedBox.shrink(), width: _actionColumnWidth));
       }
       if (onEdit != null || editRows.any((r) => r.onEdit != null)) {
-        headers.add(const BaseTableCell(child: SizedBox.shrink()));
+        headers.add(const BaseTableCell(child: SizedBox.shrink(), width: _actionColumnWidth));
       }
     }
 
@@ -91,9 +96,11 @@ class EditTable extends BaseTable {
             cells: [
               _iconButtonCell(onPressed: onAdd, icon: addIcon),
               ...List.generate(lastRow.cells.length - 1, (index) {
+                final template = lastRow.cells[index + 1];
                 return BaseTableCell(
                   child: const SizedBox.shrink(),
-                  flex: lastRow.cells[index].flex ?? 1,
+                  flex: template.flex ?? 1,
+                  width: template.width,
                 );
               }),
             ],
@@ -114,6 +121,7 @@ class EditTable extends BaseTable {
     required Widget icon,
   }) {
     return BaseTableCell(
+      width: _actionColumnWidth,
       child: Center(
         child: IconButton(icon: icon, onPressed: onPressed),
       ),

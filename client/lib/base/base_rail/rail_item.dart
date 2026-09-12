@@ -26,7 +26,9 @@ class RailItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final background = isSelected ? colorScheme.primaryContainer : Colors.transparent;
+    final brightness = Theme.of(context).brightness;
+    final background =
+        isSelected && brightness == Brightness.dark ? colorScheme.primaryContainer : Colors.transparent;
     final foreground = isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant;
 
     // Reveal the label from the *measured* width rather than the target state,

@@ -48,6 +48,15 @@ const ColorScheme _lightScheme = ColorScheme(
 
 /// Dark scheme: **true neutral** greys, no blue cast anywhere in the surface
 /// ramp. Near-black page, distinctly lighter panels, crisp borders, bright ink.
+///
+/// The page and chrome steps are tuned so the *ratio* between page, chrome and
+/// panel matches the light scheme rather than the hex distance. Equal hex
+/// steps do not read as equal separation down at the black end: the old
+/// `#0D0D0D` page against a `#151515` panel was a 1.03 luminance ratio where
+/// light mode's `#F4F5F7` against white is 1.11, which is why dark read flat
+/// and "different" next to light. `#151515` itself is fixed — the categorical
+/// palette in `theme/series_palette.dart` is validated against it — so the
+/// page and the chrome move instead.
 const ColorScheme _darkScheme = ColorScheme(
   brightness: Brightness.dark,
   primary: _primaryDark,
@@ -66,11 +75,14 @@ const ColorScheme _darkScheme = ColorScheme(
   onError: Color(0xFF400A0A),
   errorContainer: Color(0xFF5C1919),
   onErrorContainer: Color(0xFFFBDCDC),
-  surface: Color(0xFF0D0D0D),
+  surface: Color(0xFF060606),
   onSurface: Color(0xFFF2F2F2),
   onSurfaceVariant: Color(0xFFA8A8A8),
   surfaceContainerLowest: Color(0xFF151515),
-  surfaceContainerLow: Color(0xFF1A1A1A),
+  // App bar, rail and the setup side pane. Sits between the page and the
+  // panels, the same place light mode's `#FAFBFC` sits between `#F4F5F7` and
+  // white — chrome that recedes behind content instead of floating above it.
+  surfaceContainerLow: Color(0xFF101010),
   surfaceContainer: Color(0xFF1F1F1F),
   surfaceContainerHigh: Color(0xFF262626),
   surfaceContainerHighest: Color(0xFF2E2E2E),

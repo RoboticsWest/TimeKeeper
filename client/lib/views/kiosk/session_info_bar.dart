@@ -109,28 +109,34 @@ class SessionInfoBar extends StatelessWidget {
             ),
             if (location.isNotEmpty) ...[
               const SizedBox(width: 8),
-              Expanded(
+              Flexible(
                 child: Text(
                   '— $location',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: color.withValues(alpha: 0.7),
                   ),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ] else
               const Spacer(),
-            TimeUntil(
-              time: end,
-              positiveLeader: 'Ends in ',
-              positiveStyle: theme.textTheme.labelLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-              negativeLeader: 'OVERTIME ',
-              negativeStyle: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.error,
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: 8),
+            Flexible(
+              child: TimeUntil(
+                time: end,
+                positiveLeader: 'Ends in ',
+                positiveStyle: theme.textTheme.labelLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+                negativeLeader: 'OVERTIME ',
+                negativeStyle: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -138,12 +144,15 @@ class SessionInfoBar extends StatelessWidget {
         const SizedBox(height: 4),
         Row(
           children: [
-            Text(
-              '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: color.withValues(alpha: 0.7),
+            Flexible(
+              child: Text(
+                '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: color.withValues(alpha: 0.7),
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(width: 12),
             Icon(Icons.people, size: 14, color: color.withValues(alpha: 0.7)),
@@ -185,28 +194,34 @@ class SessionInfoBar extends StatelessWidget {
             ),
             if (location.isNotEmpty) ...[
               const SizedBox(width: 8),
-              Expanded(
+              Flexible(
                 child: Text(
                   '— $location',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: color.withValues(alpha: 0.7),
                   ),
                   overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ] else
               const Spacer(),
-            TimeUntil(
-              time: start,
-              positiveLeader: 'Starts in ',
-              positiveStyle: theme.textTheme.labelLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-              negativeLeader: '',
-              negativeStyle: theme.textTheme.labelLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
+            const SizedBox(width: 8),
+            Flexible(
+              child: TimeUntil(
+                time: start,
+                positiveLeader: 'Starts in ',
+                positiveStyle: theme.textTheme.labelLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+                negativeLeader: '',
+                negativeStyle: theme.textTheme.labelLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
