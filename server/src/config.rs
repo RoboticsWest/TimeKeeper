@@ -13,6 +13,12 @@ pub struct ServerConfig {
   #[arg(short, long, default_value_t = 8080)]
   pub web_port: u16,
 
+  /// Disable the built-in web server entirely. Use when the frontend is hosted
+  /// separately (e.g. an nginx reverse proxy serving the Flutter build and
+  /// forwarding API paths to this server).
+  #[arg(long)]
+  pub no_web: bool,
+
   /// Binding Port for the GraphQL API endpoint (HTTP `/graphql` and WebSocket `/graphql/ws`)
   #[arg(long, default_value_t = 4000)]
   pub graphql_port: u16,

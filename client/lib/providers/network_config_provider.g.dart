@@ -162,3 +162,97 @@ abstract class _$Tls extends $Notifier<bool> {
     element.handleCreate(ref, build);
   }
 }
+
+/// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
+/// probe).
+///
+/// On the web, when the app is served from the same host as the API (a reverse
+/// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
+/// backend), the API is reached through the *same origin the page was served
+/// from* instead of a separately configured `host:port`. Overriding the host or
+/// the port in settings switches back to explicit `scheme://host:port` mode.
+/// The TLS toggle applies to native builds and to explicit host/port mode only;
+/// on the web behind a proxy the scheme always follows the page origin.
+
+@ProviderFor(ServerBaseUri)
+final serverBaseUriProvider = ServerBaseUriProvider._();
+
+/// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
+/// probe).
+///
+/// On the web, when the app is served from the same host as the API (a reverse
+/// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
+/// backend), the API is reached through the *same origin the page was served
+/// from* instead of a separately configured `host:port`. Overriding the host or
+/// the port in settings switches back to explicit `scheme://host:port` mode.
+/// The TLS toggle applies to native builds and to explicit host/port mode only;
+/// on the web behind a proxy the scheme always follows the page origin.
+final class ServerBaseUriProvider
+    extends $NotifierProvider<ServerBaseUri, Uri> {
+  /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
+  /// probe).
+  ///
+  /// On the web, when the app is served from the same host as the API (a reverse
+  /// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
+  /// backend), the API is reached through the *same origin the page was served
+  /// from* instead of a separately configured `host:port`. Overriding the host or
+  /// the port in settings switches back to explicit `scheme://host:port` mode.
+  /// The TLS toggle applies to native builds and to explicit host/port mode only;
+  /// on the web behind a proxy the scheme always follows the page origin.
+  ServerBaseUriProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'serverBaseUriProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$serverBaseUriHash();
+
+  @$internal
+  @override
+  ServerBaseUri create() => ServerBaseUri();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Uri value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Uri>(value),
+    );
+  }
+}
+
+String _$serverBaseUriHash() => r'e1d17a6de90f6faf4eb3a14b9ef84a76a0d79844';
+
+/// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
+/// probe).
+///
+/// On the web, when the app is served from the same host as the API (a reverse
+/// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
+/// backend), the API is reached through the *same origin the page was served
+/// from* instead of a separately configured `host:port`. Overriding the host or
+/// the port in settings switches back to explicit `scheme://host:port` mode.
+/// The TLS toggle applies to native builds and to explicit host/port mode only;
+/// on the web behind a proxy the scheme always follows the page origin.
+
+abstract class _$ServerBaseUri extends $Notifier<Uri> {
+  Uri build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<Uri, Uri>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Uri, Uri>,
+              Uri,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

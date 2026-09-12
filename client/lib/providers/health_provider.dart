@@ -9,11 +9,10 @@ part 'health_provider.g.dart';
 /// Polls the plain `/health` HTTP endpoint (not part of the GraphQL API) to report connectivity.
 @Riverpod(keepAlive: true)
 Stream<bool> isConnected(Ref ref) async* {
-  final serverIp = ref.watch(serverIpProvider);
-  final graphqlPort = ref.watch(serverGraphqlPortProvider);
-  final tls = ref.watch(tlsProvider);
-  final scheme = tls ? 'https' : 'http';
-  final uri = Uri.parse('$scheme://$serverIp:$graphqlPort/health');
+  final baseUri = ref.watch(serverBaseUriProvider);
+  final scheme = baseUri.scheme;
+  final host = baseUri.hasPort ? '${baseUri.host}:${baseUri.port}' : baseUri.host;
+  final uri = Uri.parse('$scheme://$host/health');
 
   while (true) {
     bool connected;

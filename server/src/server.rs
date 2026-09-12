@@ -223,14 +223,18 @@ impl Server {
     });
 
     // ── Web server (static Flutter build) ───────────────────────────────────────────────
-    let web_addr = format!("{}:{}", config.addr, config.web_port).parse().expect("Error parsing web address");
-    let web_server = Web::new(web_addr, "client/build/web".to_string());
-    let web_cancel = cancel.clone();
-    let mut web_handle = tokio::spawn(async move {
-      if let Err(e) = web_server.serve(web_cancel).await {
-        log::error!("Web Server Error: {e:?}");
-      }
-    });
+    let mut web_handle = if config.no_web {
+      None
+    } else {
+      let web_addr = format!("{}:{}", config.addr, config.web_port).parse().expect("Error parsing web address");
+      let web_server = Web::new(web_addr, "client/build/web".to_string());
+      let web_cancel = cancel.clone();
+      Some(tokio::spawn(async move {
+        if let Err(e) = web_server.serve(web_cancel).await {
+          log::error!("Web Server Error: {e:?}");
+        }
+      }))
+    };
 
     // ── Wait for shutdown signal ─────────────────────────────────────────────────────────
     tokio::signal::ctrl_c().await.expect("Failed to listen for shutdown signal");
@@ -238,8 +242,12 @@ impl Server {
     cancel.cancel();
 
     let timeout_future = async {
-      let (api_result, web_result, discord_result, notify_result) =
-        tokio::join!(&mut graphql_handle, &mut web_handle, &mut discord_handle, &mut notify_handle);
+      let api_result = (&mut graphql_handle).await;
+      let web_result = match &mut web_handle {
+        Some(handle) => handle.await,
+        None => Ok(()),
+      };
+      let (discord_result, notify_result) = tokio::join!(&mut discord_handle, &mut notify_handle);
       api_result.and(web_result).and(discord_result).and(notify_result)
     };
 
@@ -249,7 +257,9 @@ impl Server {
       Err(_) => {
         log::warn!("Shutdown timeout - force aborting...");
         graphql_handle.abort();
-        web_handle.abort();
+        if let Some(handle) = &mut web_handle {
+          handle.abort();
+        }
         discord_handle.abort();
         notify_handle.abort();
       }
