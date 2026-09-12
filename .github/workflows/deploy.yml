@@ -1,0 +1,97 @@
+name: Deploy
+
+on:
+  push:
+    paths:
+      - "server/**"
+      - "database/**"
+      - "client/**"
+      - "deploy/timekeeper/**"
+      - "vars.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.image.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: image
+        run: echo "tag=ghcr.io/roboticswest/timekeeper:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/timekeeper/Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.tag }}
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci
+
+      # keeps the server's compose file identical to what's in git
+      - uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "deploy/timekeeper/production/docker-compose.yml"
+          target: "/srv/timekeeper"
+          strip_components: 3
+          overwrite: true
+
+      - uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: IMAGE_TAG,DATABASE_URL,TK_ADMIN_PASSWORD,TK_PROXY_TOKEN,TK_PROXY_DOMAIN,RUST_LOG,GH_TOKEN,GH_ACTOR
+          script: |
+            cat > /srv/timekeeper/.env <<ENVEOF
+            IMAGE_TAG=${IMAGE_TAG}
+            DATABASE_URL=${DATABASE_URL}
+            TK_ADMIN_PASSWORD=${TK_ADMIN_PASSWORD}
+            TK_PROXY_TOKEN=${TK_PROXY_TOKEN}
+            TK_PROXY_DOMAIN=${TK_PROXY_DOMAIN}
+            RUST_LOG=${RUST_LOG}
+            ENVEOF
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+            cd /srv/timekeeper
+            docker compose pull
+            docker compose up -d
+            docker logout ghcr.io
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TK_ADMIN_PASSWORD: ${{ secrets.TK_ADMIN_PASSWORD }}
+          TK_PROXY_TOKEN: ${{ secrets.TK_PROXY_TOKEN }}
+          TK_PROXY_DOMAIN: ${{ secrets.TK_PROXY_DOMAIN }}
+          RUST_LOG: ${{ secrets.RUST_LOG }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
