@@ -15,6 +15,7 @@ import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/models/session_rsvp.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/colors.dart';
 
 class SessionTable extends ConsumerWidget {
   final List<MapEntry<String, Session>> sessions;
@@ -156,7 +157,7 @@ class _RsvpCount extends StatelessWidget {
         Text(
           '$going',
           style: TextStyle(
-            color: Colors.green[700],
+            color: supportSuccessColor.shade700,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -168,7 +169,7 @@ class _RsvpCount extends StatelessWidget {
         ),
         Text(
           '$notGoing',
-          style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.w500),
+          style: TextStyle(color: supportErrorColor.shade700, fontWeight: FontWeight.w500),
         ),
       ],
     );

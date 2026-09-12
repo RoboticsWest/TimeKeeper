@@ -1,172 +1,231 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/providers/location_provider.dart';
-import 'package:time_keeper/providers/session_provider.dart';
-import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
-import 'package:time_keeper/views/statistics/statistics_attendance_chart.dart';
-import 'package:time_keeper/views/statistics/statistics_day_detail.dart';
-import 'package:time_keeper/views/statistics/statistics_helpers.dart';
-import 'package:time_keeper/views/statistics/statistics_hours_chart.dart';
-import 'package:time_keeper/views/statistics/statistics_location_chart.dart';
-import 'package:time_keeper/views/statistics/statistics_member_hours_table.dart';
-import 'package:time_keeper/views/statistics/statistics_overview_cards.dart';
-import 'package:time_keeper/views/statistics/statistics_overtime_table.dart';
+import 'package:time_keeper/providers/stats_provider.dart';
+import 'package:time_keeper/theme/series_palette.dart';
+import 'package:time_keeper/utils/csv_utils.dart';
+import 'package:time_keeper/utils/formatting.dart';
+import 'package:time_keeper/views/statistics/charts/activity_chart.dart';
+import 'package:time_keeper/views/statistics/charts/check_in_heatmap_chart.dart';
+import 'package:time_keeper/views/statistics/charts/location_ranking.dart';
+import 'package:time_keeper/views/statistics/panels/day_inspector.dart';
+import 'package:time_keeper/views/statistics/panels/kpi_strip.dart';
+import 'package:time_keeper/views/statistics/panels/members_grid.dart';
+import 'package:time_keeper/views/statistics/panels/stats_toolbar.dart';
+import 'package:time_keeper/views/statistics/stats_models.dart';
+import 'package:time_keeper/views/statistics/stats_query.dart';
+import 'package:time_keeper/widgets/dashboard/chart_legend.dart';
+import 'package:time_keeper/widgets/dashboard/panel.dart';
+import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
+/// Statistics dashboard.
+///
+/// This widget does zero arithmetic — every number on screen comes from a
+/// provider keyed by [StatsQuery], so changing the metric toggle or re-sorting
+/// a grid recomputes nothing.
 class StatisticsView extends HookConsumerWidget {
   const StatisticsView({super.key});
 
+  /// Layout breakpoints.
+  static const double _wide = 1280;
+  static const double _medium = 900;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(sessionsSyncProvider);
-    ref.watch(teamMembersSyncProvider);
-    ref.watch(locationsSyncProvider);
-    ref.watch(teamMemberSessionsSyncProvider);
-    final sessions = ref.watch(sessionsProvider);
-    final teamMembers = ref.watch(teamMembersProvider);
-    final locations = ref.watch(locationsProvider);
-    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
-    final theme = Theme.of(context);
+    final query = ref.watch(statsQueryProvider);
+    final kpis = ref.watch(statsKpisProvider(query));
+    final previous = ref.watch(previousKpisProvider(query));
+    final series = ref.watch(hoursSeriesProvider(query));
+    final locations = ref.watch(locationRankingProvider(query));
+    final members = ref.watch(memberHoursRowsProvider(query));
+    final heatmap = ref.watch(checkInHeatmapProvider(query));
 
-    final selectedRange = useState(StatisticsRange.week);
+    final metric = useState(ActivityMetric.hours);
     final selectedDay = useState<DateTime?>(null);
+    final overtimeOnly = useState(false);
 
-    final filtered = filterSessionsByRange(sessions, selectedRange.value);
-    final memberHours = computeMemberHours(
-      filtered,
-      teamMembers,
-      teamMemberSessions,
-    );
-    final dailyHours = computeDailyHours(filtered, teamMemberSessions);
-    final dailyAttendance = computeDailyAttendance(teamMemberSessions);
-    final locationAttendance = computeLocationAttendance(
-      filtered,
-      locations,
-      teamMemberSessions,
-    );
-    final insights = computeInsights(filtered, locations, teamMemberSessions);
+    final dayRows = selectedDay.value == null
+        ? const <DayMemberRow>[]
+        : ref.watch(dayDetailProvider(query, selectedDay.value!));
 
-    final dayMemberDetails = selectedDay.value != null
-        ? computeDayMemberDetails(
-            selectedDay.value!,
-            filtered,
-            teamMembers,
-            teamMemberSessions,
-          )
-        : <DayMemberDetail>[];
+    final memberRows = overtimeOnly.value
+        ? members.where((row) => row.overtime > Duration.zero).toList()
+        : members;
 
-    void onDaySelected(DateTime? day) {
-      selectedDay.value = day;
+    Future<void> exportCsv() async {
+      final csv = buildCsv(
+        ['Member', 'Type', 'Regular', 'Overtime', 'Total', 'Sessions', 'Overtime %'],
+        [
+          for (final row in memberRows)
+            [
+              row.name,
+              row.memberType.name,
+              formatDuration(row.regular),
+              formatDuration(row.overtime),
+              formatDuration(row.total),
+              row.sessionCount.toString(),
+              (row.overtimeRatio * 100).toStringAsFixed(1),
+            ],
+        ],
+      );
+      final saved = await saveCsvFile(csv, 'timekeeper-statistics.csv');
+      if (saved && context.mounted) {
+        SnackBarDialog.success(message: 'Statistics exported').show(context);
+      }
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
+    final brightness = Theme.of(context).brightness;
+
+    Widget activityPanel() => DashboardPanel(
+      title: 'Activity over time',
+      subtitle: query.describe(),
+      isEmpty: series.isEmpty,
+      actions: [
+        SegmentedButton<ActivityMetric>(
+          segments: [
+            for (final value in ActivityMetric.values)
+              ButtonSegment(value: value, label: Text(value.label)),
+          ],
+          selected: {metric.value},
+          showSelectedIcon: false,
+          style: const ButtonStyle(visualDensity: VisualDensity.compact),
+          onSelectionChanged: (value) => metric.value = value.first,
+        ),
+        const SizedBox(width: 8),
+        SegmentedButton<StatsBucket>(
+          segments: [
+            for (final value in StatsBucket.values)
+              if (value != StatsBucket.auto)
+                ButtonSegment(value: value, label: Text(value.label)),
+          ],
+          selected: {query.effectiveBucket()},
+          showSelectedIcon: false,
+          style: const ButtonStyle(visualDensity: VisualDensity.compact),
+          onSelectionChanged: (value) {
+            selectedDay.value = null;
+            ref.read(statsFilterProvider.notifier).setQuery(query.copyWith(bucket: value.first));
+          },
+        ),
+      ],
+      footer: metric.value == ActivityMetric.hours
+          ? ChartLegend(
+              entries: [
+                ChartLegendEntry(label: 'Regular', color: seriesColor(0, brightness)),
+                ChartLegendEntry(label: 'Overtime', color: seriesColor(1, brightness)),
+              ],
+            )
+          : null,
+      child: ActivityChart(
+        series: series,
+        metric: metric.value,
+        bucket: query.effectiveBucket(),
+        selected: selectedDay.value,
+        onSelect: (day) => selectedDay.value = selectedDay.value == day ? null : day,
+      ),
+    );
+
+    Widget locationPanel() => DashboardPanel(
+      title: 'Location ranking',
+      subtitle: 'By total time logged',
+      isEmpty: locations.isEmpty,
+      child: LocationRanking(rows: locations),
+    );
+
+    Widget membersPanel() => DashboardPanel(
+      title: 'Members',
+      subtitle: '${memberRows.length} in range',
+      actions: [
+        FilterChip(
+          label: const Text('Overtime only'),
+          selected: overtimeOnly.value,
+          onSelected: (value) => overtimeOnly.value = value,
+        ),
+      ],
+      isEmpty: memberRows.isEmpty,
+      child: MembersGrid(rows: memberRows),
+    );
+
+    Widget heatmapPanel() => DashboardPanel(
+      title: 'Check-in rhythm',
+      subtitle: 'Check-ins by weekday and hour',
+      isEmpty: heatmap.maxCount == 0,
+      child: CheckInHeatmapChart(data: heatmap),
+    );
+
+    Widget dayPanel() => DashboardPanel(
+      title: 'Day detail — ${formatDate(selectedDay.value!)}',
+      subtitle: '${dayRows.length} members',
+      height: 220,
+      actions: [
+        IconButton(
+          tooltip: 'Close',
+          icon: const Icon(Icons.close, size: 18),
+          onPressed: () => selectedDay.value = null,
+        ),
+      ],
+      isEmpty: dayRows.isEmpty,
+      child: DayInspector(rows: dayRows),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isWide = width >= _wide;
+        final isNarrow = width < _medium;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.analytics, color: theme.colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Statistics Dashboard',
-                style: theme.textTheme.headlineMedium,
+              SizedBox(height: 44, child: StatsToolbar(query: query, onExport: exportCsv)),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: isNarrow ? 4 * 46 : 72,
+                child: KpiStrip(kpis: kpis, previous: previous, compact: isNarrow),
               ),
-              const Spacer(),
-              SegmentedButton<StatisticsRange>(
-                segments: StatisticsRange.values
-                    .map(
-                      (r) => ButtonSegment(
-                        value: r,
-                        label: Text(statisticsRangeLabel(r)),
-                      ),
-                    )
-                    .toList(),
-                selected: {selectedRange.value},
-                onSelectionChanged: (value) {
-                  selectedRange.value = value.first;
-                  selectedDay.value = null;
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Scrollable content
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Overview cards
-                  StatisticsOverviewCards(
-                    filteredSessions: filtered,
-                    teamMemberSessions: teamMemberSessions,
-                    memberHours: memberHours,
-                    insights: insights,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Charts row: Hours per Day + Location pie
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 8),
+              if (isWide)
+                SizedBox(
+                  height: 280,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        flex: 3,
-                        child: StatisticsHoursChart(
-                          dailyHours: dailyHours,
-                          selectedDay: selectedDay.value,
-                          onDaySelected: onDaySelected,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 2,
-                        child: StatisticsLocationChart(
-                          locationData: locationAttendance,
-                        ),
-                      ),
+                      Expanded(flex: 3, child: activityPanel()),
+                      const SizedBox(width: 8),
+                      Expanded(flex: 2, child: locationPanel()),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // People per day chart
-                  StatisticsAttendanceChart(
-                    dailyAttendance: dailyAttendance,
-                    selectedDay: selectedDay.value,
-                    onDaySelected: onDaySelected,
+                )
+              else ...[
+                SizedBox(height: 280, child: activityPanel()),
+                const SizedBox(height: 8),
+                SizedBox(height: 240, child: locationPanel()),
+              ],
+              // Sits below the charts so opening it never reflows them.
+              if (selectedDay.value != null) ...[const SizedBox(height: 8), dayPanel()],
+              const SizedBox(height: 8),
+              if (isWide)
+                SizedBox(
+                  height: 360,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(flex: 3, child: membersPanel()),
+                      const SizedBox(width: 8),
+                      Expanded(flex: 2, child: heatmapPanel()),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Day detail panel (shown when a day is selected)
-                  if (selectedDay.value != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: StatisticsDayDetail(
-                        selectedDay: selectedDay.value!,
-                        members: dayMemberDetails,
-                        onClose: () => selectedDay.value = null,
-                      ),
-                    ),
-
-                  // Attendance insights
-                  AttendanceInsightsCards(insights: insights),
-                  const SizedBox(height: 24),
-
-                  // Overtime flags table
-                  StatisticsOvertimeTable(memberHours: memberHours),
-                  const SizedBox(height: 24),
-
-                  // Member hours table
-                  StatisticsMemberHoursTable(memberHours: memberHours),
-                ],
-              ),
-            ),
+                )
+              else ...[
+                SizedBox(height: 360, child: membersPanel()),
+                const SizedBox(height: 8),
+                SizedBox(height: 260, child: heatmapPanel()),
+              ],
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

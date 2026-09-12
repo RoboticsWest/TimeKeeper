@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/colors.dart';
 
 enum SessionStatus { current, overtime, upcoming, finished }
 
@@ -15,16 +16,18 @@ SessionStatus getSessionStatus(Session session) {
   return SessionStatus.current;
 }
 
+/// Status colors come from the reserved support palette, never the categorical
+/// series palette — "overtime" must not be mistakable for "series 4".
 Color statusColor(SessionStatus status) {
   switch (status) {
     case SessionStatus.current:
-      return Colors.green;
+      return supportSuccessColor.shade700;
     case SessionStatus.overtime:
-      return Colors.red;
+      return supportErrorColor;
     case SessionStatus.upcoming:
-      return Colors.blue;
+      return supportInfoColor;
     case SessionStatus.finished:
-      return Colors.grey;
+      return neutralColor.shade400;
   }
 }
 

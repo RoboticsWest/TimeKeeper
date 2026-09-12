@@ -6,6 +6,7 @@ import 'package:time_keeper/providers/statistics_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/colors.dart';
 
 class LeaderboardView extends ConsumerWidget {
   const LeaderboardView({super.key});
@@ -192,7 +193,7 @@ class _HoursCell extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               '+${formatSecsAsHoursMinutes(bucket.overtimeSecs)}',
-              style: TextStyle(color: Colors.red.shade300, fontSize: 12),
+              style: TextStyle(color: supportErrorColor.shade400, fontSize: 12),
             ),
           ],
         ],
