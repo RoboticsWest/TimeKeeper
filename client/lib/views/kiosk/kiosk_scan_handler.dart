@@ -94,9 +94,20 @@ Future<void> handleKioskScan({
   final result = await ref.read(sessionCheckInOutProvider.notifier).checkInOut(memberId, currentLocation);
 
   if (!context.mounted) return;
+  showCheckInOutResult(context: context, name: name, result: result);
+}
 
-  final now = DateTime.now();
-  final timeStr = formatTime(now);
+/// Renders the outcome of a check-in/out attempt.
+///
+/// Shared by the RFID and PIN paths so both report success, "no active
+/// session" and failure identically — only the way the member was identified
+/// differs between them.
+void showCheckInOutResult({
+  required BuildContext context,
+  required String? name,
+  required ApiResult<bool> result,
+}) {
+  final timeStr = formatTime(DateTime.now());
 
   switch (result) {
     case ApiSuccess(data: final checkedIn):

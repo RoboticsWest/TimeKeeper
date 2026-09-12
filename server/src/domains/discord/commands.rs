@@ -285,6 +285,7 @@ async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> String {
       member.display_name.as_deref(),
       member.mobile_number.as_deref(),
       Some(&discord_id),
+      member.quick_pin.as_deref(),
     )
     .await
   {

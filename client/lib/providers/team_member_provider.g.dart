@@ -82,7 +82,7 @@ final class TeamMembersProvider
   }
 }
 
-String _$teamMembersHash() => r'2fb6d4e0609e8b8c8bb25f8dfdd8c8aa67017a5d';
+String _$teamMembersHash() => r'26ae8ba61283699b00330dee177497b220d13944';
 
 abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
   Map<String, TeamMember> build();

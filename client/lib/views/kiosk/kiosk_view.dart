@@ -16,6 +16,8 @@ import 'package:time_keeper/views/kiosk/kiosk_dialog.dart';
 import 'package:time_keeper/views/kiosk/kiosk_scan_handler.dart';
 import 'package:time_keeper/views/kiosk/session_info_bar.dart';
 import 'package:time_keeper/widgets/dialogs/toast_overlay.dart';
+import 'package:time_keeper/providers/rfid_suppression_provider.dart';
+import 'package:time_keeper/views/kiosk/pin_entry_dialog.dart';
 
 final _log = Logger();
 
@@ -69,10 +71,16 @@ class HomeView extends HookConsumerWidget {
         : 0;
 
     final hasKiosk = ref.watch(hasAnyPermissionProvider);
+    final quickPinEnabled =
+        ref.watch(settingsQueryProvider).value?.quickPinEnabled ?? false;
+
+    // The PIN pad accumulates digits terminated by Enter, which is exactly what
+    // the keyboard-wedge reader emits - so the scanner stands down while it's open.
+    final scannerSuppressed = ref.watch(rfidScannerSuppressedProvider);
 
     // RFID scanning (PCSC + keyboard) - only active when user has KIOSK permission
     useRfidScanner(
-      enabled: hasKiosk,
+      enabled: hasKiosk && !scannerSuppressed,
       onScan: (uid) {
         _log.i('RFID scan: $uid');
         if (context.mounted) {
@@ -129,20 +137,33 @@ class HomeView extends HookConsumerWidget {
 
     return Column(
       children: [
-        if (hasKiosk)
+        if (hasKiosk || quickPinEnabled)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 25),
             child: Align(
               alignment: Alignment.center,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.how_to_reg, color: Colors.white),
-                label: const Text(
-                  'Kiosk Check In / Out',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onPressed: () {
-                  KioskDialog(sessions: unfinishedSessions).show(context);
-                },
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: [
+                  if (hasKiosk)
+                    FilledButton.icon(
+                      icon: const Icon(Icons.how_to_reg),
+                      label: const Text('Kiosk Check In / Out'),
+                      onPressed: () {
+                        KioskDialog(sessions: unfinishedSessions).show(context);
+                      },
+                    ),
+                  // Deliberately not gated on permissions: letting a member
+                  // without a card sign themselves in is the whole point.
+                  if (quickPinEnabled)
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.dialpad),
+                      label: const Text('Sign In With PIN'),
+                      onPressed: () => PinEntryDialog.show(context),
+                    ),
+                ],
               ),
             ),
           ),

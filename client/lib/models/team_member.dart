@@ -19,6 +19,11 @@ class TeamMember {
   final String? mobileNumber;
   final String? discordId;
 
+  /// Quick sign-in PIN. Null for callers without team_members write access —
+  /// the server omits it rather than erroring, so read-only kiosks can share
+  /// this model.
+  final String? quickPin;
+
   TeamMember({
     required this.id,
     required this.firstName,
@@ -27,6 +32,7 @@ class TeamMember {
     this.displayName,
     this.mobileNumber,
     this.discordId,
+    this.quickPin,
   });
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -38,6 +44,7 @@ class TeamMember {
       displayName: json['displayName'] as String?,
       mobileNumber: json['mobileNumber'] as String?,
       discordId: json['discordId'] as String?,
+      quickPin: json['quickPin'] as String?,
     );
   }
 
@@ -49,5 +56,6 @@ class TeamMember {
     'displayName': displayName,
     'mobileNumber': mobileNumber,
     'discordId': discordId,
+    'quickPin': quickPin,
   };
 }

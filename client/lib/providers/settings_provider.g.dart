@@ -153,7 +153,7 @@ final class SettingsServiceProvider
   }
 }
 
-String _$settingsServiceHash() => r'f60e248ae1ff4a2da01d8fea4739b505eee57a5c';
+String _$settingsServiceHash() => r'99285b2d45db80d4545c623390eacbc8456ad402';
 
 abstract class _$SettingsService extends $Notifier<void> {
   void build();

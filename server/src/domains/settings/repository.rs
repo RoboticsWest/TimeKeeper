@@ -40,6 +40,7 @@ fn default_settings() -> Settings {
     discord_rsvp_reactions_enabled: true,
     discord_auto_delete_start_reminder: false,
     discord_auto_delete_end_reminder: false,
+    quick_pin_enabled: false,
   }
 }
 
@@ -99,6 +100,7 @@ impl SettingsRepository for PgSettingsRepository {
           settings::discord_rsvp_reactions_enabled.eq(defaults.discord_rsvp_reactions_enabled),
           settings::discord_auto_delete_start_reminder.eq(defaults.discord_auto_delete_start_reminder),
           settings::discord_auto_delete_end_reminder.eq(defaults.discord_auto_delete_end_reminder),
+          settings::quick_pin_enabled.eq(defaults.quick_pin_enabled),
         ))
         .on_conflict(settings::id)
         .do_update()
@@ -139,6 +141,7 @@ impl SettingsRepository for PgSettingsRepository {
           settings::discord_rsvp_reactions_enabled.eq(record.discord_rsvp_reactions_enabled),
           settings::discord_auto_delete_start_reminder.eq(record.discord_auto_delete_start_reminder),
           settings::discord_auto_delete_end_reminder.eq(record.discord_auto_delete_end_reminder),
+          settings::quick_pin_enabled.eq(record.quick_pin_enabled),
         ))
         .on_conflict(settings::id)
         .do_update()
@@ -167,6 +170,7 @@ impl SettingsRepository for PgSettingsRepository {
           settings::discord_rsvp_reactions_enabled.eq(record.discord_rsvp_reactions_enabled),
           settings::discord_auto_delete_start_reminder.eq(record.discord_auto_delete_start_reminder),
           settings::discord_auto_delete_end_reminder.eq(record.discord_auto_delete_end_reminder),
+          settings::quick_pin_enabled.eq(record.quick_pin_enabled),
         ))
         .returning(Settings::as_select())
         .get_result(&mut conn)

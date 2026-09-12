@@ -20,6 +20,7 @@ use super::repository::{LogoRepository, SettingsRepository};
 pub struct GeneralUpdate {
   pub next_session_threshold_secs: Option<i64>,
   pub timezone: Option<String>,
+  pub quick_pin_enabled: Option<bool>,
 }
 
 pub struct LeaderboardUpdate {
@@ -155,6 +156,9 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
     }
     if let Some(v) = update.timezone {
       settings.timezone = v;
+    }
+    if let Some(v) = update.quick_pin_enabled {
+      settings.quick_pin_enabled = v;
     }
     self.save(&settings).await
   }
@@ -369,11 +373,12 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
             member.display_name.as_deref(),
             member.mobile_number.as_deref(),
             Some(&discord_id),
+            member.quick_pin.as_deref(),
           )
           .await?;
         linked += 1;
       } else {
-        self.team_members.add("", "", member_type, Some(&display_name), None, Some(&discord_id)).await?;
+        self.team_members.add("", "", member_type, Some(&display_name), None, Some(&discord_id), None).await?;
         imported += 1;
       }
     }

@@ -44,6 +44,8 @@ pub struct Settings {
   pub discord_rsvp_reactions_enabled: bool,
   pub discord_auto_delete_start_reminder: bool,
   pub discord_auto_delete_end_reminder: bool,
+  /// Enables the kiosk's PIN sign-in method.
+  pub quick_pin_enabled: bool,
 }
 
 #[derive(Debug, Clone, Queryable, Selectable)]
