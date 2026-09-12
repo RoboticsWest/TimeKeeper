@@ -14,10 +14,11 @@ fn reaction_to_rsvp_status(emoji: &ReactionType) -> Option<&'static str> {
   }
 }
 
-async fn resolve_team_member(ctx: &Context, deps: &DiscordDeps, reaction: &Reaction) -> Option<TeamMember> {
+async fn resolve_team_member(deps: &DiscordDeps, reaction: &Reaction) -> Option<TeamMember> {
+  // The reaction already carries the user's ID, which is exactly what members
+  // are keyed on - no need to resolve it back into a username over HTTP.
   let user_id = reaction.user_id?;
-  let user = user_id.to_user(&ctx.http).await.ok()?;
-  deps.team_members.get_by_discord_username(&user.name).await.ok()?
+  deps.team_members.get_by_discord_id(&user_id.to_string()).await.ok()?
 }
 
 /// Handles an incoming chat message: mention greeting, then `!`-prefixed commands.
@@ -37,13 +38,13 @@ pub async fn on_message(ctx: &Context, msg: &Message, deps: &DiscordDeps, bot_us
 }
 
 /// Handles a member adding an RSVP-emoji reaction to a tracked session announcement.
-pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction, deps: &DiscordDeps, bot_user_id: Option<UserId>) {
+pub async fn on_reaction_add(reaction: &Reaction, deps: &DiscordDeps, bot_user_id: Option<UserId>) {
   let Some(user_id) = reaction.user_id else { return };
   if Some(user_id) == bot_user_id {
     return;
   }
   let Some(status) = reaction_to_rsvp_status(&reaction.emoji) else { return };
-  let Some(member) = resolve_team_member(ctx, deps, reaction).await else { return };
+  let Some(member) = resolve_team_member(deps, reaction).await else { return };
 
   session_rsvp::listener::handle_reaction_add(
     &deps.settings,
@@ -57,7 +58,7 @@ pub async fn on_reaction_add(ctx: &Context, reaction: &Reaction, deps: &DiscordD
 }
 
 /// Handles a member removing an RSVP-emoji reaction - clears their RSVP for the session.
-pub async fn on_reaction_remove(ctx: &Context, reaction: &Reaction, deps: &DiscordDeps, bot_user_id: Option<UserId>) {
+pub async fn on_reaction_remove(reaction: &Reaction, deps: &DiscordDeps, bot_user_id: Option<UserId>) {
   let Some(user_id) = reaction.user_id else { return };
   if Some(user_id) == bot_user_id {
     return;
@@ -65,7 +66,7 @@ pub async fn on_reaction_remove(ctx: &Context, reaction: &Reaction, deps: &Disco
   if reaction_to_rsvp_status(&reaction.emoji).is_none() {
     return;
   }
-  let Some(member) = resolve_team_member(ctx, deps, reaction).await else { return };
+  let Some(member) = resolve_team_member(deps, reaction).await else { return };
 
   session_rsvp::listener::handle_reaction_remove(
     &deps.settings,

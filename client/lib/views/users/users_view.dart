@@ -42,10 +42,7 @@ class UsersView extends HookConsumerWidget {
               alternatingRows: true,
               headers: [
                 const BaseTableCell(
-                  child: Text(
-                    'Username',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('Username'),
                 ),
               ],
               headerDecoration: tableHeaderDecoration(context),

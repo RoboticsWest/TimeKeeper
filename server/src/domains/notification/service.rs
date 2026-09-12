@@ -80,10 +80,11 @@ impl DiscordNotificationService {
     msg
   }
 
-  fn resolve_mention(guild_members: &[GuildMember], team_member: &TeamMember) -> Option<String> {
-    let discord_username = team_member.discord_username.as_deref().filter(|u| !u.is_empty())?;
-    let guild_member = guild_members.iter().find(|gm| gm.user.name == discord_username)?;
-    Some(format!("<@{}>", guild_member.user.id))
+  /// A mention *is* the ID, so once members are keyed on their snowflake there
+  /// is nothing to look up - the guild-member roster is no longer needed here.
+  fn resolve_mention(team_member: &TeamMember) -> Option<String> {
+    let discord_id = team_member.discord_id.as_deref().filter(|id| !id.is_empty())?;
+    Some(format!("<@{discord_id}>"))
   }
 
   async fn send_member_notification(http: &Http, channel: ChannelId, message: &str) -> bool {
@@ -100,17 +101,17 @@ impl DiscordNotificationService {
     let team_members = self.team_members.get_all().await?;
 
     for member in team_members {
-      let Some(discord_username) = member.discord_username.as_deref() else { continue };
-      if discord_username.is_empty() {
+      let Some(discord_id) = member.discord_id.as_deref() else { continue };
+      if discord_id.is_empty() {
         continue;
       }
 
-      let Some(guild_member) = guild_members.iter().find(|gm| gm.user.name == discord_username) else { continue };
+      let Some(guild_member) = guild_members.iter().find(|gm| gm.user.id.to_string() == discord_id) else { continue };
       let new_display_name = guild_member.display_name().to_string();
       let current = member.display_name.as_deref().unwrap_or("");
       if current != new_display_name {
         log::info!(
-          "[DiscordNotificationService] Syncing display name for {discord_username}: '{current}' -> '{new_display_name}'"
+          "[DiscordNotificationService] Syncing display name for {discord_id}: '{current}' -> '{new_display_name}'"
         );
         self
           .team_members
@@ -121,7 +122,7 @@ impl DiscordNotificationService {
             &member.member_type,
             Some(&new_display_name),
             member.mobile_number.as_deref(),
-            member.discord_username.as_deref(),
+            member.discord_id.as_deref(),
           )
           .await?;
       }
@@ -295,8 +296,11 @@ impl Service for DiscordNotificationService {
       }
     }
 
-    // --- Fetch guild members once ---
-    let guild_members = if settings.discord_guild_id.is_empty() {
+    // --- Fetch guild members (name sync only) ---
+    // DM notifications used to need this roster to turn a username into a
+    // mentionable ID. Members are keyed on their ID now, so name sync is the
+    // only remaining consumer and the fetch is gated on it.
+    let guild_members = if !settings.discord_name_sync_enabled || settings.discord_guild_id.is_empty() {
       None
     } else {
       let guild_id: u64 = settings.discord_guild_id.parse().map_err(|e| anyhow::anyhow!("Invalid guild ID: {e}"))?;
@@ -311,9 +315,7 @@ impl Service for DiscordNotificationService {
     };
 
     // --- Per-user DM notifications ---
-    if (settings.discord_overtime_dm_enabled || settings.discord_auto_checkout_dm_enabled)
-      && let Some(ref guild_members) = guild_members
-    {
+    if settings.discord_overtime_dm_enabled || settings.discord_auto_checkout_dm_enabled {
       let team_members = self.team_members.get_all().await?;
 
       if settings.discord_overtime_dm_enabled {
@@ -338,7 +340,7 @@ impl Service for DiscordNotificationService {
             }
 
             let Some(member) = team_members.iter().find(|m| m.id == ms.team_member_id) else { continue };
-            let Some(mention) = Self::resolve_mention(guild_members, member) else { continue };
+            let Some(mention) = Self::resolve_mention(member) else { continue };
             let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
 
             let msg = Self::replace_placeholders(overtime_template, location, pes.start_secs, pes.end_secs, tz, None)
@@ -373,7 +375,7 @@ impl Service for DiscordNotificationService {
           let Some(member_id) = notification.team_member_id else { continue };
           let Some(session) = sessions.iter().find(|s| s.id == notification.session_id) else { continue };
           let Some(member) = team_members.iter().find(|m| m.id == member_id) else { continue };
-          let Some(mention) = Self::resolve_mention(guild_members, member) else { continue };
+          let Some(mention) = Self::resolve_mention(member) else { continue };
           let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
           let location =
             locations.iter().find(|l| l.id == session.location_id).map_or("Unknown", |l| l.location.as_str());

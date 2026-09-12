@@ -16,5 +16,5 @@ pub struct TeamMember {
   pub member_type: String,
   pub display_name: Option<String>,
   pub mobile_number: Option<String>,
-  pub discord_username: Option<String>,
+  pub discord_id: Option<String>,
 }

@@ -80,7 +80,7 @@ class TeamView extends HookConsumerWidget {
       return m.firstName.toLowerCase().contains(filterText) ||
           m.lastName.toLowerCase().contains(filterText) ||
           (m.displayName ?? '').toLowerCase().contains(filterText) ||
-          (m.discordUsername ?? '').toLowerCase().contains(filterText) ||
+          (m.discordId ?? '').toLowerCase().contains(filterText) ||
           type.contains(filterText);
     }).toList();
 
@@ -149,37 +149,25 @@ class TeamView extends HookConsumerWidget {
               alternatingRows: true,
               headers: [
                 BaseTableCell(
-                  child: Text(
-                    'First Name',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('First Name'),
                 ),
                 BaseTableCell(
-                  child: Text(
-                    'Last Name',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('Last Name'),
                 ),
                 BaseTableCell(
-                  child: Text('Type', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Type'),
                 ),
                 BaseTableCell(
-                  child: Text(
-                    'Display Name',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('Display Name'),
                 ),
                 BaseTableCell(
-                  child: Text(
-                    'RFID Tags',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('RFID Tags'),
                 ),
                 BaseTableCell(
-                  child: Text('Discord', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Discord'),
                 ),
                 BaseTableCell(
-                  child: Text('Status', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Status'),
                 ),
               ],
               headerDecoration: tableHeaderDecoration(context),
@@ -205,7 +193,7 @@ class TeamView extends HookConsumerWidget {
                     existingLastName: member.lastName,
                     existingMemberType: member.memberType,
                     existingDisplayName: member.displayName,
-                    existingDiscordUsername: member.discordUsername,
+                    existingDiscordId: member.discordId,
                   ),
                   onDelete: () => showDeleteTeamMemberDialog(
                     context,
@@ -224,7 +212,7 @@ class TeamView extends HookConsumerWidget {
                     ),
                     BaseTableCell(child: Text(tagDisplay)),
                     BaseTableCell(
-                      child: Text(member.discordUsername ?? '—'),
+                      child: Text(member.discordId ?? '—'),
                     ),
                     BaseTableCell(
                       child: CheckInOutButton(
