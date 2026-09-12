@@ -54,9 +54,10 @@ impl Web {
       .route("/health", get(|| async { "OK" }))
       // Static file serving as fallback
       .fallback_service(
-        ServiceBuilder::new()
-          .layer(cors)
-          .service(ServeDir::new("client/build/web").fallback(ServeFile::new("client/build/web/index.html"))),
+        ServiceBuilder::new().layer(cors).service(
+          ServeDir::new(&self.static_dir)
+            .fallback(ServeFile::new(std::path::Path::new(&self.static_dir).join("index.html"))),
+        ),
       )
       // Add WASM headers middleware
       .layer(middleware::from_fn(set_wasm_headers))

@@ -1,0 +1,24 @@
+services:
+  timekeeper:
+    container_name: timekeeper
+    image: ghcr.io/roboticswest/timekeeper:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      # Externally-managed Postgres instance, reachable on the `proxy` network.
+      DATABASE_URL: ${DATABASE_URL}
+      TK_ADMIN_PASSWORD: ${TK_ADMIN_PASSWORD}
+      RUST_LOG: ${RUST_LOG:-info}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - proxy
+
+# Shared with Caddy, which reverse-proxies the API to `timekeeper:4000` and serves the
+# Flutter build from /srv/timekeeper/web.
+networks:
+  proxy:
+    external: true

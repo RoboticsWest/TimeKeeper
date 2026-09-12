@@ -1,11 +1,7 @@
-FROM ghcr.io/cirruslabs/flutter:stable AS flutter-build
-WORKDIR /src/client
-COPY client .
-RUN flutter pub get
-RUN dart run flutter_launcher_icons
-RUN flutter build web --release --wasm --no-web-resources-cdn
-
-FROM rust:1-bookworm AS rust-build
+# API-only image. The Flutter web build is NOT baked in — the deployment serves it as a
+# static directory from the reverse proxy (see deploy/timekeeper/Caddyfile), so the server
+# runs with `--no-web`.
+FROM rust:1-bookworm AS build
 WORKDIR /src
 RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev && rm -rf /var/lib/apt/lists/*
 COPY Cargo.toml Cargo.lock ./
@@ -14,8 +10,8 @@ COPY server ./server
 RUN cargo build --release -p server
 
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends libpq5 ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends libpq5 ca-certificates curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=rust-build /src/target/release/main /app/server
-COPY --from=flutter-build /src/client/build/web /app/client/build/web
-ENTRYPOINT ["/app/server", "--web-port", "80"]
+COPY --from=build /src/target/release/main /app/server
+EXPOSE 4000
+ENTRYPOINT ["/app/server", "--no-web"]
