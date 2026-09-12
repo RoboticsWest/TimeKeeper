@@ -39,6 +39,20 @@ jobs:
           push: true
           tags: ${{ steps.image.outputs.tag }}
 
+      # Web image: nginx serving the Flutter build from the main image + proxying
+      # API paths to the timekeeper container. Built last since it copies the web
+      # build out of the main image (via the TK_IMAGE build arg).
+      - id: web-image
+        run: echo "tag=ghcr.io/roboticswest/timekeeper-web:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/timekeeper/web/Dockerfile
+          build-args: TK_IMAGE=${{ steps.image.outputs.tag }}
+          push: true
+          tags: ${{ steps.web-image.outputs.tag }}
+
   deploy:
     needs: build
     if: github.ref == 'refs/heads/main'

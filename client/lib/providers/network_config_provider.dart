@@ -81,10 +81,6 @@ class Tls extends _$Tls {
   }
 
   bool _getStoredTls() {
-    // Auto-detect TLS from the current page scheme if not explicitly set
-    if (kIsWeb && !localStorage.containsKey(_key)) {
-      return Uri.base.scheme == 'https';
-    }
     bool tls = _defaultTls;
     if (localStorage.containsKey(_key)) {
       tls = localStorage.getBool(_key) ?? _defaultTls;
@@ -95,5 +91,33 @@ class Tls extends _$Tls {
   @override
   bool build() {
     return _getStoredTls();
+  }
+}
+
+/// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
+/// probe).
+///
+/// On the web, when the app is served from the same host as the API (a reverse
+/// proxy like Caddy/nginx routes `/graphql`, `/graphql/ws` and `/health` to the
+/// backend), the API is reached through the *same origin the page was served
+/// from* instead of a separately configured `host:port`. Overriding the host or
+/// the port in settings switches back to explicit `scheme://host:port` mode.
+/// The TLS toggle applies to native builds and to explicit host/port mode only;
+/// on the web behind a proxy the scheme always follows the page origin.
+@Riverpod(keepAlive: true)
+class ServerBaseUri extends _$ServerBaseUri {
+  @override
+  Uri build() {
+    final serverIp = ref.watch(serverIpProvider);
+    final graphqlPort = ref.watch(serverGraphqlPortProvider);
+    final tls = ref.watch(tlsProvider);
+
+    final hasStoredPort = localStorage.containsKey(ServerGraphqlPort._key);
+    final isServedOverHttp = Uri.base.scheme == 'http' || Uri.base.scheme == 'https';
+
+    if (kIsWeb && !hasStoredPort && serverIp == Uri.base.host && isServedOverHttp) {
+      return Uri.parse(Uri.base.origin);
+    }
+    return Uri(scheme: tls ? 'https' : 'http', host: serverIp, port: graphqlPort);
   }
 }
