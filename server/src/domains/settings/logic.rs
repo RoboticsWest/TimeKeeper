@@ -358,8 +358,7 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
       // ID - so re-running the import re-links members whose old username-based
       // link was dropped by the 0003 migration. No separate backfill needed.
       let by_display_name = existing_members.iter().find(|m| {
-        m.discord_id.as_ref().is_none_or(String::is_empty)
-          && m.display_name.as_deref() == Some(display_name.as_str())
+        m.discord_id.as_ref().is_none_or(String::is_empty) && m.display_name.as_deref() == Some(display_name.as_str())
       });
 
       if let Some(member) = by_display_name {

@@ -157,10 +157,11 @@ pub fn locations(names: &[String]) -> CreateEmbed {
 /// rendered template stays as content and this embed carries the structured
 /// detail alongside it.
 pub fn session_facts(title: &str, colour: Colour, location: &str, start_secs: i64, end_secs: i64) -> CreateEmbed {
-  base(title, colour)
-    .field("Location", location, true)
-    .field("Starts", format!("<t:{start_secs}:t>"), true)
-    .field("Ends", format!("<t:{end_secs}:t>"), true)
+  base(title, colour).field("Location", location, true).field("Starts", format!("<t:{start_secs}:t>"), true).field(
+    "Ends",
+    format!("<t:{end_secs}:t>"),
+    true,
+  )
 }
 
 #[cfg(test)]
