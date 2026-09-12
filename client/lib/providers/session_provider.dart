@@ -40,6 +40,12 @@ const _deleteSessionMutation = r'''
   }
 ''';
 
+const _checkInOutByPinMutation = r'''
+  mutation CheckInOutByPin($pin: String!, $locationId: UUID!) {
+    checkInOutByPin(pin: $pin, locationId: $locationId) { checkedIn teamMemberId }
+  }
+''';
+
 const _checkInOutMutation = r'''
   mutation CheckInOut($teamMemberId: UUID!, $locationId: UUID!) {
     checkInOut(teamMemberId: $teamMemberId, locationId: $locationId)
@@ -143,4 +149,40 @@ class SessionCheckInOut extends _$SessionCheckInOut {
     }
     return ApiSuccess(result.data!['checkInOut'] as bool);
   }
+
+  /// Checks in/out by quick PIN. The PIN is resolved server-side — kiosks never
+  /// receive other members' PINs — so this returns the member it matched along
+  /// with the resulting state.
+  Future<ApiResult<PinCheckInOut>> checkInOutByPin(String pin, String locationId) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(_checkInOutByPinMutation),
+        variables: {'pin': pin, 'locationId': locationId},
+        fetchPolicy: FetchPolicy.noCache,
+      ),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiFailure(userMessage: message);
+    }
+    final data = result.data!['checkInOutByPin'] as Map<String, dynamic>;
+    return ApiSuccess(
+      PinCheckInOut(
+        checkedIn: data['checkedIn'] as bool,
+        teamMemberId: data['teamMemberId'] as String,
+      ),
+    );
+  }
+}
+
+/// Result of a successful PIN sign-in.
+class PinCheckInOut {
+  /// True for checked in, false for checked out.
+  final bool checkedIn;
+  final String teamMemberId;
+
+  const PinCheckInOut({required this.checkedIn, required this.teamMemberId});
 }

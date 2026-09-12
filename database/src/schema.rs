@@ -127,6 +127,7 @@ diesel::table! {
         discord_rsvp_reactions_enabled -> Bool,
         discord_auto_delete_start_reminder -> Bool,
         discord_auto_delete_end_reminder -> Bool,
+        quick_pin_enabled -> Bool,
     }
 }
 
@@ -149,6 +150,7 @@ diesel::table! {
         display_name -> Nullable<Text>,
         mobile_number -> Nullable<Text>,
         discord_id -> Nullable<Text>,
+        quick_pin -> Nullable<Text>,
     }
 }
 

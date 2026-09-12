@@ -12,7 +12,8 @@ const _settingsFields =
     'discordEndReminderMins discordStartReminderMessage discordEndReminderMessage discordOvertimeDmEnabled '
     'discordOvertimeDmMins discordOvertimeDmMessage discordAutoCheckoutDmEnabled discordAutoCheckoutDmMessage '
     'discordCheckoutEnabled discordEnabled timezone leaderboardShowOvertime '
-    'leaderboardMemberTypes discordRsvpReactionsEnabled discordAutoDeleteStartReminder discordAutoDeleteEndReminder';
+    'leaderboardMemberTypes discordRsvpReactionsEnabled discordAutoDeleteStartReminder discordAutoDeleteEndReminder '
+    'quickPinEnabled';
 
 const _settingsQuery = '''
   query GetSettings {
@@ -63,14 +64,19 @@ class SettingsService extends _$SettingsService {
   @override
   void build() {}
 
-  Future<ApiCallResult> updateGeneral({int? nextSessionThresholdSecs, String? timezone}) => _mutate(
-    r'''
-      mutation UpdateGeneralSettings($nextSessionThresholdSecs: Int, $timezone: String) {
-        updateGeneralSettings(nextSessionThresholdSecs: $nextSessionThresholdSecs, timezone: $timezone)
+  Future<ApiCallResult> updateGeneral({int? nextSessionThresholdSecs, String? timezone, bool? quickPinEnabled}) =>
+      _mutate(
+        r'''
+      mutation UpdateGeneralSettings($nextSessionThresholdSecs: Int, $timezone: String, $quickPinEnabled: Boolean) {
+        updateGeneralSettings(nextSessionThresholdSecs: $nextSessionThresholdSecs, timezone: $timezone, quickPinEnabled: $quickPinEnabled)
       }
     ''',
-    {'nextSessionThresholdSecs': nextSessionThresholdSecs, 'timezone': timezone},
-  );
+        {
+          'nextSessionThresholdSecs': nextSessionThresholdSecs,
+          'timezone': timezone,
+          'quickPinEnabled': quickPinEnabled,
+        },
+      );
 
   Future<ApiCallResult> updateLeaderboard({bool? showOvertime, required List<String> memberTypes}) => _mutate(
     r'''

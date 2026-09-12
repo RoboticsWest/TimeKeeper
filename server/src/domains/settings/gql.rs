@@ -57,9 +57,10 @@ impl SettingsMutation {
     ctx: &Context<'_>,
     next_session_threshold_secs: Option<i64>,
     timezone: Option<String>,
+    quick_pin_enabled: Option<bool>,
   ) -> Result<bool> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
-    logic(ctx)?.update_general(GeneralUpdate { next_session_threshold_secs, timezone }).await?;
+    logic(ctx)?.update_general(GeneralUpdate { next_session_threshold_secs, timezone, quick_pin_enabled }).await?;
     Ok(true)
   }
 

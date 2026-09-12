@@ -14,6 +14,7 @@ import 'package:time_keeper/views/setup/common/setting_row.dart';
 import 'package:time_keeper/views/setup/common/settings_page_layout.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/views/setup/common/switch_setting.dart';
 
 class MemberSetupTab extends HookConsumerWidget {
   const MemberSetupTab({super.key});
@@ -21,6 +22,7 @@ class MemberSetupTab extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final showOvertime = useState(true);
+    final quickPinEnabled = useState(false);
     final selectedMemberTypes = useState<Set<TeamMemberType>>(
       Set.from(TeamMemberType.values),
     );
@@ -31,6 +33,7 @@ class MemberSetupTab extends HookConsumerWidget {
         final s = await ref.read(settingsQueryProvider.future);
         if (s != null) {
           showOvertime.value = s.leaderboardShowOvertime;
+          quickPinEnabled.value = s.quickPinEnabled;
           if (s.leaderboardMemberTypes.isNotEmpty) {
             selectedMemberTypes.value = s.leaderboardMemberTypes.map(TeamMemberType.fromJson).toSet();
           }
@@ -75,6 +78,26 @@ class MemberSetupTab extends HookConsumerWidget {
       title: 'Team Member Setup',
       subtitle: 'Configure your team settings',
       children: [
+        SwitchSetting(
+          label: 'Quick PIN Sign-In',
+          description:
+              'Show a PIN keypad on the kiosk so members without an RFID card can '
+              'sign themselves in and out. Set each member\'s PIN from the Team page.',
+          value: quickPinEnabled.value,
+          onChanged: (enabled) async {
+            quickPinEnabled.value = enabled;
+            final res = await ref
+                .read(settingsServiceProvider.notifier)
+                .updateGeneral(quickPinEnabled: enabled);
+            if (!res.success) {
+              quickPinEnabled.value = !enabled;
+              if (context.mounted) {
+                PopupDialog.fromApiResult(result: res).show(context);
+              }
+            }
+          },
+        ),
+        const SizedBox(height: 24),
         FileUploadSetting(
           label: 'Upload Student CSV',
           description: 'Upload a CSV file containing the student data',

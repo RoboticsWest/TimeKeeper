@@ -178,7 +178,7 @@ final class SessionCheckInOutProvider
   }
 }
 
-String _$sessionCheckInOutHash() => r'10522ee3340118027dbeb78fd180e047c4d3c9db';
+String _$sessionCheckInOutHash() => r'6131d6ea6e8f33ca65853cb7e477676104a94349';
 
 /// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
 

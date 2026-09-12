@@ -29,6 +29,23 @@ fn logic(ctx: &Context<'_>) -> Result<Arc<dyn TeamMemberLogic>> {
   Ok(ctx.data::<Arc<dyn TeamMemberLogic>>()?.clone())
 }
 
+/// Treats a blank PIN as "no PIN", so clearing the field in the admin UI
+/// releases the value for reuse instead of storing an empty string that would
+/// collide with every other cleared PIN under the unique index.
+fn normalize_quick_pin(quick_pin: Option<String>) -> Option<String> {
+  quick_pin.map(|pin| pin.trim().to_string()).filter(|pin| !pin.is_empty())
+}
+
+/// Turns the unique-index violation into a message an admin can act on.
+fn map_quick_pin_conflict(err: &anyhow::Error) -> Error {
+  let text = err.to_string();
+  if text.contains("team_members_quick_pin_key") {
+    Error::new("That PIN is already in use by another team member.")
+  } else {
+    Error::new(text)
+  }
+}
+
 #[derive(Default)]
 pub struct TeamMemberQuery;
 
@@ -73,14 +90,23 @@ impl TeamMemberMutation {
     member_type: String,
     display_name: Option<String>,
     discord_id: Option<String>,
+    quick_pin: Option<String>,
   ) -> Result<TeamMember> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     validate_member_type(&member_type)?;
-    Ok(
-      logic(ctx)?
-        .add(&first_name, &last_name, &member_type, display_name.as_deref(), None, discord_id.as_deref())
-        .await?,
-    )
+    let quick_pin = normalize_quick_pin(quick_pin);
+    logic(ctx)?
+      .add(
+        &first_name,
+        &last_name,
+        &member_type,
+        display_name.as_deref(),
+        None,
+        discord_id.as_deref(),
+        quick_pin.as_deref(),
+      )
+      .await
+      .map_err(|e| map_quick_pin_conflict(&e))
   }
 
   #[allow(clippy::too_many_arguments)]
@@ -93,6 +119,7 @@ impl TeamMemberMutation {
     member_type: String,
     display_name: Option<String>,
     discord_id: Option<String>,
+    quick_pin: Option<String>,
   ) -> Result<TeamMember> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     validate_member_type(&member_type)?;
@@ -100,11 +127,20 @@ impl TeamMemberMutation {
     if logic.get(id).await?.is_none() {
       return Err(Error::new("Team member not found"));
     }
-    Ok(
-      logic
-        .update(id, &first_name, &last_name, &member_type, display_name.as_deref(), None, discord_id.as_deref())
-        .await?,
-    )
+    let quick_pin = normalize_quick_pin(quick_pin);
+    logic
+      .update(
+        id,
+        &first_name,
+        &last_name,
+        &member_type,
+        display_name.as_deref(),
+        None,
+        discord_id.as_deref(),
+        quick_pin.as_deref(),
+      )
+      .await
+      .map_err(|e| map_quick_pin_conflict(&e))
   }
 
   async fn delete_team_member(&self, ctx: &Context<'_>, id: Uuid) -> Result<bool> {
