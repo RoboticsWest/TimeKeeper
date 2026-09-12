@@ -16,6 +16,6 @@ RUN cargo build --release -p server
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends libpq5 ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-COPY --from=rust-build /src/target/release/server /app/server
+COPY --from=rust-build /src/target/release/main /app/server
 COPY --from=flutter-build /src/client/build/web /app/client/build/web
 ENTRYPOINT ["/app/server", "--web-port", "80"]
