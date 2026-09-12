@@ -151,19 +151,19 @@ class NotificationsView extends HookConsumerWidget {
               alternatingRows: true,
               headers: [
                 BaseTableCell(
-                  child: Text('Type', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Type'),
                   flex: 3,
                 ),
                 BaseTableCell(
-                  child: Text('Session', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Session'),
                   flex: 4,
                 ),
                 BaseTableCell(
-                  child: Text('Member', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Member'),
                   flex: 2,
                 ),
                 BaseTableCell(
-                  child: Text('Status', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Status'),
                   flex: 1,
                 ),
               ],

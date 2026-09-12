@@ -8,7 +8,7 @@ import 'package:time_keeper/utils/api_result.dart';
 
 part 'team_member_provider.g.dart';
 
-const _teamMemberFields = 'id firstName lastName memberType displayName mobileNumber discordUsername';
+const _teamMemberFields = 'id firstName lastName memberType displayName mobileNumber discordId';
 
 const _teamMembersQuery = '''
   query TeamMembers {
@@ -35,14 +35,14 @@ const _uploadMentorCsvMutation = r'''
 ''';
 
 const _createTeamMemberMutation = '''
-  mutation CreateTeamMember(\$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordUsername: String) {
-    createTeamMember(firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordUsername: \$discordUsername) { $_teamMemberFields }
+  mutation CreateTeamMember(\$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordId: String) {
+    createTeamMember(firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordId: \$discordId) { $_teamMemberFields }
   }
 ''';
 
 const _updateTeamMemberMutation = '''
-  mutation UpdateTeamMember(\$id: UUID!, \$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordUsername: String) {
-    updateTeamMember(id: \$id, firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordUsername: \$discordUsername) { $_teamMemberFields }
+  mutation UpdateTeamMember(\$id: UUID!, \$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordId: String) {
+    updateTeamMember(id: \$id, firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordId: \$discordId) { $_teamMemberFields }
   }
 ''';
 
@@ -98,13 +98,13 @@ class TeamMembers extends _$TeamMembers {
     required String lastName,
     required String memberType,
     String? displayName,
-    String? discordUsername,
+    String? discordId,
   }) => _mutate(_createTeamMemberMutation, {
     'firstName': firstName,
     'lastName': lastName,
     'memberType': memberType,
     'displayName': displayName,
-    'discordUsername': discordUsername,
+    'discordId': discordId,
   });
 
   Future<ApiCallResult> update({
@@ -113,14 +113,14 @@ class TeamMembers extends _$TeamMembers {
     required String lastName,
     required String memberType,
     String? displayName,
-    String? discordUsername,
+    String? discordId,
   }) => _mutate(_updateTeamMemberMutation, {
     'id': id,
     'firstName': firstName,
     'lastName': lastName,
     'memberType': memberType,
     'displayName': displayName,
-    'discordUsername': discordUsername,
+    'discordId': discordId,
   });
 
   Future<ApiCallResult> delete(String id) => _mutate(_deleteTeamMemberMutation, {'id': id});

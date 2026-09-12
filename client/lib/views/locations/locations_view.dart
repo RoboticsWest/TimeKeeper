@@ -86,10 +86,7 @@ class LocationsView extends HookConsumerWidget {
               alternatingRows: true,
               headers: [
                 BaseTableCell(
-                  child: Text(
-                    'Location Name',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('Location Name'),
                   flex: 3,
                 ),
               ],

@@ -17,7 +17,7 @@ class TeamMember {
   final TeamMemberType memberType;
   final String? displayName;
   final String? mobileNumber;
-  final String? discordUsername;
+  final String? discordId;
 
   TeamMember({
     required this.id,
@@ -26,7 +26,7 @@ class TeamMember {
     required this.memberType,
     this.displayName,
     this.mobileNumber,
-    this.discordUsername,
+    this.discordId,
   });
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -37,7 +37,7 @@ class TeamMember {
       memberType: TeamMemberType.fromJson(json['memberType'] as String),
       displayName: json['displayName'] as String?,
       mobileNumber: json['mobileNumber'] as String?,
-      discordUsername: json['discordUsername'] as String?,
+      discordId: json['discordId'] as String?,
     );
   }
 
@@ -48,6 +48,6 @@ class TeamMember {
     'memberType': memberType.toJson(),
     'displayName': displayName,
     'mobileNumber': mobileNumber,
-    'discordUsername': discordUsername,
+    'discordId': discordId,
   };
 }

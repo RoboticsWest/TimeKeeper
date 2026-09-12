@@ -25,7 +25,7 @@ pub trait TeamMemberLogic: Send + Sync {
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<TeamMember>>;
   async fn get_all(&self) -> anyhow::Result<Vec<TeamMember>>;
   async fn get_by_member_type(&self, member_type: &str) -> anyhow::Result<Vec<TeamMember>>;
-  async fn get_by_discord_username(&self, discord_username: &str) -> anyhow::Result<Option<TeamMember>>;
+  async fn get_by_discord_id(&self, discord_id: &str) -> anyhow::Result<Option<TeamMember>>;
   async fn get_by_name(&self, first_name: &str, last_name: &str) -> anyhow::Result<Vec<TeamMember>>;
   #[allow(clippy::too_many_arguments)]
   async fn add(
@@ -35,7 +35,7 @@ pub trait TeamMemberLogic: Send + Sync {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<TeamMember>;
   #[allow(clippy::too_many_arguments)]
   async fn update(
@@ -46,11 +46,11 @@ pub trait TeamMemberLogic: Send + Sync {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<TeamMember>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
   async fn clear(&self) -> anyhow::Result<()>;
-  /// Parses a CSV upload (`FIRST_NAME,LAST_NAME,DISPLAY_NAME,RFID_TAG,DISCORD_USERNAME`) and adds
+  /// Parses a CSV upload (`FIRST_NAME,LAST_NAME,DISPLAY_NAME,RFID_TAG,DISCORD_ID`) and adds
   /// every row not already present (matched by first + last name) as a team member of
   /// `member_type` ("student"/"mentor"), assigning the RFID tag column if present. Used by
   /// `UploadStudentCsv`/`UploadMentorCsv`.
@@ -82,8 +82,8 @@ impl<R: TeamMemberRepository> TeamMemberLogic for DefaultTeamMemberLogic<R> {
     self.repo.get_by_member_type(member_type).await
   }
 
-  async fn get_by_discord_username(&self, discord_username: &str) -> anyhow::Result<Option<TeamMember>> {
-    self.repo.get_by_discord_username(discord_username).await
+  async fn get_by_discord_id(&self, discord_id: &str) -> anyhow::Result<Option<TeamMember>> {
+    self.repo.get_by_discord_id(discord_id).await
   }
 
   async fn get_by_name(&self, first_name: &str, last_name: &str) -> anyhow::Result<Vec<TeamMember>> {
@@ -97,10 +97,10 @@ impl<R: TeamMemberRepository> TeamMemberLogic for DefaultTeamMemberLogic<R> {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<TeamMember> {
     let display_name = fill_display_name(first_name, last_name, display_name);
-    self.repo.add(first_name, last_name, member_type, display_name.as_deref(), mobile_number, discord_username).await
+    self.repo.add(first_name, last_name, member_type, display_name.as_deref(), mobile_number, discord_id).await
   }
 
   async fn update(
@@ -111,12 +111,12 @@ impl<R: TeamMemberRepository> TeamMemberLogic for DefaultTeamMemberLogic<R> {
     member_type: &str,
     display_name: Option<&str>,
     mobile_number: Option<&str>,
-    discord_username: Option<&str>,
+    discord_id: Option<&str>,
   ) -> anyhow::Result<TeamMember> {
     let display_name = fill_display_name(first_name, last_name, display_name);
     self
       .repo
-      .update(id, first_name, last_name, member_type, display_name.as_deref(), mobile_number, discord_username)
+      .update(id, first_name, last_name, member_type, display_name.as_deref(), mobile_number, discord_id)
       .await?
       .ok_or_else(|| anyhow::anyhow!("Team member not found"))
   }
@@ -145,7 +145,7 @@ impl<R: TeamMemberRepository> TeamMemberLogic for DefaultTeamMemberLogic<R> {
           member_type,
           row.display_name.as_deref(),
           None,
-          row.discord_username.as_deref(),
+          row.discord_id.as_deref(),
         )
         .await?;
 

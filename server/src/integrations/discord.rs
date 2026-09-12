@@ -25,12 +25,12 @@ impl EventHandler for Handler {
     listener::on_message(&ctx, &msg, &self.deps, self.bot_user_id.get().copied()).await;
   }
 
-  async fn reaction_add(&self, ctx: Context, reaction: Reaction) {
-    listener::on_reaction_add(&ctx, &reaction, &self.deps, self.bot_user_id.get().copied()).await;
+  async fn reaction_add(&self, _ctx: Context, reaction: Reaction) {
+    listener::on_reaction_add(&reaction, &self.deps, self.bot_user_id.get().copied()).await;
   }
 
-  async fn reaction_remove(&self, ctx: Context, reaction: Reaction) {
-    listener::on_reaction_remove(&ctx, &reaction, &self.deps, self.bot_user_id.get().copied()).await;
+  async fn reaction_remove(&self, _ctx: Context, reaction: Reaction) {
+    listener::on_reaction_remove(&reaction, &self.deps, self.bot_user_id.get().copied()).await;
   }
 
   async fn ready(&self, _ctx: Context, ready: Ready) {

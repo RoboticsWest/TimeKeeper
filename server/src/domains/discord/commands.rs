@@ -245,7 +245,7 @@ async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> String {
     return "Usage: `!link Name` (e.g. `!link John Smith` or `!link DisplayName`)".to_string();
   }
 
-  let discord_username = msg.author.name.clone();
+  let discord_id = msg.author.id.to_string();
 
   let parts: Vec<&str> = search_text.split_whitespace().collect();
   let mut found: Option<TeamMember> = None;
@@ -271,7 +271,7 @@ async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> String {
 
   let name = member_name(&member).to_string();
 
-  if member.discord_username.as_ref().is_some_and(|u| !u.is_empty()) {
+  if member.discord_id.as_ref().is_some_and(|id| !id.is_empty()) {
     return format!("{name} is already linked to a Discord account.");
   }
 
@@ -284,14 +284,15 @@ async fn link_member(msg: &Message, args: &str, deps: &DiscordDeps) -> String {
       &member.member_type,
       member.display_name.as_deref(),
       member.mobile_number.as_deref(),
-      Some(&discord_username),
+      Some(&discord_id),
     )
     .await
   {
     return format!("Error linking account: {e}");
   }
 
-  format!("Linked **{name}** to Discord user **{discord_username}**.")
+  // Store the ID, but show the humans a name they recognise.
+  format!("Linked **{name}** to Discord user **{}**.", msg.author.name)
 }
 
 async fn checkout(msg: &Message, deps: &DiscordDeps) -> String {
@@ -306,15 +307,11 @@ async fn checkout(msg: &Message, deps: &DiscordDeps) -> String {
     return "Discord checkout is not enabled. Contact an admin to enable it in settings.".to_string();
   }
 
-  let discord_username = &msg.author.name;
-
-  let members = match deps.team_members.get_all().await {
+  // Indexed lookup on the snowflake, rather than scanning every member.
+  let found = match deps.team_members.get_by_discord_id(&msg.author.id.to_string()).await {
     Ok(m) => m,
     Err(e) => return format!("Error loading team members: {e}"),
   };
-
-  let found =
-    members.into_iter().find(|m| m.discord_username.as_ref().is_some_and(|u| u.eq_ignore_ascii_case(discord_username)));
 
   let Some(member) = found else {
     return if settings.discord_self_link_enabled {

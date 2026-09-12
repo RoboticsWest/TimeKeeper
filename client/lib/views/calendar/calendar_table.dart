@@ -22,21 +22,21 @@ class CalendarTable extends ConsumerWidget {
       headerDecoration: tableHeaderDecoration(context),
       headers: [
         BaseTableCell(
-          child: Text('Date', style: TextStyle(color: Colors.white)),
+          child: TableHeaderText('Date'),
           flex: 2,
         ),
         BaseTableCell(
-          child: Text('Time', style: TextStyle(color: Colors.white)),
+          child: TableHeaderText('Time'),
           flex: 2,
         ),
         BaseTableCell(
-          child: Text('Duration', style: TextStyle(color: Colors.white)),
+          child: TableHeaderText('Duration'),
         ),
         BaseTableCell(
-          child: Text('Location', style: TextStyle(color: Colors.white)),
+          child: TableHeaderText('Location'),
         ),
         BaseTableCell(
-          child: Text('Status', style: TextStyle(color: Colors.white)),
+          child: TableHeaderText('Status'),
         ),
       ],
       rows: sessions.map((entry) {

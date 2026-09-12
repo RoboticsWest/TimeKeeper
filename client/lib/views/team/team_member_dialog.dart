@@ -18,7 +18,7 @@ void showTeamMemberDialog(
   String? existingLastName,
   TeamMemberType? existingMemberType,
   String? existingDisplayName,
-  String? existingDiscordUsername,
+  String? existingDiscordId,
 }) {
   final isEdit = id != null;
 
@@ -31,7 +31,7 @@ void showTeamMemberDialog(
       initialLastName: existingLastName,
       initialMemberType: existingMemberType,
       initialDisplayName: existingDisplayName,
-      initialDiscordUsername: existingDiscordUsername,
+      initialDiscordId: existingDiscordId,
     ),
     actions: const [],
   ).show(context);
@@ -60,7 +60,7 @@ class _TeamMemberForm extends HookConsumerWidget {
   final String? initialLastName;
   final TeamMemberType? initialMemberType;
   final String? initialDisplayName;
-  final String? initialDiscordUsername;
+  final String? initialDiscordId;
 
   const _TeamMemberForm({
     required this.isEdit,
@@ -69,7 +69,7 @@ class _TeamMemberForm extends HookConsumerWidget {
     this.initialLastName,
     this.initialMemberType,
     this.initialDisplayName,
-    this.initialDiscordUsername,
+    this.initialDiscordId,
   });
 
   @override
@@ -84,8 +84,8 @@ class _TeamMemberForm extends HookConsumerWidget {
       text: initialDisplayName ?? '',
     );
     final newRfidTagController = useTextEditingController();
-    final discordUsernameController = useTextEditingController(
-      text: initialDiscordUsername ?? '',
+    final discordIdController = useTextEditingController(
+      text: initialDiscordId ?? '',
     );
     final memberType = useState<TeamMemberType>(
       initialMemberType ?? TeamMemberType.student,
@@ -221,11 +221,14 @@ class _TeamMemberForm extends HookConsumerWidget {
           ),
           const SizedBox(height: 16),
           TextField(
-            controller: discordUsernameController,
+            controller: discordIdController,
             decoration: const InputDecoration(
-              labelText: 'Discord Username (optional)',
+              labelText: 'Discord ID (optional)',
+              helperText: 'Numeric user ID — enable Developer Mode in Discord, '
+                  'then right-click the user and "Copy User ID"',
               border: OutlineInputBorder(),
             ),
+            keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 24),
           Row(
@@ -246,7 +249,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                         final lastName = lastNameController.text.trim();
                         final displayName = displayNameController.text.trim();
                         final newRfidTag = newRfidTagController.text.trim();
-                        final discordUsername = discordUsernameController.text
+                        final discordId = discordIdController.text
                             .trim();
                         final type = memberType.value;
                         final label = displayName.isNotEmpty
@@ -263,14 +266,14 @@ class _TeamMemberForm extends HookConsumerWidget {
                                   lastName: lastName,
                                   memberType: type.toJson(),
                                   displayName: displayName.isNotEmpty ? displayName : null,
-                                  discordUsername: discordUsername.isNotEmpty ? discordUsername : null,
+                                  discordId: discordId.isNotEmpty ? discordId : null,
                                 )
                               : await notifier.create(
                                   firstName: firstName,
                                   lastName: lastName,
                                   memberType: type.toJson(),
                                   displayName: displayName.isNotEmpty ? displayName : null,
-                                  discordUsername: discordUsername.isNotEmpty ? discordUsername : null,
+                                  discordId: discordId.isNotEmpty ? discordId : null,
                                 );
 
                           // Create RFID tag for new member if provided

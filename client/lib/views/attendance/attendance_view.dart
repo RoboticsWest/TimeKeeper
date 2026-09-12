@@ -222,29 +222,23 @@ class AttendanceView extends HookConsumerWidget {
               alternatingRows: true,
               headers: [
                 BaseTableCell(
-                  child: Text('Member', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Member'),
                   flex: 2,
                 ),
                 BaseTableCell(
-                  child: Text('Session', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Session'),
                   flex: 2,
                 ),
                 BaseTableCell(
-                  child: Text(
-                    'Check In',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('Check In'),
                   flex: 2,
                 ),
                 BaseTableCell(
-                  child: Text(
-                    'Check Out',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: TableHeaderText('Check Out'),
                   flex: 2,
                 ),
                 BaseTableCell(
-                  child: Text('Status', style: TextStyle(color: Colors.white)),
+                  child: TableHeaderText('Status'),
                 ),
               ],
               headerDecoration: tableHeaderDecoration(context),

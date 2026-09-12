@@ -148,7 +148,7 @@ diesel::table! {
         member_type -> Text,
         display_name -> Nullable<Text>,
         mobile_number -> Nullable<Text>,
-        discord_username -> Nullable<Text>,
+        discord_id -> Nullable<Text>,
     }
 }
 
