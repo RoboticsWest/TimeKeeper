@@ -81,6 +81,7 @@ class TeamView extends HookConsumerWidget {
           m.lastName.toLowerCase().contains(filterText) ||
           (m.displayName ?? '').toLowerCase().contains(filterText) ||
           (m.discordId ?? '').toLowerCase().contains(filterText) ||
+          (m.quickPin ?? '').contains(filterText) ||
           type.contains(filterText);
     }).toList();
 
@@ -167,6 +168,9 @@ class TeamView extends HookConsumerWidget {
                   child: TableHeaderText('Discord'),
                 ),
                 BaseTableCell(
+                  child: TableHeaderText('PIN'),
+                ),
+                BaseTableCell(
                   child: TableHeaderText('Status'),
                 ),
               ],
@@ -194,6 +198,7 @@ class TeamView extends HookConsumerWidget {
                     existingMemberType: member.memberType,
                     existingDisplayName: member.displayName,
                     existingDiscordId: member.discordId,
+                    existingQuickPin: member.quickPin,
                   ),
                   onDelete: () => showDeleteTeamMemberDialog(
                     context,
@@ -213,6 +218,9 @@ class TeamView extends HookConsumerWidget {
                     BaseTableCell(child: Text(tagDisplay)),
                     BaseTableCell(
                       child: Text(member.discordId ?? '—'),
+                    ),
+                    BaseTableCell(
+                      child: Text(member.quickPin ?? '—'),
                     ),
                     BaseTableCell(
                       child: CheckInOutButton(

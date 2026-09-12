@@ -123,6 +123,7 @@ impl DiscordNotificationService {
             Some(&new_display_name),
             member.mobile_number.as_deref(),
             member.discord_id.as_deref(),
+            member.quick_pin.as_deref(),
           )
           .await?;
       }

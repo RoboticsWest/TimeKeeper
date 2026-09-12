@@ -19,6 +19,7 @@ void showTeamMemberDialog(
   TeamMemberType? existingMemberType,
   String? existingDisplayName,
   String? existingDiscordId,
+  String? existingQuickPin,
 }) {
   final isEdit = id != null;
 
@@ -32,6 +33,7 @@ void showTeamMemberDialog(
       initialMemberType: existingMemberType,
       initialDisplayName: existingDisplayName,
       initialDiscordId: existingDiscordId,
+      initialQuickPin: existingQuickPin,
     ),
     actions: const [],
   ).show(context);
@@ -61,6 +63,7 @@ class _TeamMemberForm extends HookConsumerWidget {
   final TeamMemberType? initialMemberType;
   final String? initialDisplayName;
   final String? initialDiscordId;
+  final String? initialQuickPin;
 
   const _TeamMemberForm({
     required this.isEdit,
@@ -70,6 +73,7 @@ class _TeamMemberForm extends HookConsumerWidget {
     this.initialMemberType,
     this.initialDisplayName,
     this.initialDiscordId,
+    this.initialQuickPin,
   });
 
   @override
@@ -86,6 +90,9 @@ class _TeamMemberForm extends HookConsumerWidget {
     final newRfidTagController = useTextEditingController();
     final discordIdController = useTextEditingController(
       text: initialDiscordId ?? '',
+    );
+    final quickPinController = useTextEditingController(
+      text: initialQuickPin ?? '',
     );
     final memberType = useState<TeamMemberType>(
       initialMemberType ?? TeamMemberType.student,
@@ -230,6 +237,17 @@ class _TeamMemberForm extends HookConsumerWidget {
             ),
             keyboardType: TextInputType.number,
           ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: quickPinController,
+            decoration: const InputDecoration(
+              labelText: 'Quick PIN (optional)',
+              helperText: 'Typed at the kiosk to sign in without a card. '
+                  'Any length, and must be unique across the team.',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.number,
+          ),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -251,6 +269,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                         final newRfidTag = newRfidTagController.text.trim();
                         final discordId = discordIdController.text
                             .trim();
+                        final quickPin = quickPinController.text.trim();
                         final type = memberType.value;
                         final label = displayName.isNotEmpty
                             ? displayName
@@ -267,6 +286,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                                   memberType: type.toJson(),
                                   displayName: displayName.isNotEmpty ? displayName : null,
                                   discordId: discordId.isNotEmpty ? discordId : null,
+                                  quickPin: quickPin.isNotEmpty ? quickPin : null,
                                 )
                               : await notifier.create(
                                   firstName: firstName,
@@ -274,6 +294,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                                   memberType: type.toJson(),
                                   displayName: displayName.isNotEmpty ? displayName : null,
                                   discordId: discordId.isNotEmpty ? discordId : null,
+                                  quickPin: quickPin.isNotEmpty ? quickPin : null,
                                 );
 
                           // Create RFID tag for new member if provided

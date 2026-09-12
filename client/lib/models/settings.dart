@@ -23,6 +23,7 @@ class Settings {
   final bool discordRsvpReactionsEnabled;
   final bool discordAutoDeleteStartReminder;
   final bool discordAutoDeleteEndReminder;
+  final bool quickPinEnabled;
 
   Settings({
     required this.nextSessionThresholdSecs,
@@ -49,6 +50,7 @@ class Settings {
     required this.discordRsvpReactionsEnabled,
     required this.discordAutoDeleteStartReminder,
     required this.discordAutoDeleteEndReminder,
+    required this.quickPinEnabled,
   });
 
   factory Settings.fromJson(Map<String, dynamic> json) {
@@ -77,6 +79,7 @@ class Settings {
       discordRsvpReactionsEnabled: json['discordRsvpReactionsEnabled'] as bool,
       discordAutoDeleteStartReminder: json['discordAutoDeleteStartReminder'] as bool,
       discordAutoDeleteEndReminder: json['discordAutoDeleteEndReminder'] as bool,
+      quickPinEnabled: json['quickPinEnabled'] as bool,
     );
   }
 }
