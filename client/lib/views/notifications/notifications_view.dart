@@ -17,6 +17,7 @@ import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/colors.dart';
 
 class NotificationsView extends HookConsumerWidget {
   const NotificationsView({super.key});
@@ -135,10 +136,10 @@ class NotificationsView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref, notifications),
-                icon: Icon(Icons.delete_sweep, size: 18, color: Colors.red),
-                label: Text('Clear All', style: TextStyle(color: Colors.red)),
+                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
+                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.red),
+                  side: BorderSide(color: theme.colorScheme.error),
                 ),
               ),
             ],
@@ -201,7 +202,7 @@ class NotificationsView extends HookConsumerWidget {
                       child: Text(
                         n.sent ? 'Sent' : 'Pending',
                         style: TextStyle(
-                          color: n.sent ? Colors.green : Colors.orange,
+                          color: n.sent ? supportSuccessColor.shade700 : supportWarningColor.shade700,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

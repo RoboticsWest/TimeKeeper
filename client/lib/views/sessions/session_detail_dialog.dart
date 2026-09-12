@@ -8,6 +8,7 @@ import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
+import 'package:time_keeper/colors.dart';
 
 void showSessionDetailDialog(
   BuildContext context,
@@ -112,8 +113,8 @@ void showSessionDetailDialog(
                                 : Icons.radio_button_checked,
                             size: 16,
                             color: ms.checkOutTime != null
-                                ? Colors.grey
-                                : Colors.green,
+                                ? neutralColor.shade400
+                                : supportSuccessColor.shade700,
                           ),
                           const SizedBox(width: 8),
                           Expanded(child: Text(name)),

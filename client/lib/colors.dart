@@ -37,22 +37,3 @@ final supportInfoColor = createMaterialColor(_supportInfoColor);
 final neutralColor = createMaterialColor(_neutralColor);
 final surfaceColor = createMaterialColor(_surfaceColor);
 final lightSurfaceColor = createMaterialColor(_lightSurfaceColor);
-
-// Vibrant colors palette - avoiding cyan/teal/blue to prevent clash with primary/secondary
-const _vibrantColorPalette = [
-  Color(0xFFE74C3C), // Red
-  Color(0xFF9B59B6), // Purple
-  Color(0xFFF39C12), // Orange
-  Color(0xFF2ECC71), // Green
-  Color(0xFFE91E63), // Pink/Magenta
-  Color(0xFFD35400), // Dark Orange
-  Color(0xFFF1C40F), // Yellow
-  Color(0xFF16A085), // Dark Teal (warmer, less blue)
-  Color(0xFFBDC3C7), // Silver
-];
-
-/// Get a vibrant color by index. Wraps around infinitely.
-/// Avoids cyan/teal/blue hues that would clash with primary/secondary colors.
-Color vibrantColors(int index) {
-  return _vibrantColorPalette[index % _vibrantColorPalette.length];
-}

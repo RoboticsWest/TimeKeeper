@@ -99,10 +99,10 @@ class SessionView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref, sessions),
-                icon: Icon(Icons.delete_sweep, size: 18, color: Colors.red),
-                label: Text('Clear All', style: TextStyle(color: Colors.red)),
+                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
+                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.red),
+                  side: BorderSide(color: theme.colorScheme.error),
                 ),
               ),
               const SizedBox(width: 12),
