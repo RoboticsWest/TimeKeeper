@@ -26,6 +26,7 @@ class SettingsView extends HookConsumerWidget {
     ref.watch(locationsSyncProvider);
     final serverIp = ref.watch(serverIpProvider);
     final graphqlPort = ref.watch(serverGraphqlPortProvider);
+    final tls = ref.watch(tlsProvider);
     final locations = ref.watch(locationsProvider);
     final currentLocationId = ref.watch(currentLocationProvider);
 
@@ -95,6 +96,20 @@ class SettingsView extends HookConsumerWidget {
             final mins = int.tryParse(debounceController.text) ?? 0;
             ref.read(scanDebounceMinsProvider.notifier).setMins(mins);
             _showConfirmation(context, 'Scan debounce updated');
+          },
+        ),
+        const SizedBox(height: 24),
+        SwitchListTile(
+          title: const Text('Use TLS (HTTPS/WSS)'),
+          subtitle: Text(
+            'Enable secure connections to the server. '
+            'When the web app is served through a reverse proxy (Caddy/nginx), '
+            'this is derived automatically from the page origin.',
+          ),
+          value: tls,
+          onChanged: (value) {
+            ref.read(tlsProvider.notifier).setTls(value);
+            _showConfirmation(context, 'TLS ${value ? 'enabled' : 'disabled'}');
           },
         ),
         const SizedBox(height: 24),

@@ -41,7 +41,7 @@ final class ScanDebounceMinsProvider
   }
 }
 
-String _$scanDebounceMinsHash() => r'a71231ee203c44e5cd790cbe0ce84e9f7e0da726';
+String _$scanDebounceMinsHash() => r'e410143b322f9a1b73c55a4ce90147bc86d45351';
 
 abstract class _$ScanDebounceMins extends $Notifier<int> {
   int build();
