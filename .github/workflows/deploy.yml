@@ -71,15 +71,13 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: IMAGE_TAG,DATABASE_URL,TK_ADMIN_PASSWORD,TK_PROXY_TOKEN,TK_PROXY_DOMAIN,RUST_LOG,GH_TOKEN,GH_ACTOR
+          envs: IMAGE_TAG,DATABASE_URL,TK_ADMIN_PASSWORD,GH_TOKEN,GH_ACTOR
           script: |
             cat > /srv/timekeeper/.env <<ENVEOF
             IMAGE_TAG=${IMAGE_TAG}
             DATABASE_URL=${DATABASE_URL}
             TK_ADMIN_PASSWORD=${TK_ADMIN_PASSWORD}
-            TK_PROXY_TOKEN=${TK_PROXY_TOKEN}
-            TK_PROXY_DOMAIN=${TK_PROXY_DOMAIN}
-            RUST_LOG=${RUST_LOG}
+            RUST_LOG=info
             ENVEOF
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
             cd /srv/timekeeper
@@ -90,8 +88,5 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           TK_ADMIN_PASSWORD: ${{ secrets.TK_ADMIN_PASSWORD }}
-          TK_PROXY_TOKEN: ${{ secrets.TK_PROXY_TOKEN }}
-          TK_PROXY_DOMAIN: ${{ secrets.TK_PROXY_DOMAIN }}
-          RUST_LOG: ${{ secrets.RUST_LOG }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
