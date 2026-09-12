@@ -39,8 +39,7 @@ impl TeamMember {
   /// share one selection set, so erroring here would break every read-only
   /// client's team-member query instead of just omitting a field it can't see.
   async fn quick_pin(&self, ctx: &Context<'_>) -> Result<Option<String>> {
-    let permitted =
-      get_auth(ctx).is_some_and(|claims| claims.has_permission("team_members", PermissionLevel::Write));
+    let permitted = get_auth(ctx).is_some_and(|claims| claims.has_permission("team_members", PermissionLevel::Write));
 
     Ok(if permitted { self.quick_pin.clone() } else { None })
   }
