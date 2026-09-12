@@ -19,7 +19,7 @@ class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
   @override
   GraphQLClient build() {
     final serverIp = ref.watch(serverIpProvider);
-    final apiPort = ref.watch(serverApiPortProvider);
+    final graphqlPort = ref.watch(serverGraphqlPortProvider);
     final tls = ref.watch(tlsProvider);
     final token = ref.watch(tokenProvider);
 
@@ -27,12 +27,12 @@ class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
     final wsScheme = tls ? 'wss' : 'ws';
 
     final httpLink = HttpLink(
-      '$httpScheme://$serverIp:$apiPort/graphql',
+      '$httpScheme://$serverIp:$graphqlPort/graphql',
       defaultHeaders: token != null && token.isNotEmpty ? <String, String>{'Authorization': 'Bearer $token'} : {},
     );
 
     final wsLink = WebSocketLink(
-      '$wsScheme://$serverIp:$apiPort/graphql/ws',
+      '$wsScheme://$serverIp:$graphqlPort/graphql/ws',
       subProtocol: GraphQLProtocol.graphqlTransportWs,
       config: SocketClientConfig(
         initialPayload: token != null && token.isNotEmpty
@@ -45,7 +45,7 @@ class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
 
     final link = Link.split(_isSubscription, wsLink, httpLink);
 
-    logger.i('GraphQL client created: $serverIp:$apiPort (TLS: $tls)');
+    logger.i('GraphQL client created: $serverIp:$graphqlPort (TLS: $tls)');
 
     return GraphQLClient(link: link, cache: GraphQLCache());
   }

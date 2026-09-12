@@ -42,7 +42,7 @@ final class TimeKeeperGraphQLClientProvider
 }
 
 String _$timeKeeperGraphQLClientHash() =>
-    r'929a05e51ff27d54ae1658e5720ebe30f2e00386';
+    r'15034047fc0810e5f3104e0dfe7de2cf0502876d';
 
 abstract class _$TimeKeeperGraphQLClient extends $Notifier<GraphQLClient> {
   GraphQLClient build();

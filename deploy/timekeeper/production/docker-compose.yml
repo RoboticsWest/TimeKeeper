@@ -7,8 +7,6 @@ services:
       # Externally-managed Postgres instance, conventionally named `timekeeper-db`.
       DATABASE_URL: ${DATABASE_URL}
       TK_ADMIN_PASSWORD: ${TK_ADMIN_PASSWORD}
-      TK_PROXY_TOKEN: ${TK_PROXY_TOKEN}
-      TK_PROXY_DOMAIN: ${TK_PROXY_DOMAIN}
       RUST_LOG: ${RUST_LOG:-info}
     networks:
       - proxy

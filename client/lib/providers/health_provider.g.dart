@@ -44,4 +44,4 @@ final class IsConnectedProvider
   }
 }
 
-String _$isConnectedHash() => r'7094d1d2b823804c01a8f4bf883a8b6815cea804';
+String _$isConnectedHash() => r'3dc087290de932e50f693d6af842b673e5af566a';

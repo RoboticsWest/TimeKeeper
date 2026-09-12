@@ -25,13 +25,13 @@ class SettingsView extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(locationsSyncProvider);
     final serverIp = ref.watch(serverIpProvider);
-    final apiPort = ref.watch(serverApiPortProvider);
+    final graphqlPort = ref.watch(serverGraphqlPortProvider);
     final locations = ref.watch(locationsProvider);
     final currentLocationId = ref.watch(currentLocationProvider);
 
     final addressController = useTextEditingController(text: serverIp);
-    final apiPortController = useTextEditingController(
-      text: apiPort.toString(),
+    final graphqlPortController = useTextEditingController(
+      text: graphqlPort.toString(),
     );
 
     final debounceMins = ref.watch(scanDebounceMinsProvider);
@@ -112,17 +112,17 @@ class SettingsView extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'API Port',
-          description: 'The port used for gRPC API connections',
-          controller: apiPortController,
-          hintText: '50051',
+          label: 'GraphQL Port',
+          description: 'The port used for GraphQL API connections',
+          controller: graphqlPortController,
+          hintText: '4000',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onUpdate: () {
-            final port = int.tryParse(apiPortController.text);
+            final port = int.tryParse(graphqlPortController.text);
             if (port != null) {
-              ref.read(serverApiPortProvider.notifier).setPort(port);
-              _showConfirmation(context, 'API port updated');
+              ref.read(serverGraphqlPortProvider.notifier).setPort(port);
+              _showConfirmation(context, 'GraphQL port updated');
             }
           },
         ),

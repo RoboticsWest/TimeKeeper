@@ -212,12 +212,12 @@ impl Server {
       permissions_repo,
     );
 
-    let api_addr: std::net::SocketAddr =
-      format!("{}:{}", config.addr, config.api_port).parse().expect("Error parsing API address");
-    let api_server = Api::new(api_addr, schema);
+    let graphql_addr: std::net::SocketAddr =
+      format!("{}:{}", config.addr, config.graphql_port).parse().expect("Error parsing API address");
+    let graphql_server = Api::new(graphql_addr, schema);
     let api_cancel = cancel.clone();
-    let mut api_handle = tokio::spawn(async move {
-      if let Err(e) = api_server.serve(api_cancel).await {
+    let mut graphql_handle = tokio::spawn(async move {
+      if let Err(e) = graphql_server.serve(api_cancel).await {
         log::error!("API Server Error: {e:?}");
       }
     });
@@ -239,7 +239,7 @@ impl Server {
 
     let timeout_future = async {
       let (api_result, web_result, discord_result, notify_result) =
-        tokio::join!(&mut api_handle, &mut web_handle, &mut discord_handle, &mut notify_handle);
+        tokio::join!(&mut graphql_handle, &mut web_handle, &mut discord_handle, &mut notify_handle);
       api_result.and(web_result).and(discord_result).and(notify_result)
     };
 
@@ -248,7 +248,7 @@ impl Server {
       Ok(Err(e)) => log::error!("Service task panicked: {e:?}"),
       Err(_) => {
         log::warn!("Shutdown timeout - force aborting...");
-        api_handle.abort();
+        graphql_handle.abort();
         web_handle.abort();
         discord_handle.abort();
         notify_handle.abort();
