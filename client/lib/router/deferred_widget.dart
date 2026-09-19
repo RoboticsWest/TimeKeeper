@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/helpers/deferred_load_heal.dart';
 
 class DeferredWidget extends HookConsumerWidget {
   final String libraryKey;
@@ -25,7 +26,10 @@ class DeferredWidget extends HookConsumerWidget {
     final libraryFuture = useMemoized(() async {
       if (!_loadedLibraries.contains(libraryKey)) {
         // First load: wait for both library AND minimum duration
-        await Future.wait([libraryLoader(), Future<void>.delayed(minimumLoadDuration)]);
+        await Future.wait([
+          libraryLoader(),
+          Future<void>.delayed(minimumLoadDuration),
+        ]);
         _loadedLibraries.add(libraryKey);
       } else {
         // Already loaded: instant
@@ -37,6 +41,11 @@ class DeferredWidget extends HookConsumerWidget {
 
     if (snapshot.connectionState == ConnectionState.done) {
       if (snapshot.hasError) {
+        // Rare, but persistent: the deferred part failed to load (typically the
+        // service worker is serving a cached bad response). The web shell
+        // listens for this and clears caches + reloads. Native simply shows the
+        // error text as before.
+        notifyDeferredLoadFailure();
         return Center(child: Text('Failed to load: ${snapshot.error}'));
       }
       return builder(context);

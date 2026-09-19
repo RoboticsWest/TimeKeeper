@@ -37,6 +37,8 @@ pub struct AttendanceFilterInput {
   pub member_types: Option<Vec<String>>,
   /// True for people still checked in, false for completed visits, omitted for both.
   pub checked_in_only: Option<bool>,
+  /// Case-insensitive substring over the member's first, last and display name.
+  pub search: Option<String>,
 }
 
 impl From<AttendanceFilterInput> for AttendanceFilter {
@@ -49,6 +51,7 @@ impl From<AttendanceFilterInput> for AttendanceFilter {
       location_ids: input.location_ids.unwrap_or_default(),
       member_types: input.member_types.unwrap_or_default(),
       checked_in_only: input.checked_in_only,
+      search: input.search,
     }
   }
 }

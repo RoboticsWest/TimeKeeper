@@ -28,6 +28,7 @@ dependencies:
   async: ^2.8.2
   dart_pcsc: ^2.0.2
   marionette_flutter: ^0.6.0
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:

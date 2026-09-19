@@ -6,14 +6,20 @@ import 'package:time_keeper/views/locations/location_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
+import 'package:time_keeper/widgets/tables/client_pagination.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class LocationsView extends HookConsumerWidget {
   const LocationsView({super.key});
 
-  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> locations) {
+  void _showClearDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> locations,
+  ) {
     final ids = locations.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No locations to delete').show(context);
@@ -47,12 +53,16 @@ class LocationsView extends HookConsumerWidget {
     final filterController = useTextEditingController();
     final filterText = useValueListenable(filterController).text.toLowerCase();
 
-    final sorted = locations.entries.toList()..sort((a, b) => a.value.location.compareTo(b.value.location));
+    final sorted = locations.entries.toList()
+      ..sort((a, b) => a.value.location.compareTo(b.value.location));
 
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
       return entry.value.location.toLowerCase().contains(filterText);
     }).toList();
+
+    final pager = useClientPagination(filtered.length);
+    final pageItems = pager.slice(filtered);
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -65,9 +75,18 @@ class LocationsView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref, locations),
-                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
-                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
-                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
+                icon: Icon(
+                  Icons.delete_sweep,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
+                label: Text(
+                  'Clear All',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: theme.colorScheme.error),
+                ),
               ),
             ],
           ),
@@ -77,21 +96,45 @@ class LocationsView extends HookConsumerWidget {
           Expanded(
             child: EditTable(
               alternatingRows: true,
-              headers: [BaseTableCell(child: TableHeaderText('Location Name'), flex: 3)],
+              headers: [
+                BaseTableCell(child: TableHeaderText('Location Name'), flex: 3),
+              ],
               headerDecoration: tableHeaderDecoration(context),
-              editRows: filtered.map((entry) {
+              editRows: pageItems.map((entry) {
                 final id = entry.key;
                 final location = entry.value;
                 return EditTableRow(
                   key: ValueKey(id),
-                  onEdit: () => showLocationDialog(context, ref, id: id, existingName: location.location),
-                  onDelete: () => showDeleteLocationDialog(context, ref, id: id, name: location.location),
-                  cells: [BaseTableCell(child: Text(location.location), flex: 3)],
+                  onEdit: () => showLocationDialog(
+                    context,
+                    ref,
+                    id: id,
+                    existingName: location.location,
+                  ),
+                  onDelete: () => showDeleteLocationDialog(
+                    context,
+                    ref,
+                    id: id,
+                    name: location.location,
+                  ),
+                  cells: [
+                    BaseTableCell(child: Text(location.location), flex: 3),
+                  ],
                 );
               }).toList(),
               onAdd: () => showLocationDialog(context, ref),
             ),
           ),
+          if (filtered.isNotEmpty)
+            PaginationBar(
+              totalCount: filtered.length,
+              offset: pager.clampedOffset(filtered.length),
+              pageSize: pager.pageSize,
+              hasMore: pager.offset + pager.pageSize < filtered.length,
+              onPageSizeChanged: pager.setPageSize,
+              onPrevious: pager.previousPage,
+              onNext: pager.nextPage,
+            ),
         ],
       ),
     );

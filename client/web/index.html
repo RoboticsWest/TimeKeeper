@@ -33,6 +33,67 @@
     <link rel="manifest" href="manifest.json" />
   </head>
   <body>
+    <!--
+      This app is served from GitHub Pages, which does not let us set cache headers. After a
+      deploy the old service worker can keep serving stale main.dart.js_*.part.js, and the app
+      then dies with "DeferredLoadException ... part not loaded". Clear the stale caches and
+      reload once instead of asking the user to wipe their site storage. Each visit self-heals
+      at most twice, so a genuinely broken deploy cannot loop.
+    -->
+    <script>
+      (function () {
+        if (!('serviceWorker' in navigator) || !window.caches || !window.caches.keys) return;
+
+        var KEY = 'tk-web-heal-count';
+        var RE = /DeferredLoadException|part not loaded|part\.js not loaded|dart2jsRetry/i;
+        function attends() {
+          var n = 0;
+          try { n = parseInt(sessionStorage.getItem(KEY) || '0', 10) || 0; } catch (e) {}
+          n += 1;
+          try { sessionStorage.setItem(KEY, String(n)); } catch (e) {}
+          return n;
+        }
+
+        function heal() {
+          if (attends() > 2) return;
+          var unregister = navigator.serviceWorker.getRegistrations
+            ? navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister(); }));
+              })
+            : Promise.resolve();
+          var clearCaches = window.caches.keys().then(function (names) {
+            return Promise.all(names.map(function (n) { return window.caches.delete(n); }));
+          });
+          Promise.all([unregister, clearCaches]).then(function () {
+            try { window.location.reload(); } catch (e) {}
+          });
+        }
+
+        window.addEventListener('unhandledrejection', function (e) {
+          var reason = e && e.reason;
+          var msg = String((reason && (reason.message || reason)) || '');
+          if (RE.test(msg)) heal();
+        });
+        window.addEventListener('error', function (e) {
+          var msg = String((e && e.message) || '');
+          if (RE.test(msg)) heal();
+        });
+        window.addEventListener('tk-deferred-load-error', function () {
+          heal();
+        });
+
+        // Boot watchdog: if Flutter never manages to boot at all (part load
+        // fails before routing), no Dart code runs to dispatch the event
+        // above. Heal once if the app view never appears.
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            var booted = !!(document.querySelector('flutter-view, flt-glass-pane') ||
+              document.getElementById('flutter-view'));
+            if (!booted) heal();
+          }, 30000);
+        });
+      })();
+    </script>
     <script src="flutter_bootstrap.js" async></script>
   </body>
 </html>

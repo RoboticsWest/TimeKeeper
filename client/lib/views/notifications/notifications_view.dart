@@ -14,7 +14,9 @@ import 'package:time_keeper/views/notifications/notification_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
+import 'package:time_keeper/widgets/tables/client_pagination.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 import 'package:time_keeper/colors.dart';
@@ -47,7 +49,11 @@ String _scheduleLabel(Notification n) {
 class NotificationsView extends HookConsumerWidget {
   const NotificationsView({super.key});
 
-  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, Notification> notifications) {
+  void _showClearDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, Notification> notifications,
+  ) {
     final ids = notifications.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No notifications to delete').show(context);
@@ -72,7 +78,11 @@ class NotificationsView extends HookConsumerWidget {
     ).show(context);
   }
 
-  String _formatSessionLabel(Map<String, Session> sessions, Map<String, Location> locations, String sessionId) {
+  String _formatSessionLabel(
+    Map<String, Session> sessions,
+    Map<String, Location> locations,
+    String sessionId,
+  ) {
     final session = sessions[sessionId];
     if (session == null) return sessionId;
     final start = session.startTime;
@@ -84,11 +94,16 @@ class NotificationsView extends HookConsumerWidget {
     return '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)}';
   }
 
-  String _formatMemberName(Map<String, TeamMember> teamMembers, String? memberId) {
+  String _formatMemberName(
+    Map<String, TeamMember> teamMembers,
+    String? memberId,
+  ) {
     if (memberId == null || memberId.isEmpty) return '-';
     final member = teamMembers[memberId];
     if (member == null) return memberId;
-    if (member.displayName != null && member.displayName!.isNotEmpty) return member.displayName!;
+    if (member.displayName != null && member.displayName!.isNotEmpty) {
+      return member.displayName!;
+    }
     return '${member.firstName} ${member.lastName}';
   }
 
@@ -112,8 +127,10 @@ class NotificationsView extends HookConsumerWidget {
         // Sort by session start time descending, then by type
         final sessionA = sessions[a.value.sessionId];
         final sessionB = sessions[b.value.sessionId];
-        final startA = sessionA?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final startB = sessionB?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final startA =
+            sessionA?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final startB =
+            sessionB?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
         final cmp = startB.compareTo(startA);
         if (cmp != 0) return cmp;
         return a.value.notificationType.compareTo(b.value.notificationType);
@@ -123,7 +140,11 @@ class NotificationsView extends HookConsumerWidget {
       if (filterText.isEmpty) return true;
       final n = entry.value;
       final typeLabel = notificationTypeLabel(n.notificationType);
-      final sessionLabel = _formatSessionLabel(sessions, locations, n.sessionId);
+      final sessionLabel = _formatSessionLabel(
+        sessions,
+        locations,
+        n.sessionId,
+      );
       final memberLabel = _formatMemberName(teamMembers, n.teamMemberId);
       final statusLabel = NotificationStatus.label(n.status).toLowerCase();
       return typeLabel.toLowerCase().contains(filterText) ||
@@ -131,6 +152,9 @@ class NotificationsView extends HookConsumerWidget {
           memberLabel.toLowerCase().contains(filterText) ||
           statusLabel.contains(filterText);
     }).toList();
+
+    final pager = useClientPagination(filtered.length);
+    final pageItems = pager.slice(filtered);
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -143,9 +167,18 @@ class NotificationsView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref, notifications),
-                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
-                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
-                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
+                icon: Icon(
+                  Icons.delete_sweep,
+                  size: 18,
+                  color: theme.colorScheme.error,
+                ),
+                label: Text(
+                  'Clear All',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: theme.colorScheme.error),
+                ),
               ),
             ],
           ),
@@ -163,31 +196,65 @@ class NotificationsView extends HookConsumerWidget {
                 BaseTableCell(child: TableHeaderText('When'), flex: 2),
               ],
               headerDecoration: tableHeaderDecoration(context),
-              editRows: filtered.map((entry) {
+              editRows: pageItems.map((entry) {
                 final id = entry.key;
                 final n = entry.value;
                 return EditTableRow(
                   key: ValueKey(id),
-                  onEdit: () => showNotificationDialog(context, ref, id: id, existing: n),
-                  onDelete: () => showDeleteNotificationDialog(context, ref, id: id),
+                  onEdit: () =>
+                      showNotificationDialog(context, ref, id: id, existing: n),
+                  onDelete: () =>
+                      showDeleteNotificationDialog(context, ref, id: id),
                   cells: [
-                    BaseTableCell(child: Text(notificationTypeLabel(n.notificationType)), flex: 3),
-                    BaseTableCell(child: Text(_formatSessionLabel(sessions, locations, n.sessionId)), flex: 4),
-                    BaseTableCell(child: Text(_formatMemberName(teamMembers, n.teamMemberId)), flex: 2),
+                    BaseTableCell(
+                      child: Text(notificationTypeLabel(n.notificationType)),
+                      flex: 3,
+                    ),
+                    BaseTableCell(
+                      child: Text(
+                        _formatSessionLabel(sessions, locations, n.sessionId),
+                      ),
+                      flex: 4,
+                    ),
+                    BaseTableCell(
+                      child: Text(
+                        _formatMemberName(teamMembers, n.teamMemberId),
+                      ),
+                      flex: 2,
+                    ),
                     BaseTableCell(
                       child: Text(
                         NotificationStatus.label(n.status),
-                        style: TextStyle(color: _statusColor(n.status), fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: _statusColor(n.status),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       flex: 1,
                     ),
-                    BaseTableCell(child: Text(_scheduleLabel(n), style: theme.textTheme.bodySmall), flex: 2),
+                    BaseTableCell(
+                      child: Text(
+                        _scheduleLabel(n),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      flex: 2,
+                    ),
                   ],
                 );
               }).toList(),
               onAdd: () => showNotificationDialog(context, ref),
             ),
           ),
+          if (filtered.isNotEmpty)
+            PaginationBar(
+              totalCount: filtered.length,
+              offset: pager.clampedOffset(filtered.length),
+              pageSize: pager.pageSize,
+              hasMore: pager.offset + pager.pageSize < filtered.length,
+              onPageSizeChanged: pager.setPageSize,
+              onPrevious: pager.previousPage,
+              onNext: pager.nextPage,
+            ),
         ],
       ),
     );

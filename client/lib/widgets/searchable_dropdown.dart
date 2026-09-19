@@ -19,19 +19,32 @@ class SearchableDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedLabel = items.where((item) => item.key == selectedKey).map((item) => item.label).firstOrNull ?? '';
+    final selectedLabel =
+        items
+            .where((item) => item.key == selectedKey)
+            .map((item) => item.label)
+            .firstOrNull ??
+        '';
 
     return InkWell(
       onTap: () async {
         final result = await showDialog<String>(
           context: context,
-          builder: (context) => _SearchDialog(title: label, items: items, selectedKey: selectedKey),
+          builder: (context) => _SearchDialog(
+            title: label,
+            items: items,
+            selectedKey: selectedKey,
+          ),
         );
         if (result != null) {
           onSelected(result);
         }
       },
       child: InputDecorator(
+        // Without `isEmpty` the decorator assumes the child always has content, so the label
+        // stays floated on the border even when nothing is selected. Telling it the truth makes
+        // the label sit centered as a placeholder when empty and float when something is picked.
+        isEmpty: selectedLabel.isEmpty,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -41,7 +54,9 @@ class SearchableDropdown extends StatelessWidget {
           selectedLabel,
           overflow: TextOverflow.ellipsis,
           style: selectedLabel.isEmpty
-              ? Theme.of(context).textTheme.bodyLarge?.copyWith(color: Theme.of(context).hintColor)
+              ? Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).hintColor,
+                )
               : null,
         ),
       ),
@@ -54,7 +69,11 @@ class _SearchDialog extends HookWidget {
   final List<({String key, String label})> items;
   final String? selectedKey;
 
-  const _SearchDialog({required this.title, required this.items, this.selectedKey});
+  const _SearchDialog({
+    required this.title,
+    required this.items,
+    this.selectedKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +82,13 @@ class _SearchDialog extends HookWidget {
 
     final filtered = searchText.value.isEmpty
         ? items
-        : items.where((item) => item.label.toLowerCase().contains(searchText.value.toLowerCase())).toList();
+        : items
+              .where(
+                (item) => item.label.toLowerCase().contains(
+                  searchText.value.toLowerCase(),
+                ),
+              )
+              .toList();
 
     return Dialog(
       child: ConstrainedBox(
@@ -101,7 +126,9 @@ class _SearchDialog extends HookWidget {
                             dense: true,
                             selected: isSelected,
                             title: Text(item.label),
-                            trailing: isSelected ? const Icon(Icons.check, size: 18) : null,
+                            trailing: isSelected
+                                ? const Icon(Icons.check, size: 18)
+                                : null,
                             onTap: () => Navigator.of(context).pop(item.key),
                           );
                         },

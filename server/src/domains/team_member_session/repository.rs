@@ -30,6 +30,8 @@ pub struct AttendanceFilter {
   pub member_types: Vec<String>,
   /// `Some(true)` for people still checked in, `Some(false)` for completed visits.
   pub checked_in_only: Option<bool>,
+  /// Matches the member's first, last or display name, case-insensitive.
+  pub search: Option<String>,
 }
 
 /// Builds the filtered, joined attendance query.
@@ -65,6 +67,17 @@ macro_rules! filtered_attendance {
       Some(true) => query = query.filter(team_member_sessions::check_out_time.is_null()),
       Some(false) => query = query.filter(team_member_sessions::check_out_time.is_not_null()),
       None => {}
+    }
+    if let Some(search) = $filter.search.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+      // ILIKE like the team-members filter: keeps the comparison in the database and matches
+      // however the admin typed it.
+      let pattern = format!("%{search}%");
+      query = query.filter(
+        team_members::first_name
+          .ilike(pattern.clone())
+          .or(team_members::last_name.ilike(pattern.clone()))
+          .or(team_members::display_name.ilike(pattern)),
+      );
     }
 
     query

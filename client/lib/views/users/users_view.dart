@@ -5,7 +5,9 @@ import 'package:time_keeper/providers/user_provider.dart';
 import 'package:time_keeper/views/users/role_chip.dart';
 import 'package:time_keeper/views/users/user_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
+import 'package:time_keeper/widgets/tables/client_pagination.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 
@@ -28,14 +30,19 @@ class UsersView extends HookConsumerWidget {
       refreshing.value = false;
     }
 
-    final sorted = users.entries.toList()..sort((a, b) => a.value.username.compareTo(b.value.username));
+    final sorted = users.entries.toList()
+      ..sort((a, b) => a.value.username.compareTo(b.value.username));
 
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
       final user = entry.value;
       final roleText = user.roles.map((r) => r.name.toLowerCase()).join(' ');
-      return user.username.toLowerCase().contains(filterText) || roleText.contains(filterText);
+      return user.username.toLowerCase().contains(filterText) ||
+          roleText.contains(filterText);
     }).toList();
+
+    final pager = useClientPagination(filtered.length);
+    final pageItems = pager.slice(filtered);
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -46,9 +53,9 @@ class UsersView extends HookConsumerWidget {
           const SizedBox(height: 4),
           Text(
             '(The default admin user is hidden from this list)',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -59,7 +66,11 @@ class UsersView extends HookConsumerWidget {
                 tooltip: 'Refresh users',
                 onPressed: refreshing.value ? null : refreshUsers,
                 icon: refreshing.value
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.refresh),
               ),
             ],
@@ -73,14 +84,24 @@ class UsersView extends HookConsumerWidget {
                 const BaseTableCell(flex: 2, child: TableHeaderText('Roles')),
               ],
               headerDecoration: tableHeaderDecoration(context),
-              editRows: filtered.map((entry) {
+              editRows: pageItems.map((entry) {
                 final id = entry.key;
                 final user = entry.value;
                 return EditTableRow(
                   key: ValueKey(id),
-                  onEdit: () =>
-                      showUserDialog(context, ref, id: id, existingUsername: user.username, existingRoles: user.roles),
-                  onDelete: () => showDeleteUserDialog(context, ref, id: id, username: user.username),
+                  onEdit: () => showUserDialog(
+                    context,
+                    ref,
+                    id: id,
+                    existingUsername: user.username,
+                    existingRoles: user.roles,
+                  ),
+                  onDelete: () => showDeleteUserDialog(
+                    context,
+                    ref,
+                    id: id,
+                    username: user.username,
+                  ),
                   cells: [
                     BaseTableCell(child: Text(user.username)),
                     BaseTableCell(flex: 2, child: RoleChips(roles: user.roles)),
@@ -90,6 +111,16 @@ class UsersView extends HookConsumerWidget {
               onAdd: () => showUserDialog(context, ref),
             ),
           ),
+          if (filtered.isNotEmpty)
+            PaginationBar(
+              totalCount: filtered.length,
+              offset: pager.clampedOffset(filtered.length),
+              pageSize: pager.pageSize,
+              hasMore: pager.offset + pager.pageSize < filtered.length,
+              onPageSizeChanged: pager.setPageSize,
+              onPrevious: pager.previousPage,
+              onNext: pager.nextPage,
+            ),
         ],
       ),
     );
