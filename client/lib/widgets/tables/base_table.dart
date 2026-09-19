@@ -75,9 +75,7 @@ class BaseTable extends StatelessWidget {
             flex: cell.flex,
             width: cell.width,
             child: DefaultTextStyle.merge(
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               child: cell.child,
             ),
           ),
@@ -94,19 +92,11 @@ class BaseTable extends StatelessWidget {
 
     if (index.isEven) {
       return BoxDecoration(
-        color:
-            evenRowColor ??
-            (isDark
-                ? Colors.white.withValues(alpha: 0.03)
-                : Colors.black.withValues(alpha: 0.02)),
+        color: evenRowColor ?? (isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02)),
       );
     } else {
       return BoxDecoration(
-        color:
-            oddRowColor ??
-            (isDark
-                ? Colors.white.withValues(alpha: 0.07)
-                : Colors.black.withValues(alpha: 0.05)),
+        color: oddRowColor ?? (isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05)),
       );
     }
   }

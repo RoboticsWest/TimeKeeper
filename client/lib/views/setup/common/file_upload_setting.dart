@@ -79,9 +79,7 @@ class _FileUploadSettingState extends State<FileUploadSetting> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+                border: Border.all(color: Theme.of(context).colorScheme.outline),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -103,17 +101,12 @@ class _FileUploadSettingState extends State<FileUploadSetting> {
           ),
           const SizedBox(width: 12),
           FilledButton.icon(
-            onPressed: widget.enabled && _selectedFile != null && !_isUploading
-                ? _uploadFile
-                : null,
+            onPressed: widget.enabled && _selectedFile != null && !_isUploading ? _uploadFile : null,
             icon: _isUploading
                 ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : const Icon(Icons.upload),
             label: Text(widget.uploadButtonLabel ?? 'Upload'),

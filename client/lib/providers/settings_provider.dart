@@ -7,7 +7,7 @@ import 'package:time_keeper/utils/api_result.dart';
 part 'settings_provider.g.dart';
 
 const _settingsFields =
-    'nextSessionThresholdSecs discordBotToken discordGuildId discordAnnouncementChannelId '
+    'checkInWindowSecs autoCheckoutAfterSecs discordBotToken discordGuildId discordAnnouncementChannelId '
     'discordNotificationChannelId discordSelfLinkEnabled discordNameSyncEnabled discordStartReminderMins '
     'discordEndReminderMins discordStartReminderMessage discordEndReminderMessage discordOvertimeDmEnabled '
     'discordOvertimeDmMins discordOvertimeDmMessage discordAutoCheckoutDmEnabled discordAutoCheckoutDmMessage '
@@ -15,9 +15,17 @@ const _settingsFields =
     'leaderboardMemberTypes discordRsvpReactionsEnabled discordAutoDeleteStartReminder discordAutoDeleteEndReminder '
     'quickPinEnabled';
 
-const _settingsQuery = '''
+const _settingsQuery =
+    '''
   query GetSettings {
     settings { $_settingsFields }
+  }
+''';
+
+const _settingsChangesSubscription =
+    '''
+  subscription SettingsChanges {
+    settingsChanges { $_settingsFields }
   }
 ''';
 
@@ -33,8 +41,30 @@ const _discordRolesQuery = r'''
   }
 ''';
 
+/// Settings pushed from the server whenever the row changes.
+///
+/// `settings` is a single-row table with a DB trigger behind it since migration 0006, but
+/// nothing was ever subscribed to it — so every client kept whatever settings it happened to
+/// fetch at startup until it was restarted. Changing the timezone or a reminder message on one
+/// machine left every other one stale.
+@Riverpod(keepAlive: true)
+Stream<Settings> settingsChanges(Ref ref) {
+  final client = ref.watch(timeKeeperGraphQLClientProvider);
+  return client
+      .subscribe(SubscriptionOptions(document: gql(_settingsChangesSubscription)))
+      .where((result) => result.data != null)
+      .map((result) => Settings.fromJson(result.data!['settingsChanges'] as Map<String, dynamic>));
+}
+
+/// The current settings: seeded by a query, then kept current by [settingsChanges].
+///
+/// Watching the subscription means a pushed row rebuilds this provider and every consumer of
+/// it, without a re-fetch — the payload is the whole row.
 @riverpod
 Future<Settings?> settingsQuery(Ref ref) async {
+  final pushed = ref.watch(settingsChangesProvider);
+  if (pushed.hasValue) return pushed.value;
+
   final client = ref.watch(timeKeeperGraphQLClientProvider);
   final result = await client.query(QueryOptions(document: gql(_settingsQuery), fetchPolicy: FetchPolicy.noCache));
   if (result.hasException || result.data == null) return null;
@@ -64,19 +94,24 @@ class SettingsService extends _$SettingsService {
   @override
   void build() {}
 
-  Future<ApiCallResult> updateGeneral({int? nextSessionThresholdSecs, String? timezone, bool? quickPinEnabled}) =>
-      _mutate(
-        r'''
-      mutation UpdateGeneralSettings($nextSessionThresholdSecs: Int, $timezone: String, $quickPinEnabled: Boolean) {
-        updateGeneralSettings(nextSessionThresholdSecs: $nextSessionThresholdSecs, timezone: $timezone, quickPinEnabled: $quickPinEnabled)
+  Future<ApiCallResult> updateGeneral({
+    int? checkInWindowSecs,
+    int? autoCheckoutAfterSecs,
+    String? timezone,
+    bool? quickPinEnabled,
+  }) => _mutate(
+    r'''
+      mutation UpdateGeneralSettings($checkInWindowSecs: Int, $autoCheckoutAfterSecs: Int, $timezone: String, $quickPinEnabled: Boolean) {
+        updateGeneralSettings(checkInWindowSecs: $checkInWindowSecs, autoCheckoutAfterSecs: $autoCheckoutAfterSecs, timezone: $timezone, quickPinEnabled: $quickPinEnabled)
       }
     ''',
-        {
-          'nextSessionThresholdSecs': nextSessionThresholdSecs,
-          'timezone': timezone,
-          'quickPinEnabled': quickPinEnabled,
-        },
-      );
+    {
+      'checkInWindowSecs': checkInWindowSecs,
+      'autoCheckoutAfterSecs': autoCheckoutAfterSecs,
+      'timezone': timezone,
+      'quickPinEnabled': quickPinEnabled,
+    },
+  );
 
   Future<ApiCallResult> updateLeaderboard({bool? showOvertime, required List<String> memberTypes}) => _mutate(
     r'''

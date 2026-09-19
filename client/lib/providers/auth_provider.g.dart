@@ -33,10 +33,7 @@ final class TokenProvider extends $NotifierProvider<Token, String?> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(String? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<String?>(value));
   }
 }
 
@@ -48,14 +45,7 @@ abstract class _$Token extends $Notifier<String?> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<String?, String?>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<String?, String?>,
-              String?,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<String?, String?>, String?, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }
@@ -84,10 +74,7 @@ final class UsernameProvider extends $NotifierProvider<Username, String?> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(String? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<String?>(value));
   }
 }
 
@@ -99,14 +86,7 @@ abstract class _$Username extends $Notifier<String?> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<String?, String?>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<String?, String?>,
-              String?,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<String?, String?>, String?, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }
@@ -120,8 +100,7 @@ final permissionsProvider = PermissionsProvider._();
 /// Decoded straight from the current JWT's `permissions` claim - not independently stored, so it
 /// always reflects whatever token is currently active.
 
-final class PermissionsProvider
-    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+final class PermissionsProvider extends $FunctionalProvider<List<String>, List<String>, List<String>>
     with $Provider<List<String>> {
   /// Decoded straight from the current JWT's `permissions` claim - not independently stored, so it
   /// always reflects whatever token is currently active.
@@ -141,8 +120,7 @@ final class PermissionsProvider
 
   @$internal
   @override
-  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   List<String> create(Ref ref) {
@@ -151,10 +129,7 @@ final class PermissionsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<String> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<String>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<List<String>>(value));
   }
 }
 
@@ -184,10 +159,7 @@ final class UserServiceProvider extends $NotifierProvider<UserService, void> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
@@ -199,14 +171,7 @@ abstract class _$UserService extends $Notifier<void> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<void, void>, void, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }
@@ -214,8 +179,7 @@ abstract class _$UserService extends $Notifier<void> {
 @ProviderFor(isLoggedIn)
 final isLoggedInProvider = IsLoggedInProvider._();
 
-final class IsLoggedInProvider extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
+final class IsLoggedInProvider extends $FunctionalProvider<bool, bool, bool> with $Provider<bool> {
   IsLoggedInProvider._()
     : super(
         from: null,
@@ -232,8 +196,7 @@ final class IsLoggedInProvider extends $FunctionalProvider<bool, bool, bool>
 
   @$internal
   @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   bool create(Ref ref) {
@@ -242,10 +205,7 @@ final class IsLoggedInProvider extends $FunctionalProvider<bool, bool, bool>
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<bool>(value));
   }
 }
 
@@ -260,8 +220,7 @@ final isAdminProvider = IsAdminProvider._();
 /// UI-gating helper mirroring the server's `require_permission` checks - not a security boundary,
 /// just controls what the client shows/hides. The server independently enforces every request.
 
-final class IsAdminProvider extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
+final class IsAdminProvider extends $FunctionalProvider<bool, bool, bool> with $Provider<bool> {
   /// UI-gating helper mirroring the server's `require_permission` checks - not a security boundary,
   /// just controls what the client shows/hides. The server independently enforces every request.
   IsAdminProvider._()
@@ -280,8 +239,7 @@ final class IsAdminProvider extends $FunctionalProvider<bool, bool, bool>
 
   @$internal
   @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   bool create(Ref ref) {
@@ -290,10 +248,7 @@ final class IsAdminProvider extends $FunctionalProvider<bool, bool, bool>
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<bool>(value));
   }
 }
 
@@ -308,9 +263,7 @@ final hasAnyPermissionProvider = HasAnyPermissionProvider._();
 /// Whether the current token grants any permission at all (vs. being unauthenticated) - used to
 /// gate the main navigation rail and RFID scanning.
 
-final class HasAnyPermissionProvider
-    extends $FunctionalProvider<bool, bool, bool>
-    with $Provider<bool> {
+final class HasAnyPermissionProvider extends $FunctionalProvider<bool, bool, bool> with $Provider<bool> {
   /// Whether the current token grants any permission at all (vs. being unauthenticated) - used to
   /// gate the main navigation rail and RFID scanning.
   HasAnyPermissionProvider._()
@@ -329,8 +282,7 @@ final class HasAnyPermissionProvider
 
   @$internal
   @override
-  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   bool create(Ref ref) {
@@ -339,10 +291,7 @@ final class HasAnyPermissionProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<bool>(value));
   }
 }
 

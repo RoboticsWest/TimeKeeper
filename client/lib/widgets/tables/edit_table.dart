@@ -25,14 +25,8 @@ class _TableActionIconButton extends StatelessWidget {
     final isLight = !isDark;
 
     final (icon, color) = switch (action) {
-      _TableAction.add => (
-        Icons.add,
-        isLight ? Colors.green.shade700 : Colors.green.shade300,
-      ),
-      _TableAction.edit => (
-        Icons.edit,
-        isLight ? Colors.blue.shade700 : Colors.blue.shade300,
-      ),
+      _TableAction.add => (Icons.add, isLight ? Colors.green.shade700 : Colors.green.shade300),
+      _TableAction.edit => (Icons.edit, isLight ? Colors.blue.shade700 : Colors.blue.shade300),
       _TableAction.delete => (Icons.delete, theme.colorScheme.error),
     };
     final tooltip = switch (action) {
@@ -63,13 +57,7 @@ class EditTableRow extends BaseTableRow {
   final void Function()? onDelete;
   final void Function()? onEdit;
 
-  EditTableRow({
-    this.key,
-    required super.cells,
-    super.decoration,
-    this.onDelete,
-    this.onEdit,
-  });
+  EditTableRow({this.key, required super.cells, super.decoration, this.onDelete, this.onEdit});
 }
 
 class EditTable extends BaseTable {
@@ -146,11 +134,7 @@ class EditTable extends BaseTable {
               _iconButtonCell(action: _TableAction.add, onPressed: onAdd),
               ...List.generate(lastRow.cells.length - 1, (index) {
                 final template = lastRow.cells[index + 1];
-                return BaseTableCell(
-                  child: const SizedBox.shrink(),
-                  flex: template.flex ?? 1,
-                  width: template.width,
-                );
+                return BaseTableCell(child: const SizedBox.shrink(), flex: template.flex ?? 1, width: template.width);
               }),
             ],
           ),
@@ -165,10 +149,7 @@ class EditTable extends BaseTable {
     }
   }
 
-  static BaseTableCell _iconButtonCell({
-    required _TableAction action,
-    required void Function()? onPressed,
-  }) {
+  static BaseTableCell _iconButtonCell({required _TableAction action, required void Function()? onPressed}) {
     return BaseTableCell(
       width: _actionColumnWidth,
       child: Center(

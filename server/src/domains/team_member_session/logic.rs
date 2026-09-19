@@ -11,7 +11,7 @@ use crate::domains::team_member::TeamMemberRepository;
 
 use super::csv_parser::AttendanceCsvParser;
 use super::model::TeamMemberSession;
-use super::repository::TeamMemberSessionRepository;
+use super::repository::{AttendanceFilter, TeamMemberSessionRepository};
 
 #[async_trait]
 pub trait TeamMemberSessionLogic: Send + Sync {
@@ -42,6 +42,14 @@ pub trait TeamMemberSessionLogic: Send + Sync {
   /// or that already have a record for that session. Used by `ImportAttendanceCsv`. Returns
   /// `(imported, skipped)` counts.
   async fn import_attendance_csv(&self, csv: &str) -> anyhow::Result<(usize, usize)>;
+
+  /// One page of attendance matching `filter`, with the total number of matching rows.
+  async fn query_page(
+    &self,
+    filter: &AttendanceFilter,
+    offset: i64,
+    limit: i64,
+  ) -> anyhow::Result<(Vec<TeamMemberSession>, i64)>;
 }
 
 pub struct DefaultTeamMemberSessionLogic<R: TeamMemberSessionRepository> {
@@ -87,7 +95,9 @@ impl<R: TeamMemberSessionRepository> TeamMemberSessionLogic for DefaultTeamMembe
     check_in_time: DateTime<Utc>,
     check_out_time: Option<DateTime<Utc>>,
   ) -> anyhow::Result<TeamMemberSession> {
-    self.repo.add(team_member_id, session_id, check_in_time, check_out_time).await
+    let record = self.repo.add(team_member_id, session_id, check_in_time, check_out_time).await?;
+    self.sessions.refresh_actual_times(session_id).await?;
+    Ok(record)
   }
 
   async fn update(
@@ -98,19 +108,53 @@ impl<R: TeamMemberSessionRepository> TeamMemberSessionLogic for DefaultTeamMembe
     check_in_time: DateTime<Utc>,
     check_out_time: Option<DateTime<Utc>>,
   ) -> anyhow::Result<TeamMemberSession> {
-    self
+    // An edit can move the session's first check-in or last check-out, and can move the row to
+    // a different session entirely - in which case both sessions need recomputing.
+    let previous_session_id = self.repo.get(id).await?.map(|ms| ms.session_id);
+
+    let record = self
       .repo
       .update(id, team_member_id, session_id, check_in_time, check_out_time)
       .await?
-      .ok_or_else(|| anyhow::anyhow!("Team member session not found"))
+      .ok_or_else(|| anyhow::anyhow!("Team member session not found"))?;
+
+    self.sessions.refresh_actual_times(session_id).await?;
+    if let Some(previous) = previous_session_id
+      && previous != session_id
+    {
+      self.sessions.refresh_actual_times(previous).await?;
+    }
+
+    Ok(record)
   }
 
   async fn remove(&self, id: Uuid) -> anyhow::Result<()> {
-    self.repo.remove(id).await
+    // Read the owning session before the row is gone, so its actual times can be recomputed.
+    let session_id = self.repo.get(id).await?.map(|ms| ms.session_id);
+    self.repo.remove(id).await?;
+    if let Some(session_id) = session_id {
+      self.sessions.refresh_actual_times(session_id).await?;
+    }
+    Ok(())
   }
 
   async fn clear(&self) -> anyhow::Result<()> {
-    self.repo.clear().await
+    let session_ids: Vec<Uuid> = self.repo.get_all().await?.into_iter().map(|ms| ms.session_id).collect();
+    self.repo.clear().await?;
+    // Every session just lost all its attendance, so all of them revert to "never started".
+    for session_id in session_ids.into_iter().collect::<std::collections::HashSet<_>>() {
+      self.sessions.refresh_actual_times(session_id).await?;
+    }
+    Ok(())
+  }
+
+  async fn query_page(
+    &self,
+    filter: &AttendanceFilter,
+    offset: i64,
+    limit: i64,
+  ) -> anyhow::Result<(Vec<TeamMemberSession>, i64)> {
+    self.repo.query_page(filter, offset, limit).await
   }
 
   async fn import_attendance_csv(&self, csv: &str) -> anyhow::Result<(usize, usize)> {

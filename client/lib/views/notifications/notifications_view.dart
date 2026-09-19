@@ -19,14 +19,35 @@ import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 import 'package:time_keeper/colors.dart';
 
+/// Colour for a notification's lifecycle state, from the reserved support palette.
+Color _statusColor(String status) {
+  switch (status) {
+    case NotificationStatus.sent:
+      return supportSuccessColor.shade700;
+    case NotificationStatus.pending:
+      return supportInfoColor;
+    case NotificationStatus.failed:
+      return supportErrorColor;
+    case NotificationStatus.skipped:
+    case NotificationStatus.cancelled:
+    default:
+      return neutralColor.shade400;
+  }
+}
+
+/// When the notification went out, or is due to.
+String _scheduleLabel(Notification n) {
+  final sentAt = n.sentAt;
+  if (sentAt != null) return formatDateTime(sentAt);
+  final due = n.scheduledFor;
+  if (due != null) return formatDateTime(due);
+  return '\u2014';
+}
+
 class NotificationsView extends HookConsumerWidget {
   const NotificationsView({super.key});
 
-  void _showClearDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, Notification> notifications,
-  ) {
+  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, Notification> notifications) {
     final ids = notifications.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No notifications to delete').show(context);
@@ -51,11 +72,7 @@ class NotificationsView extends HookConsumerWidget {
     ).show(context);
   }
 
-  String _formatSessionLabel(
-    Map<String, Session> sessions,
-    Map<String, Location> locations,
-    String sessionId,
-  ) {
+  String _formatSessionLabel(Map<String, Session> sessions, Map<String, Location> locations, String sessionId) {
     final session = sessions[sessionId];
     if (session == null) return sessionId;
     final start = session.startTime;
@@ -67,10 +84,7 @@ class NotificationsView extends HookConsumerWidget {
     return '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)}';
   }
 
-  String _formatMemberName(
-    Map<String, TeamMember> teamMembers,
-    String? memberId,
-  ) {
+  String _formatMemberName(Map<String, TeamMember> teamMembers, String? memberId) {
     if (memberId == null || memberId.isEmpty) return '-';
     final member = teamMembers[memberId];
     if (member == null) return memberId;
@@ -109,20 +123,13 @@ class NotificationsView extends HookConsumerWidget {
       if (filterText.isEmpty) return true;
       final n = entry.value;
       final typeLabel = notificationTypeLabel(n.notificationType);
-      final sessionLabel = _formatSessionLabel(
-        sessions,
-        locations,
-        n.sessionId,
-      );
-      final memberLabel = _formatMemberName(
-        teamMembers,
-        n.teamMemberId,
-      );
-      final sentLabel = n.sent ? 'sent' : 'pending';
+      final sessionLabel = _formatSessionLabel(sessions, locations, n.sessionId);
+      final memberLabel = _formatMemberName(teamMembers, n.teamMemberId);
+      final statusLabel = NotificationStatus.label(n.status).toLowerCase();
       return typeLabel.toLowerCase().contains(filterText) ||
           sessionLabel.toLowerCase().contains(filterText) ||
           memberLabel.toLowerCase().contains(filterText) ||
-          sentLabel.contains(filterText);
+          statusLabel.contains(filterText);
     }).toList();
 
     return Padding(
@@ -138,9 +145,7 @@ class NotificationsView extends HookConsumerWidget {
                 onPressed: () => _showClearDialog(context, ref, notifications),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
             ],
           ),
@@ -151,22 +156,11 @@ class NotificationsView extends HookConsumerWidget {
             child: EditTable(
               alternatingRows: true,
               headers: [
-                BaseTableCell(
-                  child: TableHeaderText('Type'),
-                  flex: 3,
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Session'),
-                  flex: 4,
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Member'),
-                  flex: 2,
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Status'),
-                  flex: 1,
-                ),
+                BaseTableCell(child: TableHeaderText('Type'), flex: 3),
+                BaseTableCell(child: TableHeaderText('Session'), flex: 4),
+                BaseTableCell(child: TableHeaderText('Member'), flex: 2),
+                BaseTableCell(child: TableHeaderText('Status'), flex: 1),
+                BaseTableCell(child: TableHeaderText('When'), flex: 2),
               ],
               headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
@@ -174,40 +168,20 @@ class NotificationsView extends HookConsumerWidget {
                 final n = entry.value;
                 return EditTableRow(
                   key: ValueKey(id),
-                  onEdit: () =>
-                      showNotificationDialog(context, ref, id: id, existing: n),
-                  onDelete: () =>
-                      showDeleteNotificationDialog(context, ref, id: id),
+                  onEdit: () => showNotificationDialog(context, ref, id: id, existing: n),
+                  onDelete: () => showDeleteNotificationDialog(context, ref, id: id),
                   cells: [
-                    BaseTableCell(
-                      child: Text(notificationTypeLabel(n.notificationType)),
-                      flex: 3,
-                    ),
-                    BaseTableCell(
-                      child: Text(
-                        _formatSessionLabel(sessions, locations, n.sessionId),
-                      ),
-                      flex: 4,
-                    ),
+                    BaseTableCell(child: Text(notificationTypeLabel(n.notificationType)), flex: 3),
+                    BaseTableCell(child: Text(_formatSessionLabel(sessions, locations, n.sessionId)), flex: 4),
+                    BaseTableCell(child: Text(_formatMemberName(teamMembers, n.teamMemberId)), flex: 2),
                     BaseTableCell(
                       child: Text(
-                        _formatMemberName(
-                          teamMembers,
-                          n.teamMemberId,
-                        ),
-                      ),
-                      flex: 2,
-                    ),
-                    BaseTableCell(
-                      child: Text(
-                        n.sent ? 'Sent' : 'Pending',
-                        style: TextStyle(
-                          color: n.sent ? supportSuccessColor.shade700 : supportWarningColor.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        NotificationStatus.label(n.status),
+                        style: TextStyle(color: _statusColor(n.status), fontWeight: FontWeight.w500),
                       ),
                       flex: 1,
                     ),
+                    BaseTableCell(child: Text(_scheduleLabel(n), style: theme.textTheme.bodySmall), flex: 2),
                   ],
                 );
               }).toList(),

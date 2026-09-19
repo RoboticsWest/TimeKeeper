@@ -12,12 +12,7 @@ class HoursBucket {
   /// Distinct members who checked in during this bucket.
   final int headcount;
 
-  const HoursBucket({
-    required this.start,
-    required this.regular,
-    required this.overtime,
-    required this.headcount,
-  });
+  const HoursBucket({required this.start, required this.regular, required this.overtime, required this.headcount});
 
   Duration get total => regular + overtime;
 }
@@ -80,8 +75,7 @@ class CheckInHeatmap {
 
   const CheckInHeatmap({required this.counts, required this.maxCount});
 
-  static CheckInHeatmap get empty =>
-      CheckInHeatmap(counts: List.generate(7, (_) => List.filled(24, 0)), maxCount: 0);
+  static CheckInHeatmap get empty => CheckInHeatmap(counts: List.generate(7, (_) => List.filled(24, 0)), maxCount: 0);
 }
 
 /// Typed attendance insights.
@@ -138,8 +132,7 @@ class StatsKpis {
     this.avgAttendancePerSession = 0,
   });
 
-  double get overtimeRatio =>
-      totalHours.inSeconds > 0 ? overtimeHours.inSeconds / totalHours.inSeconds : 0;
+  double get overtimeRatio => totalHours.inSeconds > 0 ? overtimeHours.inSeconds / totalHours.inSeconds : 0;
 }
 
 /// One member's contribution on a drilled-into day.

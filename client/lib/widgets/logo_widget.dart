@@ -16,10 +16,6 @@ class LogoWidget extends ConsumerWidget {
       return Image.memory(logoBytes, width: width, height: height);
     }
 
-    return Image.asset(
-      'assets/logos/default_logo.png',
-      width: width,
-      height: height,
-    );
+    return Image.asset('assets/logos/default_logo.png', width: width, height: height);
   }
 }

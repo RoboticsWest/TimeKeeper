@@ -26,8 +26,10 @@ diesel::table! {
         notification_type -> Text,
         session_id -> Uuid,
         team_member_id -> Nullable<Uuid>,
-        sent -> Bool,
         discord_message_id -> Nullable<Text>,
+        scheduled_for -> Nullable<Timestamptz>,
+        sent_at -> Nullable<Timestamptz>,
+        status -> Text,
     }
 }
 
@@ -97,13 +99,15 @@ diesel::table! {
         end_time -> Timestamptz,
         location_id -> Uuid,
         finished -> Bool,
+        actual_start_time -> Nullable<Timestamptz>,
+        actual_end_time -> Nullable<Timestamptz>,
     }
 }
 
 diesel::table! {
     settings (id) {
         id -> Bool,
-        next_session_threshold_secs -> Int8,
+        check_in_window_secs -> Int8,
         discord_bot_token -> Text,
         discord_guild_id -> Text,
         discord_announcement_channel_id -> Text,
@@ -128,6 +132,7 @@ diesel::table! {
         discord_auto_delete_start_reminder -> Bool,
         discord_auto_delete_end_reminder -> Bool,
         quick_pin_enabled -> Bool,
+        auto_checkout_after_secs -> Int8,
     }
 }
 

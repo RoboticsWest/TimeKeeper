@@ -1,30 +1,31 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use serenity::all::{ChannelId, CreateEmbed, CreateMessage, GuildId, Member as GuildMember, MessageId, ReactionType};
 use serenity::http::Http;
+use uuid::Uuid;
 
 use crate::domains::discord::embeds;
-use crate::domains::location::LocationLogic;
-use crate::domains::session::SessionLogic;
+use crate::domains::location::{Location, LocationLogic};
+use crate::domains::session::{Session, SessionLogic};
 use crate::domains::session_rsvp::SessionRsvpMessageLogic;
 use crate::domains::settings::{
   DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_END_REMINDER_MESSAGE, DEFAULT_OVERTIME_DM_MESSAGE,
-  DEFAULT_START_REMINDER_MESSAGE, SettingsLogic,
+  DEFAULT_START_REMINDER_MESSAGE, Settings, SettingsLogic,
 };
 use crate::domains::team_member::{TeamMember, TeamMemberLogic};
 use crate::scheduler::{Schedule, Service};
-use crate::time::{format_date, format_time, parse_tz};
+use crate::time::{format_date, format_relative_day, format_time, format_weekday, parse_tz};
 
 use super::logic::NotificationLogic;
-
-/// Run an async future from within a sync context - unused now that `execute` is itself async,
-/// kept only if a future caller needs to bridge a sync callback; currently unused.
-#[allow(dead_code)]
-fn block_on<F: std::future::Future>(f: F) -> F::Output {
-  tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(f))
-}
+use super::model::{
+  Notification, STATUS_FAILED, STATUS_PENDING, STATUS_SENT, TYPE_AUTO_CHECKOUT, TYPE_OVERTIME,
+  TYPE_SESSION_END_REMINDER, TYPE_SESSION_START_REMINDER,
+};
+use super::repository::NewNotification;
+use super::scheduling::{LateReminderPolicy, ensure_session_reminders};
 
 pub struct DiscordNotificationService {
   settings: Arc<dyn SettingsLogic>,
@@ -33,6 +34,25 @@ pub struct DiscordNotificationService {
   notifications: Arc<dyn NotificationLogic>,
   team_members: Arc<dyn TeamMemberLogic>,
   session_rsvp_messages: Arc<dyn SessionRsvpMessageLogic>,
+}
+
+/// Everything the send loop needs to render one notification.
+struct SendContext<'a> {
+  http: &'a Http,
+  settings: &'a Settings,
+  tz: FixedOffset,
+  now_secs: i64,
+  announcement_channel: ChannelId,
+  notification_channel: ChannelId,
+  sessions: &'a HashMap<Uuid, Session>,
+  locations: &'a HashMap<Uuid, Location>,
+  members: &'a HashMap<Uuid, TeamMember>,
+}
+
+impl SendContext<'_> {
+  fn location_name(&self, session: &Session) -> &str {
+    self.locations.get(&session.location_id).map_or("Unknown", |l| l.location.as_str())
+  }
 }
 
 impl DiscordNotificationService {
@@ -47,32 +67,33 @@ impl DiscordNotificationService {
     Self { settings, sessions, locations, notifications, team_members, session_rsvp_messages }
   }
 
+  /// Substitutes the `{...}` tokens an operator can use in a message template.
+  ///
+  /// `{relative_day}` is the one that earns its keep: templates used to hardcode "tomorrow",
+  /// which silently became a lie whenever a session was created inside its own reminder window.
   fn replace_placeholders(
     template: &str,
     location: &str,
     start_secs: i64,
     end_secs: i64,
     tz: FixedOffset,
+    now_secs: i64,
     mins: Option<i64>,
   ) -> String {
     let date_str = format_date(start_secs, tz);
-    let start_date_str = date_str.clone();
-    let end_date_str = format_date(end_secs, tz);
-    let start_time_str = format_time(start_secs, tz);
-    let end_time_str = format_time(end_secs, tz);
-
-    let start_timestamp = format!("<t:{start_secs}:F>");
-    let end_timestamp = format!("<t:{end_secs}:F>");
 
     let mut msg = template
       .replace("{location}", location)
       .replace("{date}", &date_str)
-      .replace("{start_date}", &start_date_str)
-      .replace("{end_date}", &end_date_str)
-      .replace("{start_time}", &start_time_str)
-      .replace("{end_time}", &end_time_str)
-      .replace("{start_date_time}", &start_timestamp)
-      .replace("{end_date_time}", &end_timestamp);
+      .replace("{start_date}", &date_str)
+      .replace("{end_date}", &format_date(end_secs, tz))
+      .replace("{start_time}", &format_time(start_secs, tz))
+      .replace("{end_time}", &format_time(end_secs, tz))
+      .replace("{start_date_time}", &format!("<t:{start_secs}:F>"))
+      .replace("{end_date_time}", &format!("<t:{end_secs}:F>"))
+      .replace("{relative_day}", &format_relative_day(start_secs, tz, now_secs))
+      .replace("{weekday}", &format_weekday(start_secs, tz))
+      .replace("{end_weekday}", &format_weekday(end_secs, tz));
 
     if let Some(m) = mins {
       msg = msg.replace("{mins}", &m.to_string());
@@ -95,14 +116,222 @@ impl DiscordNotificationService {
   /// for a mention in the content — one inside an embed renders as a link but
   /// pings nobody. The embed adds the session facts and the brand colour
   /// without taking the ping away.
-  async fn send_with_facts(http: &Http, channel: ChannelId, message: &str, facts: CreateEmbed) -> bool {
+  async fn send_with_facts(http: &Http, channel: ChannelId, message: &str, facts: CreateEmbed) -> Option<String> {
     match channel.send_message(http, CreateMessage::new().content(message).embed(facts)).await {
-      Ok(_) => true,
+      Ok(sent) => Some(sent.id.to_string()),
       Err(e) => {
         log::error!("[DiscordNotificationService] Failed to send notification: {e}");
-        false
+        None
       }
     }
+  }
+
+  /// Makes sure every future session has its session-wide reminders scheduled.
+  ///
+  /// Sessions get their reminders at creation time, but reminder lead times can be changed
+  /// afterwards, and sessions imported before this scheduling model existed have none at all.
+  /// Scheduling is idempotent, so this is a cheap safety net rather than a second source of
+  /// truth: a reminder already sent, cancelled or skipped is never revived.
+  async fn backfill_schedules(&self, settings: &Settings, now: DateTime<Utc>) -> anyhow::Result<()> {
+    for session in self.sessions.get_all().await? {
+      if session.finished || session.end_time <= now {
+        continue;
+      }
+      // A session created before the operator set a lead time was never offered the choice, so
+      // a reminder that is already overdue is skipped rather than fired retroactively.
+      if let Err(e) =
+        ensure_session_reminders(self.notifications.as_ref(), &session, settings, now, LateReminderPolicy::Skip).await
+      {
+        log::error!("[DiscordNotificationService] Failed to schedule reminders for session {}: {e}", session.id);
+      }
+    }
+    Ok(())
+  }
+
+  /// Schedules the per-member `overtime` notifications for anyone still checked in past the
+  /// configured threshold. Idempotent via the unique index, so a member is warned once.
+  async fn schedule_overtime(&self, settings: &Settings, now_secs: i64) -> anyhow::Result<()> {
+    if !settings.discord_overtime_dm_enabled {
+      return Ok(());
+    }
+    let threshold_secs = settings.discord_overtime_dm_mins * 60;
+
+    for pes in self.sessions.get_past_end_sessions().await? {
+      if pes.checked_in.is_empty() {
+        continue;
+      }
+      let due_secs = pes.end_secs + threshold_secs;
+      if now_secs < due_secs {
+        continue;
+      }
+      let Some(due) = DateTime::from_timestamp(due_secs, 0) else { continue };
+
+      for ms in &pes.checked_in {
+        if let Err(e) = self
+          .notifications
+          .schedule(NewNotification {
+            notification_type: TYPE_OVERTIME,
+            session_id: pes.session_id,
+            team_member_id: Some(ms.team_member_id),
+            scheduled_for: Some(due),
+            status: STATUS_PENDING,
+          })
+          .await
+        {
+          log::error!(
+            "[DiscordNotificationService] Failed to schedule overtime notification for {}: {e}",
+            ms.team_member_id
+          );
+        }
+      }
+    }
+    Ok(())
+  }
+
+  /// Sends one due notification. Returns the Discord message id when one was produced.
+  async fn dispatch(&self, ctx: &SendContext<'_>, notification: &Notification) -> anyhow::Result<Option<String>> {
+    let Some(session) = ctx.sessions.get(&notification.session_id) else {
+      anyhow::bail!("session {} no longer exists", notification.session_id);
+    };
+    let location = ctx.location_name(session);
+    let start_secs = session.start_time.timestamp();
+    let end_secs = session.end_time.timestamp();
+
+    match notification.notification_type.as_str() {
+      TYPE_SESSION_START_REMINDER => {
+        let template = if ctx.settings.discord_start_reminder_message.is_empty() {
+          DEFAULT_START_REMINDER_MESSAGE
+        } else {
+          &ctx.settings.discord_start_reminder_message
+        };
+        let mins = (start_secs - ctx.now_secs).max(0) / 60;
+        let msg =
+          Self::replace_placeholders(template, location, start_secs, end_secs, ctx.tz, ctx.now_secs, Some(mins));
+        let facts =
+          embeds::session_facts("Session starting soon", embeds::SUPPORT_INFO, location, start_secs, end_secs);
+
+        let sent =
+          ctx.announcement_channel.send_message(ctx.http, CreateMessage::new().content(&msg).embed(facts)).await?;
+        let message_id = sent.id.to_string();
+
+        if ctx.settings.discord_rsvp_reactions_enabled {
+          let _ = sent.react(ctx.http, ReactionType::Unicode("\u{1F44D}".to_string())).await;
+          let _ = sent.react(ctx.http, ReactionType::Unicode("\u{1F44E}".to_string())).await;
+          if let Err(e) = self.session_rsvp_messages.set(&message_id, session.id).await {
+            log::error!("[DiscordNotificationService] Failed to store RSVP message mapping: {e}");
+          }
+        }
+
+        Ok(Some(message_id))
+      }
+
+      TYPE_SESSION_END_REMINDER => {
+        let template = if ctx.settings.discord_end_reminder_message.is_empty() {
+          DEFAULT_END_REMINDER_MESSAGE
+        } else {
+          &ctx.settings.discord_end_reminder_message
+        };
+        let mins = (end_secs - ctx.now_secs).max(0) / 60;
+        let msg =
+          Self::replace_placeholders(template, location, start_secs, end_secs, ctx.tz, ctx.now_secs, Some(mins));
+        let facts =
+          embeds::session_facts("Session ending soon", embeds::SUPPORT_WARNING, location, start_secs, end_secs);
+
+        let sent =
+          ctx.announcement_channel.send_message(ctx.http, CreateMessage::new().content(&msg).embed(facts)).await?;
+        Ok(Some(sent.id.to_string()))
+      }
+
+      TYPE_OVERTIME | TYPE_AUTO_CHECKOUT => {
+        let is_overtime = notification.notification_type == TYPE_OVERTIME;
+        let enabled = if is_overtime {
+          ctx.settings.discord_overtime_dm_enabled
+        } else {
+          ctx.settings.discord_auto_checkout_dm_enabled
+        };
+        if !enabled {
+          // Leave it pending: the operator may turn the feature back on.
+          return Ok(None);
+        }
+
+        let Some(member_id) = notification.team_member_id else {
+          anyhow::bail!("{} notification has no team member", notification.notification_type);
+        };
+        let Some(member) = ctx.members.get(&member_id) else {
+          anyhow::bail!("team member {member_id} no longer exists");
+        };
+        let Some(mention) = Self::resolve_mention(member) else {
+          // No linked Discord account - nothing to send, and nothing to retry.
+          anyhow::bail!("team member {member_id} has no linked Discord account");
+        };
+        let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
+
+        let (template, title, colour) = if is_overtime {
+          let t = if ctx.settings.discord_overtime_dm_message.is_empty() {
+            DEFAULT_OVERTIME_DM_MESSAGE
+          } else {
+            &ctx.settings.discord_overtime_dm_message
+          };
+          (t, "In overtime", embeds::SUPPORT_WARNING)
+        } else {
+          let t = if ctx.settings.discord_auto_checkout_dm_message.is_empty() {
+            DEFAULT_AUTO_CHECKOUT_DM_MESSAGE
+          } else {
+            &ctx.settings.discord_auto_checkout_dm_message
+          };
+          (t, "Auto checked out", embeds::SUPPORT_INFO)
+        };
+
+        let msg = Self::replace_placeholders(template, location, start_secs, end_secs, ctx.tz, ctx.now_secs, None)
+          .replace("{username}", &mention)
+          .replace("{name}", member_name);
+        let facts =
+          embeds::session_facts(title, colour, location, start_secs, end_secs).field("Member", member_name, true);
+
+        Ok(Self::send_with_facts(ctx.http, ctx.notification_channel, &msg, facts).await)
+      }
+
+      other => anyhow::bail!("unknown notification type '{other}'"),
+    }
+  }
+
+  /// Deletes the Discord message for a reminder whose moment has passed, when configured to.
+  async fn auto_delete_expired(&self, ctx: &SendContext<'_>) -> anyhow::Result<()> {
+    if !ctx.settings.discord_auto_delete_start_reminder && !ctx.settings.discord_auto_delete_end_reminder {
+      return Ok(());
+    }
+
+    for (session_id, session) in ctx.sessions {
+      for notification in self.notifications.get_by_session_id(*session_id).await? {
+        if notification.status != STATUS_SENT {
+          continue;
+        }
+        let Some(message_id) = notification.discord_message_id.as_deref() else { continue };
+
+        let expired = match notification.notification_type.as_str() {
+          TYPE_SESSION_START_REMINDER => {
+            ctx.settings.discord_auto_delete_start_reminder && ctx.now_secs >= session.start_time.timestamp()
+          }
+          TYPE_SESSION_END_REMINDER => {
+            ctx.settings.discord_auto_delete_end_reminder && ctx.now_secs >= session.end_time.timestamp()
+          }
+          _ => false,
+        };
+        if !expired {
+          continue;
+        }
+
+        let Ok(raw) = message_id.parse::<u64>() else { continue };
+        if let Err(e) = ctx.announcement_channel.delete_message(ctx.http, MessageId::new(raw)).await {
+          log::warn!("[DiscordNotificationService] Failed to delete reminder message {message_id}: {e}");
+        }
+        // Cleared either way: if the message is already gone, retrying forever helps nobody.
+        if let Err(e) = self.notifications.clear_message_id(notification.id).await {
+          log::error!("[DiscordNotificationService] Failed to clear reminder message ID: {e}");
+        }
+      }
+    }
+    Ok(())
   }
 
   async fn sync_names(&self, guild_members: &[GuildMember]) -> anyhow::Result<()> {
@@ -161,8 +390,13 @@ impl Service for DiscordNotificationService {
       return Ok(());
     }
 
-    let start_reminder_secs = settings.discord_start_reminder_mins * 60;
-    let end_reminder_secs = settings.discord_end_reminder_mins * 60;
+    let now = Utc::now();
+    let now_secs = now.timestamp();
+
+    // Keep the schedule complete before deciding what is due.
+    self.backfill_schedules(&settings, now).await?;
+    self.schedule_overtime(&settings, now_secs).await?;
+
     let announcement_channel_id: u64 = settings
       .discord_announcement_channel_id
       .parse()
@@ -172,268 +406,68 @@ impl Service for DiscordNotificationService {
       .parse()
       .map_err(|e| anyhow::anyhow!("Invalid notification channel ID: {e}"))?;
 
-    let start_msg_template = if settings.discord_start_reminder_message.is_empty() {
-      DEFAULT_START_REMINDER_MESSAGE
-    } else {
-      &settings.discord_start_reminder_message
-    };
-    let end_msg_template = if settings.discord_end_reminder_message.is_empty() {
-      DEFAULT_END_REMINDER_MESSAGE
-    } else {
-      &settings.discord_end_reminder_message
-    };
-
     let http = Http::new(&settings.discord_bot_token);
-    let announcement_channel = ChannelId::new(announcement_channel_id);
-    let notification_channel = ChannelId::new(notification_channel_id);
+    let sessions: HashMap<Uuid, Session> = self.sessions.get_all().await?.into_iter().map(|s| (s.id, s)).collect();
+    let locations: HashMap<Uuid, Location> = self.locations.get_all().await?.into_iter().map(|l| (l.id, l)).collect();
+    let members: HashMap<Uuid, TeamMember> =
+      self.team_members.get_all().await?.into_iter().map(|m| (m.id, m)).collect();
 
-    let tz = parse_tz(&settings.timezone);
-    let sessions = self.sessions.get_all().await?;
-    let locations = self.locations.get_all().await?;
-    let now_secs = Utc::now().timestamp();
-
-    // --- Session Start/End Reminders ---
-    for session in &sessions {
-      let start_secs = session.start_time.timestamp();
-      let end_secs = session.end_time.timestamp();
-
-      if !session.finished {
-        let location =
-          locations.iter().find(|l| l.id == session.location_id).map_or("Unknown", |l| l.location.as_str());
-
-        if start_reminder_secs > 0 {
-          let time_until_start = start_secs - now_secs;
-          if time_until_start > 0
-            && time_until_start <= start_reminder_secs
-            && !self.notifications.exists("session_start_reminder", session.id, None).await?
-          {
-            let mins = time_until_start / 60;
-            let msg = Self::replace_placeholders(start_msg_template, location, start_secs, end_secs, tz, Some(mins));
-            let facts =
-              embeds::session_facts("Session starting soon", embeds::SUPPORT_INFO, location, start_secs, end_secs);
-
-            match announcement_channel.send_message(&http, CreateMessage::new().content(&msg).embed(facts)).await {
-              Ok(sent_msg) => {
-                let discord_message_id = sent_msg.id.to_string();
-
-                if settings.discord_rsvp_reactions_enabled {
-                  let _ = sent_msg.react(&http, ReactionType::Unicode("👍".to_string())).await;
-                  let _ = sent_msg.react(&http, ReactionType::Unicode("👎".to_string())).await;
-
-                  if let Err(e) = self.session_rsvp_messages.set(&discord_message_id, session.id).await {
-                    log::error!("[DiscordNotificationService] Failed to store RSVP message mapping: {e}");
-                  }
-                }
-
-                self
-                  .notifications
-                  .add("session_start_reminder", session.id, None, true, Some(&discord_message_id))
-                  .await?;
-              }
-              Err(e) => log::error!("[DiscordNotificationService] Failed to send start reminder: {e}"),
-            }
-          }
-        }
-
-        if end_reminder_secs > 0 {
-          let time_until_end = end_secs - now_secs;
-          if time_until_end > 0
-            && time_until_end <= end_reminder_secs
-            && now_secs >= start_secs
-            && !self.notifications.exists("session_end_reminder", session.id, None).await?
-          {
-            let mins = time_until_end / 60;
-            let msg = Self::replace_placeholders(end_msg_template, location, start_secs, end_secs, tz, Some(mins));
-            let facts =
-              embeds::session_facts("Session ending soon", embeds::SUPPORT_WARNING, location, start_secs, end_secs);
-
-            match announcement_channel.send_message(&http, CreateMessage::new().content(&msg).embed(facts)).await {
-              Ok(sent_msg) => {
-                self
-                  .notifications
-                  .add("session_end_reminder", session.id, None, true, Some(&sent_msg.id.to_string()))
-                  .await?;
-              }
-              Err(e) => log::error!("[DiscordNotificationService] Failed to send end reminder: {e}"),
-            }
-          }
-        }
-      }
-
-      // Auto-delete start reminder when session has started
-      if settings.discord_auto_delete_start_reminder && start_secs > 0 && now_secs >= start_secs {
-        let session_notifs = self.notifications.get_by_session_id(session.id).await?;
-        if let Some(notif) = session_notifs
-          .into_iter()
-          .find(|n| n.notification_type == "session_start_reminder" && n.discord_message_id.is_some())
-        {
-          let discord_msg_id = notif.discord_message_id.clone().unwrap();
-          let msg_id: u64 = discord_msg_id.parse().unwrap_or(0);
-          if msg_id > 0
-            && let Err(e) = announcement_channel.delete_message(&http, MessageId::new(msg_id)).await
-          {
-            log::warn!("[DiscordNotificationService] Failed to delete start reminder message {discord_msg_id}: {e}");
-          }
-          if let Err(e) = self
-            .notifications
-            .update(notif.id, &notif.notification_type, notif.session_id, notif.team_member_id, notif.sent, None)
-            .await
-          {
-            log::error!("[DiscordNotificationService] Failed to clear start reminder message ID: {e}");
-          }
-        }
-      }
-
-      // Auto-delete end reminder when session has ended
-      if settings.discord_auto_delete_end_reminder && end_secs > 0 && now_secs >= end_secs {
-        let session_notifs = self.notifications.get_by_session_id(session.id).await?;
-        if let Some(notif) = session_notifs
-          .into_iter()
-          .find(|n| n.notification_type == "session_end_reminder" && n.discord_message_id.is_some())
-        {
-          let discord_msg_id = notif.discord_message_id.clone().unwrap();
-          let msg_id: u64 = discord_msg_id.parse().unwrap_or(0);
-          if msg_id > 0
-            && let Err(e) = announcement_channel.delete_message(&http, MessageId::new(msg_id)).await
-          {
-            log::warn!("[DiscordNotificationService] Failed to delete end reminder message {discord_msg_id}: {e}");
-          }
-          if let Err(e) = self
-            .notifications
-            .update(notif.id, &notif.notification_type, notif.session_id, notif.team_member_id, notif.sent, None)
-            .await
-          {
-            log::error!("[DiscordNotificationService] Failed to clear end reminder message ID: {e}");
-          }
-        }
-      }
-    }
-
-    // --- Fetch guild members (name sync only) ---
-    // DM notifications used to need this roster to turn a username into a
-    // mentionable ID. Members are keyed on their ID now, so name sync is the
-    // only remaining consumer and the fetch is gated on it.
-    let guild_members = if !settings.discord_name_sync_enabled || settings.discord_guild_id.is_empty() {
-      None
-    } else {
-      let guild_id: u64 = settings.discord_guild_id.parse().map_err(|e| anyhow::anyhow!("Invalid guild ID: {e}"))?;
-      let guild = GuildId::new(guild_id);
-      match guild.members(&http, Some(1000), None).await {
-        Ok(members) => Some(members),
-        Err(e) => {
-          log::error!("[DiscordNotificationService] Failed to fetch guild members: {e}");
-          None
-        }
-      }
+    let ctx = SendContext {
+      http: &http,
+      settings: &settings,
+      tz: parse_tz(&settings.timezone),
+      now_secs,
+      announcement_channel: ChannelId::new(announcement_channel_id),
+      notification_channel: ChannelId::new(notification_channel_id),
+      sessions: &sessions,
+      locations: &locations,
+      members: &members,
     };
 
-    // --- Per-user DM notifications ---
-    if settings.discord_overtime_dm_enabled || settings.discord_auto_checkout_dm_enabled {
-      let team_members = self.team_members.get_all().await?;
-
-      if settings.discord_overtime_dm_enabled {
-        let overtime_template = if settings.discord_overtime_dm_message.is_empty() {
-          DEFAULT_OVERTIME_DM_MESSAGE
-        } else {
-          &settings.discord_overtime_dm_message
-        };
-        let overtime_threshold_secs = settings.discord_overtime_dm_mins * 60;
-
-        for pes in self.sessions.get_past_end_sessions().await? {
-          if pes.checked_in.is_empty() || now_secs <= pes.end_secs + overtime_threshold_secs {
-            continue;
-          }
-
-          let location =
-            locations.iter().find(|l| l.id == pes.session.location_id).map_or("Unknown", |l| l.location.as_str());
-
-          for ms in &pes.checked_in {
-            if self.notifications.exists("overtime", pes.session_id, Some(ms.team_member_id)).await? {
-              continue;
-            }
-
-            let Some(member) = team_members.iter().find(|m| m.id == ms.team_member_id) else { continue };
-            let Some(mention) = Self::resolve_mention(member) else { continue };
-            let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
-
-            let msg = Self::replace_placeholders(overtime_template, location, pes.start_secs, pes.end_secs, tz, None)
-              .replace("{username}", &mention)
-              .replace("{name}", member_name);
-
-            let facts =
-              embeds::session_facts("In overtime", embeds::SUPPORT_WARNING, location, pes.start_secs, pes.end_secs)
-                .field("Member", member_name, true);
-
-            if Self::send_with_facts(&http, notification_channel, &msg, facts).await
-              && let Err(e) =
-                self.notifications.add("overtime", pes.session_id, Some(ms.team_member_id), true, None).await
-            {
-              log::error!(
-                "[DiscordNotificationService] Failed to record overtime notification for {}: {e}",
-                ms.team_member_id
-              );
-            }
+    // --- Send everything that is due ---
+    //
+    // The whole send decision is this query. Previously it was inferred from the *absence* of a
+    // row, which meant deleting a notification re-armed it; now a row's status is the record,
+    // and a send only ever moves it out of `pending`.
+    for notification in self.notifications.get_due(now).await? {
+      match self.dispatch(&ctx, &notification).await {
+        Ok(Some(message_id)) => {
+          if let Err(e) = self.notifications.mark_sent(notification.id, Some(&message_id)).await {
+            log::error!("[DiscordNotificationService] Failed to mark notification {} sent: {e}", notification.id);
           }
         }
-      }
-
-      if settings.discord_auto_checkout_dm_enabled {
-        let auto_template = if settings.discord_auto_checkout_dm_message.is_empty() {
-          DEFAULT_AUTO_CHECKOUT_DM_MESSAGE
-        } else {
-          &settings.discord_auto_checkout_dm_message
-        };
-
-        for notification in self.notifications.get_unsent().await? {
-          if notification.notification_type != "auto_checkout" {
-            continue;
-          }
-
-          let Some(member_id) = notification.team_member_id else { continue };
-          let Some(session) = sessions.iter().find(|s| s.id == notification.session_id) else { continue };
-          let Some(member) = team_members.iter().find(|m| m.id == member_id) else { continue };
-          let Some(mention) = Self::resolve_mention(member) else { continue };
-          let member_name = member.display_name.as_deref().unwrap_or(&member.first_name);
-          let location =
-            locations.iter().find(|l| l.id == session.location_id).map_or("Unknown", |l| l.location.as_str());
-          let start_secs = session.start_time.timestamp();
-          let end_secs = session.end_time.timestamp();
-
-          let msg = Self::replace_placeholders(auto_template, location, start_secs, end_secs, tz, None)
-            .replace("{username}", &mention)
-            .replace("{name}", member_name);
-
-          let facts = embeds::session_facts("Auto checked out", embeds::SUPPORT_INFO, location, start_secs, end_secs)
-            .field("Member", member_name, true);
-
-          if Self::send_with_facts(&http, notification_channel, &msg, facts).await
-            && let Err(e) = self
-              .notifications
-              .update(
-                notification.id,
-                &notification.notification_type,
-                notification.session_id,
-                notification.team_member_id,
-                true,
-                notification.discord_message_id.as_deref(),
-              )
-              .await
-          {
-            log::error!(
-              "[DiscordNotificationService] Failed to mark auto-checkout notification as sent for {}: {e}",
-              notification.id
-            );
+        // Nothing sent, but nothing wrong either - the feature is switched off. Leave pending.
+        Ok(None) => {}
+        Err(e) => {
+          log::error!(
+            "[DiscordNotificationService] Failed to send {} notification {}: {e}",
+            notification.notification_type,
+            notification.id
+          );
+          // Terminal: retrying a message whose session or member is gone will never succeed,
+          // and leaving it pending would log the same error every minute forever.
+          if let Err(e) = self.notifications.set_status(notification.id, STATUS_FAILED).await {
+            log::error!("[DiscordNotificationService] Failed to mark notification failed: {e}");
           }
         }
       }
     }
 
-    // Name sync
-    if settings.discord_name_sync_enabled
-      && let Some(ref guild_members) = guild_members
-      && let Err(e) = self.sync_names(guild_members).await
-    {
-      log::error!("[DiscordNotificationService] Name sync failed: {e}");
+    self.auto_delete_expired(&ctx).await?;
+
+    // --- Name sync ---
+    // DM notifications used to need the guild roster to turn a username into a mentionable ID.
+    // Members are keyed on their ID now, so name sync is the only remaining consumer.
+    if settings.discord_name_sync_enabled && !settings.discord_guild_id.is_empty() {
+      let guild_id: u64 = settings.discord_guild_id.parse().map_err(|e| anyhow::anyhow!("Invalid guild ID: {e}"))?;
+      match GuildId::new(guild_id).members(&http, Some(1000), None).await {
+        Ok(guild_members) => {
+          if let Err(e) = self.sync_names(&guild_members).await {
+            log::error!("[DiscordNotificationService] Name sync failed: {e}");
+          }
+        }
+        Err(e) => log::error!("[DiscordNotificationService] Failed to fetch guild members: {e}"),
+      }
     }
 
     Ok(())

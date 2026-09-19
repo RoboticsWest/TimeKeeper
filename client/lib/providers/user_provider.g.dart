@@ -13,15 +13,8 @@ part of 'user_provider.dart';
 final userChangesProvider = UserChangesProvider._();
 
 final class UserChangesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<ChangeEvent<User>>,
-          ChangeEvent<User>,
-          Stream<ChangeEvent<User>>
-        >
-    with
-        $FutureModifier<ChangeEvent<User>>,
-        $StreamProvider<ChangeEvent<User>> {
+    extends $FunctionalProvider<AsyncValue<ChangeEvent<User>>, ChangeEvent<User>, Stream<ChangeEvent<User>>>
+    with $FutureModifier<ChangeEvent<User>>, $StreamProvider<ChangeEvent<User>> {
   UserChangesProvider._()
     : super(
         from: null,
@@ -38,9 +31,7 @@ final class UserChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<User>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<User>> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<User>> create(Ref ref) {
@@ -74,14 +65,11 @@ final class UsersProvider extends $NotifierProvider<Users, Map<String, User>> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, User> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, User>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, User>>(value));
   }
 }
 
-String _$usersHash() => r'46e82aef68f92b9366e5516144c3e0751df0fe96';
+String _$usersHash() => r'8ccfad6a0049c31629356edbed10bb8bbd424e5a';
 
 abstract class _$Users extends $Notifier<Map<String, User>> {
   Map<String, User> build();
@@ -108,13 +96,7 @@ final rolesProvider = RolesProvider._();
 
 /// The assignable roles, fetched once - they only change with a migration.
 
-final class RolesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Role>>,
-          List<Role>,
-          FutureOr<List<Role>>
-        >
+final class RolesProvider extends $FunctionalProvider<AsyncValue<List<Role>>, List<Role>, FutureOr<List<Role>>>
     with $FutureModifier<List<Role>>, $FutureProvider<List<Role>> {
   /// The assignable roles, fetched once - they only change with a migration.
   RolesProvider._()
@@ -133,8 +115,7 @@ final class RolesProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Role>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<Role>> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<Role>> create(Ref ref) {
@@ -147,8 +128,7 @@ String _$rolesHash() => r'9a162f0e13477a25038d17cbc15f92e3badd679a';
 @ProviderFor(usersSync)
 final usersSyncProvider = UsersSyncProvider._();
 
-final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class UsersSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   UsersSyncProvider._()
     : super(
         from: null,
@@ -165,8 +145,7 @@ final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -175,11 +154,8 @@ final class UsersSyncProvider extends $FunctionalProvider<void, void, void>
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$usersSyncHash() => r'977e557d2064e49debc773039180b4806083265d';
+String _$usersSyncHash() => r'f4e40e2ad2c358238e188e54f33c7785f1deb4da';

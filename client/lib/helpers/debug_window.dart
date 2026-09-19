@@ -25,18 +25,13 @@ void registerDebugWindowExtension() {
   if (!kDebugMode || _registered) return;
   _registered = true;
 
-  developer.registerExtension('ext.flutter.tkDebug.setWindowSize', (
-    method,
-    parameters,
-  ) async {
+  developer.registerExtension('ext.flutter.tkDebug.setWindowSize', (method, parameters) async {
     final width = double.tryParse(parameters['width'] ?? '');
     final height = double.tryParse(parameters['height'] ?? '');
 
     if (width == null && height == null) {
       debugSizeOverride.value = null;
-      return developer.ServiceExtensionResponse.result(
-        jsonEncode({'override': null}),
-      );
+      return developer.ServiceExtensionResponse.result(jsonEncode({'override': null}));
     }
     if (width == null || height == null) {
       return developer.ServiceExtensionResponse.error(
@@ -46,8 +41,6 @@ void registerDebugWindowExtension() {
     }
 
     debugSizeOverride.value = Size(width, height);
-    return developer.ServiceExtensionResponse.result(
-      jsonEncode({'width': width, 'height': height}),
-    );
+    return developer.ServiceExtensionResponse.result(jsonEncode({'width': width, 'height': height}));
   });
 }

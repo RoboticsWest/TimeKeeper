@@ -3,19 +3,22 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/providers/realtime_collection.dart';
 import 'package:time_keeper/utils/api_result.dart';
 
 part 'team_member_provider.g.dart';
 
 const _teamMemberFields = 'id firstName lastName memberType displayName mobileNumber discordId quickPin';
 
-const _teamMembersQuery = '''
+const _teamMembersQuery =
+    '''
   query TeamMembers {
     teamMembers { $_teamMemberFields }
   }
 ''';
 
-const _teamMemberChangesSubscription = '''
+const _teamMemberChangesSubscription =
+    '''
   subscription TeamMemberChanges {
     teamMemberChanges { operation id data { $_teamMemberFields } }
   }
@@ -33,13 +36,15 @@ const _uploadMentorCsvMutation = r'''
   }
 ''';
 
-const _createTeamMemberMutation = '''
+const _createTeamMemberMutation =
+    '''
   mutation CreateTeamMember(\$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordId: String, \$quickPin: String) {
     createTeamMember(firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordId: \$discordId, quickPin: \$quickPin) { $_teamMemberFields }
   }
 ''';
 
-const _updateTeamMemberMutation = '''
+const _updateTeamMemberMutation =
+    '''
   mutation UpdateTeamMember(\$id: UUID!, \$firstName: String!, \$lastName: String!, \$memberType: String!, \$displayName: String, \$discordId: String, \$quickPin: String) {
     updateTeamMember(id: \$id, firstName: \$firstName, lastName: \$lastName, memberType: \$memberType, displayName: \$displayName, discordId: \$discordId, quickPin: \$quickPin) { $_teamMemberFields }
   }
@@ -58,7 +63,8 @@ Stream<ChangeEvent<TeamMember>> teamMemberChanges(Ref ref) {
       .subscribe(SubscriptionOptions(document: gql(_teamMemberChangesSubscription)))
       .where((result) => result.data != null)
       .map(
-        (result) => ChangeEvent.fromJson(result.data!['teamMemberChanges'] as Map<String, dynamic>, TeamMember.fromJson),
+        (result) =>
+            ChangeEvent.fromJson(result.data!['teamMemberChanges'] as Map<String, dynamic>, TeamMember.fromJson),
       );
 }
 
@@ -66,19 +72,24 @@ Stream<ChangeEvent<TeamMember>> teamMemberChanges(Ref ref) {
 class TeamMembers extends _$TeamMembers {
   @override
   Map<String, TeamMember> build() {
+    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
+    // Without this a fetch that failed at startup is never retried.
+    ref.watch(timeKeeperGraphQLClientProvider);
     _fetchInitial();
     return {};
   }
 
   Future<void> _fetchInitial() async {
-    final client = ref.read(timeKeeperGraphQLClientProvider);
-    final result = await client.query(QueryOptions(document: gql(_teamMembersQuery), fetchPolicy: FetchPolicy.noCache));
-    if (result.hasException || result.data == null) return;
-
-    final items = (result.data!['teamMembers'] as List<dynamic>)
-        .map((e) => TeamMember.fromJson(e as Map<String, dynamic>))
-        .toList();
-    state = {for (final item in items) item.id: item};
+    final items = await fetchCollection<TeamMember>(
+      ref: ref,
+      document: _teamMembersQuery,
+      rootField: 'teamMembers',
+      fromJson: TeamMember.fromJson,
+      idOf: (item) => item.id,
+    );
+    // Null means every attempt failed; keep what we have rather than
+    // replacing real data with an empty map.
+    if (items != null) state = items;
   }
 
   /// Team members only re-syncs via the `teamMemberChanges` subscription. If that connection is
@@ -147,11 +158,13 @@ class TeamMembers extends _$TeamMembers {
 
 @Riverpod(keepAlive: true)
 void teamMembersSync(Ref ref) {
-  ref.listen(teamMemberChangesProvider, (previous, next) {
-    next.whenData((change) {
-      ref.read(teamMembersProvider.notifier).applyChange(change);
-    });
-  });
+  ref.listen(
+    teamMemberChangesProvider,
+    changeListener<TeamMember>(
+      apply: (change) => ref.read(teamMembersProvider.notifier).applyChange(change),
+      refresh: () => ref.read(teamMembersProvider.notifier).refresh(),
+    ),
+  );
 }
 
 @Riverpod(keepAlive: true)

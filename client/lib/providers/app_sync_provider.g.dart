@@ -57,14 +57,11 @@ final class AppDataSyncProvider extends $NotifierProvider<AppDataSync, void> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$appDataSyncHash() => r'8d222a2089990ccfdf2a981e639854a5c7051a95';
+String _$appDataSyncHash() => r'da2e8e51ffdf29c37c9e782bbb0b02e995f37e44';
 
 /// App-lifetime data bootstrap, wired once from [App].
 ///
@@ -81,14 +78,7 @@ abstract class _$AppDataSync extends $Notifier<void> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<void, void>, void, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

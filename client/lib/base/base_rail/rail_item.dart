@@ -27,8 +27,7 @@ class RailItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
-    final background =
-        isSelected && brightness == Brightness.dark ? colorScheme.primaryContainer : Colors.transparent;
+    final background = isSelected && brightness == Brightness.dark ? colorScheme.primaryContainer : Colors.transparent;
     final foreground = isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant;
 
     // Reveal the label from the *measured* width rather than the target state,
@@ -48,8 +47,7 @@ class RailItem extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: showLabel ? 8 : 0, vertical: 10),
                 child: Row(
-                  mainAxisAlignment:
-                      showLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
+                  mainAxisAlignment: showLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
                   children: [
                     Icon(icon, size: 22, color: iconColor),
                     if (showLabel) ...[

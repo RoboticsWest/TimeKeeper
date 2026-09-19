@@ -47,16 +47,11 @@ class SessionInfoBar extends StatelessWidget {
                     : theme.colorScheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(kRadiusRow),
                 border: currentSession == null || isUpcoming
-                    ? Border.all(
-                        color: theme.colorScheme.outlineVariant,
-                        width: 1,
-                      )
+                    ? Border.all(color: theme.colorScheme.outlineVariant, width: 1)
                     : null,
               ),
               child: currentSession != null
-                  ? (isUpcoming
-                        ? _buildUpcomingSession(theme)
-                        : _buildCurrentSession(theme))
+                  ? (isUpcoming ? _buildUpcomingSession(theme) : _buildCurrentSession(theme))
                   : _buildNoSession(theme),
             ),
           ),
@@ -70,14 +65,9 @@ class SessionInfoBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(kRadiusRow),
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant,
-                  width: 1,
-                ),
+                border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
               ),
-              child: nextSession != null
-                  ? _buildNextSession(theme)
-                  : _buildNoUpcoming(theme),
+              child: nextSession != null ? _buildNextSession(theme) : _buildNoUpcoming(theme),
             ),
           ),
         ],
@@ -102,19 +92,14 @@ class SessionInfoBar extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               'Current Session',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold),
             ),
             if (location.isNotEmpty) ...[
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   '— $location',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: color.withValues(alpha: 0.7),
-                  ),
+                  style: theme.textTheme.labelMedium?.copyWith(color: color.withValues(alpha: 0.7)),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
@@ -126,10 +111,7 @@ class SessionInfoBar extends StatelessWidget {
               child: TimeUntil(
                 time: end,
                 positiveLeader: 'Ends in ',
-                positiveStyle: theme.textTheme.labelLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                positiveStyle: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold),
                 negativeLeader: 'OVERTIME ',
                 negativeStyle: theme.textTheme.labelLarge?.copyWith(
                   color: theme.colorScheme.error,
@@ -147,9 +129,7 @@ class SessionInfoBar extends StatelessWidget {
             Flexible(
               child: Text(
                 '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: color.withValues(alpha: 0.7),
-                ),
+                style: theme.textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.7)),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -187,19 +167,14 @@ class SessionInfoBar extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               'Upcoming Session',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+              style: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold),
             ),
             if (location.isNotEmpty) ...[
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   '— $location',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: color.withValues(alpha: 0.7),
-                  ),
+                  style: theme.textTheme.labelMedium?.copyWith(color: color.withValues(alpha: 0.7)),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
@@ -211,15 +186,9 @@ class SessionInfoBar extends StatelessWidget {
               child: TimeUntil(
                 time: start,
                 positiveLeader: 'Starts in ',
-                positiveStyle: theme.textTheme.labelLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                positiveStyle: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold),
                 negativeLeader: '',
-                negativeStyle: theme.textTheme.labelLarge?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                negativeStyle: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -229,9 +198,7 @@ class SessionInfoBar extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: color.withValues(alpha: 0.7),
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.7)),
           overflow: TextOverflow.ellipsis,
         ),
       ],
@@ -246,9 +213,7 @@ class SessionInfoBar extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            deviceLocationName != null
-                ? 'No Active Session — $deviceLocationName'
-                : 'No Active Session',
+            deviceLocationName != null ? 'No Active Session — $deviceLocationName' : 'No Active Session',
             style: theme.textTheme.labelLarge?.copyWith(color: color),
             overflow: TextOverflow.ellipsis,
           ),
@@ -272,18 +237,13 @@ class SessionInfoBar extends StatelessWidget {
           children: [
             Icon(Icons.skip_next, color: color, size: 18),
             const SizedBox(width: 8),
-            Text(
-              'Next',
-              style: theme.textTheme.labelLarge?.copyWith(color: color),
-            ),
+            Text('Next', style: theme.textTheme.labelLarge?.copyWith(color: color)),
             if (location.isNotEmpty) ...[
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '— $location',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: color.withValues(alpha: 0.7),
-                  ),
+                  style: theme.textTheme.labelMedium?.copyWith(color: color.withValues(alpha: 0.7)),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -293,9 +253,7 @@ class SessionInfoBar extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           '${formatDate(start)}  ${formatTime(start)} - ${formatTime(end)}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: color.withValues(alpha: 0.7),
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.7)),
           overflow: TextOverflow.ellipsis,
         ),
       ],
@@ -310,9 +268,7 @@ class SessionInfoBar extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            deviceLocationName != null
-                ? 'No Upcoming Sessions — $deviceLocationName'
-                : 'No Upcoming Sessions',
+            deviceLocationName != null ? 'No Upcoming Sessions — $deviceLocationName' : 'No Upcoming Sessions',
             style: theme.textTheme.labelLarge?.copyWith(color: color),
             overflow: TextOverflow.ellipsis,
           ),

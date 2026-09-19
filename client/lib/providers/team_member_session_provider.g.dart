@@ -19,9 +19,7 @@ final class TeamMemberSessionChangesProvider
           ChangeEvent<TeamMemberSession>,
           Stream<ChangeEvent<TeamMemberSession>>
         >
-    with
-        $FutureModifier<ChangeEvent<TeamMemberSession>>,
-        $StreamProvider<ChangeEvent<TeamMemberSession>> {
+    with $FutureModifier<ChangeEvent<TeamMemberSession>>, $StreamProvider<ChangeEvent<TeamMemberSession>> {
   TeamMemberSessionChangesProvider._()
     : super(
         from: null,
@@ -38,9 +36,8 @@ final class TeamMemberSessionChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<TeamMemberSession>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<TeamMemberSession>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<TeamMemberSession>> create(Ref ref) {
@@ -48,15 +45,12 @@ final class TeamMemberSessionChangesProvider
   }
 }
 
-String _$teamMemberSessionChangesHash() =>
-    r'd4c306695fec6a0cac13daa460754eb134de8710';
+String _$teamMemberSessionChangesHash() => r'd4c306695fec6a0cac13daa460754eb134de8710';
 
 @ProviderFor(TeamMemberSessions)
 final teamMemberSessionsProvider = TeamMemberSessionsProvider._();
 
-final class TeamMemberSessionsProvider
-    extends
-        $NotifierProvider<TeamMemberSessions, Map<String, TeamMemberSession>> {
+final class TeamMemberSessionsProvider extends $NotifierProvider<TeamMemberSessions, Map<String, TeamMemberSession>> {
   TeamMemberSessionsProvider._()
     : super(
         from: null,
@@ -77,37 +71,22 @@ final class TeamMemberSessionsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, TeamMemberSession> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, TeamMemberSession>>(
-        value,
-      ),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, TeamMemberSession>>(value));
   }
 }
 
-String _$teamMemberSessionsHash() =>
-    r'c46867693cad5856ac10717f46607b69e7aaf224';
+String _$teamMemberSessionsHash() => r'0695a0635883fc4379232bb6240f5c9d3b39464e';
 
-abstract class _$TeamMemberSessions
-    extends $Notifier<Map<String, TeamMemberSession>> {
+abstract class _$TeamMemberSessions extends $Notifier<Map<String, TeamMemberSession>> {
   Map<String, TeamMemberSession> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref
-            as $Ref<
-              Map<String, TeamMemberSession>,
-              Map<String, TeamMemberSession>
-            >;
+    final ref = this.ref as $Ref<Map<String, TeamMemberSession>, Map<String, TeamMemberSession>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                Map<String, TeamMemberSession>,
-                Map<String, TeamMemberSession>
-              >,
+              AnyNotifier<Map<String, TeamMemberSession>, Map<String, TeamMemberSession>>,
               Map<String, TeamMemberSession>,
               Object?,
               Object?
@@ -119,9 +98,7 @@ abstract class _$TeamMemberSessions
 @ProviderFor(teamMemberSessionsSync)
 final teamMemberSessionsSyncProvider = TeamMemberSessionsSyncProvider._();
 
-final class TeamMemberSessionsSyncProvider
-    extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class TeamMemberSessionsSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   TeamMemberSessionsSyncProvider._()
     : super(
         from: null,
@@ -138,8 +115,7 @@ final class TeamMemberSessionsSyncProvider
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -148,12 +124,8 @@ final class TeamMemberSessionsSyncProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$teamMemberSessionsSyncHash() =>
-    r'8b127802320ed08d20c1097495e61215a1353a9a';
+String _$teamMemberSessionsSyncHash() => r'9c0fa960d2e65f29660b421fc337d75e186870bc';

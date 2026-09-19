@@ -23,20 +23,16 @@ class DataSetupTab extends ConsumerWidget {
     Map<String, RfidTag> allTags,
     TeamMemberType type,
   ) {
-    final filtered =
-        members.entries.where((e) => e.value.memberType == type).toList()
-          ..sort((a, b) {
-            final lastCmp = a.value.lastName.compareTo(b.value.lastName);
-            if (lastCmp != 0) return lastCmp;
-            return a.value.firstName.compareTo(b.value.firstName);
-          });
+    final filtered = members.entries.where((e) => e.value.memberType == type).toList()
+      ..sort((a, b) {
+        final lastCmp = a.value.lastName.compareTo(b.value.lastName);
+        if (lastCmp != 0) return lastCmp;
+        return a.value.firstName.compareTo(b.value.firstName);
+      });
 
     return filtered.map((entry) {
       final m = entry.value;
-      final tags = allTags.values
-          .where((t) => t.teamMemberId == entry.key)
-          .map((t) => t.tag)
-          .join(';');
+      final tags = allTags.values.where((t) => t.teamMemberId == entry.key).map((t) => t.tag).join(';');
       return [m.firstName, m.lastName, m.displayName ?? '', tags, m.discordId ?? ''];
     }).toList();
   }
@@ -57,21 +53,13 @@ class DataSetupTab extends ConsumerWidget {
       return;
     }
 
-    final headers = [
-      'FIRST_NAME',
-      'LAST_NAME',
-      'DISPLAY_NAME',
-      'RFID_TAG',
-      'DISCORD_ID',
-    ];
+    final headers = ['FIRST_NAME', 'LAST_NAME', 'DISPLAY_NAME', 'RFID_TAG', 'DISCORD_ID'];
     final csv = buildCsv(headers, rows);
     final saved = await saveCsvFile(csv, '$label.csv');
 
     if (context.mounted) {
       if (saved) {
-        SnackBarDialog.info(
-          message: 'Exported ${rows.length} $label',
-        ).show(context);
+        SnackBarDialog.info(message: 'Exported ${rows.length} $label').show(context);
       }
     }
   }
@@ -88,8 +76,7 @@ class DataSetupTab extends ConsumerWidget {
       return;
     }
 
-    final sorted = sessions.entries.toList()
-      ..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
+    final sorted = sessions.entries.toList()..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
 
     final headers = ['LOCATION', 'START_DATE_TIME', 'END_DATE_TIME'];
     final rows = sorted.map((entry) {
@@ -102,9 +89,7 @@ class DataSetupTab extends ConsumerWidget {
     final saved = await saveCsvFile(csv, 'schedule.csv');
 
     if (context.mounted && saved) {
-      SnackBarDialog.info(
-        message: 'Exported ${rows.length} sessions',
-      ).show(context);
+      SnackBarDialog.info(message: 'Exported ${rows.length} sessions').show(context);
     }
   }
 
@@ -117,9 +102,7 @@ class DataSetupTab extends ConsumerWidget {
   ) async {
     if (teamMemberSessions.isEmpty) {
       if (context.mounted) {
-        SnackBarDialog.info(
-          message: 'No attendance records to export',
-        ).show(context);
+        SnackBarDialog.info(message: 'No attendance records to export').show(context);
       }
       return;
     }
@@ -127,13 +110,7 @@ class DataSetupTab extends ConsumerWidget {
     final sorted = teamMemberSessions.entries.toList()
       ..sort((a, b) => a.value.checkInTime.compareTo(b.value.checkInTime));
 
-    final headers = [
-      'FIRST_NAME',
-      'LAST_NAME',
-      'LOCATION',
-      'CHECK_IN_TIME',
-      'CHECK_OUT_TIME',
-    ];
+    final headers = ['FIRST_NAME', 'LAST_NAME', 'LOCATION', 'CHECK_IN_TIME', 'CHECK_OUT_TIME'];
     final rows = sorted.map((entry) {
       final ms = entry.value;
       final member = teamMembers[ms.teamMemberId];
@@ -153,9 +130,7 @@ class DataSetupTab extends ConsumerWidget {
     final saved = await saveCsvFile(csv, 'attendance.csv');
 
     if (context.mounted && saved) {
-      SnackBarDialog.info(
-        message: 'Exported ${rows.length} attendance records',
-      ).show(context);
+      SnackBarDialog.info(message: 'Exported ${rows.length} attendance records').show(context);
     }
   }
 
@@ -167,12 +142,8 @@ class DataSetupTab extends ConsumerWidget {
     final locations = ref.watch(locationsProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
 
-    final studentCount = teamMembers.values
-        .where((m) => m.memberType == TeamMemberType.student)
-        .length;
-    final mentorCount = teamMembers.values
-        .where((m) => m.memberType == TeamMemberType.mentor)
-        .length;
+    final studentCount = teamMembers.values.where((m) => m.memberType == TeamMemberType.student).length;
+    final mentorCount = teamMembers.values.where((m) => m.memberType == TeamMemberType.mentor).length;
 
     return SettingsPageLayout(
       title: 'Data',
@@ -186,12 +157,7 @@ class DataSetupTab extends ConsumerWidget {
           label: 'Export Students',
           description: '$studentCount students available to export',
           child: FilledButton.icon(
-            onPressed: () => _exportMembers(
-              context,
-              teamMembers,
-              rfidTags,
-              TeamMemberType.student,
-            ),
+            onPressed: () => _exportMembers(context, teamMembers, rfidTags, TeamMemberType.student),
             icon: const Icon(Icons.download),
             label: const Text('Export CSV'),
           ),
@@ -202,12 +168,7 @@ class DataSetupTab extends ConsumerWidget {
           label: 'Export Mentors',
           description: '$mentorCount mentors available to export',
           child: FilledButton.icon(
-            onPressed: () => _exportMembers(
-              context,
-              teamMembers,
-              rfidTags,
-              TeamMemberType.mentor,
-            ),
+            onPressed: () => _exportMembers(context, teamMembers, rfidTags, TeamMemberType.mentor),
             icon: const Icon(Icons.download),
             label: const Text('Export CSV'),
           ),
@@ -227,16 +188,9 @@ class DataSetupTab extends ConsumerWidget {
 
         SettingRow(
           label: 'Export Attendance',
-          description:
-              '${teamMemberSessions.length} attendance records available to export',
+          description: '${teamMemberSessions.length} attendance records available to export',
           child: FilledButton.icon(
-            onPressed: () => _exportAttendance(
-              context,
-              teamMemberSessions,
-              teamMembers,
-              sessions,
-              locations,
-            ),
+            onPressed: () => _exportAttendance(context, teamMemberSessions, teamMembers, sessions, locations),
             icon: const Icon(Icons.download),
             label: const Text('Export CSV'),
           ),

@@ -20,12 +20,7 @@ class ToastOverlay {
     final overlay = Overlay.of(context);
 
     final entry = OverlayEntry(
-      builder: (context) => _ToastWidget(
-        title: title,
-        message: message,
-        type: type,
-        onDismiss: _dismiss,
-      ),
+      builder: (context) => _ToastWidget(title: title, message: message, type: type, onDismiss: _dismiss),
     );
 
     _currentEntry = entry;
@@ -40,13 +35,7 @@ class ToastOverlay {
     required String message,
     Duration duration = const Duration(seconds: 3),
   }) {
-    show(
-      context,
-      title: title,
-      message: message,
-      type: DialogType.success,
-      duration: duration,
-    );
+    show(context, title: title, message: message, type: DialogType.success, duration: duration);
   }
 
   static void error(
@@ -55,13 +44,7 @@ class ToastOverlay {
     required String message,
     Duration duration = const Duration(seconds: 3),
   }) {
-    show(
-      context,
-      title: title,
-      message: message,
-      type: DialogType.error,
-      duration: duration,
-    );
+    show(context, title: title, message: message, type: DialogType.error, duration: duration);
   }
 
   static void info(
@@ -70,13 +53,7 @@ class ToastOverlay {
     required String message,
     Duration duration = const Duration(seconds: 3),
   }) {
-    show(
-      context,
-      title: title,
-      message: message,
-      type: DialogType.info,
-      duration: duration,
-    );
+    show(context, title: title, message: message, type: DialogType.info, duration: duration);
   }
 
   static void warn(
@@ -85,13 +62,7 @@ class ToastOverlay {
     required String message,
     Duration duration = const Duration(seconds: 3),
   }) {
-    show(
-      context,
-      title: title,
-      message: message,
-      type: DialogType.warn,
-      duration: duration,
-    );
+    show(context, title: title, message: message, type: DialogType.warn, duration: duration);
   }
 
   static void _dismiss() {
@@ -108,19 +79,13 @@ class _ToastWidget extends StatefulWidget {
   final DialogType type;
   final VoidCallback onDismiss;
 
-  const _ToastWidget({
-    required this.title,
-    required this.message,
-    required this.type,
-    required this.onDismiss,
-  });
+  const _ToastWidget({required this.title, required this.message, required this.type, required this.onDismiss});
 
   @override
   State<_ToastWidget> createState() => _ToastWidgetState();
 }
 
-class _ToastWidgetState extends State<_ToastWidget>
-    with SingleTickerProviderStateMixin {
+class _ToastWidgetState extends State<_ToastWidget> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
   late final Animation<Offset> _slideAnimation;
@@ -128,14 +93,8 @@ class _ToastWidgetState extends State<_ToastWidget>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, -0.3),
       end: Offset.zero,
@@ -180,19 +139,12 @@ class _ToastWidgetState extends State<_ToastWidget>
               child: GestureDetector(
                 onTap: widget.onDismiss,
                 child: Container(
-                  constraints: const BoxConstraints(
-                    minWidth: 300,
-                    maxWidth: 500,
-                  ),
+                  constraints: const BoxConstraints(minWidth: 300, maxWidth: 500),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(radius),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4)),
                     ],
                   ),
                   clipBehavior: Clip.antiAlias,
@@ -203,41 +155,24 @@ class _ToastWidgetState extends State<_ToastWidget>
                       // Banner
                       Container(
                         color: _bannerColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         child: Row(
                           children: [
-                            Icon(
-                              widget.type.icon,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                            Icon(widget.type.icon, color: Colors.white, size: 20),
                             const SizedBox(width: 8),
                             Text(
                               widget.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                       ),
                       // Body
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Text(
                           widget.message,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 15,
-                          ),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15),
                         ),
                       ),
                     ],

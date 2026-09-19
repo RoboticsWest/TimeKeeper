@@ -41,9 +41,14 @@ jobs:
       - name: Generate Flutter Icons
         working-directory: client
         run: dart run flutter_launcher_icons
+      # TK_VERSION is what the client compares against the server's version to decide
+      # whether to tell the user it is out of date. Without it the build reports 0.0.0 and
+      # the check stays silent.
       - name: Build Flutter web (release)
         working-directory: client
-        run: flutter build web --release --wasm --no-web-resources-cdn
+        run: >-
+          flutter build web --release --wasm --no-web-resources-cdn
+          --dart-define=TK_VERSION=${{ needs.read-vars.outputs.version }}
       - name: Upload web client artifact
         uses: actions/upload-artifact@v4
         with:
@@ -187,7 +192,9 @@ jobs:
 
       - name: Build client (release)
         working-directory: client
-        run: flutter build ${{ matrix.build-cmd }} --release
+        run: >-
+          flutter build ${{ matrix.build-cmd }} --release
+          --dart-define=TK_VERSION=${{ needs.read-vars.outputs.version }}
 
       # Archive: tar.gz (Linux)
       - name: Prepare archive (tar.gz)

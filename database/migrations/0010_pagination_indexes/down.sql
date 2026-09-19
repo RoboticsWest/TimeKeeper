@@ -1,0 +1,10 @@
+DROP INDEX IF EXISTS notifications_team_member_id_idx;
+DROP INDEX IF EXISTS team_members_name_idx;
+DROP INDEX IF EXISTS team_members_member_type_idx;
+DROP INDEX IF EXISTS sessions_unfinished_idx;
+DROP INDEX IF EXISTS sessions_location_id_idx;
+DROP INDEX IF EXISTS sessions_start_desc_idx;
+DROP INDEX IF EXISTS team_member_sessions_open_idx;
+DROP INDEX IF EXISTS team_member_sessions_team_member_id_idx;
+DROP INDEX IF EXISTS team_member_sessions_session_id_idx;
+DROP INDEX IF EXISTS team_member_sessions_check_in_desc_idx;

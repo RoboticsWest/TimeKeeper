@@ -8,15 +8,16 @@ use database::{
 };
 
 use super::model::{
-  DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_END_REMINDER_MESSAGE, DEFAULT_END_REMINDER_MINS,
-  DEFAULT_NEXT_SESSION_THRESHOLD_SECS, DEFAULT_OVERTIME_DM_MESSAGE, DEFAULT_OVERTIME_DM_MINS,
+  DEFAULT_AUTO_CHECKOUT_AFTER_SECS, DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_CHECK_IN_WINDOW_SECS,
+  DEFAULT_END_REMINDER_MESSAGE, DEFAULT_END_REMINDER_MINS, DEFAULT_OVERTIME_DM_MESSAGE, DEFAULT_OVERTIME_DM_MINS,
   DEFAULT_START_REMINDER_MESSAGE, DEFAULT_START_REMINDER_MINS, Logo, Settings,
 };
 
 fn default_settings() -> Settings {
   Settings {
     id: true,
-    next_session_threshold_secs: DEFAULT_NEXT_SESSION_THRESHOLD_SECS,
+    check_in_window_secs: DEFAULT_CHECK_IN_WINDOW_SECS,
+    auto_checkout_after_secs: DEFAULT_AUTO_CHECKOUT_AFTER_SECS,
     discord_bot_token: String::new(),
     discord_guild_id: String::new(),
     discord_announcement_channel_id: String::new(),
@@ -76,7 +77,8 @@ impl SettingsRepository for PgSettingsRepository {
       diesel::insert_into(settings::table)
         .values((
           settings::id.eq(defaults.id),
-          settings::next_session_threshold_secs.eq(defaults.next_session_threshold_secs),
+          settings::check_in_window_secs.eq(defaults.check_in_window_secs),
+          settings::auto_checkout_after_secs.eq(defaults.auto_checkout_after_secs),
           settings::discord_bot_token.eq(&defaults.discord_bot_token),
           settings::discord_guild_id.eq(&defaults.discord_guild_id),
           settings::discord_announcement_channel_id.eq(&defaults.discord_announcement_channel_id),
@@ -117,7 +119,8 @@ impl SettingsRepository for PgSettingsRepository {
       diesel::insert_into(settings::table)
         .values((
           settings::id.eq(true),
-          settings::next_session_threshold_secs.eq(record.next_session_threshold_secs),
+          settings::check_in_window_secs.eq(record.check_in_window_secs),
+          settings::auto_checkout_after_secs.eq(record.auto_checkout_after_secs),
           settings::discord_bot_token.eq(&record.discord_bot_token),
           settings::discord_guild_id.eq(&record.discord_guild_id),
           settings::discord_announcement_channel_id.eq(&record.discord_announcement_channel_id),
@@ -146,7 +149,8 @@ impl SettingsRepository for PgSettingsRepository {
         .on_conflict(settings::id)
         .do_update()
         .set((
-          settings::next_session_threshold_secs.eq(record.next_session_threshold_secs),
+          settings::check_in_window_secs.eq(record.check_in_window_secs),
+          settings::auto_checkout_after_secs.eq(record.auto_checkout_after_secs),
           settings::discord_bot_token.eq(&record.discord_bot_token),
           settings::discord_guild_id.eq(&record.discord_guild_id),
           settings::discord_announcement_channel_id.eq(&record.discord_announcement_channel_id),

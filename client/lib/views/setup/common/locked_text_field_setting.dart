@@ -65,9 +65,7 @@ class LockedTextFieldSetting extends StatelessWidget {
       severity: severity,
       noticeMessage: noticeMessage,
       actionButtonLabel: 'Update',
-      actionIcon: severity == LockedSettingSeverity.standard
-          ? Icons.save
-          : Icons.warning,
+      actionIcon: severity == LockedSettingSeverity.standard ? Icons.save : Icons.warning,
       onAction: onUpdate,
       contentBuilder: (context, isUnlocked) {
         final severityColor = severity.getColor(context);
@@ -77,10 +75,7 @@ class LockedTextFieldSetting extends StatelessWidget {
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
             hintText: hintText,
-            prefixIcon: Icon(
-              isUnlocked ? Icons.lock_open : Icons.lock,
-              color: isUnlocked ? severityColor : null,
-            ),
+            prefixIcon: Icon(isUnlocked ? Icons.lock_open : Icons.lock, color: isUnlocked ? severityColor : null),
           ),
         );
       },

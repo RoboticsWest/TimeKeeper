@@ -153,10 +153,7 @@ class StatsQuery {
     switch (range) {
       // Calendar months vary in length, so step by month rather than by span.
       case StatsRange.thisMonth:
-        return DateWindow(
-          DateTime(window.start.year, window.start.month - 1),
-          window.start,
-        );
+        return DateWindow(DateTime(window.start.year, window.start.month - 1), window.start);
       case StatsRange.ytd:
         return DateWindow(
           DateTime(window.start.year - 1),

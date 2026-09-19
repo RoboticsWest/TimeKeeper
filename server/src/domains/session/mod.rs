@@ -7,5 +7,5 @@ pub mod service;
 pub use gql::{SessionMutation, SessionQuery, SessionSubscription};
 pub use logic::{DefaultSessionLogic, PastEndSession, SessionLogic};
 pub use model::Session;
-pub use repository::{PgSessionRepository, SessionRepository};
+pub use repository::{PgSessionRepository, SessionFilter, SessionRepository};
 pub use service::SessionService;

@@ -54,13 +54,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           channelAnnouncementIdController.text = s.discordAnnouncementChannelId;
           channelNotificationIdController.text = s.discordNotificationChannelId;
           final startMins = s.discordStartReminderMins;
-          startReminderMinsController.text = startMins > 0
-              ? startMins.toString()
-              : '1440';
+          startReminderMinsController.text = startMins > 0 ? startMins.toString() : '1440';
           final endMins = s.discordEndReminderMins;
-          endReminderMinsController.text = endMins > 0
-              ? endMins.toString()
-              : '15';
+          endReminderMinsController.text = endMins > 0 ? endMins.toString() : '15';
           startReminderMessageController.text = s.discordStartReminderMessage;
           endReminderMessageController.text = s.discordEndReminderMessage;
           autoDeleteStartReminder.value = s.discordAutoDeleteStartReminder;
@@ -70,9 +66,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           nameSyncEnabled.value = s.discordNameSyncEnabled;
           overtimeDmEnabled.value = s.discordOvertimeDmEnabled;
           final overtimeMins = s.discordOvertimeDmMins;
-          overtimeDmMinsController.text = overtimeMins > 0
-              ? overtimeMins.toString()
-              : '10';
+          overtimeDmMinsController.text = overtimeMins > 0 ? overtimeMins.toString() : '10';
           overtimeDmMessageController.text = s.discordOvertimeDmMessage;
           autoCheckoutDmEnabled.value = s.discordAutoCheckoutDmEnabled;
           autoCheckoutDmMessageController.text = s.discordAutoCheckoutDmMessage;
@@ -166,8 +160,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
           await ref.read(teamMembersProvider.notifier).refresh();
           if (!context.mounted) return;
           SnackBarDialog.success(
-            message:
-                'Imported ${r.imported} new, linked ${r.linked} existing, ${r.alreadyLinked} already linked.',
+            message: 'Imported ${r.imported} new, linked ${r.linked} existing, ${r.alreadyLinked} already linked.',
           ).show(context);
         case ApiFailure(userMessage: final msg):
           PopupDialog.error(title: 'Error', message: Text(msg)).show(context);
@@ -182,9 +175,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 4),
         Text(
           'Connect a Discord bot to enable notifications and team communication features.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         SettingRow(
@@ -209,8 +202,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         TextFieldSetting(
           label: 'Bot Token',
-          description:
-              'The bot token from the Discord Developer Portal (Applications > Bot > Token)',
+          description: 'The bot token from the Discord Developer Portal (Applications > Bot > Token)',
           controller: botTokenController,
           hintText: 'Enter bot token',
           obscureText: true,
@@ -219,8 +211,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         TextFieldSetting(
           label: 'Server ID',
-          description:
-              'The ID of your Discord server (Enable Developer Mode, right-click server, Copy Server ID)',
+          description: 'The ID of your Discord server (Enable Developer Mode, right-click server, Copy Server ID)',
           controller: guildIdController,
           hintText: 'Enter server ID',
           onUpdate: updateDiscordCore,
@@ -246,23 +237,20 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text(
-          'Reminders (Announcement Channel)',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Reminders (Announcement Channel)', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(
           'Configure when and what the bot posts before sessions start and end. '
-          'Placeholders: {mins}, {location}, {date}, {start_time}, {end_time}. Set minutes to 0 to disable.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          'Placeholders: {mins}, {location}, {relative_day}, {weekday}, {date}, {start_time}, {end_time}. '
+          'Set minutes to 0 to disable.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         TextFieldSetting(
           label: 'Start Reminder (minutes before)',
-          description:
-              'How many minutes before a session starts to send a reminder (default: 1440 = 24 hours)',
+          description: 'How many minutes before a session starts to send a reminder (default: 1440 = 24 hours)',
           controller: startReminderMinsController,
           hintText: '1440',
           keyboardType: TextInputType.number,
@@ -273,10 +261,13 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         TextFieldSetting(
           label: 'Start Reminder Message',
           description:
-              'Custom message for the start reminder. Supports {mins}, {location}, {date}, {start_time}, {end_time}',
+              'Custom message for the start reminder. {relative_day} renders as "today", "tomorrow" or a '
+              'weekday depending on when the reminder actually fires — prefer it over writing '
+              '"tomorrow", which is wrong whenever a session is created at short notice. '
+              'Supports {mins}, {location}, {relative_day}, {weekday}, {date}, {start_time}, {end_time}',
           controller: startReminderMessageController,
           hintText:
-              '@here Session on {date} from {start_time} to {end_time} @ {location} starting in ~{mins} minutes!',
+              '@here Session {relative_day} from {start_time} to {end_time} @ {location} \u2014 starting in ~{mins} minutes!',
           multiline: true,
           onUpdate: updateDiscordReminder,
         ),
@@ -322,8 +313,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         TextFieldSetting(
           label: 'End Reminder (minutes before)',
-          description:
-              'How many minutes before a session ends to send a reminder (default: 15)',
+          description: 'How many minutes before a session ends to send a reminder (default: 15)',
           controller: endReminderMinsController,
           hintText: '15',
           keyboardType: TextInputType.number,
@@ -334,10 +324,9 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         TextFieldSetting(
           label: 'End Reminder Message',
           description:
-              'Custom message for the end reminder. Supports {mins}, {location}, {date}, {start_time}, {end_time}',
+              'Custom message for the end reminder. Supports {mins}, {location}, {relative_day}, {weekday}, {date}, {start_time}, {end_time}',
           controller: endReminderMessageController,
-          hintText:
-              '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
+          hintText: '@here Session at {location} is ending in ~{mins} minutes \u2014 don\'t forget to sign out!',
           multiline: true,
           onUpdate: updateDiscordReminder,
         ),
@@ -363,8 +352,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         SettingRow(
           label: 'Self-Linking',
-          description:
-              'Allow team members to link their Discord account using the !link command',
+          description: 'Allow team members to link their Discord account using the !link command',
           child: Row(
             children: [
               Switch(
@@ -382,8 +370,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         SettingRow(
           label: 'Name Syncing',
-          description:
-              'Periodically sync team member names from their Discord server nickname',
+          description: 'Periodically sync team member names from their Discord server nickname',
           child: Row(
             children: [
               Switch(
@@ -421,24 +408,20 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text(
-          'Notifications (Notification Channel)',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Notifications (Notification Channel)', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(
           'Send notifications to team members for overtime and auto-checkout warnings. '
           'Members must have a linked Discord account. '
           'Placeholders: {username}, {name}, {location}, {end_time}.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         SettingRow(
           label: 'Overtime Notification',
-          description:
-              'Notify members who are still checked in after a session ends',
+          description: 'Notify members who are still checked in after a session ends',
           child: Row(
             children: [
               Switch(
@@ -456,8 +439,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         TextFieldSetting(
           label: 'Overtime Notification (minutes after session end)',
-          description:
-              'How many minutes after a session ends to send the overtime notification (default: 10)',
+          description: 'How many minutes after a session ends to send the overtime notification (default: 10)',
           controller: overtimeDmMinsController,
           hintText: '10',
           keyboardType: TextInputType.number,
@@ -467,8 +449,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         TextFieldSetting(
           label: 'Overtime Notification Message',
-          description:
-              'Custom message for overtime notifications. Supports {username}, {name}, {location}, {end_time}',
+          description: 'Custom message for overtime notifications. Supports {username}, {name}, {location}, {end_time}',
           controller: overtimeDmMessageController,
           hintText:
               'Hey {username}, you\'re now in overtime for the session at {location}. The session ended at {end_time}. Don\'t forget to check out!',
@@ -478,8 +459,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         SettingRow(
           label: 'Auto-Checkout Notification',
-          description:
-              'Notify members when they have been auto-checked-out because a new session is starting',
+          description: 'Notify members when they have been auto-checked-out because a new session is starting',
           child: Row(
             children: [
               Switch(
@@ -501,46 +481,34 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               'Message sent when a member is auto-checked-out. Supports {username}, {name}, {location}, {end_time}',
           controller: autoCheckoutDmMessageController,
           hintText:
-              'Hey {username}, you\'ve been auto-checked-out from the session at {location} (ended at {end_time}) because a new session is starting soon.',
+              'Hey {username}, you\'ve been auto-checked-out from the session at {location} (ended at {end_time}) because you were still signed in after it finished.',
           multiline: true,
           onUpdate: updateDiscordBehavior,
         ),
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text(
-          'Import Members from Discord',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Import Members from Discord', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(
           'Import Discord server members into TimeKeeper by role. '
           'Members are matched by display name and linked to their Discord account.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         SettingRow(
           label: 'Discord Role',
-          description:
-              'Select a role from your Discord server to import members from',
+          description: 'Select a role from your Discord server to import members from',
           child: Row(
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
                   initialValue: selectedRoleId.value,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Select a role',
-                  ),
+                  decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'Select a role'),
                   items: discordRoles.value
-                      .map(
-                        (role) => DropdownMenuItem(
-                          value: role.id,
-                          child: Text(role.name),
-                        ),
-                      )
+                      .map((role) => DropdownMenuItem(value: role.id, child: Text(role.name)))
                       .toList(),
                   onChanged: (value) => selectedRoleId.value = value,
                 ),
@@ -549,11 +517,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
               FilledButton.icon(
                 onPressed: isLoadingRoles.value ? null : fetchDiscordRoles,
                 icon: isLoadingRoles.value
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.refresh),
                 label: const Text('Fetch Roles'),
               ),
@@ -564,31 +528,21 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         Row(
           children: [
             FilledButton.icon(
-              onPressed:
-                  selectedRoleId.value == null || importingType.value != null
+              onPressed: selectedRoleId.value == null || importingType.value != null
                   ? null
                   : () => importMembers(TeamMemberType.student),
               icon: importingType.value == TeamMemberType.student
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.person_add),
               label: const Text('Import as Students'),
             ),
             const SizedBox(width: 12),
             FilledButton.icon(
-              onPressed:
-                  selectedRoleId.value == null || importingType.value != null
+              onPressed: selectedRoleId.value == null || importingType.value != null
                   ? null
                   : () => importMembers(TeamMemberType.mentor),
               icon: importingType.value == TeamMemberType.mentor
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.person_add),
               label: const Text('Import as Mentors'),
             ),

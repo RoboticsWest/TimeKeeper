@@ -8,11 +8,7 @@ class SessionStats extends StatelessWidget {
   final Map<String, Session> sessions;
   final Map<String, TeamMemberSession> teamMemberSessions;
 
-  const SessionStats({
-    super.key,
-    required this.sessions,
-    required this.teamMemberSessions,
-  });
+  const SessionStats({super.key, required this.sessions, required this.teamMemberSessions});
 
   @override
   Widget build(BuildContext context) {
@@ -20,12 +16,9 @@ class SessionStats extends StatelessWidget {
 
     final activeSessions = sessions.values.where((s) {
       final status = getSessionStatus(s);
-      return status == SessionStatus.current ||
-          status == SessionStatus.overtime;
+      return status == SessionStatus.current || status == SessionStatus.overtime;
     }).length;
-    final upcomingSessions = sessions.values
-        .where((s) => getSessionStatus(s) == SessionStatus.upcoming)
-        .length;
+    final upcomingSessions = sessions.values.where((s) => getSessionStatus(s) == SessionStatus.upcoming).length;
     final thisMonth = sessions.values.where((s) {
       final dt = s.startTime;
       return dt.year == now.year && dt.month == now.month;

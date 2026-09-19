@@ -1,5 +1,10 @@
 class Settings {
-  final int nextSessionThresholdSecs;
+  /// How far either side of a session a kiosk scan still counts as checking in to it.
+  final int checkInWindowSecs;
+
+  /// Grace period after a session's scheduled end before lingering members are auto-checked-out.
+  /// The other trigger — the next session at that location starting — is unconditional.
+  final int autoCheckoutAfterSecs;
   final String discordBotToken;
   final String discordGuildId;
   final String discordAnnouncementChannelId;
@@ -26,7 +31,8 @@ class Settings {
   final bool quickPinEnabled;
 
   Settings({
-    required this.nextSessionThresholdSecs,
+    required this.checkInWindowSecs,
+    required this.autoCheckoutAfterSecs,
     required this.discordBotToken,
     required this.discordGuildId,
     required this.discordAnnouncementChannelId,
@@ -55,7 +61,8 @@ class Settings {
 
   factory Settings.fromJson(Map<String, dynamic> json) {
     return Settings(
-      nextSessionThresholdSecs: json['nextSessionThresholdSecs'] as int,
+      checkInWindowSecs: json['checkInWindowSecs'] as int,
+      autoCheckoutAfterSecs: json['autoCheckoutAfterSecs'] as int,
       discordBotToken: json['discordBotToken'] as String,
       discordGuildId: json['discordGuildId'] as String,
       discordAnnouncementChannelId: json['discordAnnouncementChannelId'] as String,

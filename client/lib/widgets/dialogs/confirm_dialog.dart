@@ -137,10 +137,7 @@ class ConfirmDialog extends BaseDialog {
       'Either onConfirm, onConfirmAsync, or onConfirmAsyncGrpc must be provided',
     );
     assert(
-      (onConfirm != null ? 1 : 0) +
-              (onConfirmAsync != null ? 1 : 0) +
-              (onConfirmAsyncApi != null ? 1 : 0) ==
-          1,
+      (onConfirm != null ? 1 : 0) + (onConfirmAsync != null ? 1 : 0) + (onConfirmAsyncApi != null ? 1 : 0) == 1,
       'Only one of onConfirm, onConfirmAsync, or onConfirmAsyncGrpc can be provided',
     );
 
@@ -212,9 +209,7 @@ class _AsyncConfirmButton extends HookWidget {
 
           if (showResultDialog) {
             SnackBarDialog.success(
-              message: successMessage is Text
-                  ? (successMessage as Text).data ?? 'Success'
-                  : 'Success',
+              message: successMessage is Text ? (successMessage as Text).data ?? 'Success' : 'Success',
             ).show(context);
           }
         }
@@ -223,10 +218,7 @@ class _AsyncConfirmButton extends HookWidget {
           Navigator.of(context).pop();
 
           if (showResultDialog) {
-            PopupDialog.error(
-              title: 'Error',
-              message: Text('Operation failed: $e'),
-            ).show(context);
+            PopupDialog.error(title: 'Error', message: Text('Operation failed: $e')).show(context);
           }
         }
       } finally {
@@ -237,11 +229,7 @@ class _AsyncConfirmButton extends HookWidget {
     return ElevatedButton(
       onPressed: isLoading.value ? null : handleConfirm,
       child: isLoading.value
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
+          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
           : Text(confirmText),
     );
   }
@@ -278,9 +266,7 @@ class _AsyncApiConfirmButton extends HookWidget {
           if (showResultDialog) {
             if (result.success) {
               SnackBarDialog.success(
-                message: successMessage is Text
-                    ? (successMessage as Text).data ?? 'Success'
-                    : 'Success',
+                message: successMessage is Text ? (successMessage as Text).data ?? 'Success' : 'Success',
               ).show(context);
             } else {
               PopupDialog.fromApiResult(result: result).show(context);
@@ -292,10 +278,7 @@ class _AsyncApiConfirmButton extends HookWidget {
           Navigator.of(context).pop();
 
           if (showResultDialog) {
-            PopupDialog.error(
-              title: 'Error',
-              message: Text('Unexpected error: $e'),
-            ).show(context);
+            PopupDialog.error(title: 'Error', message: Text('Unexpected error: $e')).show(context);
           }
         }
       } finally {
@@ -306,11 +289,7 @@ class _AsyncApiConfirmButton extends HookWidget {
     return ElevatedButton(
       onPressed: isLoading.value ? null : handleConfirm,
       child: isLoading.value
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
+          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
           : Text(confirmText),
     );
   }

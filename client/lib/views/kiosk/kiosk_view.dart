@@ -42,37 +42,25 @@ class HomeView extends HookConsumerWidget {
     final unfinishedSessions =
         sessionList.values
             .where(
-              (session) =>
-                  !session.finished &&
-                  (deviceLocationId == null || session.locationId == deviceLocationId),
+              (session) => !session.finished && (deviceLocationId == null || session.locationId == deviceLocationId),
             )
             .toList()
           ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
-    final currentSession = unfinishedSessions.isNotEmpty
-        ? unfinishedSessions.first
-        : null;
-    final nextSession = unfinishedSessions.length > 1
-        ? unfinishedSessions[1]
-        : null;
+    final currentSession = unfinishedSessions.isNotEmpty ? unfinishedSessions.first : null;
+    final nextSession = unfinishedSessions.length > 1 ? unfinishedSessions[1] : null;
 
     // Count members checked into the current session
     final currentSessionId = currentSession != null
-        ? sessionList.entries
-              .where((e) => e.value == currentSession)
-              .map((e) => e.key)
-              .firstOrNull
+        ? sessionList.entries.where((e) => e.value == currentSession).map((e) => e.key).firstOrNull
         : null;
 
     final checkedInCount = currentSessionId != null
-        ? teamMemberSessions.values
-              .where((ms) => ms.sessionId == currentSessionId && ms.checkOutTime == null)
-              .length
+        ? teamMemberSessions.values.where((ms) => ms.sessionId == currentSessionId && ms.checkOutTime == null).length
         : 0;
 
     final hasKiosk = ref.watch(hasAnyPermissionProvider);
-    final quickPinEnabled =
-        ref.watch(settingsQueryProvider).value?.quickPinEnabled ?? false;
+    final quickPinEnabled = ref.watch(settingsQueryProvider).value?.quickPinEnabled ?? false;
 
     // The PIN pad accumulates digits terminated by Enter, which is exactly what
     // the keyboard-wedge reader emits - so the scanner stands down while it's open.
@@ -98,7 +86,7 @@ class HomeView extends HookConsumerWidget {
       Future<void> loadSettings() async {
         final settings = await ref.read(settingsQueryProvider.future);
         if (settings != null) {
-          thresholdDuration.value = Duration(seconds: settings.nextSessionThresholdSecs);
+          thresholdDuration.value = Duration(seconds: settings.checkInWindowSecs);
         }
       }
 
@@ -149,8 +137,8 @@ class HomeView extends HookConsumerWidget {
                 children: [
                   if (hasKiosk)
                     FilledButton.icon(
-                      icon: const Icon(Icons.how_to_reg),
-                      label: const Text('Kiosk Check In / Out'),
+                      icon: const Icon(Icons.how_to_reg, color: Colors.white),
+                      label: const Text('Kiosk Check In / Out', style: TextStyle(color: Colors.white)),
                       onPressed: () {
                         KioskDialog(sessions: unfinishedSessions).show(context);
                       },
@@ -172,9 +160,7 @@ class HomeView extends HookConsumerWidget {
           isUpcoming: isUpcoming.value,
           nextSession: nextSession,
           locations: locations,
-          deviceLocationName: deviceLocationId != null
-              ? locations[deviceLocationId]?.location
-              : null,
+          deviceLocationName: deviceLocationId != null ? locations[deviceLocationId]?.location : null,
           checkedInCount: checkedInCount,
           totalMembers: teamMembers.length,
         ),

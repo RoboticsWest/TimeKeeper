@@ -122,11 +122,7 @@ ThemeData _buildTheme(ColorScheme cs) {
       scrolledUnderElevation: 0,
       iconTheme: IconThemeData(color: cs.onSurface, size: 20),
       shape: Border(bottom: BorderSide(color: divider)),
-      titleTextStyle: TextStyle(
-        color: cs.onSurface,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
+      titleTextStyle: TextStyle(color: cs.onSurface, fontSize: 16, fontWeight: FontWeight.w600),
     ),
 
     // Bordered, not elevated. Panels separate from the page by contrast and a
@@ -150,11 +146,7 @@ ThemeData _buildTheme(ColorScheme cs) {
         borderRadius: kBorderRadiusCard,
         side: BorderSide(color: divider),
       ),
-      titleTextStyle: TextStyle(
-        color: cs.onSurface,
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-      ),
+      titleTextStyle: TextStyle(color: cs.onSurface, fontSize: 17, fontWeight: FontWeight.w600),
       contentTextStyle: TextStyle(color: cs.onSurface, fontSize: 14),
     ),
 
@@ -246,9 +238,7 @@ ThemeData _buildTheme(ColorScheme cs) {
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
-      style: IconButton.styleFrom(
-        shape: const RoundedRectangleBorder(borderRadius: kBorderRadiusRow),
-      ),
+      style: IconButton.styleFrom(shape: const RoundedRectangleBorder(borderRadius: kBorderRadiusRow)),
     ),
 
     navigationRailTheme: NavigationRailThemeData(
@@ -257,11 +247,7 @@ ThemeData _buildTheme(ColorScheme cs) {
       indicatorShape: const RoundedRectangleBorder(borderRadius: kBorderRadiusRow),
       selectedIconTheme: IconThemeData(color: cs.onSurface, size: 22),
       unselectedIconTheme: IconThemeData(color: cs.onSurfaceVariant, size: 22),
-      selectedLabelTextStyle: TextStyle(
-        color: cs.onSurface,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-      ),
+      selectedLabelTextStyle: TextStyle(color: cs.onSurface, fontSize: 14, fontWeight: FontWeight.w600),
       unselectedLabelTextStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
     ),
 
@@ -269,20 +255,13 @@ ThemeData _buildTheme(ColorScheme cs) {
       backgroundColor: cs.surfaceContainerHigh,
       side: BorderSide(color: divider),
       shape: const RoundedRectangleBorder(borderRadius: kBorderRadiusRow),
-      labelStyle: TextStyle(
-        color: cs.onSurface,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
+      labelStyle: TextStyle(color: cs.onSurface, fontSize: 12, fontWeight: FontWeight.w600),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       labelPadding: const EdgeInsets.symmetric(horizontal: 2),
     ),
 
     tooltipTheme: TooltipThemeData(
-      decoration: BoxDecoration(
-        color: cs.inverseSurface,
-        borderRadius: kBorderRadiusRow,
-      ),
+      decoration: BoxDecoration(color: cs.inverseSurface, borderRadius: kBorderRadiusRow),
       textStyle: TextStyle(color: cs.onInverseSurface, fontSize: 12),
       waitDuration: const Duration(milliseconds: 400),
     ),
@@ -309,9 +288,7 @@ ThemeData _buildTheme(ColorScheme cs) {
     ),
 
     checkboxTheme: CheckboxThemeData(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(2)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(2))),
       side: BorderSide(color: cs.outline, width: 1.5),
     ),
 
@@ -322,18 +299,11 @@ ThemeData _buildTheme(ColorScheme cs) {
       contentTextStyle: TextStyle(color: cs.onInverseSurface, fontSize: 14),
     ),
 
-    progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: cs.primary,
-      linearMinHeight: 4,
-    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: cs.primary, linearMinHeight: 4),
 
     dataTableTheme: DataTableThemeData(
       headingRowColor: WidgetStatePropertyAll(cs.surfaceContainerHigh),
-      headingTextStyle: TextStyle(
-        color: cs.onSurface,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-      ),
+      headingTextStyle: TextStyle(color: cs.onSurface, fontSize: 12, fontWeight: FontWeight.w700),
       dataTextStyle: TextStyle(color: cs.onSurface, fontSize: 13),
       dividerThickness: 1,
     ),

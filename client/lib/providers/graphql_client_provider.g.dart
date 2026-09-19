@@ -12,8 +12,7 @@ part of 'graphql_client_provider.dart';
 @ProviderFor(TimeKeeperGraphQLClient)
 final timeKeeperGraphQLClientProvider = TimeKeeperGraphQLClientProvider._();
 
-final class TimeKeeperGraphQLClientProvider
-    extends $NotifierProvider<TimeKeeperGraphQLClient, GraphQLClient> {
+final class TimeKeeperGraphQLClientProvider extends $NotifierProvider<TimeKeeperGraphQLClient, GraphQLClient> {
   TimeKeeperGraphQLClientProvider._()
     : super(
         from: null,
@@ -34,15 +33,11 @@ final class TimeKeeperGraphQLClientProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(GraphQLClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<GraphQLClient>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<GraphQLClient>(value));
   }
 }
 
-String _$timeKeeperGraphQLClientHash() =>
-    r'5601e9e32f9443e8b3f67a28dc2824165b599401';
+String _$timeKeeperGraphQLClientHash() => r'5601e9e32f9443e8b3f67a28dc2824165b599401';
 
 abstract class _$TimeKeeperGraphQLClient extends $Notifier<GraphQLClient> {
   GraphQLClient build();
@@ -52,12 +47,7 @@ abstract class _$TimeKeeperGraphQLClient extends $Notifier<GraphQLClient> {
     final ref = this.ref as $Ref<GraphQLClient, GraphQLClient>;
     final element =
         ref.element
-            as $ClassProviderElement<
-              AnyNotifier<GraphQLClient, GraphQLClient>,
-              GraphQLClient,
-              Object?,
-              Object?
-            >;
+            as $ClassProviderElement<AnyNotifier<GraphQLClient, GraphQLClient>, GraphQLClient, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

@@ -20,10 +20,7 @@ void usePcscScanner({
   useEffect(() {
     if (!enabled) return null;
 
-    final scanner = PcscScanner(
-      onScan: (uid) => onScanRef.value(uid),
-      onError: (msg) => onErrorRef.value?.call(msg),
-    );
+    final scanner = PcscScanner(onScan: (uid) => onScanRef.value(uid), onError: (msg) => onErrorRef.value?.call(msg));
 
     scanner.start();
 

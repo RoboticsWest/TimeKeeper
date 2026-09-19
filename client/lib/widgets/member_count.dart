@@ -7,21 +7,13 @@ class MemberCount extends StatelessWidget {
   final SessionStatus status;
   final List<TeamMemberSession> sessionMemberSessions;
 
-  const MemberCount({
-    super.key,
-    required this.total,
-    required this.status,
-    required this.sessionMemberSessions,
-  });
+  const MemberCount({super.key, required this.total, required this.status, required this.sessionMemberSessions});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final activeCount = sessionMemberSessions
-        .where((ms) => ms.checkOutTime == null)
-        .length;
-    final text =
-        status == SessionStatus.current || status == SessionStatus.overtime
+    final activeCount = sessionMemberSessions.where((ms) => ms.checkOutTime == null).length;
+    final text = status == SessionStatus.current || status == SessionStatus.overtime
         ? '$activeCount / $total'
         : '$total';
 

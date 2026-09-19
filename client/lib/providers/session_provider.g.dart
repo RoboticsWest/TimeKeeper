@@ -13,15 +13,8 @@ part of 'session_provider.dart';
 final sessionChangesProvider = SessionChangesProvider._();
 
 final class SessionChangesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<ChangeEvent<Session>>,
-          ChangeEvent<Session>,
-          Stream<ChangeEvent<Session>>
-        >
-    with
-        $FutureModifier<ChangeEvent<Session>>,
-        $StreamProvider<ChangeEvent<Session>> {
+    extends $FunctionalProvider<AsyncValue<ChangeEvent<Session>>, ChangeEvent<Session>, Stream<ChangeEvent<Session>>>
+    with $FutureModifier<ChangeEvent<Session>>, $StreamProvider<ChangeEvent<Session>> {
   SessionChangesProvider._()
     : super(
         from: null,
@@ -38,9 +31,8 @@ final class SessionChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<Session>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<Session>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<Session>> create(Ref ref) {
@@ -53,8 +45,7 @@ String _$sessionChangesHash() => r'6f4d879aa536883ab6676d85ada36110134394f7';
 @ProviderFor(Sessions)
 final sessionsProvider = SessionsProvider._();
 
-final class SessionsProvider
-    extends $NotifierProvider<Sessions, Map<String, Session>> {
+final class SessionsProvider extends $NotifierProvider<Sessions, Map<String, Session>> {
   SessionsProvider._()
     : super(
         from: null,
@@ -75,14 +66,11 @@ final class SessionsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, Session> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, Session>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, Session>>(value));
   }
 }
 
-String _$sessionsHash() => r'd5300950745a746dabca20f999ee67f89c2a0e21';
+String _$sessionsHash() => r'cc5065c71aa673663db173348cc6a6cea547e3cb';
 
 abstract class _$Sessions extends $Notifier<Map<String, Session>> {
   Map<String, Session> build();
@@ -105,8 +93,7 @@ abstract class _$Sessions extends $Notifier<Map<String, Session>> {
 @ProviderFor(sessionsSync)
 final sessionsSyncProvider = SessionsSyncProvider._();
 
-final class SessionsSyncProvider extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class SessionsSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   SessionsSyncProvider._()
     : super(
         from: null,
@@ -123,8 +110,7 @@ final class SessionsSyncProvider extends $FunctionalProvider<void, void, void>
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -133,14 +119,11 @@ final class SessionsSyncProvider extends $FunctionalProvider<void, void, void>
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$sessionsSyncHash() => r'ef8645c9b792c5fbfb0bdd05e3bc836a1d2885fd';
+String _$sessionsSyncHash() => r'c7e9abf8cdefc71c513cd1dd374cf4de102e9598';
 
 /// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
 
@@ -148,8 +131,7 @@ String _$sessionsSyncHash() => r'ef8645c9b792c5fbfb0bdd05e3bc836a1d2885fd';
 final sessionCheckInOutProvider = SessionCheckInOutProvider._();
 
 /// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
-final class SessionCheckInOutProvider
-    extends $NotifierProvider<SessionCheckInOut, void> {
+final class SessionCheckInOutProvider extends $NotifierProvider<SessionCheckInOut, void> {
   /// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
   SessionCheckInOutProvider._()
     : super(
@@ -171,10 +153,7 @@ final class SessionCheckInOutProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
@@ -188,14 +167,7 @@ abstract class _$SessionCheckInOut extends $Notifier<void> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<void, void>, void, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

@@ -6,9 +6,7 @@ import 'package:logger/logger.dart';
 
 final _log = Logger();
 
-String _hexColon(List<int> bytes) => bytes
-    .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-    .join(':');
+String _hexColon(List<int> bytes) => bytes.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(':');
 
 class PcscScanner {
   final void Function(String scannedUid) onScan;
@@ -19,13 +17,7 @@ class PcscScanner {
   CancelableOperation<List<String>>? _pendingWait;
 
   /// APDU command to read UID from most ISO 14443 cards.
-  static final _getUidCommand = Uint8List.fromList([
-    0xFF,
-    0xCA,
-    0x00,
-    0x00,
-    0x00,
-  ]);
+  static final _getUidCommand = Uint8List.fromList([0xFF, 0xCA, 0x00, 0x00, 0x00]);
 
   /// Debounce: ignore the same UID within this window.
   static const _debounceDuration = Duration(seconds: 3);
@@ -78,11 +70,7 @@ class PcscScanner {
 
         Card? card;
         try {
-          card = await context.connect(
-            readersWithCard.first,
-            ShareMode.shared,
-            Protocol.any,
-          );
+          card = await context.connect(readersWithCard.first, ShareMode.shared, Protocol.any);
 
           var response = await card.transmit(_getUidCommand);
 
@@ -95,11 +83,7 @@ class PcscScanner {
               await card.disconnect(Disposition.resetCard);
               card = null;
               await Future<void>.delayed(const Duration(milliseconds: 200));
-              card = await context.connect(
-                readersWithCard.first,
-                ShareMode.shared,
-                Protocol.any,
-              );
+              card = await context.connect(readersWithCard.first, ShareMode.shared, Protocol.any);
               response = await card.transmit(_getUidCommand);
             }
           }
@@ -116,9 +100,7 @@ class PcscScanner {
 
               // Debounce: skip if same card scanned within window
               final now = DateTime.now();
-              if (hexUid != _lastUid ||
-                  _lastScanTime == null ||
-                  now.difference(_lastScanTime!) > _debounceDuration) {
+              if (hexUid != _lastUid || _lastScanTime == null || now.difference(_lastScanTime!) > _debounceDuration) {
                 _lastUid = hexUid;
                 _lastScanTime = now;
                 onScan(hexUid);

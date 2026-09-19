@@ -33,10 +33,7 @@ final class ServerIpProvider extends $NotifierProvider<ServerIp, String> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(String value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<String>(value));
   }
 }
 
@@ -48,14 +45,7 @@ abstract class _$ServerIp extends $Notifier<String> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<String, String>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<String, String>,
-              String,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<String, String>, String, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }
@@ -63,8 +53,7 @@ abstract class _$ServerIp extends $Notifier<String> {
 @ProviderFor(ServerGraphqlPort)
 final serverGraphqlPortProvider = ServerGraphqlPortProvider._();
 
-final class ServerGraphqlPortProvider
-    extends $NotifierProvider<ServerGraphqlPort, int> {
+final class ServerGraphqlPortProvider extends $NotifierProvider<ServerGraphqlPort, int> {
   ServerGraphqlPortProvider._()
     : super(
         from: null,
@@ -85,10 +74,7 @@ final class ServerGraphqlPortProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(int value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<int>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<int>(value));
   }
 }
 
@@ -100,14 +86,7 @@ abstract class _$ServerGraphqlPort extends $Notifier<int> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<int, int>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<int, int>,
-              int,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<int, int>, int, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }
@@ -136,10 +115,7 @@ final class TlsProvider extends $NotifierProvider<Tls, bool> {
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(bool value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<bool>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<bool>(value));
   }
 }
 
@@ -151,14 +127,7 @@ abstract class _$Tls extends $Notifier<bool> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<bool, bool>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<bool, bool>,
-              bool,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<bool, bool>, bool, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }
@@ -199,8 +168,7 @@ final serverBaseUriProvider = ServerBaseUriProvider._();
 ///
 /// Native builds (desktop, Android) genuinely do have to be pointed at a
 /// server, so there the configured host, port and TLS toggle apply.
-final class ServerBaseUriProvider
-    extends $NotifierProvider<ServerBaseUri, Uri> {
+final class ServerBaseUriProvider extends $NotifierProvider<ServerBaseUri, Uri> {
   /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
   /// probe).
   ///
@@ -237,10 +205,7 @@ final class ServerBaseUriProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Uri value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Uri>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Uri>(value));
   }
 }
 
@@ -269,14 +234,7 @@ abstract class _$ServerBaseUri extends $Notifier<Uri> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<Uri, Uri>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<Uri, Uri>,
-              Uri,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<Uri, Uri>, Uri, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

@@ -4,6 +4,7 @@ import 'package:time_keeper/helpers/local_storage.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/location.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/providers/realtime_collection.dart';
 import 'package:time_keeper/utils/api_result.dart';
 
 part 'location_provider.g.dart';
@@ -44,28 +45,33 @@ Stream<ChangeEvent<Location>> locationChanges(Ref ref) {
   return client
       .subscribe(SubscriptionOptions(document: gql(_locationChangesSubscription)))
       .where((result) => result.data != null)
-      .map((result) => ChangeEvent.fromJson(result.data!['locationChanges'] as Map<String, dynamic>, Location.fromJson));
+      .map(
+        (result) => ChangeEvent.fromJson(result.data!['locationChanges'] as Map<String, dynamic>, Location.fromJson),
+      );
 }
 
 @Riverpod(keepAlive: true)
 class Locations extends _$Locations {
   @override
   Map<String, Location> build() {
+    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
+    // Without this a fetch that failed at startup is never retried.
+    ref.watch(timeKeeperGraphQLClientProvider);
     _fetchInitial();
     return {};
   }
 
   Future<void> _fetchInitial() async {
-    final client = ref.read(timeKeeperGraphQLClientProvider);
-    final result = await client.query(
-      QueryOptions(document: gql(_locationsQuery), fetchPolicy: FetchPolicy.noCache),
+    final items = await fetchCollection<Location>(
+      ref: ref,
+      document: _locationsQuery,
+      rootField: 'locations',
+      fromJson: Location.fromJson,
+      idOf: (item) => item.id,
     );
-    if (result.hasException || result.data == null) return;
-
-    final items = (result.data!['locations'] as List<dynamic>)
-        .map((e) => Location.fromJson(e as Map<String, dynamic>))
-        .toList();
-    state = {for (final item in items) item.id: item};
+    // Null means every attempt failed; keep what we have rather than
+    // replacing real data with an empty map.
+    if (items != null) state = items;
   }
 
   Future<void> refresh() => _fetchInitial();
@@ -100,11 +106,13 @@ class Locations extends _$Locations {
 /// live-update subscription.
 @Riverpod(keepAlive: true)
 void locationsSync(Ref ref) {
-  ref.listen(locationChangesProvider, (previous, next) {
-    next.whenData((change) {
-      ref.read(locationsProvider.notifier).applyChange(change);
-    });
-  });
+  ref.listen(
+    locationChangesProvider,
+    changeListener<Location>(
+      apply: (change) => ref.read(locationsProvider.notifier).applyChange(change),
+      refresh: () => ref.read(locationsProvider.notifier).refresh(),
+    ),
+  );
 }
 
 @Riverpod(keepAlive: true)

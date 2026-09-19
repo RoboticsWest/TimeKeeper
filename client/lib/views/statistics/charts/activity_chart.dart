@@ -56,8 +56,7 @@ class ActivityChart extends StatelessWidget {
     }
   }
 
-  double _value(HoursBucket b) =>
-      metric == ActivityMetric.headcount ? b.headcount.toDouble() : b.total.inMinutes / 60;
+  double _value(HoursBucket b) => metric == ActivityMetric.headcount ? b.headcount.toDouble() : b.total.inMinutes / 60;
 
   List<String> _tooltip(int index) {
     if (index < 0 || index >= series.length) return const [];
@@ -81,9 +80,7 @@ class ActivityChart extends StatelessWidget {
     final overtimeColor = seriesColor(1, brightness);
     final headcountColor = seriesColor(2, brightness);
 
-    final maxValue = series.isEmpty
-        ? 0.0
-        : series.map(_value).reduce((a, b) => a > b ? a : b);
+    final maxValue = series.isEmpty ? 0.0 : series.map(_value).reduce((a, b) => a > b ? a : b);
     final maxY = niceMaxY(maxValue);
 
     String formatLeft(double value) =>
@@ -104,12 +101,7 @@ class ActivityChart extends StatelessWidget {
           maxY: maxY,
           gridData: statsGrid(context, maxY),
           borderData: statsBorder(),
-          titlesData: statsTitles(
-            context,
-            maxY: maxY,
-            leftFormatter: formatLeft,
-            bottomBuilder: bottomLabel,
-          ),
+          titlesData: statsTitles(context, maxY: maxY, leftFormatter: formatLeft, bottomBuilder: bottomLabel),
           lineTouchData: statsLineTouch(context, linesFor: _tooltip),
           lineBarsData: [
             if (previousSeries.isNotEmpty)
@@ -125,17 +117,14 @@ class ActivityChart extends StatelessWidget {
                 dotData: const FlDotData(show: false),
               ),
             LineChartBarData(
-              spots: [
-                for (var i = 0; i < series.length; i++) FlSpot(i.toDouble(), _value(series[i])),
-              ],
+              spots: [for (var i = 0; i < series.length; i++) FlSpot(i.toDouble(), _value(series[i]))],
               isCurved: false,
               barWidth: 2,
               color: metric == ActivityMetric.headcount ? headcountColor : regularColor,
               dotData: const FlDotData(show: false),
               belowBarData: BarAreaData(
                 show: true,
-                color: (metric == ActivityMetric.headcount ? headcountColor : regularColor)
-                    .withValues(alpha: 0.14),
+                color: (metric == ActivityMetric.headcount ? headcountColor : regularColor).withValues(alpha: 0.14),
               ),
             ),
           ],
@@ -150,12 +139,7 @@ class ActivityChart extends StatelessWidget {
         alignment: BarChartAlignment.spaceAround,
         gridData: statsGrid(context, maxY),
         borderData: statsBorder(),
-        titlesData: statsTitles(
-          context,
-          maxY: maxY,
-          leftFormatter: formatLeft,
-          bottomBuilder: bottomLabel,
-        ),
+        titlesData: statsTitles(context, maxY: maxY, leftFormatter: formatLeft, bottomBuilder: bottomLabel),
         barTouchData: statsBarTouch(
           context,
           linesFor: _tooltip,

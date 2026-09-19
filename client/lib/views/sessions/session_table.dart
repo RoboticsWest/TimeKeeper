@@ -33,32 +33,14 @@ class SessionTable extends ConsumerWidget {
     return EditTable(
       alternatingRows: true,
       headers: [
-        BaseTableCell(
-          child: TableHeaderText('Date'),
-          flex: 2,
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Time'),
-          flex: 2,
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Duration'),
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Location'),
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Members'),
-        ),
-        BaseTableCell(
-          child: TableHeaderText('RSVPs'),
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Status'),
-        ),
-        BaseTableCell(
-          child: TableHeaderText(''),
-        ),
+        BaseTableCell(child: TableHeaderText('Date'), flex: 2),
+        BaseTableCell(child: TableHeaderText('Time'), flex: 2),
+        BaseTableCell(child: TableHeaderText('Duration')),
+        BaseTableCell(child: TableHeaderText('Location')),
+        BaseTableCell(child: TableHeaderText('Members')),
+        BaseTableCell(child: TableHeaderText('RSVPs')),
+        BaseTableCell(child: TableHeaderText('Status')),
+        BaseTableCell(child: TableHeaderText('')),
       ],
       headerDecoration: tableHeaderDecoration(context),
       editRows: sessions.map((entry) {
@@ -67,34 +49,22 @@ class SessionTable extends ConsumerWidget {
         final start = session.startTime;
         final end = session.endTime;
         final duration = end.difference(start);
-        final locationName =
-            locations[session.locationId]?.location ?? session.locationId;
-        final sessionMemberSessions = teamMemberSessions.values
-            .where((ms) => ms.sessionId == id)
-            .toList();
+        final locationName = locations[session.locationId]?.location ?? session.locationId;
+        final sessionMemberSessions = teamMemberSessions.values.where((ms) => ms.sessionId == id).toList();
         final memberCount = sessionMemberSessions.length;
         final status = getSessionStatus(session);
 
         return EditTableRow(
           key: ValueKey(id),
-          onEdit: () =>
-              showSessionDialog(context, ref, id: id, existingSession: session),
-          onDelete: () =>
-              showDeleteSessionDialog(context, ref, id: id, session: session),
+          onEdit: () => showSessionDialog(context, ref, id: id, existingSession: session),
+          onDelete: () => showDeleteSessionDialog(context, ref, id: id, session: session),
           cells: [
             BaseTableCell(child: Text(formatDate(start)), flex: 2),
-            BaseTableCell(
-              child: Text('${formatTime(start)} - ${formatTime(end)}'),
-              flex: 2,
-            ),
+            BaseTableCell(child: Text('${formatTime(start)} - ${formatTime(end)}'), flex: 2),
             BaseTableCell(child: Text(formatDuration(duration))),
             BaseTableCell(child: Text(locationName)),
             BaseTableCell(
-              child: MemberCount(
-                total: memberCount,
-                status: status,
-                sessionMemberSessions: sessionMemberSessions,
-              ),
+              child: MemberCount(total: memberCount, status: status, sessionMemberSessions: sessionMemberSessions),
             ),
             BaseTableCell(
               child: _RsvpCount(sessionId: id, sessionRsvps: sessionRsvps),
@@ -102,11 +72,7 @@ class SessionTable extends ConsumerWidget {
             BaseTableCell(child: SessionStatusChip(status: status)),
             BaseTableCell(
               child: IconButton(
-                icon: Icon(
-                  Icons.visibility,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                ),
+                icon: Icon(Icons.visibility, color: theme.colorScheme.primary, size: 20),
                 tooltip: 'View details',
                 onPressed: () => showSessionDetailDialog(
                   context,
@@ -136,19 +102,12 @@ class _RsvpCount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rsvps = sessionRsvps.values
-        .where((r) => r.sessionId == sessionId)
-        .toList();
+    final rsvps = sessionRsvps.values.where((r) => r.sessionId == sessionId).toList();
     final going = rsvps.where((r) => r.status == RsvpStatus.going).length;
-    final notGoing = rsvps
-        .where((r) => r.status == RsvpStatus.notGoing)
-        .length;
+    final notGoing = rsvps.where((r) => r.status == RsvpStatus.notGoing).length;
 
     if (rsvps.isEmpty) {
-      return Text(
-        '\u2014',
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-      );
+      return Text('\u2014', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant));
     }
 
     return Row(
@@ -156,17 +115,9 @@ class _RsvpCount extends StatelessWidget {
       children: [
         Text(
           '$going',
-          style: TextStyle(
-            color: supportSuccessColor.shade700,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: supportSuccessColor.shade700, fontWeight: FontWeight.w500),
         ),
-        Text(
-          ' / ',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
+        Text(' / ', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
         Text(
           '$notGoing',
           style: TextStyle(color: supportErrorColor.shade700, fontWeight: FontWeight.w500),

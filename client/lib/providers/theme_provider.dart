@@ -10,8 +10,7 @@ ThemeMode get _defaultThemeMode => ThemeMode.system;
 class AppThemeMode extends _$AppThemeMode {
   final String _key = 'theme_mode';
 
-  void toggleTheme() =>
-      setThemeMode(state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light);
+  void toggleTheme() => setThemeMode(state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light);
 
   void setThemeMode(ThemeMode mode) {
     final value = switch (mode) {

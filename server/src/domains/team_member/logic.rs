@@ -7,7 +7,7 @@ use crate::domains::rfid_tag::RfidTagRepository;
 
 use super::csv_parser::TeamMemberCsvParser;
 use super::model::TeamMember;
-use super::repository::TeamMemberRepository;
+use super::repository::{TeamMemberFilter, TeamMemberRepository};
 
 /// Ensures `display_name` is populated - if empty/missing, falls back to "first last".
 fn fill_display_name(first_name: &str, last_name: &str, display_name: Option<&str>) -> Option<String> {
@@ -28,6 +28,13 @@ pub trait TeamMemberLogic: Send + Sync {
   async fn get_by_discord_id(&self, discord_id: &str) -> anyhow::Result<Option<TeamMember>>;
   /// Resolves a PIN typed at a kiosk to the single member that owns it.
   async fn get_by_quick_pin(&self, quick_pin: &str) -> anyhow::Result<Option<TeamMember>>;
+  /// One page of team members matching `filter`, with the total number of matching rows.
+  async fn query_page(
+    &self,
+    filter: &TeamMemberFilter,
+    offset: i64,
+    limit: i64,
+  ) -> anyhow::Result<(Vec<TeamMember>, i64)>;
   async fn get_by_name(&self, first_name: &str, last_name: &str) -> anyhow::Result<Vec<TeamMember>>;
   #[allow(clippy::too_many_arguments)]
   async fn add(
@@ -92,6 +99,15 @@ impl<R: TeamMemberRepository> TeamMemberLogic for DefaultTeamMemberLogic<R> {
 
   async fn get_by_quick_pin(&self, quick_pin: &str) -> anyhow::Result<Option<TeamMember>> {
     self.repo.get_by_quick_pin(quick_pin).await
+  }
+
+  async fn query_page(
+    &self,
+    filter: &TeamMemberFilter,
+    offset: i64,
+    limit: i64,
+  ) -> anyhow::Result<(Vec<TeamMember>, i64)> {
+    self.repo.query_page(filter, offset, limit).await
   }
 
   async fn get_by_name(&self, first_name: &str, last_name: &str) -> anyhow::Result<Vec<TeamMember>> {

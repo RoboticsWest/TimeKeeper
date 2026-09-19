@@ -14,8 +14,7 @@ part of 'stats_provider.dart';
 final statsFilterProvider = StatsFilterProvider._();
 
 /// The dashboard's filter state.
-final class StatsFilterProvider
-    extends $NotifierProvider<StatsFilter, StatsQuery> {
+final class StatsFilterProvider extends $NotifierProvider<StatsFilter, StatsQuery> {
   /// The dashboard's filter state.
   StatsFilterProvider._()
     : super(
@@ -37,10 +36,7 @@ final class StatsFilterProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(StatsQuery value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<StatsQuery>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<StatsQuery>(value));
   }
 }
 
@@ -55,13 +51,7 @@ abstract class _$StatsFilter extends $Notifier<StatsQuery> {
   void runBuild() {
     final ref = this.ref as $Ref<StatsQuery, StatsQuery>;
     final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<StatsQuery, StatsQuery>,
-              StatsQuery,
-              Object?,
-              Object?
-            >;
+        ref.element as $ClassProviderElement<AnyNotifier<StatsQuery, StatsQuery>, StatsQuery, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }
@@ -73,8 +63,7 @@ final statsQueryProvider = StatsQueryProvider._();
 
 /// The active query, with `asOf` refreshed from the shared ticker.
 
-final class StatsQueryProvider
-    extends $FunctionalProvider<StatsQuery, StatsQuery, StatsQuery>
+final class StatsQueryProvider extends $FunctionalProvider<StatsQuery, StatsQuery, StatsQuery>
     with $Provider<StatsQuery> {
   /// The active query, with `asOf` refreshed from the shared ticker.
   StatsQueryProvider._()
@@ -93,8 +82,7 @@ final class StatsQueryProvider
 
   @$internal
   @override
-  $ProviderElement<StatsQuery> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<StatsQuery> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   StatsQuery create(Ref ref) {
@@ -103,10 +91,7 @@ final class StatsQueryProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(StatsQuery value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<StatsQuery>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<StatsQuery>(value));
   }
 }
 
@@ -119,20 +104,17 @@ final statsScopeProvider = StatsScopeFamily._();
 
 /// Filters sessions and member sessions by the query, then indexes them.
 
-final class StatsScopeProvider
-    extends $FunctionalProvider<StatsScope, StatsScope, StatsScope>
+final class StatsScopeProvider extends $FunctionalProvider<StatsScope, StatsScope, StatsScope>
     with $Provider<StatsScope> {
   /// Filters sessions and member sessions by the query, then indexes them.
-  StatsScopeProvider._({
-    required StatsScopeFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'statsScopeProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  StatsScopeProvider._({required StatsScopeFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'statsScopeProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$statsScopeHash();
@@ -146,8 +128,7 @@ final class StatsScopeProvider
 
   @$internal
   @override
-  $ProviderElement<StatsScope> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<StatsScope> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   StatsScope create(Ref ref) {
@@ -157,10 +138,7 @@ final class StatsScopeProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(StatsScope value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<StatsScope>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<StatsScope>(value));
   }
 
   @override
@@ -178,8 +156,7 @@ String _$statsScopeHash() => r'aa4bdcc083afdaf268ddce7fd5132162ccbf0ea6';
 
 /// Filters sessions and member sessions by the query, then indexes them.
 
-final class StatsScopeFamily extends $Family
-    with $FunctionalFamilyOverride<StatsScope, StatsQuery> {
+final class StatsScopeFamily extends $Family with $FunctionalFamilyOverride<StatsScope, StatsQuery> {
   StatsScopeFamily._()
     : super(
         retry: null,
@@ -191,8 +168,7 @@ final class StatsScopeFamily extends $Family
 
   /// Filters sessions and member sessions by the query, then indexes them.
 
-  StatsScopeProvider call(StatsQuery query) =>
-      StatsScopeProvider._(argument: query, from: this);
+  StatsScopeProvider call(StatsQuery query) => StatsScopeProvider._(argument: query, from: this);
 
   @override
   String toString() => r'statsScopeProvider';
@@ -200,42 +176,37 @@ final class StatsScopeFamily extends $Family
 
 /// Hours and headcount per bucket.
 ///
-/// Unlike the helper it replaces, this includes unfinished sessions — the KPI
-/// overtime figure always counted them, so excluding them here made the chart
-/// disagree with the headline number above it.
+/// Hours are *session* hours: how long each session actually ran, split against its scheduled
+/// window. They are deliberately not the sum of everyone's attendance — a four-hour session
+/// with twelve people present lasted four hours, not forty-eight. Headcount still counts
+/// people, which is what makes the two series readable side by side.
 
 @ProviderFor(hoursSeries)
 final hoursSeriesProvider = HoursSeriesFamily._();
 
 /// Hours and headcount per bucket.
 ///
-/// Unlike the helper it replaces, this includes unfinished sessions — the KPI
-/// overtime figure always counted them, so excluding them here made the chart
-/// disagree with the headline number above it.
+/// Hours are *session* hours: how long each session actually ran, split against its scheduled
+/// window. They are deliberately not the sum of everyone's attendance — a four-hour session
+/// with twelve people present lasted four hours, not forty-eight. Headcount still counts
+/// people, which is what makes the two series readable side by side.
 
-final class HoursSeriesProvider
-    extends
-        $FunctionalProvider<
-          List<HoursBucket>,
-          List<HoursBucket>,
-          List<HoursBucket>
-        >
+final class HoursSeriesProvider extends $FunctionalProvider<List<HoursBucket>, List<HoursBucket>, List<HoursBucket>>
     with $Provider<List<HoursBucket>> {
   /// Hours and headcount per bucket.
   ///
-  /// Unlike the helper it replaces, this includes unfinished sessions — the KPI
-  /// overtime figure always counted them, so excluding them here made the chart
-  /// disagree with the headline number above it.
-  HoursSeriesProvider._({
-    required HoursSeriesFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'hoursSeriesProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  /// Hours are *session* hours: how long each session actually ran, split against its scheduled
+  /// window. They are deliberately not the sum of everyone's attendance — a four-hour session
+  /// with twelve people present lasted four hours, not forty-eight. Headcount still counts
+  /// people, which is what makes the two series readable side by side.
+  HoursSeriesProvider._({required HoursSeriesFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'hoursSeriesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$hoursSeriesHash();
@@ -249,9 +220,7 @@ final class HoursSeriesProvider
 
   @$internal
   @override
-  $ProviderElement<List<HoursBucket>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<List<HoursBucket>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   List<HoursBucket> create(Ref ref) {
@@ -261,10 +230,7 @@ final class HoursSeriesProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<HoursBucket> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<HoursBucket>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<List<HoursBucket>>(value));
   }
 
   @override
@@ -278,16 +244,16 @@ final class HoursSeriesProvider
   }
 }
 
-String _$hoursSeriesHash() => r'83f0561ea36066a4d7c54bc83136380056e596f3';
+String _$hoursSeriesHash() => r'c5f9261d9dd72128b876fc442a012d3095f1358b';
 
 /// Hours and headcount per bucket.
 ///
-/// Unlike the helper it replaces, this includes unfinished sessions — the KPI
-/// overtime figure always counted them, so excluding them here made the chart
-/// disagree with the headline number above it.
+/// Hours are *session* hours: how long each session actually ran, split against its scheduled
+/// window. They are deliberately not the sum of everyone's attendance — a four-hour session
+/// with twelve people present lasted four hours, not forty-eight. Headcount still counts
+/// people, which is what makes the two series readable side by side.
 
-final class HoursSeriesFamily extends $Family
-    with $FunctionalFamilyOverride<List<HoursBucket>, StatsQuery> {
+final class HoursSeriesFamily extends $Family with $FunctionalFamilyOverride<List<HoursBucket>, StatsQuery> {
   HoursSeriesFamily._()
     : super(
         retry: null,
@@ -299,12 +265,12 @@ final class HoursSeriesFamily extends $Family
 
   /// Hours and headcount per bucket.
   ///
-  /// Unlike the helper it replaces, this includes unfinished sessions — the KPI
-  /// overtime figure always counted them, so excluding them here made the chart
-  /// disagree with the headline number above it.
+  /// Hours are *session* hours: how long each session actually ran, split against its scheduled
+  /// window. They are deliberately not the sum of everyone's attendance — a four-hour session
+  /// with twelve people present lasted four hours, not forty-eight. Headcount still counts
+  /// people, which is what makes the two series readable side by side.
 
-  HoursSeriesProvider call(StatsQuery query) =>
-      HoursSeriesProvider._(argument: query, from: this);
+  HoursSeriesProvider call(StatsQuery query) => HoursSeriesProvider._(argument: query, from: this);
 
   @override
   String toString() => r'hoursSeriesProvider';
@@ -318,24 +284,17 @@ final memberHoursRowsProvider = MemberHoursRowsFamily._();
 /// Per-member totals, sorted by total time descending.
 
 final class MemberHoursRowsProvider
-    extends
-        $FunctionalProvider<
-          List<MemberHoursRow>,
-          List<MemberHoursRow>,
-          List<MemberHoursRow>
-        >
+    extends $FunctionalProvider<List<MemberHoursRow>, List<MemberHoursRow>, List<MemberHoursRow>>
     with $Provider<List<MemberHoursRow>> {
   /// Per-member totals, sorted by total time descending.
-  MemberHoursRowsProvider._({
-    required MemberHoursRowsFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'memberHoursRowsProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  MemberHoursRowsProvider._({required MemberHoursRowsFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'memberHoursRowsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$memberHoursRowsHash();
@@ -349,9 +308,7 @@ final class MemberHoursRowsProvider
 
   @$internal
   @override
-  $ProviderElement<List<MemberHoursRow>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<List<MemberHoursRow>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   List<MemberHoursRow> create(Ref ref) {
@@ -361,10 +318,7 @@ final class MemberHoursRowsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<MemberHoursRow> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<MemberHoursRow>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<List<MemberHoursRow>>(value));
   }
 
   @override
@@ -382,8 +336,7 @@ String _$memberHoursRowsHash() => r'fb600b7f14003ec17fa8014c245d024df69d10ef';
 
 /// Per-member totals, sorted by total time descending.
 
-final class MemberHoursRowsFamily extends $Family
-    with $FunctionalFamilyOverride<List<MemberHoursRow>, StatsQuery> {
+final class MemberHoursRowsFamily extends $Family with $FunctionalFamilyOverride<List<MemberHoursRow>, StatsQuery> {
   MemberHoursRowsFamily._()
     : super(
         retry: null,
@@ -395,39 +348,40 @@ final class MemberHoursRowsFamily extends $Family
 
   /// Per-member totals, sorted by total time descending.
 
-  MemberHoursRowsProvider call(StatsQuery query) =>
-      MemberHoursRowsProvider._(argument: query, from: this);
+  MemberHoursRowsProvider call(StatsQuery query) => MemberHoursRowsProvider._(argument: query, from: this);
 
   @override
   String toString() => r'memberHoursRowsProvider';
 }
 
-/// Locations ranked by total time logged.
+/// Locations ranked by how many hours of session they hosted.
+///
+/// Session hours, not man-hours: a room that held one long session should not outrank one that
+/// held three simply because more people happened to attend the first.
 
 @ProviderFor(locationRanking)
 final locationRankingProvider = LocationRankingFamily._();
 
-/// Locations ranked by total time logged.
+/// Locations ranked by how many hours of session they hosted.
+///
+/// Session hours, not man-hours: a room that held one long session should not outrank one that
+/// held three simply because more people happened to attend the first.
 
 final class LocationRankingProvider
-    extends
-        $FunctionalProvider<
-          List<LocationRankRow>,
-          List<LocationRankRow>,
-          List<LocationRankRow>
-        >
+    extends $FunctionalProvider<List<LocationRankRow>, List<LocationRankRow>, List<LocationRankRow>>
     with $Provider<List<LocationRankRow>> {
-  /// Locations ranked by total time logged.
-  LocationRankingProvider._({
-    required LocationRankingFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'locationRankingProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  /// Locations ranked by how many hours of session they hosted.
+  ///
+  /// Session hours, not man-hours: a room that held one long session should not outrank one that
+  /// held three simply because more people happened to attend the first.
+  LocationRankingProvider._({required LocationRankingFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'locationRankingProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$locationRankingHash();
@@ -441,9 +395,7 @@ final class LocationRankingProvider
 
   @$internal
   @override
-  $ProviderElement<List<LocationRankRow>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<List<LocationRankRow>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   List<LocationRankRow> create(Ref ref) {
@@ -453,10 +405,7 @@ final class LocationRankingProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<LocationRankRow> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<LocationRankRow>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<List<LocationRankRow>>(value));
   }
 
   @override
@@ -470,12 +419,14 @@ final class LocationRankingProvider
   }
 }
 
-String _$locationRankingHash() => r'd35372e306734b373f492f27b7431dd2e3045e7c';
+String _$locationRankingHash() => r'4f11473551ebb30970573c8cf753c56f9fa4c711';
 
-/// Locations ranked by total time logged.
+/// Locations ranked by how many hours of session they hosted.
+///
+/// Session hours, not man-hours: a room that held one long session should not outrank one that
+/// held three simply because more people happened to attend the first.
 
-final class LocationRankingFamily extends $Family
-    with $FunctionalFamilyOverride<List<LocationRankRow>, StatsQuery> {
+final class LocationRankingFamily extends $Family with $FunctionalFamilyOverride<List<LocationRankRow>, StatsQuery> {
   LocationRankingFamily._()
     : super(
         retry: null,
@@ -485,10 +436,12 @@ final class LocationRankingFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Locations ranked by total time logged.
+  /// Locations ranked by how many hours of session they hosted.
+  ///
+  /// Session hours, not man-hours: a room that held one long session should not outrank one that
+  /// held three simply because more people happened to attend the first.
 
-  LocationRankingProvider call(StatsQuery query) =>
-      LocationRankingProvider._(argument: query, from: this);
+  LocationRankingProvider call(StatsQuery query) => LocationRankingProvider._(argument: query, from: this);
 
   @override
   String toString() => r'locationRankingProvider';
@@ -501,20 +454,17 @@ final checkInHeatmapProvider = CheckInHeatmapFamily._();
 
 /// Weekday x hour check-in density.
 
-final class CheckInHeatmapProvider
-    extends $FunctionalProvider<CheckInHeatmap, CheckInHeatmap, CheckInHeatmap>
+final class CheckInHeatmapProvider extends $FunctionalProvider<CheckInHeatmap, CheckInHeatmap, CheckInHeatmap>
     with $Provider<CheckInHeatmap> {
   /// Weekday x hour check-in density.
-  CheckInHeatmapProvider._({
-    required CheckInHeatmapFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'checkInHeatmapProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  CheckInHeatmapProvider._({required CheckInHeatmapFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'checkInHeatmapProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$checkInHeatmapHash();
@@ -528,8 +478,7 @@ final class CheckInHeatmapProvider
 
   @$internal
   @override
-  $ProviderElement<CheckInHeatmap> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<CheckInHeatmap> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   CheckInHeatmap create(Ref ref) {
@@ -539,10 +488,7 @@ final class CheckInHeatmapProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(CheckInHeatmap value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<CheckInHeatmap>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<CheckInHeatmap>(value));
   }
 
   @override
@@ -560,8 +506,7 @@ String _$checkInHeatmapHash() => r'a555466cbd0f9b2be406a480140166b1bb1ea79d';
 
 /// Weekday x hour check-in density.
 
-final class CheckInHeatmapFamily extends $Family
-    with $FunctionalFamilyOverride<CheckInHeatmap, StatsQuery> {
+final class CheckInHeatmapFamily extends $Family with $FunctionalFamilyOverride<CheckInHeatmap, StatsQuery> {
   CheckInHeatmapFamily._()
     : super(
         retry: null,
@@ -573,8 +518,7 @@ final class CheckInHeatmapFamily extends $Family
 
   /// Weekday x hour check-in density.
 
-  CheckInHeatmapProvider call(StatsQuery query) =>
-      CheckInHeatmapProvider._(argument: query, from: this);
+  CheckInHeatmapProvider call(StatsQuery query) => CheckInHeatmapProvider._(argument: query, from: this);
 
   @override
   String toString() => r'checkInHeatmapProvider';
@@ -588,24 +532,17 @@ final attendanceInsightsProvider = AttendanceInsightsFamily._();
 /// Typed attendance insights over the current scope.
 
 final class AttendanceInsightsProvider
-    extends
-        $FunctionalProvider<
-          AttendanceInsights,
-          AttendanceInsights,
-          AttendanceInsights
-        >
+    extends $FunctionalProvider<AttendanceInsights, AttendanceInsights, AttendanceInsights>
     with $Provider<AttendanceInsights> {
   /// Typed attendance insights over the current scope.
-  AttendanceInsightsProvider._({
-    required AttendanceInsightsFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'attendanceInsightsProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  AttendanceInsightsProvider._({required AttendanceInsightsFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'attendanceInsightsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$attendanceInsightsHash();
@@ -619,9 +556,7 @@ final class AttendanceInsightsProvider
 
   @$internal
   @override
-  $ProviderElement<AttendanceInsights> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<AttendanceInsights> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   AttendanceInsights create(Ref ref) {
@@ -631,10 +566,7 @@ final class AttendanceInsightsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AttendanceInsights value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AttendanceInsights>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<AttendanceInsights>(value));
   }
 
   @override
@@ -648,13 +580,11 @@ final class AttendanceInsightsProvider
   }
 }
 
-String _$attendanceInsightsHash() =>
-    r'766cc8654a3b3f11bafaa0238313786a3b421915';
+String _$attendanceInsightsHash() => r'766cc8654a3b3f11bafaa0238313786a3b421915';
 
 /// Typed attendance insights over the current scope.
 
-final class AttendanceInsightsFamily extends $Family
-    with $FunctionalFamilyOverride<AttendanceInsights, StatsQuery> {
+final class AttendanceInsightsFamily extends $Family with $FunctionalFamilyOverride<AttendanceInsights, StatsQuery> {
   AttendanceInsightsFamily._()
     : super(
         retry: null,
@@ -666,34 +596,53 @@ final class AttendanceInsightsFamily extends $Family
 
   /// Typed attendance insights over the current scope.
 
-  AttendanceInsightsProvider call(StatsQuery query) =>
-      AttendanceInsightsProvider._(argument: query, from: this);
+  AttendanceInsightsProvider call(StatsQuery query) => AttendanceInsightsProvider._(argument: query, from: this);
 
   @override
   String toString() => r'attendanceInsightsProvider';
 }
 
 /// Headline numbers for the KPI strip.
+///
+/// Hours are session hours. "Total hours" is how long the team's sessions ran, so two scheduled
+/// five-hour sessions that each overran by an hour read as 12h total / 10h regular / 2h
+/// overtime — regardless of whether two people attended or two hundred. Summing per-member
+/// attendance instead made the same two sessions read as hundreds of hours, and dragged the
+/// overtime percentage and the activity chart along with it.
+///
+/// Member counts and check-ins stay per-person; those are questions about people.
 
 @ProviderFor(statsKpis)
 final statsKpisProvider = StatsKpisFamily._();
 
 /// Headline numbers for the KPI strip.
+///
+/// Hours are session hours. "Total hours" is how long the team's sessions ran, so two scheduled
+/// five-hour sessions that each overran by an hour read as 12h total / 10h regular / 2h
+/// overtime — regardless of whether two people attended or two hundred. Summing per-member
+/// attendance instead made the same two sessions read as hundreds of hours, and dragged the
+/// overtime percentage and the activity chart along with it.
+///
+/// Member counts and check-ins stay per-person; those are questions about people.
 
-final class StatsKpisProvider
-    extends $FunctionalProvider<StatsKpis, StatsKpis, StatsKpis>
-    with $Provider<StatsKpis> {
+final class StatsKpisProvider extends $FunctionalProvider<StatsKpis, StatsKpis, StatsKpis> with $Provider<StatsKpis> {
   /// Headline numbers for the KPI strip.
-  StatsKpisProvider._({
-    required StatsKpisFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'statsKpisProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  ///
+  /// Hours are session hours. "Total hours" is how long the team's sessions ran, so two scheduled
+  /// five-hour sessions that each overran by an hour read as 12h total / 10h regular / 2h
+  /// overtime — regardless of whether two people attended or two hundred. Summing per-member
+  /// attendance instead made the same two sessions read as hundreds of hours, and dragged the
+  /// overtime percentage and the activity chart along with it.
+  ///
+  /// Member counts and check-ins stay per-person; those are questions about people.
+  StatsKpisProvider._({required StatsKpisFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'statsKpisProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$statsKpisHash();
@@ -707,8 +656,7 @@ final class StatsKpisProvider
 
   @$internal
   @override
-  $ProviderElement<StatsKpis> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<StatsKpis> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   StatsKpis create(Ref ref) {
@@ -718,10 +666,7 @@ final class StatsKpisProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(StatsKpis value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<StatsKpis>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<StatsKpis>(value));
   }
 
   @override
@@ -735,12 +680,19 @@ final class StatsKpisProvider
   }
 }
 
-String _$statsKpisHash() => r'e194dd6371e90cd067a1a6aa6eb9d8a68d56c78a';
+String _$statsKpisHash() => r'3d17b453bb85d968cd627ef3800995334bdfc5fa';
 
 /// Headline numbers for the KPI strip.
+///
+/// Hours are session hours. "Total hours" is how long the team's sessions ran, so two scheduled
+/// five-hour sessions that each overran by an hour read as 12h total / 10h regular / 2h
+/// overtime — regardless of whether two people attended or two hundred. Summing per-member
+/// attendance instead made the same two sessions read as hundreds of hours, and dragged the
+/// overtime percentage and the activity chart along with it.
+///
+/// Member counts and check-ins stay per-person; those are questions about people.
 
-final class StatsKpisFamily extends $Family
-    with $FunctionalFamilyOverride<StatsKpis, StatsQuery> {
+final class StatsKpisFamily extends $Family with $FunctionalFamilyOverride<StatsKpis, StatsQuery> {
   StatsKpisFamily._()
     : super(
         retry: null,
@@ -751,9 +703,16 @@ final class StatsKpisFamily extends $Family
       );
 
   /// Headline numbers for the KPI strip.
+  ///
+  /// Hours are session hours. "Total hours" is how long the team's sessions ran, so two scheduled
+  /// five-hour sessions that each overran by an hour read as 12h total / 10h regular / 2h
+  /// overtime — regardless of whether two people attended or two hundred. Summing per-member
+  /// attendance instead made the same two sessions read as hundreds of hours, and dragged the
+  /// overtime percentage and the activity chart along with it.
+  ///
+  /// Member counts and check-ins stay per-person; those are questions about people.
 
-  StatsKpisProvider call(StatsQuery query) =>
-      StatsKpisProvider._(argument: query, from: this);
+  StatsKpisProvider call(StatsQuery query) => StatsKpisProvider._(argument: query, from: this);
 
   @override
   String toString() => r'statsKpisProvider';
@@ -768,21 +727,18 @@ final previousKpisProvider = PreviousKpisFamily._();
 /// KPIs for the period immediately before the query's window, for deltas.
 /// Null when the range has no meaningful predecessor (all time).
 
-final class PreviousKpisProvider
-    extends $FunctionalProvider<StatsKpis?, StatsKpis?, StatsKpis?>
+final class PreviousKpisProvider extends $FunctionalProvider<StatsKpis?, StatsKpis?, StatsKpis?>
     with $Provider<StatsKpis?> {
   /// KPIs for the period immediately before the query's window, for deltas.
   /// Null when the range has no meaningful predecessor (all time).
-  PreviousKpisProvider._({
-    required PreviousKpisFamily super.from,
-    required StatsQuery super.argument,
-  }) : super(
-         retry: null,
-         name: r'previousKpisProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  PreviousKpisProvider._({required PreviousKpisFamily super.from, required StatsQuery super.argument})
+    : super(
+        retry: null,
+        name: r'previousKpisProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$previousKpisHash();
@@ -796,8 +752,7 @@ final class PreviousKpisProvider
 
   @$internal
   @override
-  $ProviderElement<StatsKpis?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<StatsKpis?> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   StatsKpis? create(Ref ref) {
@@ -807,10 +762,7 @@ final class PreviousKpisProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(StatsKpis? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<StatsKpis?>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<StatsKpis?>(value));
   }
 
   @override
@@ -829,8 +781,7 @@ String _$previousKpisHash() => r'f5d82598edd9bce633c99988dfc6aacff9af44d0';
 /// KPIs for the period immediately before the query's window, for deltas.
 /// Null when the range has no meaningful predecessor (all time).
 
-final class PreviousKpisFamily extends $Family
-    with $FunctionalFamilyOverride<StatsKpis?, StatsQuery> {
+final class PreviousKpisFamily extends $Family with $FunctionalFamilyOverride<StatsKpis?, StatsQuery> {
   PreviousKpisFamily._()
     : super(
         retry: null,
@@ -843,8 +794,7 @@ final class PreviousKpisFamily extends $Family
   /// KPIs for the period immediately before the query's window, for deltas.
   /// Null when the range has no meaningful predecessor (all time).
 
-  PreviousKpisProvider call(StatsQuery query) =>
-      PreviousKpisProvider._(argument: query, from: this);
+  PreviousKpisProvider call(StatsQuery query) => PreviousKpisProvider._(argument: query, from: this);
 
   @override
   String toString() => r'previousKpisProvider';
@@ -857,25 +807,17 @@ final dayDetailProvider = DayDetailFamily._();
 
 /// Per-member breakdown for a drilled-into bucket.
 
-final class DayDetailProvider
-    extends
-        $FunctionalProvider<
-          List<DayMemberRow>,
-          List<DayMemberRow>,
-          List<DayMemberRow>
-        >
+final class DayDetailProvider extends $FunctionalProvider<List<DayMemberRow>, List<DayMemberRow>, List<DayMemberRow>>
     with $Provider<List<DayMemberRow>> {
   /// Per-member breakdown for a drilled-into bucket.
-  DayDetailProvider._({
-    required DayDetailFamily super.from,
-    required (StatsQuery, DateTime) super.argument,
-  }) : super(
-         retry: null,
-         name: r'dayDetailProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  DayDetailProvider._({required DayDetailFamily super.from, required (StatsQuery, DateTime) super.argument})
+    : super(
+        retry: null,
+        name: r'dayDetailProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$dayDetailHash();
@@ -889,9 +831,7 @@ final class DayDetailProvider
 
   @$internal
   @override
-  $ProviderElement<List<DayMemberRow>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<List<DayMemberRow>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   List<DayMemberRow> create(Ref ref) {
@@ -901,10 +841,7 @@ final class DayDetailProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<DayMemberRow> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<DayMemberRow>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<List<DayMemberRow>>(value));
   }
 
   @override
@@ -922,8 +859,7 @@ String _$dayDetailHash() => r'681aca39c4ca3e471d33210d029ab1772b552672';
 
 /// Per-member breakdown for a drilled-into bucket.
 
-final class DayDetailFamily extends $Family
-    with $FunctionalFamilyOverride<List<DayMemberRow>, (StatsQuery, DateTime)> {
+final class DayDetailFamily extends $Family with $FunctionalFamilyOverride<List<DayMemberRow>, (StatsQuery, DateTime)> {
   DayDetailFamily._()
     : super(
         retry: null,
@@ -935,8 +871,7 @@ final class DayDetailFamily extends $Family
 
   /// Per-member breakdown for a drilled-into bucket.
 
-  DayDetailProvider call(StatsQuery query, DateTime day) =>
-      DayDetailProvider._(argument: (query, day), from: this);
+  DayDetailProvider call(StatsQuery query, DateTime day) => DayDetailProvider._(argument: (query, day), from: this);
 
   @override
   String toString() => r'dayDetailProvider';

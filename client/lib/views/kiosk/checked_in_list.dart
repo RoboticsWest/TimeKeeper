@@ -15,11 +15,7 @@ class CheckedInMember {
   final DateTime timeIn;
   final TeamMember teamMember;
 
-  CheckedInMember({
-    required this.location,
-    required this.timeIn,
-    required this.teamMember,
-  });
+  CheckedInMember({required this.location, required this.timeIn, required this.teamMember});
 }
 
 class CheckedInList extends ConsumerWidget {
@@ -46,19 +42,12 @@ class CheckedInList extends ConsumerWidget {
       final location = session != null ? locations[session.locationId] : null;
       if (location == null) continue;
 
-      checkedInList.add(
-        CheckedInMember(
-          location: location,
-          timeIn: ms.checkInTime,
-          teamMember: teamMember,
-        ),
-      );
+      checkedInList.add(CheckedInMember(location: location, timeIn: ms.checkInTime, teamMember: teamMember));
     }
 
     checkedInList.sort(
-      (a, b) => (a.teamMember.displayName ?? '').toLowerCase().compareTo(
-        (b.teamMember.displayName ?? '').toLowerCase(),
-      ),
+      (a, b) =>
+          (a.teamMember.displayName ?? '').toLowerCase().compareTo((b.teamMember.displayName ?? '').toLowerCase()),
     );
 
     double childHeight = 40;
@@ -73,19 +62,13 @@ class CheckedInList extends ConsumerWidget {
               childHeight: childHeight,
               children: () {
                 final isDark = Theme.of(context).brightness == Brightness.dark;
-                final evenColor = isDark
-                    ? Colors.white.withValues(alpha: 0.03)
-                    : Colors.black.withValues(alpha: 0.02);
-                final oddColor = isDark
-                    ? Colors.white.withValues(alpha: 0.07)
-                    : Colors.black.withValues(alpha: 0.05);
+                final evenColor = isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02);
+                final oddColor = isDark ? Colors.white.withValues(alpha: 0.07) : Colors.black.withValues(alpha: 0.05);
                 return List.generate(checkedInList.length, (i) {
                   final member = checkedInList[i];
                   return Container(
                     height: childHeight,
-                    decoration: BoxDecoration(
-                      color: i % 2 == 0 ? evenColor : oddColor,
-                    ),
+                    decoration: BoxDecoration(color: i % 2 == 0 ? evenColor : oddColor),
                     child: TeamMemberRow(
                       teamMember: member.teamMember,
                       location: member.location,

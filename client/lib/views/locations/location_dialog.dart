@@ -6,31 +6,17 @@ import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
-void showLocationDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  String? id,
-  String? existingName,
-}) {
+void showLocationDialog(BuildContext context, WidgetRef ref, {String? id, String? existingName}) {
   final isEdit = id != null;
 
   PopupDialog.info(
     title: isEdit ? 'Edit Location' : 'Add Location',
-    message: _LocationForm(
-      isEdit: isEdit,
-      locationId: id,
-      initialName: existingName,
-    ),
+    message: _LocationForm(isEdit: isEdit, locationId: id, initialName: existingName),
     actions: const [],
   ).show(context);
 }
 
-void showDeleteLocationDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  required String id,
-  required String name,
-}) {
+void showDeleteLocationDialog(BuildContext context, WidgetRef ref, {required String id, required String name}) {
   ConfirmDialog.warn(
     title: 'Delete Location',
     message: Text('Are you sure you want to delete "$name"?'),
@@ -46,11 +32,7 @@ class _LocationForm extends HookConsumerWidget {
   final String? locationId;
   final String? initialName;
 
-  const _LocationForm({
-    required this.isEdit,
-    this.locationId,
-    this.initialName,
-  });
+  const _LocationForm({required this.isEdit, this.locationId, this.initialName});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,19 +47,14 @@ class _LocationForm extends HookConsumerWidget {
         children: [
           TextField(
             controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'Location Name',
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: 'Location Name', border: OutlineInputBorder()),
           ),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: isLoading.value
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                onPressed: isLoading.value ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
@@ -99,9 +76,7 @@ class _LocationForm extends HookConsumerWidget {
                             Navigator.of(context).pop();
                             if (result.success) {
                               SnackBarDialog.success(
-                                message: isEdit
-                                    ? '"$name" updated successfully'
-                                    : '"$name" created successfully',
+                                message: isEdit ? '"$name" updated successfully' : '"$name" created successfully',
                               ).show(context);
                             } else {
                               SnackBarDialog.fromApiResult(result: result).show(context);
@@ -112,11 +87,7 @@ class _LocationForm extends HookConsumerWidget {
                         }
                       },
                 child: isLoading.value
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],

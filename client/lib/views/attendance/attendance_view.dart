@@ -20,16 +20,10 @@ import 'package:time_keeper/colors.dart';
 class AttendanceView extends HookConsumerWidget {
   const AttendanceView({super.key});
 
-  void _showClearDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> teamMemberSessions,
-  ) {
+  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> teamMemberSessions) {
     final ids = teamMemberSessions.keys.toList();
     if (ids.isEmpty) {
-      SnackBarDialog.info(
-        message: 'No attendance records to delete',
-      ).show(context);
+      SnackBarDialog.info(message: 'No attendance records to delete').show(context);
       return;
     }
 
@@ -81,14 +75,8 @@ class AttendanceView extends HookConsumerWidget {
 
     // Build location dropdown items sorted alphabetically
     final locationItems = locations.entries.toList()
-      ..sort(
-        (a, b) => a.value.location.toLowerCase().compareTo(
-          b.value.location.toLowerCase(),
-        ),
-      );
-    final locationDropdownItems = locationItems
-        .map((entry) => (key: entry.key, label: entry.value.location))
-        .toList();
+      ..sort((a, b) => a.value.location.toLowerCase().compareTo(b.value.location.toLowerCase()));
+    final locationDropdownItems = locationItems.map((entry) => (key: entry.key, label: entry.value.location)).toList();
 
     // Sort by check-in time descending (most recent first)
     final sorted = teamMemberSessions.entries.toList()
@@ -96,11 +84,7 @@ class AttendanceView extends HookConsumerWidget {
 
     // Apply session filter
     final sessionFiltered = selectedSessionId.value != null
-        ? sorted
-              .where(
-                (entry) => entry.value.sessionId == selectedSessionId.value,
-              )
-              .toList()
+        ? sorted.where((entry) => entry.value.sessionId == selectedSessionId.value).toList()
         : sorted;
 
     // Apply location filter
@@ -137,8 +121,7 @@ class AttendanceView extends HookConsumerWidget {
           status.contains(filterText);
     }).toList();
 
-    final hasActiveFilters =
-        selectedSessionId.value != null || selectedLocationId.value != null;
+    final hasActiveFilters = selectedSessionId.value != null || selectedLocationId.value != null;
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -150,13 +133,10 @@ class AttendanceView extends HookConsumerWidget {
               Text('Attendance', style: theme.textTheme.headlineMedium),
               const Spacer(),
               OutlinedButton.icon(
-                onPressed: () =>
-                    _showClearDialog(context, ref, teamMemberSessions),
+                onPressed: () => _showClearDialog(context, ref, teamMemberSessions),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
             ],
           ),
@@ -171,9 +151,7 @@ class AttendanceView extends HookConsumerWidget {
                   items: sessionDropdownItems,
                   selectedKey: selectedSessionId.value,
                   onSelected: (key) {
-                    selectedSessionId.value = key == selectedSessionId.value
-                        ? null
-                        : key;
+                    selectedSessionId.value = key == selectedSessionId.value ? null : key;
                   },
                 ),
               ),
@@ -184,9 +162,7 @@ class AttendanceView extends HookConsumerWidget {
                   items: locationDropdownItems,
                   selectedKey: selectedLocationId.value,
                   onSelected: (key) {
-                    selectedLocationId.value = key == selectedLocationId.value
-                        ? null
-                        : key;
+                    selectedLocationId.value = key == selectedLocationId.value ? null : key;
                   },
                 ),
               ),
@@ -212,9 +188,7 @@ class AttendanceView extends HookConsumerWidget {
           // Results count
           Text(
             '${filtered.length} ${filtered.length == 1 ? 'record' : 'records'}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
 
@@ -222,25 +196,11 @@ class AttendanceView extends HookConsumerWidget {
             child: EditTable(
               alternatingRows: true,
               headers: [
-                BaseTableCell(
-                  child: TableHeaderText('Member'),
-                  flex: 2,
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Session'),
-                  flex: 2,
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Check In'),
-                  flex: 2,
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Check Out'),
-                  flex: 2,
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Status'),
-                ),
+                BaseTableCell(child: TableHeaderText('Member'), flex: 2),
+                BaseTableCell(child: TableHeaderText('Session'), flex: 2),
+                BaseTableCell(child: TableHeaderText('Check In'), flex: 2),
+                BaseTableCell(child: TableHeaderText('Check Out'), flex: 2),
+                BaseTableCell(child: TableHeaderText('Status')),
               ],
               headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
@@ -249,15 +209,10 @@ class AttendanceView extends HookConsumerWidget {
 
                 final member = teamMembers[ms.teamMemberId];
                 final memberName =
-                    member?.displayName ??
-                    (member != null
-                        ? '${member.firstName} ${member.lastName}'
-                        : 'Unknown');
+                    member?.displayName ?? (member != null ? '${member.firstName} ${member.lastName}' : 'Unknown');
 
                 final session = sessions[ms.sessionId];
-                final location = session != null
-                    ? locations[session.locationId]
-                    : null;
+                final location = session != null ? locations[session.locationId] : null;
 
                 final sessionLabel = session != null
                     ? '${formatDate(session.startTime)} @ ${location?.location ?? 'Unknown'}'
@@ -281,12 +236,7 @@ class AttendanceView extends HookConsumerWidget {
                     memberName: memberName,
                     sessionLabel: sessionLabel,
                   ),
-                  onDelete: () => showDeleteAttendanceDialog(
-                    context,
-                    ref,
-                    id: id,
-                    memberName: memberName,
-                  ),
+                  onDelete: () => showDeleteAttendanceDialog(context, ref, id: id, memberName: memberName),
                   cells: [
                     BaseTableCell(child: Text(memberName), flex: 2),
                     BaseTableCell(child: Text(sessionLabel), flex: 2),
@@ -297,9 +247,7 @@ class AttendanceView extends HookConsumerWidget {
                         isCheckedIn ? 'Checked In' : 'Completed',
                         style: TextStyle(
                           color: isCheckedIn ? supportSuccessColor.shade700 : null,
-                          fontWeight: isCheckedIn
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                          fontWeight: isCheckedIn ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
                     ),

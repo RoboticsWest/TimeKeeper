@@ -23,19 +23,13 @@ void showSessionDetailDialog(
   final start = session.startTime;
   final end = session.endTime;
   final duration = end.difference(start);
-  final locationName =
-      locations[session.locationId]?.location ?? session.locationId;
+  final locationName = locations[session.locationId]?.location ?? session.locationId;
   final status = getSessionStatus(session);
 
-  final memberSessions =
-      teamMemberSessions.values
-          .where((ms) => ms.sessionId == sessionId)
-          .toList()
-        ..sort((a, b) => a.checkInTime.compareTo(b.checkInTime));
+  final memberSessions = teamMemberSessions.values.where((ms) => ms.sessionId == sessionId).toList()
+    ..sort((a, b) => a.checkInTime.compareTo(b.checkInTime));
 
-  final checkedOutCount = memberSessions
-      .where((ms) => ms.checkOutTime != null)
-      .length;
+  final checkedOutCount = memberSessions.where((ms) => ms.checkOutTime != null).length;
 
   PopupDialog.info(
     title: 'Session Details',
@@ -46,29 +40,17 @@ void showSessionDetailDialog(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _InfoRow(label: 'Date', value: formatDate(start)),
-          _InfoRow(
-            label: 'Time',
-            value: '${formatTime(start)} - ${formatTime(end)}',
-          ),
+          _InfoRow(label: 'Time', value: '${formatTime(start)} - ${formatTime(end)}'),
           _InfoRow(label: 'Duration', value: formatDuration(duration)),
           _InfoRow(label: 'Location', value: locationName),
           _InfoRow(label: 'Status', value: statusLabel(status)),
           Builder(
             builder: (context) {
-              final rsvps = sessionRsvps.values
-                  .where((r) => r.sessionId == sessionId)
-                  .toList();
-              final going = rsvps
-                  .where((r) => r.status == RsvpStatus.going)
-                  .length;
-              final notGoing = rsvps
-                  .where((r) => r.status == RsvpStatus.notGoing)
-                  .length;
+              final rsvps = sessionRsvps.values.where((r) => r.sessionId == sessionId).toList();
+              final going = rsvps.where((r) => r.status == RsvpStatus.going).length;
+              final notGoing = rsvps.where((r) => r.status == RsvpStatus.notGoing).length;
               if (rsvps.isEmpty) return const SizedBox.shrink();
-              return _InfoRow(
-                label: 'RSVPs',
-                value: 'Going: $going, Not Going: $notGoing',
-              );
+              return _InfoRow(label: 'RSVPs', value: 'Going: $going, Not Going: $notGoing');
             },
           ),
           const Divider(height: 24),
@@ -92,15 +74,11 @@ void showSessionDetailDialog(
                     final name = member?.displayName ?? ms.teamMemberId;
 
                     final checkIn = formatTime(ms.checkInTime);
-                    final checkOut = ms.checkOutTime != null
-                        ? formatTime(ms.checkOutTime!)
-                        : '\u2014';
+                    final checkOut = ms.checkOutTime != null ? formatTime(ms.checkOutTime!) : '\u2014';
 
                     Duration? memberDuration;
                     if (ms.checkOutTime != null) {
-                      memberDuration = ms.checkOutTime!.difference(
-                        ms.checkInTime,
-                      );
+                      memberDuration = ms.checkOutTime!.difference(ms.checkInTime);
                     }
 
                     return Padding(
@@ -108,24 +86,15 @@ void showSessionDetailDialog(
                       child: Row(
                         children: [
                           Icon(
-                            ms.checkOutTime != null
-                                ? Icons.check_circle
-                                : Icons.radio_button_checked,
+                            ms.checkOutTime != null ? Icons.check_circle : Icons.radio_button_checked,
                             size: 16,
-                            color: ms.checkOutTime != null
-                                ? neutralColor.shade400
-                                : supportSuccessColor.shade700,
+                            color: ms.checkOutTime != null ? neutralColor.shade400 : supportSuccessColor.shade700,
                           ),
                           const SizedBox(width: 8),
                           Expanded(child: Text(name)),
                           Text(
                             '$checkIn - $checkOut',
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
                           ),
                           if (memberDuration != null) ...[
                             const SizedBox(width: 12),
@@ -167,10 +136,7 @@ class _InfoRow extends StatelessWidget {
             width: 80,
             child: Text(
               label,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
             ),
           ),
           Expanded(child: Text(value)),

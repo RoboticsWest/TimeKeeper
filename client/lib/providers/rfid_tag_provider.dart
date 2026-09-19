@@ -3,25 +3,29 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/rfid_tag.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/providers/realtime_collection.dart';
 import 'package:time_keeper/utils/api_result.dart';
 
 part 'rfid_tag_provider.g.dart';
 
 const _rfidTagFields = 'id teamMemberId tag';
 
-const _rfidTagsQuery = '''
+const _rfidTagsQuery =
+    '''
   query RfidTags {
     rfidTags { $_rfidTagFields }
   }
 ''';
 
-const _rfidTagChangesSubscription = '''
+const _rfidTagChangesSubscription =
+    '''
   subscription RfidTagChanges {
     rfidTagChanges { operation id data { $_rfidTagFields } }
   }
 ''';
 
-const _createRfidTagMutation = '''
+const _createRfidTagMutation =
+    '''
   mutation CreateRfidTag(\$teamMemberId: UUID!, \$tag: String!) {
     createRfidTag(teamMemberId: \$teamMemberId, tag: \$tag) { $_rfidTagFields }
   }
@@ -52,17 +56,24 @@ Stream<ChangeEvent<RfidTag>> rfidTagChanges(Ref ref) {
 class RfidTags extends _$RfidTags {
   @override
   Map<String, RfidTag> build() {
+    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
+    // Without this a fetch that failed at startup is never retried.
+    ref.watch(timeKeeperGraphQLClientProvider);
     _fetchInitial();
     return {};
   }
 
   Future<void> _fetchInitial() async {
-    final client = ref.read(timeKeeperGraphQLClientProvider);
-    final result = await client.query(QueryOptions(document: gql(_rfidTagsQuery), fetchPolicy: FetchPolicy.noCache));
-    if (result.hasException || result.data == null) return;
-
-    final items = (result.data!['rfidTags'] as List<dynamic>).map((e) => RfidTag.fromJson(e as Map<String, dynamic>)).toList();
-    state = {for (final item in items) item.id: item};
+    final items = await fetchCollection<RfidTag>(
+      ref: ref,
+      document: _rfidTagsQuery,
+      rootField: 'rfidTags',
+      fromJson: RfidTag.fromJson,
+      idOf: (item) => item.id,
+    );
+    // Null means every attempt failed; keep what we have rather than
+    // replacing real data with an empty map.
+    if (items != null) state = items;
   }
 
   Future<void> refresh() => _fetchInitial();
@@ -96,11 +107,13 @@ class RfidTags extends _$RfidTags {
 
 @Riverpod(keepAlive: true)
 void rfidTagsSync(Ref ref) {
-  ref.listen(rfidTagChangesProvider, (previous, next) {
-    next.whenData((change) {
-      ref.read(rfidTagsProvider.notifier).applyChange(change);
-    });
-  });
+  ref.listen(
+    rfidTagChangesProvider,
+    changeListener<RfidTag>(
+      apply: (change) => ref.read(rfidTagsProvider.notifier).applyChange(change),
+      refresh: () => ref.read(rfidTagsProvider.notifier).refresh(),
+    ),
+  );
 }
 
 @Riverpod(keepAlive: true)

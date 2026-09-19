@@ -24,8 +24,7 @@ class DropdownSetting<T> extends StatelessWidget {
   /// settings page can pass a value before its options have loaded (or one
   /// that no longer exists), so fall back to a null selection — for
   /// `DropdownSetting<String?>` that maps to the "None" item.
-  bool _contains(Object? candidate) =>
-      items.any((item) => item.value == candidate);
+  bool _contains(Object? candidate) => items.any((item) => item.value == candidate);
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +37,7 @@ class DropdownSetting<T> extends StatelessWidget {
             child: InputDecorator(
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<T>(
@@ -64,11 +60,7 @@ class DropdownSetting<T> extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          FilledButton.icon(
-            onPressed: onUpdate,
-            icon: const Icon(Icons.save),
-            label: const Text('Update'),
-          ),
+          FilledButton.icon(onPressed: onUpdate, icon: const Icon(Icons.save), label: const Text('Update')),
         ],
       ),
     );

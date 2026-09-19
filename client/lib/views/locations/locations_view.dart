@@ -13,11 +13,7 @@ import 'package:time_keeper/widgets/tables/header_text.dart';
 class LocationsView extends HookConsumerWidget {
   const LocationsView({super.key});
 
-  void _showClearDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> locations,
-  ) {
+  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> locations) {
     final ids = locations.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No locations to delete').show(context);
@@ -51,8 +47,7 @@ class LocationsView extends HookConsumerWidget {
     final filterController = useTextEditingController();
     final filterText = useValueListenable(filterController).text.toLowerCase();
 
-    final sorted = locations.entries.toList()
-      ..sort((a, b) => a.value.location.compareTo(b.value.location));
+    final sorted = locations.entries.toList()..sort((a, b) => a.value.location.compareTo(b.value.location));
 
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
@@ -72,9 +67,7 @@ class LocationsView extends HookConsumerWidget {
                 onPressed: () => _showClearDialog(context, ref, locations),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
             ],
           ),
@@ -84,33 +77,16 @@ class LocationsView extends HookConsumerWidget {
           Expanded(
             child: EditTable(
               alternatingRows: true,
-              headers: [
-                BaseTableCell(
-                  child: TableHeaderText('Location Name'),
-                  flex: 3,
-                ),
-              ],
+              headers: [BaseTableCell(child: TableHeaderText('Location Name'), flex: 3)],
               headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
                 final id = entry.key;
                 final location = entry.value;
                 return EditTableRow(
                   key: ValueKey(id),
-                  onEdit: () => showLocationDialog(
-                    context,
-                    ref,
-                    id: id,
-                    existingName: location.location,
-                  ),
-                  onDelete: () => showDeleteLocationDialog(
-                    context,
-                    ref,
-                    id: id,
-                    name: location.location,
-                  ),
-                  cells: [
-                    BaseTableCell(child: Text(location.location), flex: 3),
-                  ],
+                  onEdit: () => showLocationDialog(context, ref, id: id, existingName: location.location),
+                  onDelete: () => showDeleteLocationDialog(context, ref, id: id, name: location.location),
+                  cells: [BaseTableCell(child: Text(location.location), flex: 3)],
                 );
               }).toList(),
               onAdd: () => showLocationDialog(context, ref),

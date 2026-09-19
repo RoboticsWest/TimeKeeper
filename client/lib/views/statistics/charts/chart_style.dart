@@ -106,11 +106,7 @@ BarTouchData statsBarTouch(
         if (lines.isEmpty) return null;
         return BarTooltipItem(
           lines.first,
-          TextStyle(
-            color: theme.colorScheme.onInverseSurface,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-          ),
+          TextStyle(color: theme.colorScheme.onInverseSurface, fontSize: 11, fontWeight: FontWeight.w700),
           children: [
             for (final line in lines.skip(1))
               TextSpan(
@@ -136,10 +132,7 @@ BarTouchData statsBarTouch(
 }
 
 /// Crosshair + tooltip for the line/area form of the activity chart.
-LineTouchData statsLineTouch(
-  BuildContext context, {
-  required List<String> Function(int index) linesFor,
-}) {
+LineTouchData statsLineTouch(BuildContext context, {required List<String> Function(int index) linesFor}) {
   final theme = Theme.of(context);
 
   return LineTouchData(
@@ -167,10 +160,7 @@ LineTouchData statsLineTouch(
         return [
           for (var i = 0; i < spots.length; i++)
             if (i == 0)
-              LineTooltipItem(
-                lines.join('\n'),
-                TextStyle(color: theme.colorScheme.onInverseSurface, fontSize: 11),
-              )
+              LineTooltipItem(lines.join('\n'), TextStyle(color: theme.colorScheme.onInverseSurface, fontSize: 11))
             else
               null,
         ];

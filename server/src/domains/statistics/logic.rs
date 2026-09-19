@@ -96,7 +96,15 @@ fn combine_overtime(bucket: &mut HoursBucket) {
 
 #[async_trait]
 pub trait StatisticsLogic: Send + Sync {
-  async fn get_leaderboard(&self) -> anyhow::Result<Vec<LeaderboardEntry>>;
+  /// The leaderboard, ranked by all-time hours.
+  ///
+  /// `member_type_override` replaces the configured `leaderboard_member_types` filter for this
+  /// call. That setting is a *default* - which member types the leaderboard shows when nobody
+  /// asked for anything in particular - so a caller that explicitly asks for one type must not
+  /// have it intersected with the default. With the default set to students only,
+  /// `!leaderboard mentors` was filtering mentors out of an already students-only list and
+  /// always reporting "No attendance data yet".
+  async fn get_leaderboard(&self, member_type_override: Option<Vec<String>>) -> anyhow::Result<Vec<LeaderboardEntry>>;
 }
 
 pub struct DefaultStatisticsLogic {
@@ -119,10 +127,14 @@ impl DefaultStatisticsLogic {
 
 #[async_trait]
 impl StatisticsLogic for DefaultStatisticsLogic {
-  async fn get_leaderboard(&self) -> anyhow::Result<Vec<LeaderboardEntry>> {
+  async fn get_leaderboard(&self, member_type_override: Option<Vec<String>>) -> anyhow::Result<Vec<LeaderboardEntry>> {
     let settings = self.settings.get().await?;
     let show_overtime = settings.leaderboard_show_overtime;
-    let member_types: Vec<String> = settings.leaderboard_member_types.into_iter().flatten().collect();
+    // An explicit request wins over the configured default; an empty list means "everyone".
+    let member_types: Vec<String> = match member_type_override {
+      Some(types) => types,
+      None => settings.leaderboard_member_types.into_iter().flatten().collect(),
+    };
 
     let sessions: HashMap<Uuid, _> = self.sessions.get_all().await?.into_iter().map(|s| (s.id, s)).collect();
     let team_members: HashMap<Uuid, TeamMember> =

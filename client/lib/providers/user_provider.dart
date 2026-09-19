@@ -4,6 +4,7 @@ import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/role.dart';
 import 'package:time_keeper/models/user.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/providers/realtime_collection.dart';
 import 'package:time_keeper/utils/api_result.dart';
 
 part 'user_provider.g.dart';
@@ -16,25 +17,29 @@ const _rolesQuery = '''
   }
 ''';
 
-const _usersQuery = '''
+const _usersQuery =
+    '''
   query Users {
     users { $_userFields }
   }
 ''';
 
-const _userChangesSubscription = '''
+const _userChangesSubscription =
+    '''
   subscription UserChanges {
     userChanges { operation id data { $_userFields } }
   }
 ''';
 
-const _createUserMutation = '''
+const _createUserMutation =
+    '''
   mutation CreateUser(\$username: String!, \$password: String!, \$roleIds: [Int!]) {
     createUser(username: \$username, password: \$password, roleIds: \$roleIds) { $_userFields }
   }
 ''';
 
-const _updateUserMutation = '''
+const _updateUserMutation =
+    '''
   mutation UpdateUser(\$id: UUID!, \$username: String, \$password: String, \$roleIds: [Int!]) {
     updateUser(id: \$id, username: \$username, password: \$password, roleIds: \$roleIds) { $_userFields }
   }
@@ -59,17 +64,24 @@ Stream<ChangeEvent<User>> userChanges(Ref ref) {
 class Users extends _$Users {
   @override
   Map<String, User> build() {
+    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
+    // Without this a fetch that failed at startup is never retried.
+    ref.watch(timeKeeperGraphQLClientProvider);
     _fetchInitial();
     return {};
   }
 
   Future<void> _fetchInitial() async {
-    final client = ref.read(timeKeeperGraphQLClientProvider);
-    final result = await client.query(QueryOptions(document: gql(_usersQuery), fetchPolicy: FetchPolicy.noCache));
-    if (result.hasException || result.data == null) return;
-
-    final items = (result.data!['users'] as List<dynamic>).map((e) => User.fromJson(e as Map<String, dynamic>)).toList();
-    state = {for (final item in items) item.id: item};
+    final items = await fetchCollection<User>(
+      ref: ref,
+      document: _usersQuery,
+      rootField: 'users',
+      fromJson: User.fromJson,
+      idOf: (item) => item.id,
+    );
+    // Null means every attempt failed; keep what we have rather than
+    // replacing real data with an empty map.
+    if (items != null) state = items;
   }
 
   void applyChange(ChangeEvent<User> change) {
@@ -115,9 +127,11 @@ Future<List<Role>> roles(Ref ref) async {
 
 @Riverpod(keepAlive: true)
 void usersSync(Ref ref) {
-  ref.listen(userChangesProvider, (previous, next) {
-    next.whenData((change) {
-      ref.read(usersProvider.notifier).applyChange(change);
-    });
-  });
+  ref.listen(
+    userChangesProvider,
+    changeListener<User>(
+      apply: (change) => ref.read(usersProvider.notifier).applyChange(change),
+      refresh: () => ref.read(usersProvider.notifier).refresh(),
+    ),
+  );
 }

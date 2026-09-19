@@ -22,10 +22,7 @@ class ChangeEvent<T> {
 
   ChangeEvent({required this.operation, required this.id, this.data});
 
-  static ChangeEvent<T> fromJson<T>(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJsonT,
-  ) {
+  static ChangeEvent<T> fromJson<T>(Map<String, dynamic> json, T Function(Map<String, dynamic>) fromJsonT) {
     final rawData = json['data'] as Map<String, dynamic>?;
     return ChangeEvent<T>(
       operation: changeOperationFromJson(json['operation'] as String),

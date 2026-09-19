@@ -16,11 +16,7 @@ import 'package:time_keeper/providers/location_provider.dart';
 class SessionView extends HookConsumerWidget {
   const SessionView({super.key});
 
-  void _showClearDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> sessions,
-  ) {
+  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> sessions) {
     final ids = sessions.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No sessions to delete').show(context);
@@ -68,9 +64,7 @@ class SessionView extends HookConsumerWidget {
         ? sorted.where((entry) {
             final dt = entry.value.startTime;
             final sel = selectedDate.value!;
-            return dt.year == sel.year &&
-                dt.month == sel.month &&
-                dt.day == sel.day;
+            return dt.year == sel.year && dt.month == sel.month && dt.day == sel.day;
           }).toList()
         : sorted;
 
@@ -101,23 +95,13 @@ class SessionView extends HookConsumerWidget {
                 onPressed: () => _showClearDialog(context, ref, sessions),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
               const SizedBox(width: 12),
               SegmentedButton<bool>(
                 segments: const [
-                  ButtonSegment(
-                    value: true,
-                    icon: Icon(Icons.calendar_month),
-                    label: Text('Calendar'),
-                  ),
-                  ButtonSegment(
-                    value: false,
-                    icon: Icon(Icons.table_rows),
-                    label: Text('Table'),
-                  ),
+                  ButtonSegment(value: true, icon: Icon(Icons.calendar_month), label: Text('Calendar')),
+                  ButtonSegment(value: false, icon: Icon(Icons.table_rows), label: Text('Table')),
                 ],
                 selected: {showCalendar.value},
                 onSelectionChanged: (value) {
@@ -147,10 +131,7 @@ class SessionView extends HookConsumerWidget {
                 padding: const EdgeInsets.only(top: 12, bottom: 4),
                 child: Row(
                   children: [
-                    Text(
-                      'Showing: ${formatDate(selectedDate.value!)}',
-                      style: theme.textTheme.titleSmall,
-                    ),
+                    Text('Showing: ${formatDate(selectedDate.value!)}', style: theme.textTheme.titleSmall),
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => selectedDate.value = null,
@@ -164,10 +145,7 @@ class SessionView extends HookConsumerWidget {
           ],
 
           // Stats
-          SessionStats(
-            sessions: sessions,
-            teamMemberSessions: teamMemberSessions,
-          ),
+          SessionStats(sessions: sessions, teamMemberSessions: teamMemberSessions),
           const SizedBox(height: 16),
 
           // Filter

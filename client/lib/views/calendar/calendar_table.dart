@@ -21,40 +21,24 @@ class CalendarTable extends ConsumerWidget {
       alternatingRows: true,
       headerDecoration: tableHeaderDecoration(context),
       headers: [
-        BaseTableCell(
-          child: TableHeaderText('Date'),
-          flex: 2,
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Time'),
-          flex: 2,
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Duration'),
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Location'),
-        ),
-        BaseTableCell(
-          child: TableHeaderText('Status'),
-        ),
+        BaseTableCell(child: TableHeaderText('Date'), flex: 2),
+        BaseTableCell(child: TableHeaderText('Time'), flex: 2),
+        BaseTableCell(child: TableHeaderText('Duration')),
+        BaseTableCell(child: TableHeaderText('Location')),
+        BaseTableCell(child: TableHeaderText('Status')),
       ],
       rows: sessions.map((entry) {
         final session = entry.value;
         final start = session.startTime;
         final end = session.endTime;
         final duration = end.difference(start);
-        final locationName =
-            locations[session.locationId]?.location ?? session.locationId;
+        final locationName = locations[session.locationId]?.location ?? session.locationId;
         final status = getSessionStatus(session);
 
         return BaseTableRow(
           cells: [
             BaseTableCell(child: Text(formatDate(start)), flex: 2),
-            BaseTableCell(
-              child: Text('${formatTime(start)} - ${formatTime(end)}'),
-              flex: 2,
-            ),
+            BaseTableCell(child: Text('${formatTime(start)} - ${formatTime(end)}'), flex: 2),
             BaseTableCell(child: Text(formatDuration(duration))),
             BaseTableCell(child: Text(locationName)),
             BaseTableCell(child: SessionStatusChip(status: status)),

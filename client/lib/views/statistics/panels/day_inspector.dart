@@ -44,10 +44,7 @@ class DayInspector extends StatelessWidget {
           label: 'Total',
           flex: 2,
           alignment: Alignment.centerRight,
-          cell: (row) => Text(
-            formatDuration(row.total),
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
+          cell: (row) => Text(formatDuration(row.total), style: const TextStyle(fontWeight: FontWeight.w600)),
           compare: (a, b) => a.total.compareTo(b.total),
         ),
         GridColumn(

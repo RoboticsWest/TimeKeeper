@@ -8,18 +8,76 @@ part of 'settings_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Settings pushed from the server whenever the row changes.
+///
+/// `settings` is a single-row table with a DB trigger behind it since migration 0006, but
+/// nothing was ever subscribed to it — so every client kept whatever settings it happened to
+/// fetch at startup until it was restarted. Changing the timezone or a reminder message on one
+/// machine left every other one stale.
+
+@ProviderFor(settingsChanges)
+final settingsChangesProvider = SettingsChangesProvider._();
+
+/// Settings pushed from the server whenever the row changes.
+///
+/// `settings` is a single-row table with a DB trigger behind it since migration 0006, but
+/// nothing was ever subscribed to it — so every client kept whatever settings it happened to
+/// fetch at startup until it was restarted. Changing the timezone or a reminder message on one
+/// machine left every other one stale.
+
+final class SettingsChangesProvider extends $FunctionalProvider<AsyncValue<Settings>, Settings, Stream<Settings>>
+    with $FutureModifier<Settings>, $StreamProvider<Settings> {
+  /// Settings pushed from the server whenever the row changes.
+  ///
+  /// `settings` is a single-row table with a DB trigger behind it since migration 0006, but
+  /// nothing was ever subscribed to it — so every client kept whatever settings it happened to
+  /// fetch at startup until it was restarted. Changing the timezone or a reminder message on one
+  /// machine left every other one stale.
+  SettingsChangesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'settingsChangesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$settingsChangesHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<Settings> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<Settings> create(Ref ref) {
+    return settingsChanges(ref);
+  }
+}
+
+String _$settingsChangesHash() => r'71560bc0b4ddac4d437985a562629fc6c5a48855';
+
+/// The current settings: seeded by a query, then kept current by [settingsChanges].
+///
+/// Watching the subscription means a pushed row rebuilds this provider and every consumer of
+/// it, without a re-fetch — the payload is the whole row.
 
 @ProviderFor(settingsQuery)
 final settingsQueryProvider = SettingsQueryProvider._();
 
-final class SettingsQueryProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<Settings?>,
-          Settings?,
-          FutureOr<Settings?>
-        >
+/// The current settings: seeded by a query, then kept current by [settingsChanges].
+///
+/// Watching the subscription means a pushed row rebuilds this provider and every consumer of
+/// it, without a re-fetch — the payload is the whole row.
+
+final class SettingsQueryProvider extends $FunctionalProvider<AsyncValue<Settings?>, Settings?, FutureOr<Settings?>>
     with $FutureModifier<Settings?>, $FutureProvider<Settings?> {
+  /// The current settings: seeded by a query, then kept current by [settingsChanges].
+  ///
+  /// Watching the subscription means a pushed row rebuilds this provider and every consumer of
+  /// it, without a re-fetch — the payload is the whole row.
   SettingsQueryProvider._()
     : super(
         from: null,
@@ -36,8 +94,7 @@ final class SettingsQueryProvider
 
   @$internal
   @override
-  $FutureProviderElement<Settings?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<Settings?> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<Settings?> create(Ref ref) {
@@ -45,13 +102,12 @@ final class SettingsQueryProvider
   }
 }
 
-String _$settingsQueryHash() => r'ab23d82d651d5b3d4dac404ee74363037a61de29';
+String _$settingsQueryHash() => r'4277f171fe52bebb27b30bf1430ec16b21ad34b4';
 
 @ProviderFor(logoQuery)
 final logoQueryProvider = LogoQueryProvider._();
 
-final class LogoQueryProvider
-    extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
+final class LogoQueryProvider extends $FunctionalProvider<AsyncValue<String?>, String?, FutureOr<String?>>
     with $FutureModifier<String?>, $FutureProvider<String?> {
   LogoQueryProvider._()
     : super(
@@ -69,8 +125,7 @@ final class LogoQueryProvider
 
   @$internal
   @override
-  $FutureProviderElement<String?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<String?> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<String?> create(Ref ref) {
@@ -84,15 +139,8 @@ String _$logoQueryHash() => r'a77bd173892382892e3ba90b5f68abeb04b730b2';
 final discordRolesQueryProvider = DiscordRolesQueryProvider._();
 
 final class DiscordRolesQueryProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<DiscordRole>>,
-          List<DiscordRole>,
-          FutureOr<List<DiscordRole>>
-        >
-    with
-        $FutureModifier<List<DiscordRole>>,
-        $FutureProvider<List<DiscordRole>> {
+    extends $FunctionalProvider<AsyncValue<List<DiscordRole>>, List<DiscordRole>, FutureOr<List<DiscordRole>>>
+    with $FutureModifier<List<DiscordRole>>, $FutureProvider<List<DiscordRole>> {
   DiscordRolesQueryProvider._()
     : super(
         from: null,
@@ -109,9 +157,7 @@ final class DiscordRolesQueryProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<DiscordRole>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $FutureProviderElement<List<DiscordRole>> $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<DiscordRole>> create(Ref ref) {
@@ -124,8 +170,7 @@ String _$discordRolesQueryHash() => r'f1d84a6edf704390627e91a279c1c114e0236301';
 @ProviderFor(SettingsService)
 final settingsServiceProvider = SettingsServiceProvider._();
 
-final class SettingsServiceProvider
-    extends $NotifierProvider<SettingsService, void> {
+final class SettingsServiceProvider extends $NotifierProvider<SettingsService, void> {
   SettingsServiceProvider._()
     : super(
         from: null,
@@ -146,14 +191,11 @@ final class SettingsServiceProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$settingsServiceHash() => r'99285b2d45db80d4545c623390eacbc8456ad402';
+String _$settingsServiceHash() => r'4d8391e1ab32666479313fccf4e1072befe59908';
 
 abstract class _$SettingsService extends $Notifier<void> {
   void build();
@@ -161,14 +203,7 @@ abstract class _$SettingsService extends $Notifier<void> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<void, void>, void, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

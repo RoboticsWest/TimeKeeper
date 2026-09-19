@@ -14,8 +14,7 @@ part of 'token_validator_provider.dart';
 final tokenValidatorProvider = TokenValidatorProvider._();
 
 /// Provider that monitors app lifecycle and validates token when app resumes
-final class TokenValidatorProvider
-    extends $NotifierProvider<TokenValidator, void> {
+final class TokenValidatorProvider extends $NotifierProvider<TokenValidator, void> {
   /// Provider that monitors app lifecycle and validates token when app resumes
   TokenValidatorProvider._()
     : super(
@@ -37,10 +36,7 @@ final class TokenValidatorProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
@@ -54,14 +50,7 @@ abstract class _$TokenValidator extends $Notifier<void> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<void, void>, void, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

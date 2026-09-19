@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -34,10 +35,7 @@ class PinEntryDialog extends HookConsumerWidget {
     final notifier = ref.read(rfidScannerSuppressedProvider.notifier);
     notifier.suppress();
     try {
-      await showDialog<void>(
-        context: context,
-        builder: (_) => const PinEntryDialog(),
-      );
+      await showDialog<void>(context: context, builder: (_) => const PinEntryDialog());
     } finally {
       notifier.release();
     }
@@ -62,9 +60,7 @@ class PinEntryDialog extends HookConsumerWidget {
 
       submitting.value = true;
       error.value = null;
-      final result = await ref
-          .read(sessionCheckInOutProvider.notifier)
-          .checkInOutByPin(pin, locationId);
+      final result = await ref.read(sessionCheckInOutProvider.notifier).checkInOutByPin(pin, locationId);
 
       if (!context.mounted) return;
 
@@ -72,11 +68,7 @@ class PinEntryDialog extends HookConsumerWidget {
         case ApiSuccess(data: final outcome):
           final member = ref.read(teamMembersProvider)[outcome.teamMemberId];
           Navigator.of(context).pop();
-          showCheckInOutResult(
-            context: context,
-            name: member?.displayName,
-            result: ApiSuccess(outcome.checkedIn),
-          );
+          showCheckInOutResult(context: context, name: member?.displayName, result: ApiSuccess(outcome.checkedIn));
         case ApiFailure(userMessage: final msg):
           submitting.value = false;
           controller.clear();
@@ -99,10 +91,10 @@ class PinEntryDialog extends HookConsumerWidget {
               textInputAction: TextInputAction.done,
               enabled: !submitting.value,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                hintText: 'PIN',
-                prefixIcon: Icon(Icons.pin_outlined),
-              ),
+              // No PIN can be longer than this, so a longer entry is a scanner misfire or a
+              // stuck key rather than something worth sending to the server.
+              maxLength: kMaxQuickPinLength,
+              decoration: const InputDecoration(hintText: 'PIN', prefixIcon: Icon(Icons.pin_outlined), counterText: ''),
               onChanged: (_) => error.value = null,
               onSubmitted: (_) => submit(),
             ),
@@ -125,9 +117,7 @@ class PinEntryDialog extends HookConsumerWidget {
             ListenableBuilder(
               listenable: controller,
               builder: (context, _) => FilledButton.icon(
-                onPressed: submitting.value || controller.text.isEmpty
-                    ? null
-                    : submit,
+                onPressed: submitting.value || controller.text.isEmpty ? null : submit,
                 icon: const Icon(Icons.check, size: 20),
                 label: const Text('Check In / Out'),
               ),
@@ -136,10 +126,7 @@ class PinEntryDialog extends HookConsumerWidget {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: submitting.value ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
+        TextButton(onPressed: submitting.value ? null : () => Navigator.of(context).pop(), child: const Text('Cancel')),
       ],
     );
   }

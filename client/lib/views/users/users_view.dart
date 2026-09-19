@@ -28,8 +28,7 @@ class UsersView extends HookConsumerWidget {
       refreshing.value = false;
     }
 
-    final sorted = users.entries.toList()
-      ..sort((a, b) => a.value.username.compareTo(b.value.username));
+    final sorted = users.entries.toList()..sort((a, b) => a.value.username.compareTo(b.value.username));
 
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
@@ -47,9 +46,9 @@ class UsersView extends HookConsumerWidget {
           const SizedBox(height: 4),
           Text(
             '(The default admin user is hidden from this list)',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           Row(
@@ -60,11 +59,7 @@ class UsersView extends HookConsumerWidget {
                 tooltip: 'Refresh users',
                 onPressed: refreshing.value ? null : refreshUsers,
                 icon: refreshing.value
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.refresh),
               ),
             ],
@@ -74,13 +69,8 @@ class UsersView extends HookConsumerWidget {
             child: EditTable(
               alternatingRows: true,
               headers: [
-                const BaseTableCell(
-                  child: TableHeaderText('Username'),
-                ),
-                const BaseTableCell(
-                  flex: 2,
-                  child: TableHeaderText('Roles'),
-                ),
+                const BaseTableCell(child: TableHeaderText('Username')),
+                const BaseTableCell(flex: 2, child: TableHeaderText('Roles')),
               ],
               headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
@@ -88,19 +78,9 @@ class UsersView extends HookConsumerWidget {
                 final user = entry.value;
                 return EditTableRow(
                   key: ValueKey(id),
-                  onEdit: () => showUserDialog(
-                    context,
-                    ref,
-                    id: id,
-                    existingUsername: user.username,
-                    existingRoles: user.roles,
-                  ),
-                  onDelete: () => showDeleteUserDialog(
-                    context,
-                    ref,
-                    id: id,
-                    username: user.username,
-                  ),
+                  onEdit: () =>
+                      showUserDialog(context, ref, id: id, existingUsername: user.username, existingRoles: user.roles),
+                  onDelete: () => showDeleteUserDialog(context, ref, id: id, username: user.username),
                   cells: [
                     BaseTableCell(child: Text(user.username)),
                     BaseTableCell(flex: 2, child: RoleChips(roles: user.roles)),

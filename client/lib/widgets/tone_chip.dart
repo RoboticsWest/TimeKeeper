@@ -21,13 +21,11 @@ class ToneChip extends StatelessWidget {
   /// genuine alert rather than a category — see [ToneChip.alert].
   final bool emphasize;
 
-  const ToneChip({super.key, required this.color, required this.label})
-    : emphasize = false;
+  const ToneChip({super.key, required this.color, required this.label}) : emphasize = false;
 
   /// A chip that should read as a warning rather than a category. Still a
   /// chip, so the house rule holds — this is not body text.
-  const ToneChip.alert({super.key, required this.color, required this.label})
-    : emphasize = true;
+  const ToneChip.alert({super.key, required this.color, required this.label}) : emphasize = true;
 
   @override
   Widget build(BuildContext context) {

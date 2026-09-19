@@ -1,3 +1,5 @@
+import 'package:time_keeper/utils/time_utils.dart';
+
 class TeamMemberSession {
   final String id;
   final String teamMemberId;
@@ -18,8 +20,8 @@ class TeamMemberSession {
       id: json['id'] as String,
       teamMemberId: json['teamMemberId'] as String,
       sessionId: json['sessionId'] as String,
-      checkInTime: DateTime.parse(json['checkInTime'] as String),
-      checkOutTime: json['checkOutTime'] != null ? DateTime.parse(json['checkOutTime'] as String) : null,
+      checkInTime: parseServerTime(json['checkInTime'] as String),
+      checkOutTime: parseServerTimeOrNull(json['checkOutTime']),
     );
   }
 
@@ -27,7 +29,7 @@ class TeamMemberSession {
     'id': id,
     'teamMemberId': teamMemberId,
     'sessionId': sessionId,
-    'checkInTime': checkInTime.toUtc().toIso8601String(),
-    'checkOutTime': checkOutTime?.toUtc().toIso8601String(),
+    'checkInTime': toServerTime(checkInTime),
+    'checkOutTime': toServerTimeOrNull(checkOutTime),
   };
 }

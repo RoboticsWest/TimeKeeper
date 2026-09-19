@@ -20,8 +20,7 @@ class RfidScanBuffer {
     final key = event.logicalKey;
 
     // Enter key = end of scan
-    if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter) {
+    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
       if (_buffer.isNotEmpty) {
         final input = _buffer.trim();
         _clear();

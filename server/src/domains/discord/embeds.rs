@@ -138,9 +138,50 @@ pub fn sessions(active: &[SessionRow], upcoming: &[SessionRow]) -> CreateEmbed {
   embed
 }
 
-pub fn checked_in(names: &[String]) -> CreateEmbed {
-  let items: Vec<(String, String)> = names.iter().map(|n| (n.clone(), "\u{200b}".to_string())).collect();
-  inline_fields(base(&format!("Checked in ({})", names.len()), SUPPORT_SUCCESS), &items)
+/// One person currently signed in.
+pub struct CheckedInRow {
+  pub name: String,
+  pub location: String,
+  /// When they checked in, as a unix timestamp.
+  pub since_secs: i64,
+}
+
+/// Who is currently checked in, grouped by location.
+///
+/// This used to render one *inline field per person* with a zero-width-space value, which left
+/// Discord laying names out in a ragged three-column grid of empty cells - unreadable, and
+/// worse the moment the count was not a multiple of three. It now follows the leaderboard's
+/// shape: a line per person inside one field per location, which reflows properly on a phone
+/// and has room to say where each person is and how long they have been there.
+pub fn checked_in(rows: &[CheckedInRow]) -> CreateEmbed {
+  let mut embed = base(&format!("Checked in ({})", rows.len()), SUPPORT_SUCCESS);
+
+  // Group by location, preserving first-seen order so the layout is stable between calls.
+  let mut locations: Vec<&str> = Vec::new();
+  for row in rows {
+    if !locations.contains(&row.location.as_str()) {
+      locations.push(&row.location);
+    }
+  }
+
+  for location in locations.iter().take(MAX_FIELDS) {
+    let body: Vec<String> = rows
+      .iter()
+      .filter(|r| &r.location == location)
+      .map(|r| {
+        // `<t:N:R>` renders as "2 hours ago" in each reader's own locale.
+        format!("**{}** \u{2014} since <t:{}:t> (<t:{}:R>)", r.name, r.since_secs, r.since_secs)
+      })
+      .collect();
+
+    embed = embed.field(format!("{location} ({})", body.len()), body.join("\n"), false);
+  }
+
+  if locations.len() > MAX_FIELDS {
+    embed = embed.field("\u{200b}", format!("\u{2026}and {} more locations", locations.len() - MAX_FIELDS), false);
+  }
+
+  embed
 }
 
 pub fn locations(names: &[String]) -> CreateEmbed {
@@ -239,14 +280,51 @@ mod tests {
 
   #[test]
   fn name_lists_use_inline_fields_and_cap_their_length() {
-    let names: Vec<String> = (0..30).map(|i| format!("Member {i}")).collect();
-    let v = json(checked_in(&names));
+    let names: Vec<String> = (0..30).map(|i| format!("Location {i}")).collect();
+    let v = json(locations(&names));
 
-    assert_eq!(v["title"], "Checked in (30)");
+    assert_eq!(v["title"], "Locations (30)");
     let fields = v["fields"].as_array().expect("fields");
     assert_eq!(fields.len(), MAX_FIELDS + 1);
     assert_eq!(fields[0]["inline"], true);
     assert_eq!(fields[MAX_FIELDS]["value"], "…and 6 more");
+  }
+
+  fn checked_in_row(name: &str, location: &str, since: i64) -> CheckedInRow {
+    CheckedInRow { name: name.into(), location: location.into(), since_secs: since }
+  }
+
+  /// One field per *location* holding a line per person, rather than one inline field per
+  /// person - which Discord laid out as a ragged grid of empty cells.
+  #[test]
+  fn checked_in_groups_people_under_their_location() {
+    let v = json(checked_in(&[
+      checked_in_row("Ada", "Workshop", 100),
+      checked_in_row("Grace", "Workshop", 200),
+      checked_in_row("Alan", "Machine Shop", 300),
+    ]));
+
+    assert_eq!(v["title"], "Checked in (3)");
+    let fields = v["fields"].as_array().expect("fields");
+    assert_eq!(fields.len(), 2, "one field per location, not one per person");
+
+    assert_eq!(fields[0]["name"], "Workshop (2)");
+    assert_eq!(fields[0]["inline"], false, "a stacked list must not be laid out in columns");
+    let workshop = fields[0]["value"].as_str().expect("value");
+    assert!(workshop.contains("**Ada**"));
+    assert!(workshop.contains("**Grace**"));
+    assert_eq!(workshop.lines().count(), 2);
+
+    assert_eq!(fields[1]["name"], "Machine Shop (1)");
+  }
+
+  /// Relative timestamps are rendered by Discord in each reader's own timezone.
+  #[test]
+  fn checked_in_shows_how_long_each_person_has_been_in() {
+    let v = json(checked_in(&[checked_in_row("Ada", "Workshop", 1_700_000_000)]));
+    let body = v["fields"][0]["value"].as_str().expect("value");
+    assert!(body.contains("<t:1700000000:t>"), "absolute check-in time: {body}");
+    assert!(body.contains("<t:1700000000:R>"), "relative duration: {body}");
   }
 
   #[test]

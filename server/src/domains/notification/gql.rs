@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_graphql::{Context, Error, ID, Object, Result, Subscription};
+use chrono::{DateTime, Utc};
 use futures_util::{Stream, StreamExt};
 use tokio_stream::wrappers::BroadcastStream;
 use uuid::Uuid;
@@ -11,19 +12,25 @@ use crate::events::{ChangeOperation, EVENT_BUS};
 use crate::gql_common::Change;
 
 use super::logic::NotificationLogic;
-use super::model::Notification;
+use super::model::{Notification, STATUS_CANCELLED, STATUS_PENDING, VALID_STATUSES, VALID_TYPES};
+use super::repository::NewNotification;
 
 const RESOURCE: &str = "notifications";
 const TABLE: &str = "notifications";
-
-/// Matches the `notifications.notification_type` CHECK constraint in the migration.
-const VALID_TYPES: &[&str] = &["session_start_reminder", "session_end_reminder", "overtime", "auto_checkout"];
 
 fn validate_type(value: &str) -> Result<()> {
   if VALID_TYPES.contains(&value) {
     Ok(())
   } else {
     Err(Error::new(format!("Invalid notification type, expected one of: {}", VALID_TYPES.join(", "))))
+  }
+}
+
+fn validate_status(value: &str) -> Result<()> {
+  if VALID_STATUSES.contains(&value) {
+    Ok(())
+  } else {
+    Err(Error::new(format!("Invalid notification status, expected one of: {}", VALID_STATUSES.join(", "))))
   }
 }
 
@@ -39,6 +46,12 @@ impl NotificationQuery {
   async fn notifications(&self, ctx: &Context<'_>) -> Result<Vec<Notification>> {
     Ok(logic(ctx)?.get_all().await?)
   }
+
+  /// Notifications scheduled for one session. The Sessions UI uses this to show what will be
+  /// sent and when, and to let an operator cancel a reminder before it fires.
+  async fn session_notifications(&self, ctx: &Context<'_>, session_id: Uuid) -> Result<Vec<Notification>> {
+    Ok(logic(ctx)?.get_by_session_id(session_id).await?)
+  }
 }
 
 #[derive(Default)]
@@ -46,36 +59,46 @@ pub struct NotificationMutation;
 
 #[Object]
 impl NotificationMutation {
-  #[allow(clippy::too_many_arguments)]
-  async fn create_notification(
+  /// Schedules a notification. Idempotent: scheduling one that already exists returns the
+  /// existing row rather than creating a duplicate or resetting its status.
+  async fn schedule_notification(
     &self,
     ctx: &Context<'_>,
     notification_type: String,
     session_id: Uuid,
     team_member_id: Option<Uuid>,
-    sent: bool,
+    scheduled_for: Option<DateTime<Utc>>,
   ) -> Result<Notification> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     validate_type(&notification_type)?;
-    Ok(logic(ctx)?.add(&notification_type, session_id, team_member_id, sent, None).await?)
+    Ok(
+      logic(ctx)?
+        .schedule(NewNotification {
+          notification_type: &notification_type,
+          session_id,
+          team_member_id,
+          scheduled_for,
+          status: STATUS_PENDING,
+        })
+        .await?,
+    )
   }
 
-  #[allow(clippy::too_many_arguments)]
-  async fn update_notification(
-    &self,
-    ctx: &Context<'_>,
-    id: Uuid,
-    notification_type: String,
-    session_id: Uuid,
-    team_member_id: Option<Uuid>,
-    sent: bool,
-  ) -> Result<Notification> {
+  /// Moves a notification to a different lifecycle status.
+  async fn set_notification_status(&self, ctx: &Context<'_>, id: Uuid, status: String) -> Result<Notification> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
-    validate_type(&notification_type)?;
-    logic(ctx)?
-      .update(id, &notification_type, session_id, team_member_id, sent, None)
-      .await?
-      .ok_or_else(|| Error::new("Notification not found"))
+    validate_status(&status)?;
+    logic(ctx)?.set_status(id, &status).await?.ok_or_else(|| Error::new("Notification not found"))
+  }
+
+  /// Switches off a scheduled reminder without deleting it.
+  ///
+  /// Preferred over `deleteNotification`: a cancelled row still records that this reminder was
+  /// deliberately suppressed, whereas a deleted one is indistinguishable from one that was
+  /// never scheduled.
+  async fn cancel_notification(&self, ctx: &Context<'_>, id: Uuid) -> Result<Notification> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
+    logic(ctx)?.set_status(id, STATUS_CANCELLED).await?.ok_or_else(|| Error::new("Notification not found"))
   }
 
   async fn delete_notification(&self, ctx: &Context<'_>, id: Uuid) -> Result<bool> {

@@ -19,15 +19,12 @@ class BrandingSetupTab extends ConsumerWidget {
       children: [
         FileUploadSetting(
           label: 'Logo',
-          description:
-              'Upload a logo image displayed on the login screen. Supported formats: PNG, JPG',
+          description: 'Upload a logo image displayed on the login screen. Supported formats: PNG, JPG',
           allowedExtensions: const ['png', 'jpg', 'jpeg'],
           uploadButtonLabel: 'Upload',
           onUpload: (file) async {
             if (file.bytes != null) {
-              final res = await ref
-                  .read(settingsServiceProvider.notifier)
-                  .uploadLogo(base64Encode(file.bytes!));
+              final res = await ref.read(settingsServiceProvider.notifier).uploadLogo(base64Encode(file.bytes!));
               if (context.mounted) {
                 PopupDialog.fromApiResult(result: res).show(context);
                 if (res.success) {

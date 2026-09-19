@@ -23,30 +23,17 @@ String notificationTypeLabel(String type) {
   return _notificationTypeLabels[type] ?? 'Unknown';
 }
 
-void showNotificationDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  String? id,
-  Notification? existing,
-}) {
+void showNotificationDialog(BuildContext context, WidgetRef ref, {String? id, Notification? existing}) {
   final isEdit = id != null;
 
   PopupDialog.info(
     title: isEdit ? 'Edit Notification' : 'Add Notification',
-    message: _NotificationForm(
-      isEdit: isEdit,
-      notificationId: id,
-      existing: existing,
-    ),
+    message: _NotificationForm(isEdit: isEdit, notificationId: id, existing: existing),
     actions: const [],
   ).show(context);
 }
 
-void showDeleteNotificationDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  required String id,
-}) {
+void showDeleteNotificationDialog(BuildContext context, WidgetRef ref, {required String id}) {
   ConfirmDialog.warn(
     title: 'Delete Notification',
     message: const Text('Are you sure you want to delete this notification?'),
@@ -62,11 +49,7 @@ class _NotificationForm extends HookConsumerWidget {
   final String? notificationId;
   final Notification? existing;
 
-  const _NotificationForm({
-    required this.isEdit,
-    this.notificationId,
-    this.existing,
-  });
+  const _NotificationForm({required this.isEdit, this.notificationId, this.existing});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,27 +57,19 @@ class _NotificationForm extends HookConsumerWidget {
     final locations = ref.watch(locationsProvider);
     final teamMembers = ref.watch(teamMembersProvider);
 
-    final selectedType = useState(
-      existing?.notificationType ?? NotificationType.sessionStartReminder,
-    );
+    final selectedType = useState(existing?.notificationType ?? NotificationType.sessionStartReminder);
     final selectedSessionId = useState<String?>(existing?.sessionId);
     final selectedMemberId = useState<String?>(existing?.teamMemberId);
-    final sent = useState(existing?.sent ?? false);
     final isLoading = useState(false);
 
     // Build sorted session list (oldest first)
-    final sortedSessions = sessions.entries.toList()
-      ..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
+    final sortedSessions = sessions.entries.toList()..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
 
     // Build sorted member list
     final sortedMembers = teamMembers.entries.toList()
       ..sort((a, b) {
-        final aName = (a.value.displayName?.isNotEmpty ?? false)
-            ? a.value.displayName!
-            : a.value.firstName;
-        final bName = (b.value.displayName?.isNotEmpty ?? false)
-            ? b.value.displayName!
-            : b.value.firstName;
+        final aName = (a.value.displayName?.isNotEmpty ?? false) ? a.value.displayName! : a.value.firstName;
+        final bName = (b.value.displayName?.isNotEmpty ?? false) ? b.value.displayName! : b.value.firstName;
         return aName.compareTo(bName);
       });
 
@@ -107,14 +82,9 @@ class _NotificationForm extends HookConsumerWidget {
           // Notification type
           DropdownButtonFormField<String>(
             initialValue: selectedType.value,
-            decoration: const InputDecoration(
-              labelText: 'Type',
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()),
             items: _notificationTypeLabels.entries
-                .map(
-                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                )
+                .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
                 .toList(),
             onChanged: (value) {
               if (value != null) selectedType.value = value;
@@ -159,18 +129,21 @@ class _NotificationForm extends HookConsumerWidget {
                 ),
             ],
             selectedKey: selectedMemberId.value ?? '',
-            onSelected: (key) =>
-                selectedMemberId.value = key.isEmpty ? null : key,
+            onSelected: (key) => selectedMemberId.value = key.isEmpty ? null : key,
           ),
           const SizedBox(height: 16),
 
-          // Sent toggle
-          SwitchListTile(
-            title: const Text('Sent'),
-            contentPadding: EdgeInsets.zero,
-            value: sent.value,
-            onChanged: (value) => sent.value = value,
-          ),
+          // Status is not editable: it is a record of what happened, set by the server when
+          // the message is sent, skipped or fails. The one transition a user drives is
+          // cancelling, which is what the confirm button does when editing.
+          if (isEdit)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Status: ${NotificationStatus.label(existing?.status ?? NotificationStatus.pending)}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
           const SizedBox(height: 24),
 
           // Actions
@@ -178,9 +151,7 @@ class _NotificationForm extends HookConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: isLoading.value
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                onPressed: isLoading.value ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
@@ -193,26 +164,22 @@ class _NotificationForm extends HookConsumerWidget {
                         isLoading.value = true;
                         try {
                           final notifier = ref.read(notificationsProvider.notifier);
+                          // Editing is deliberately limited to cancelling: a sent
+                          // notification is history, and re-pointing one at a different
+                          // session would misreport what was actually announced.
                           final result = isEdit
-                              ? await notifier.update(
-                                  id: notificationId!,
+                              ? await notifier.cancel(notificationId!)
+                              : await notifier.schedule(
                                   notificationType: selectedType.value,
                                   sessionId: selectedSessionId.value!,
                                   teamMemberId: selectedMemberId.value,
-                                  sent: sent.value,
-                                )
-                              : await notifier.create(
-                                  notificationType: selectedType.value,
-                                  sessionId: selectedSessionId.value!,
-                                  teamMemberId: selectedMemberId.value,
-                                  sent: sent.value,
                                 );
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
                             if (result.success) {
                               SnackBarDialog.success(
-                                message: isEdit ? 'Notification updated' : 'Notification created',
+                                message: isEdit ? 'Notification cancelled' : 'Notification scheduled',
                               ).show(context);
                             } else {
                               SnackBarDialog.fromApiResult(result: result).show(context);
@@ -223,11 +190,7 @@ class _NotificationForm extends HookConsumerWidget {
                         }
                       },
                 child: isLoading.value
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],

@@ -52,9 +52,7 @@ class TimeUntil extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch the shared ticker - all widgets update together
-    final tickerState = ref.watch(
-      sharedTickerProvider(const Duration(seconds: 1)),
-    );
+    final tickerState = ref.watch(sharedTickerProvider(const Duration(seconds: 1)));
     final now = tickerState.value ?? DateTime.now();
     final difference = _calculateDifference(now);
     final timeString = _secondsToTimeString(difference);

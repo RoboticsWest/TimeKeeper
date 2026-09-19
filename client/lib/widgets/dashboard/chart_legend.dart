@@ -32,16 +32,10 @@ class ChartLegend extends StatelessWidget {
               Container(
                 width: 10,
                 height: 10,
-                decoration: BoxDecoration(
-                  color: entry.color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                decoration: BoxDecoration(color: entry.color, borderRadius: BorderRadius.circular(2)),
               ),
               const SizedBox(width: 6),
-              Text(
-                entry.label,
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
-              ),
+              Text(entry.label, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11)),
             ],
           ),
       ],

@@ -48,18 +48,11 @@ class _LeaderboardTable extends StatelessWidget {
             children: [
               Icon(Icons.leaderboard, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
-              Text(
-                'Leaderboard',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Leaderboard', style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(width: 16),
               Text(
                 '${entries.length} members',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -82,9 +75,7 @@ class _LeaderboardTable extends StatelessWidget {
                 ? Center(
                     child: Text(
                       'No data yet',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   )
                 : AnimatedInfiniteVerticalList(
@@ -92,9 +83,7 @@ class _LeaderboardTable extends StatelessWidget {
                     children: List.generate(entries.length, (i) {
                       return Container(
                         height: 40,
-                        decoration: BoxDecoration(
-                          color: i % 2 == 0 ? evenColor : oddColor,
-                        ),
+                        decoration: BoxDecoration(color: i % 2 == 0 ? evenColor : oddColor),
                         child: _LeaderboardRow(rank: i + 1, entry: entries[i]),
                       );
                     }),
@@ -117,10 +106,7 @@ class _HeaderText extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         child: Text(
           text,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
     );
@@ -137,9 +123,7 @@ class _LeaderboardRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final member = entry.teamMember;
     final name = member.displayName ?? '${member.firstName} ${member.lastName}';
-    final memberType = member.memberType == TeamMemberType.student
-        ? 'Student'
-        : 'Mentor';
+    final memberType = member.memberType == TeamMemberType.student ? 'Student' : 'Mentor';
 
     return Row(
       children: [
@@ -162,10 +146,7 @@ class _LeaderboardRow extends StatelessWidget {
         Expanded(
           flex: 2,
           child: Center(
-            child: Text(
-              formatSecsAsHoursMinutes(entry.totalSecs),
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
+            child: Text(formatSecsAsHoursMinutes(entry.totalSecs), style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
         ),
       ],

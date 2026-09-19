@@ -53,8 +53,6 @@ class SnackBarDialog extends BaseDialog {
     final messenger = ScaffoldMessenger.of(context);
     // Clear any existing snackbars before showing new one
     messenger.clearSnackBars();
-    messenger.showSnackBar(
-      SnackBar(backgroundColor: color, content: Text(message)),
-    );
+    messenger.showSnackBar(SnackBar(backgroundColor: color, content: Text(message)));
   }
 }

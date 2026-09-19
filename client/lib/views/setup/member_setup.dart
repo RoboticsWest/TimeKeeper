@@ -23,9 +23,7 @@ class MemberSetupTab extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final showOvertime = useState(true);
     final quickPinEnabled = useState(false);
-    final selectedMemberTypes = useState<Set<TeamMemberType>>(
-      Set.from(TeamMemberType.values),
-    );
+    final selectedMemberTypes = useState<Set<TeamMemberType>>(Set.from(TeamMemberType.values));
 
     // Load current settings on mount
     useEffect(() {
@@ -86,9 +84,7 @@ class MemberSetupTab extends HookConsumerWidget {
           value: quickPinEnabled.value,
           onChanged: (enabled) async {
             quickPinEnabled.value = enabled;
-            final res = await ref
-                .read(settingsServiceProvider.notifier)
-                .updateGeneral(quickPinEnabled: enabled);
+            final res = await ref.read(settingsServiceProvider.notifier).updateGeneral(quickPinEnabled: enabled);
             if (!res.success) {
               quickPinEnabled.value = !enabled;
               if (context.mounted) {
@@ -107,9 +103,7 @@ class MemberSetupTab extends HookConsumerWidget {
             if (file.bytes != null) {
               ConfirmDialog.warn(
                 title: 'Confirm Upload',
-                message: const Text(
-                  'Uploading students can have impacts on existing data integrity',
-                ),
+                message: const Text('Uploading students can have impacts on existing data integrity'),
                 onConfirmAsyncApi: () async {
                   return await uploadStudentCsv(file.bytes!);
                 },
@@ -129,9 +123,7 @@ class MemberSetupTab extends HookConsumerWidget {
             if (file.bytes != null) {
               ConfirmDialog.warn(
                 title: 'Confirm Upload',
-                message: const Text(
-                  'Uploading mentors can have impacts on existing data integrity',
-                ),
+                message: const Text('Uploading mentors can have impacts on existing data integrity'),
                 onConfirmAsyncApi: () async {
                   return await uploadMentorCsv(file.bytes!);
                 },
@@ -171,17 +163,14 @@ class MemberSetupTab extends HookConsumerWidget {
         const SizedBox(height: 32),
         const Divider(),
         const SizedBox(height: 16),
-        Text(
-          'Leaderboard Configuration',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Leaderboard Configuration', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),
         Text(
           'Configure how the leaderboard calculates and displays member rankings. '
           'These settings also apply to the Discord !leaderboard command.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 16),
         SettingRow(
@@ -191,10 +180,7 @@ class MemberSetupTab extends HookConsumerWidget {
               'When disabled, overtime is combined into the total hours.',
           child: Row(
             children: [
-              Switch(
-                value: showOvertime.value,
-                onChanged: (value) => showOvertime.value = value,
-              ),
+              Switch(value: showOvertime.value, onChanged: (value) => showOvertime.value = value),
               const SizedBox(width: 8),
               Text(showOvertime.value ? 'Enabled' : 'Disabled'),
             ],
@@ -212,9 +198,7 @@ class MemberSetupTab extends HookConsumerWidget {
                 label: Text(memberTypeName(type)),
                 selected: isSelected,
                 onSelected: (selected) {
-                  final updated = Set<TeamMemberType>.from(
-                    selectedMemberTypes.value,
-                  );
+                  final updated = Set<TeamMemberType>.from(selectedMemberTypes.value);
                   if (selected) {
                     updated.add(type);
                   } else {

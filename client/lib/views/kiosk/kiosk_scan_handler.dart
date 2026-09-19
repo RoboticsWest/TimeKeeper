@@ -25,16 +25,11 @@ final _log = Logger();
 /// error ("Failed to parse \"UUID\": invalid length: expected length 32 for
 /// simple format, found 0"), which told the person at the kiosk nothing. Both
 /// the RFID and PIN paths stop here instead and name the actual problem.
-const String kNoDeviceLocationMessage =
-    'This device has no location set. Choose one in Settings before checking in.';
+const String kNoDeviceLocationMessage = 'This device has no location set. Choose one in Settings before checking in.';
 
 /// Handles a PCSC card scan by matching the UID against team members
 /// and checking them in/out.
-Future<void> handleKioskScan({
-  required String input,
-  required BuildContext context,
-  required WidgetRef ref,
-}) async {
+Future<void> handleKioskScan({required String input, required BuildContext context, required WidgetRef ref}) async {
   final trimmed = input.trim();
   if (trimmed.isEmpty) return;
 
@@ -44,19 +39,13 @@ Future<void> handleKioskScan({
   final match = _findMember(variants, teamMembers, rfidTags);
 
   if (match == null) {
-    _log.w(
-      'No member matched scan: $input (tried ${variants.length} variants)',
-    );
+    _log.w('No member matched scan: $input (tried ${variants.length} variants)');
     if (context.mounted) {
       final isAdmin = ref.read(isAdminProvider);
       if (isAdmin) {
         showLinkCardDialog(context, ref, trimmed);
       } else {
-        ToastOverlay.error(
-          context,
-          title: 'Unrecognized',
-          message: 'Unrecognized card "$trimmed", contact admin.',
-        );
+        ToastOverlay.error(context, title: 'Unrecognized', message: 'Unrecognized card "$trimmed", contact admin.');
       }
     }
     return;
@@ -91,11 +80,7 @@ Future<void> handleKioskScan({
       final secs = remaining.inSeconds % 60;
       final timeLeft = mins > 0 ? '$mins min ${secs}s' : '${secs}s';
       if (context.mounted) {
-        ToastOverlay.warn(
-          context,
-          title: 'Too Soon',
-          message: '$name\nPlease wait $timeLeft before scanning again.',
-        );
+        ToastOverlay.warn(context, title: 'Too Soon', message: '$name\nPlease wait $timeLeft before scanning again.');
       }
       return;
     }
@@ -104,11 +89,7 @@ Future<void> handleKioskScan({
   final currentLocation = ref.read(currentLocationProvider);
   if (currentLocation == null || currentLocation.isEmpty) {
     if (context.mounted) {
-      ToastOverlay.error(
-        context,
-        title: 'No location set',
-        message: kNoDeviceLocationMessage,
-      );
+      ToastOverlay.error(context, title: 'No location set', message: kNoDeviceLocationMessage);
     }
     return;
   }
@@ -124,41 +105,21 @@ Future<void> handleKioskScan({
 /// Shared by the RFID and PIN paths so both report success, "no active
 /// session" and failure identically — only the way the member was identified
 /// differs between them.
-void showCheckInOutResult({
-  required BuildContext context,
-  required String? name,
-  required ApiResult<bool> result,
-}) {
-  final timeStr = formatTime(DateTime.now().toUtc());
+void showCheckInOutResult({required BuildContext context, required String? name, required ApiResult<bool> result}) {
+  final timeStr = formatTime(DateTime.now());
 
   switch (result) {
     case ApiSuccess(data: final checkedIn):
       if (checkedIn) {
-        ToastOverlay.success(
-          context,
-          title: 'Checked In',
-          message: '$name\n$timeStr',
-        );
+        ToastOverlay.success(context, title: 'Checked In', message: '$name\n$timeStr');
       } else {
-        ToastOverlay.info(
-          context,
-          title: 'Checked Out',
-          message: '$name\n$timeStr',
-        );
+        ToastOverlay.info(context, title: 'Checked Out', message: '$name\n$timeStr');
       }
     case ApiFailure(userMessage: final msg):
       if (msg.toLowerCase().contains('no active session')) {
-        ToastOverlay.info(
-          context,
-          title: 'No Session',
-          message: '$name\nNo active session at this location.',
-        );
+        ToastOverlay.info(context, title: 'No Session', message: '$name\nNo active session at this location.');
       } else {
-        ToastOverlay.error(
-          context,
-          title: 'Check In Failed',
-          message: '$name\n$msg',
-        );
+        ToastOverlay.error(context, title: 'Check In Failed', message: '$name\n$msg');
       }
   }
 }
@@ -185,9 +146,7 @@ Set<String> _buildUidVariants(String input) {
   final hexBytes = _parseHexBytes(normalized);
 
   if (hexBytes != null && hexBytes.isNotEmpty) {
-    final hexParts = hexBytes
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .toList();
+    final hexParts = hexBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).toList();
 
     variants.add(hexParts.join(':')); // 89:02:9e:40
     variants.add(hexParts.join(' ')); // 89 02 9e 40
@@ -217,17 +176,13 @@ Set<String> _buildUidVariants(String input) {
     final bytes = _bigIntToBytes(asInt);
     if (bytes.isNotEmpty) {
       // Big-endian interpretation
-      final hexBe = bytes
-          .map((b) => b.toRadixString(16).padLeft(2, '0'))
-          .toList();
+      final hexBe = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).toList();
       variants.add(hexBe.join(':'));
       variants.add(hexBe.join(' '));
       variants.add(hexBe.join());
 
       // Little-endian (reversed) interpretation
-      final hexLe = bytes.reversed
-          .map((b) => b.toRadixString(16).padLeft(2, '0'))
-          .toList();
+      final hexLe = bytes.reversed.map((b) => b.toRadixString(16).padLeft(2, '0')).toList();
       variants.add(hexLe.join(':'));
       variants.add(hexLe.join(' '));
       variants.add(hexLe.join());
@@ -255,9 +210,7 @@ List<int>? _parseHexBytes(String input) {
   }
 
   // No separator — try as continuous hex (must be even length)
-  if (input.length.isEven &&
-      input.length >= 4 &&
-      RegExp(r'^[0-9a-f]+$').hasMatch(input)) {
+  if (input.length.isEven && input.length >= 4 && RegExp(r'^[0-9a-f]+$').hasMatch(input)) {
     final bytes = <int>[];
     for (var i = 0; i < input.length; i += 2) {
       bytes.add(int.parse(input.substring(i, i + 2), radix: 16));

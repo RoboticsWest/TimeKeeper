@@ -19,9 +19,7 @@ final class TeamMemberChangesProvider
           ChangeEvent<TeamMember>,
           Stream<ChangeEvent<TeamMember>>
         >
-    with
-        $FutureModifier<ChangeEvent<TeamMember>>,
-        $StreamProvider<ChangeEvent<TeamMember>> {
+    with $FutureModifier<ChangeEvent<TeamMember>>, $StreamProvider<ChangeEvent<TeamMember>> {
   TeamMemberChangesProvider._()
     : super(
         from: null,
@@ -38,9 +36,8 @@ final class TeamMemberChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<TeamMember>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<TeamMember>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<TeamMember>> create(Ref ref) {
@@ -53,8 +50,7 @@ String _$teamMemberChangesHash() => r'5aae68de4ba20618ad8a9eebd81844f72a62297e';
 @ProviderFor(TeamMembers)
 final teamMembersProvider = TeamMembersProvider._();
 
-final class TeamMembersProvider
-    extends $NotifierProvider<TeamMembers, Map<String, TeamMember>> {
+final class TeamMembersProvider extends $NotifierProvider<TeamMembers, Map<String, TeamMember>> {
   TeamMembersProvider._()
     : super(
         from: null,
@@ -75,22 +71,18 @@ final class TeamMembersProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, TeamMember> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, TeamMember>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, TeamMember>>(value));
   }
 }
 
-String _$teamMembersHash() => r'b3edc969f4620e74ff52d5ffc2657a7b66722b0b';
+String _$teamMembersHash() => r'd61cd4781dac0e0e389c397c42a6ef1dfbf5b300';
 
 abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
   Map<String, TeamMember> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref as $Ref<Map<String, TeamMember>, Map<String, TeamMember>>;
+    final ref = this.ref as $Ref<Map<String, TeamMember>, Map<String, TeamMember>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -106,9 +98,7 @@ abstract class _$TeamMembers extends $Notifier<Map<String, TeamMember>> {
 @ProviderFor(teamMembersSync)
 final teamMembersSyncProvider = TeamMembersSyncProvider._();
 
-final class TeamMembersSyncProvider
-    extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class TeamMembersSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   TeamMembersSyncProvider._()
     : super(
         from: null,
@@ -125,8 +115,7 @@ final class TeamMembersSyncProvider
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -135,25 +124,17 @@ final class TeamMembersSyncProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$teamMembersSyncHash() => r'e68052e99354dad8be3b5543bb0cbf2e35ef593e';
+String _$teamMembersSyncHash() => r'1b0415c9e359a3d2a4fc6e3994534065a2d82bf1';
 
 @ProviderFor(studentTeamMembers)
 final studentTeamMembersProvider = StudentTeamMembersProvider._();
 
 final class StudentTeamMembersProvider
-    extends
-        $FunctionalProvider<
-          Map<String, TeamMember>,
-          Map<String, TeamMember>,
-          Map<String, TeamMember>
-        >
+    extends $FunctionalProvider<Map<String, TeamMember>, Map<String, TeamMember>, Map<String, TeamMember>>
     with $Provider<Map<String, TeamMember>> {
   StudentTeamMembersProvider._()
     : super(
@@ -171,9 +152,7 @@ final class StudentTeamMembersProvider
 
   @$internal
   @override
-  $ProviderElement<Map<String, TeamMember>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<Map<String, TeamMember>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   Map<String, TeamMember> create(Ref ref) {
@@ -182,26 +161,17 @@ final class StudentTeamMembersProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, TeamMember> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, TeamMember>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, TeamMember>>(value));
   }
 }
 
-String _$studentTeamMembersHash() =>
-    r'446391af205ad0b6eac2fc93dbb9e1c002179043';
+String _$studentTeamMembersHash() => r'446391af205ad0b6eac2fc93dbb9e1c002179043';
 
 @ProviderFor(mentorTeamMembers)
 final mentorTeamMembersProvider = MentorTeamMembersProvider._();
 
 final class MentorTeamMembersProvider
-    extends
-        $FunctionalProvider<
-          Map<String, TeamMember>,
-          Map<String, TeamMember>,
-          Map<String, TeamMember>
-        >
+    extends $FunctionalProvider<Map<String, TeamMember>, Map<String, TeamMember>, Map<String, TeamMember>>
     with $Provider<Map<String, TeamMember>> {
   MentorTeamMembersProvider._()
     : super(
@@ -219,9 +189,7 @@ final class MentorTeamMembersProvider
 
   @$internal
   @override
-  $ProviderElement<Map<String, TeamMember>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<Map<String, TeamMember>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   Map<String, TeamMember> create(Ref ref) {
@@ -230,10 +198,7 @@ final class MentorTeamMembersProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, TeamMember> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, TeamMember>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, TeamMember>>(value));
   }
 }
 

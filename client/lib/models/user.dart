@@ -16,9 +16,5 @@ class User {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'username': username,
-    'roles': roles.map((r) => r.toJson()).toList(),
-  };
+  Map<String, dynamic> toJson() => {'id': id, 'username': username, 'roles': roles.map((r) => r.toJson()).toList()};
 }

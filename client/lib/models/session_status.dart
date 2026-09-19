@@ -45,10 +45,7 @@ String statusLabel(SessionStatus status) {
 }
 
 /// Sort: current/overtime first, then upcoming (soonest first), then finished (newest first).
-int compareSessionEntries(
-  MapEntry<String, Session> a,
-  MapEntry<String, Session> b,
-) {
+int compareSessionEntries(MapEntry<String, Session> a, MapEntry<String, Session> b) {
   final aStatus = getSessionStatus(a.value);
   final bStatus = getSessionStatus(b.value);
 

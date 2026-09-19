@@ -19,9 +19,7 @@ final class SessionRsvpChangesProvider
           ChangeEvent<SessionRsvp>,
           Stream<ChangeEvent<SessionRsvp>>
         >
-    with
-        $FutureModifier<ChangeEvent<SessionRsvp>>,
-        $StreamProvider<ChangeEvent<SessionRsvp>> {
+    with $FutureModifier<ChangeEvent<SessionRsvp>>, $StreamProvider<ChangeEvent<SessionRsvp>> {
   SessionRsvpChangesProvider._()
     : super(
         from: null,
@@ -38,9 +36,8 @@ final class SessionRsvpChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<SessionRsvp>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<SessionRsvp>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<SessionRsvp>> create(Ref ref) {
@@ -48,14 +45,12 @@ final class SessionRsvpChangesProvider
   }
 }
 
-String _$sessionRsvpChangesHash() =>
-    r'0477c1e0a5132d01ab7046700ae502f33e8e6e54';
+String _$sessionRsvpChangesHash() => r'0477c1e0a5132d01ab7046700ae502f33e8e6e54';
 
 @ProviderFor(SessionRsvps)
 final sessionRsvpsProvider = SessionRsvpsProvider._();
 
-final class SessionRsvpsProvider
-    extends $NotifierProvider<SessionRsvps, Map<String, SessionRsvp>> {
+final class SessionRsvpsProvider extends $NotifierProvider<SessionRsvps, Map<String, SessionRsvp>> {
   SessionRsvpsProvider._()
     : super(
         from: null,
@@ -76,22 +71,18 @@ final class SessionRsvpsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, SessionRsvp> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, SessionRsvp>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, SessionRsvp>>(value));
   }
 }
 
-String _$sessionRsvpsHash() => r'7c740a3ba3d0da2c571f415557c7b99979f7f1c3';
+String _$sessionRsvpsHash() => r'e8319acebc2c5db35d587e991972f1cdece67912';
 
 abstract class _$SessionRsvps extends $Notifier<Map<String, SessionRsvp>> {
   Map<String, SessionRsvp> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref as $Ref<Map<String, SessionRsvp>, Map<String, SessionRsvp>>;
+    final ref = this.ref as $Ref<Map<String, SessionRsvp>, Map<String, SessionRsvp>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -107,9 +98,7 @@ abstract class _$SessionRsvps extends $Notifier<Map<String, SessionRsvp>> {
 @ProviderFor(sessionRsvpsSync)
 final sessionRsvpsSyncProvider = SessionRsvpsSyncProvider._();
 
-final class SessionRsvpsSyncProvider
-    extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class SessionRsvpsSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   SessionRsvpsSyncProvider._()
     : super(
         from: null,
@@ -126,8 +115,7 @@ final class SessionRsvpsSyncProvider
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -136,11 +124,8 @@ final class SessionRsvpsSyncProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$sessionRsvpsSyncHash() => r'888a8773566662b79d563f297f823df61016e4ee';
+String _$sessionRsvpsSyncHash() => r'3a959d7161a882246aec39dc20763781d55a72f5';

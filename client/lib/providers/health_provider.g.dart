@@ -15,8 +15,7 @@ final isConnectedProvider = IsConnectedProvider._();
 
 /// Polls the plain `/health` HTTP endpoint (not part of the GraphQL API) to report connectivity.
 
-final class IsConnectedProvider
-    extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
+final class IsConnectedProvider extends $FunctionalProvider<AsyncValue<bool>, bool, Stream<bool>>
     with $FutureModifier<bool>, $StreamProvider<bool> {
   /// Polls the plain `/health` HTTP endpoint (not part of the GraphQL API) to report connectivity.
   IsConnectedProvider._()
@@ -35,8 +34,7 @@ final class IsConnectedProvider
 
   @$internal
   @override
-  $StreamProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $StreamProviderElement(pointer);
+  $StreamProviderElement<bool> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
 
   @override
   Stream<bool> create(Ref ref) {

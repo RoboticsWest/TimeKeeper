@@ -85,14 +85,18 @@ async fn leaderboard(args: &str, deps: &DiscordDeps) -> CreateEmbed {
     }
   };
 
-  let entries = match deps.statistics.get_leaderboard().await {
+  // Pass the requested type as an override rather than filtering afterwards: the configured
+  // `leaderboard_member_types` is only the *default*, and intersecting the two meant
+  // `!leaderboard mentors` returned nothing whenever the default was students-only.
+  let member_type_override = member_type_filter.map(|t| vec![t.to_string()]);
+
+  let entries = match deps.statistics.get_leaderboard(member_type_override).await {
     Ok(e) => e,
     Err(e) => return embeds::error(&format!("Error computing leaderboard: {e}")),
   };
 
   let rows: Vec<embeds::LeaderboardRow> = entries
     .into_iter()
-    .filter(|e| member_type_filter.is_none_or(|t| e.team_member.member_type == t))
     .take(15)
     .map(|entry| embeds::LeaderboardRow {
       name: member_name(&entry.team_member).to_string(),
@@ -102,7 +106,12 @@ async fn leaderboard(args: &str, deps: &DiscordDeps) -> CreateEmbed {
     .collect();
 
   if rows.is_empty() {
-    return embeds::info("Leaderboard", "No attendance data yet.");
+    let scope = match member_type_filter {
+      Some("student") => "No students have any attendance recorded yet.",
+      Some("mentor") => "No mentors have any attendance recorded yet.",
+      _ => "No attendance data yet.",
+    };
+    return embeds::info("Leaderboard", scope);
   }
 
   embeds::leaderboard(&rows, subtitle)
@@ -166,27 +175,40 @@ async fn checked_in(deps: &DiscordDeps) -> CreateEmbed {
     Err(e) => return embeds::error(&format!("Error loading attendance: {e}")),
   };
 
-  let active_session_ids: Vec<_> = sessions.iter().filter(|s| !s.finished).map(|s| s.id).collect();
-  if active_session_ids.is_empty() {
+  let locations = match deps.locations.get_all().await {
+    Ok(l) => l,
+    Err(e) => return embeds::error(&format!("Error loading locations: {e}")),
+  };
+
+  let active: Vec<_> = sessions.iter().filter(|s| !s.finished).collect();
+  if active.is_empty() {
     return embeds::info("Checked in", "No active session right now.");
   }
 
-  let mut checked_in_names: Vec<String> = Vec::new();
+  let mut rows: Vec<embeds::CheckedInRow> = Vec::new();
   for ms in &member_sessions {
-    if !active_session_ids.contains(&ms.session_id) || ms.check_out_time.is_some() {
+    if ms.check_out_time.is_some() {
       continue;
     }
-    if let Some(member) = members.iter().find(|m| m.id == ms.team_member_id) {
-      checked_in_names.push(member_name(member).to_string());
-    }
+    let Some(session) = active.iter().find(|s| s.id == ms.session_id) else { continue };
+    let Some(member) = members.iter().find(|m| m.id == ms.team_member_id) else { continue };
+    let location =
+      locations.iter().find(|l| l.id == session.location_id).map_or("Unknown", |l| l.location.as_str()).to_string();
+
+    rows.push(embeds::CheckedInRow {
+      name: member_name(member).to_string(),
+      location,
+      since_secs: ms.check_in_time.timestamp(),
+    });
   }
 
-  if checked_in_names.is_empty() {
+  if rows.is_empty() {
     return embeds::info("Checked in", "No one is currently checked in.");
   }
 
-  checked_in_names.sort();
-  embeds::checked_in(&checked_in_names)
+  // Longest-present first within each location, so whoever is closest to overtime reads first.
+  rows.sort_by(|a, b| a.location.cmp(&b.location).then(a.since_secs.cmp(&b.since_secs)));
+  embeds::checked_in(&rows)
 }
 
 async fn locations(deps: &DiscordDeps) -> CreateEmbed {

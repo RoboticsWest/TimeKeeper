@@ -16,29 +16,19 @@ class BaseAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
   List<Widget> _actions() {
     if (!showActions) return [];
-    return [
-      BaseAppBarThemeAction(),
-      SettingsAction(),
-      BaseAppBarLoginAction(state: state),
-    ];
+    return [BaseAppBarThemeAction(), SettingsAction(), BaseAppBarLoginAction(state: state)];
   }
 
   Widget? _title(bool isConnected, WidgetRef ref) {
     if (!isConnected) {
-      return Text(
-        'Disconnected',
-        style: TextStyle(fontWeight: FontWeight.bold),
-      );
+      return Text('Disconnected', style: TextStyle(fontWeight: FontWeight.bold));
     }
 
     final routeName = state.topRoute?.name;
     if (routeName != null) {
       for (final route in AppRoute.values) {
         if (route.name == routeName) {
-          return Text(
-            route.name.toUpperCase(),
-            style: TextStyle(fontWeight: FontWeight.bold),
-          );
+          return Text(route.name.toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold));
         }
       }
     }
@@ -52,11 +42,7 @@ class BaseAppBar extends ConsumerWidget implements PreferredSizeWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (!isHomePage)
-          IconButton(
-            icon: Icon(Icons.home),
-            onPressed: () => AppRoute.kiosk.go(context),
-          ),
+        if (!isHomePage) IconButton(icon: Icon(Icons.home), onPressed: () => AppRoute.kiosk.go(context)),
         IconButton(
           icon: Icon(Icons.leaderboard),
           tooltip: 'Leaderboard',
@@ -82,14 +68,8 @@ class BaseAppBar extends ConsumerWidget implements PreferredSizeWidget {
       foregroundColor: isConnected ? null : Colors.white,
       titleTextStyle: isConnected
           ? null
-          : const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-      iconTheme: isConnected
-          ? null
-          : const IconThemeData(color: Colors.white, size: 20),
+          : const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+      iconTheme: isConnected ? null : const IconThemeData(color: Colors.white, size: 20),
       leadingWidth: 120,
       leading: _leading(context),
       title: _title(isConnected, ref),

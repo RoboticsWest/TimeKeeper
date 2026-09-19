@@ -74,11 +74,7 @@ class LockedButtonSetting extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: isUnlocked
-                  ? severityColor
-                  : Theme.of(context).colorScheme.outline,
-            ),
+            border: Border.all(color: isUnlocked ? severityColor : Theme.of(context).colorScheme.outline),
             borderRadius: BorderRadius.circular(4),
             color: isUnlocked ? containerColor.withValues(alpha: 0.5) : null,
           ),
@@ -86,17 +82,13 @@ class LockedButtonSetting extends StatelessWidget {
             children: [
               Icon(
                 isUnlocked ? Icons.lock_open : Icons.lock,
-                color: isUnlocked
-                    ? severityColor
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                color: isUnlocked ? severityColor : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
               Text(
                 isUnlocked ? _getUnlockedText() : 'Action locked for safety',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isUnlocked
-                      ? severityColor
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: isUnlocked ? severityColor : Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight: isUnlocked ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),

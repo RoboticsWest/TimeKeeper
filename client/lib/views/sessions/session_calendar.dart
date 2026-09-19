@@ -10,12 +10,7 @@ class SessionCalendar extends HookWidget {
   final DateTime? selectedDate;
   final void Function(DateTime date) onDateSelected;
 
-  const SessionCalendar({
-    super.key,
-    required this.sessions,
-    required this.selectedDate,
-    required this.onDateSelected,
-  });
+  const SessionCalendar({super.key, required this.sessions, required this.selectedDate, required this.onDateSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +40,7 @@ class SessionCalendar extends HookWidget {
         firstDay: DateTime(2020),
         lastDay: DateTime(2030),
         focusedDay: focusedDay.value,
-        selectedDayPredicate: (day) =>
-            selectedDate != null && isSameDay(selectedDate, day),
+        selectedDayPredicate: (day) => selectedDate != null && isSameDay(selectedDate, day),
         eventLoader: getEventsForDay,
         startingDayOfWeek: StartingDayOfWeek.monday,
         calendarFormat: CalendarFormat.month,
@@ -63,17 +57,9 @@ class SessionCalendar extends HookWidget {
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
           titleCentered: true,
-          titleTextStyle: theme.textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-          leftChevronIcon: Icon(
-            Icons.chevron_left,
-            color: theme.colorScheme.onSurface,
-          ),
-          rightChevronIcon: Icon(
-            Icons.chevron_right,
-            color: theme.colorScheme.onSurface,
-          ),
+          titleTextStyle: theme.textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+          leftChevronIcon: Icon(Icons.chevron_left, color: theme.colorScheme.onSurface),
+          rightChevronIcon: Icon(Icons.chevron_right, color: theme.colorScheme.onSurface),
         ),
         daysOfWeekStyle: DaysOfWeekStyle(
           weekdayStyle: theme.textTheme.bodySmall!.copyWith(
@@ -87,22 +73,10 @@ class SessionCalendar extends HookWidget {
         ),
         calendarStyle: CalendarStyle(
           outsideDaysVisible: false,
-          todayDecoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          todayTextStyle: TextStyle(
-            color: theme.colorScheme.onPrimaryContainer,
-            fontWeight: FontWeight.bold,
-          ),
-          selectedDecoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            shape: BoxShape.circle,
-          ),
-          selectedTextStyle: TextStyle(
-            color: theme.colorScheme.onPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          todayDecoration: BoxDecoration(color: theme.colorScheme.primaryContainer, shape: BoxShape.circle),
+          todayTextStyle: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+          selectedDecoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle),
+          selectedTextStyle: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold),
           markersMaxCount: 3,
           markerSize: 6,
           markersAlignment: Alignment.bottomCenter,
@@ -123,10 +97,7 @@ class SessionCalendar extends HookWidget {
                     width: 6,
                     height: 6,
                     margin: const EdgeInsets.symmetric(horizontal: 1),
-                    decoration: BoxDecoration(
-                      color: statusColor(status),
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: BoxDecoration(color: statusColor(status), shape: BoxShape.circle),
                   );
                 }).toList(),
               ),

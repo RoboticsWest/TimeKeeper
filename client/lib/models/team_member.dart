@@ -1,3 +1,9 @@
+/// Maximum quick PIN length.
+///
+/// Mirrors the `team_members_quick_pin_length` CHECK constraint (migration 0009) and the
+/// server-side validation, so the three agree.
+const kMaxQuickPinLength = 50;
+
 /// Matches the `team_members.member_type` CHECK constraint on the server ('student'/'mentor').
 enum TeamMemberType {
   student,

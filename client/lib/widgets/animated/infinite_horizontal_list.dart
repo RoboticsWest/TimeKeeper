@@ -29,25 +29,17 @@ class AnimatedInfiniteHorizontalList extends HookConsumerWidget {
         final availableWidth = constraints.maxWidth;
 
         if (children.isNotEmpty && availableWidth < _getChildrenTotalWidth()) {
-          return _InfiniteScrolling(
-            items: children,
-            childWidth: childWidth,
-            scrollSpeedMs: scrollSpeedMs,
-          );
+          return _InfiniteScrolling(items: children, childWidth: childWidth, scrollSpeedMs: scrollSpeedMs);
         } else {
           // Static normal list — fits on screen
           return ScrollConfiguration(
-            behavior: ScrollConfiguration.of(
-              context,
-            ).copyWith(scrollbars: false),
+            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
             child: CustomScrollView(
               scrollDirection: Axis.horizontal,
               slivers: [
                 SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    return RepaintBoundary(
-                      child: children.elementAtOrNull(index),
-                    );
+                    return RepaintBoundary(child: children.elementAtOrNull(index));
                   }, childCount: children.length),
                 ),
               ],
@@ -64,18 +56,12 @@ class _InfiniteScrolling extends HookWidget {
   final double childWidth;
   final int scrollSpeedMs;
 
-  const _InfiniteScrolling({
-    required this.items,
-    required this.childWidth,
-    required this.scrollSpeedMs,
-  });
+  const _InfiniteScrolling({required this.items, required this.childWidth, required this.scrollSpeedMs});
 
   @override
   Widget build(BuildContext context) {
     final totalWidth = items.length * childWidth;
-    final duration = Duration(
-      milliseconds: (items.isEmpty ? 1 : items.length) * scrollSpeedMs,
-    );
+    final duration = Duration(milliseconds: (items.isEmpty ? 1 : items.length) * scrollSpeedMs);
     final animationController = useAnimationController(duration: duration);
 
     useEffect(() {
@@ -109,10 +95,7 @@ class _InfiniteScrolling extends HookWidget {
                 animation: animationController,
                 builder: (context, child) {
                   final offset = animationController.value * totalWidth;
-                  return Transform.translate(
-                    offset: Offset(-offset, 0),
-                    child: child,
-                  );
+                  return Transform.translate(offset: Offset(-offset, 0), child: child);
                 },
                 child: row,
               ),

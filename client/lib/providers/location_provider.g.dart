@@ -13,15 +13,8 @@ part of 'location_provider.dart';
 final locationChangesProvider = LocationChangesProvider._();
 
 final class LocationChangesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<ChangeEvent<Location>>,
-          ChangeEvent<Location>,
-          Stream<ChangeEvent<Location>>
-        >
-    with
-        $FutureModifier<ChangeEvent<Location>>,
-        $StreamProvider<ChangeEvent<Location>> {
+    extends $FunctionalProvider<AsyncValue<ChangeEvent<Location>>, ChangeEvent<Location>, Stream<ChangeEvent<Location>>>
+    with $FutureModifier<ChangeEvent<Location>>, $StreamProvider<ChangeEvent<Location>> {
   LocationChangesProvider._()
     : super(
         from: null,
@@ -38,9 +31,8 @@ final class LocationChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<Location>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<Location>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<Location>> create(Ref ref) {
@@ -53,8 +45,7 @@ String _$locationChangesHash() => r'0088a00f2b2b46759654948bab508a46685af7b2';
 @ProviderFor(Locations)
 final locationsProvider = LocationsProvider._();
 
-final class LocationsProvider
-    extends $NotifierProvider<Locations, Map<String, Location>> {
+final class LocationsProvider extends $NotifierProvider<Locations, Map<String, Location>> {
   LocationsProvider._()
     : super(
         from: null,
@@ -75,14 +66,11 @@ final class LocationsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, Location> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, Location>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, Location>>(value));
   }
 }
 
-String _$locationsHash() => r'731d184b6192831b1d06f5049e5905607c61a627';
+String _$locationsHash() => r'2768ca7cf3e6fbb07754dc3cef8f90101ec130d5';
 
 abstract class _$Locations extends $Notifier<Map<String, Location>> {
   Map<String, Location> build();
@@ -111,8 +99,7 @@ final locationsSyncProvider = LocationsSyncProvider._();
 /// Bridges [locationChangesProvider] to [locationsProvider]. Views watch this to activate the
 /// live-update subscription.
 
-final class LocationsSyncProvider extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class LocationsSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   /// Bridges [locationChangesProvider] to [locationsProvider]. Views watch this to activate the
   /// live-update subscription.
   LocationsSyncProvider._()
@@ -131,8 +118,7 @@ final class LocationsSyncProvider extends $FunctionalProvider<void, void, void>
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -141,20 +127,16 @@ final class LocationsSyncProvider extends $FunctionalProvider<void, void, void>
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$locationsSyncHash() => r'a5a8da9846eab6c3010f9c34fbd8446af00400be';
+String _$locationsSyncHash() => r'e25edfd98ff06447a66d949e73a310f2fc6c1ea0';
 
 @ProviderFor(CurrentLocation)
 final currentLocationProvider = CurrentLocationProvider._();
 
-final class CurrentLocationProvider
-    extends $NotifierProvider<CurrentLocation, String?> {
+final class CurrentLocationProvider extends $NotifierProvider<CurrentLocation, String?> {
   CurrentLocationProvider._()
     : super(
         from: null,
@@ -175,10 +157,7 @@ final class CurrentLocationProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(String? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<String?>(value));
   }
 }
 
@@ -190,14 +169,7 @@ abstract class _$CurrentLocation extends $Notifier<String?> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<String?, String?>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<String?, String?>,
-              String?,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<String?, String?>, String?, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

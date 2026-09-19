@@ -19,9 +19,7 @@ final class NotificationChangesProvider
           ChangeEvent<Notification>,
           Stream<ChangeEvent<Notification>>
         >
-    with
-        $FutureModifier<ChangeEvent<Notification>>,
-        $StreamProvider<ChangeEvent<Notification>> {
+    with $FutureModifier<ChangeEvent<Notification>>, $StreamProvider<ChangeEvent<Notification>> {
   NotificationChangesProvider._()
     : super(
         from: null,
@@ -38,9 +36,8 @@ final class NotificationChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<Notification>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<Notification>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<Notification>> create(Ref ref) {
@@ -48,14 +45,12 @@ final class NotificationChangesProvider
   }
 }
 
-String _$notificationChangesHash() =>
-    r'9e4b757110d211d50c99959386aca8e6363bf630';
+String _$notificationChangesHash() => r'9e4b757110d211d50c99959386aca8e6363bf630';
 
 @ProviderFor(Notifications)
 final notificationsProvider = NotificationsProvider._();
 
-final class NotificationsProvider
-    extends $NotifierProvider<Notifications, Map<String, Notification>> {
+final class NotificationsProvider extends $NotifierProvider<Notifications, Map<String, Notification>> {
   NotificationsProvider._()
     : super(
         from: null,
@@ -76,22 +71,18 @@ final class NotificationsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, Notification> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, Notification>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, Notification>>(value));
   }
 }
 
-String _$notificationsHash() => r'ac2d971f8bc1eb177a0ab5012d0762ad3ba5732b';
+String _$notificationsHash() => r'bbfdaefe48f248cb006a18738e90c4b9d7da81a0';
 
 abstract class _$Notifications extends $Notifier<Map<String, Notification>> {
   Map<String, Notification> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref as $Ref<Map<String, Notification>, Map<String, Notification>>;
+    final ref = this.ref as $Ref<Map<String, Notification>, Map<String, Notification>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -107,9 +98,7 @@ abstract class _$Notifications extends $Notifier<Map<String, Notification>> {
 @ProviderFor(notificationsSync)
 final notificationsSyncProvider = NotificationsSyncProvider._();
 
-final class NotificationsSyncProvider
-    extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class NotificationsSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   NotificationsSyncProvider._()
     : super(
         from: null,
@@ -126,8 +115,7 @@ final class NotificationsSyncProvider
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -136,11 +124,8 @@ final class NotificationsSyncProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$notificationsSyncHash() => r'04feb325d012d16b44e6e733241774c9f6987f47';
+String _$notificationsSyncHash() => r'2e071382427c4c23aef5e5a32063e88501b6f9fc';

@@ -9,31 +9,17 @@ import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
-void showSessionDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  String? id,
-  Session? existingSession,
-}) {
+void showSessionDialog(BuildContext context, WidgetRef ref, {String? id, Session? existingSession}) {
   final isEdit = id != null;
 
   PopupDialog.info(
     title: isEdit ? 'Edit Session' : 'Create Session',
-    message: _SessionForm(
-      isEdit: isEdit,
-      sessionId: id,
-      existingSession: existingSession,
-    ),
+    message: _SessionForm(isEdit: isEdit, sessionId: id, existingSession: existingSession),
     actions: const [],
   ).show(context);
 }
 
-void showDeleteSessionDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  required String id,
-  required Session session,
-}) {
+void showDeleteSessionDialog(BuildContext context, WidgetRef ref, {required String id, required Session session}) {
   final start = session.startTime;
   final label = '${formatDate(start)} ${formatTime(start)}';
 
@@ -52,11 +38,7 @@ class _SessionForm extends HookConsumerWidget {
   final String? sessionId;
   final Session? existingSession;
 
-  const _SessionForm({
-    required this.isEdit,
-    this.sessionId,
-    this.existingSession,
-  });
+  const _SessionForm({required this.isEdit, this.sessionId, this.existingSession});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,15 +51,12 @@ class _SessionForm extends HookConsumerWidget {
     final startDate = useState(existingStart ?? now);
     final startTime = useState(TimeOfDay.fromDateTime(existingStart ?? now));
     final endDate = useState(existingEnd ?? now.add(const Duration(hours: 2)));
-    final endTime = useState(
-      TimeOfDay.fromDateTime(existingEnd ?? now.add(const Duration(hours: 2))),
-    );
+    final endTime = useState(TimeOfDay.fromDateTime(existingEnd ?? now.add(const Duration(hours: 2))));
     final selectedLocationId = useState<String?>(existingSession?.locationId);
     final finished = useState(existingSession?.finished ?? false);
     final isLoading = useState(false);
 
-    final locationEntries = locations.entries.toList()
-      ..sort((a, b) => a.value.location.compareTo(b.value.location));
+    final locationEntries = locations.entries.toList()..sort((a, b) => a.value.location.compareTo(b.value.location));
 
     // Default to first location if none selected
     if (selectedLocationId.value == null && locationEntries.isNotEmpty) {
@@ -96,19 +75,11 @@ class _SessionForm extends HookConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: _DatePickerField(
-                  label: 'Date',
-                  value: startDate.value,
-                  onChanged: (d) => startDate.value = d,
-                ),
+                child: _DatePickerField(label: 'Date', value: startDate.value, onChanged: (d) => startDate.value = d),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _TimePickerField(
-                  label: 'Time',
-                  value: startTime.value,
-                  onChanged: (t) => startTime.value = t,
-                ),
+                child: _TimePickerField(label: 'Time', value: startTime.value, onChanged: (t) => startTime.value = t),
               ),
             ],
           ),
@@ -120,19 +91,11 @@ class _SessionForm extends HookConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: _DatePickerField(
-                  label: 'Date',
-                  value: endDate.value,
-                  onChanged: (d) => endDate.value = d,
-                ),
+                child: _DatePickerField(label: 'Date', value: endDate.value, onChanged: (d) => endDate.value = d),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _TimePickerField(
-                  label: 'Time',
-                  value: endTime.value,
-                  onChanged: (t) => endTime.value = t,
-                ),
+                child: _TimePickerField(label: 'Time', value: endTime.value, onChanged: (t) => endTime.value = t),
               ),
             ],
           ),
@@ -145,12 +108,7 @@ class _SessionForm extends HookConsumerWidget {
             initialValue: selectedLocationId.value,
             decoration: const InputDecoration(border: OutlineInputBorder()),
             items: locationEntries
-                .map(
-                  (entry) => DropdownMenuItem(
-                    value: entry.key,
-                    child: Text(entry.value.location),
-                  ),
-                )
+                .map((entry) => DropdownMenuItem(value: entry.key, child: Text(entry.value.location)))
                 .toList(),
             onChanged: (value) => selectedLocationId.value = value,
           ),
@@ -173,9 +131,7 @@ class _SessionForm extends HookConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: isLoading.value
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                onPressed: isLoading.value ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
@@ -201,38 +157,39 @@ class _SessionForm extends HookConsumerWidget {
                           endTime.value.minute,
                         );
 
-                        if (endDt.isBefore(startDt) ||
-                            endDt.isAtSameMomentAs(startDt)) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'End time must be after start time',
-                              ),
-                            ),
-                          );
+                        if (endDt.isBefore(startDt) || endDt.isAtSameMomentAs(startDt)) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(const SnackBar(content: Text('End time must be after start time')));
                           return;
                         }
 
                         isLoading.value = true;
                         try {
                           final notifier = ref.read(sessionsProvider.notifier);
+
+                          // Creating a session inside its own reminder window would fire the
+                          // reminder immediately — the "@here Session tomorrow" message that
+                          // shows up seconds after an admin schedules something for this
+                          // afternoon. Ask before doing that rather than surprising the channel.
+                          var sendLateReminder = false;
+                          if (!isEdit) {
+                            final preview = await notifier.reminderPreview(startDt, endDt, locationId);
+                            if (preview != null && preview.hasLateReminder) {
+                              if (!context.mounted) return;
+                              sendLateReminder = await _confirmLateReminder(context, preview) ?? false;
+                            }
+                          }
+
                           final result = isEdit
-                              ? await notifier.update(
-                                  sessionId!,
-                                  startDt,
-                                  endDt,
-                                  locationId,
-                                  finished.value,
-                                )
-                              : await notifier.create(startDt, endDt, locationId);
+                              ? await notifier.update(sessionId!, startDt, endDt, locationId, finished.value)
+                              : await notifier.create(startDt, endDt, locationId, sendLateReminder: sendLateReminder);
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
                             if (result.success) {
                               SnackBarDialog.success(
-                                message: isEdit
-                                    ? 'Session updated successfully'
-                                    : 'Session created successfully',
+                                message: isEdit ? 'Session updated successfully' : 'Session created successfully',
                               ).show(context);
                             } else {
                               SnackBarDialog.fromApiResult(result: result).show(context);
@@ -243,11 +200,7 @@ class _SessionForm extends HookConsumerWidget {
                         }
                       },
                 child: isLoading.value
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],
@@ -258,16 +211,47 @@ class _SessionForm extends HookConsumerWidget {
   }
 }
 
+/// Asks whether a reminder whose lead time has already passed should still go out.
+///
+/// Returns true to send, false to skip, null if dismissed (treated as skip by the caller — the
+/// quieter default when the operator did not actually answer).
+Future<bool?> _confirmLateReminder(BuildContext context, SessionReminderPreview preview) {
+  final which = preview.lateReminders.join(', ');
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Send reminder now?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'This session starts ${preview.relativeDay}, which is already inside the '
+            'reminder window.',
+          ),
+          const SizedBox(height: 12),
+          Text('Creating it now would immediately send: $which.'),
+          const SizedBox(height: 12),
+          const Text(
+            'The session is created either way — this only decides whether the reminder '
+            'goes out.',
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("Don't send")),
+        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Send reminder')),
+      ],
+    ),
+  );
+}
+
 class _DatePickerField extends StatelessWidget {
   final String label;
   final DateTime value;
   final ValueChanged<DateTime> onChanged;
 
-  const _DatePickerField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
+  const _DatePickerField({required this.label, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -298,20 +282,13 @@ class _TimePickerField extends StatelessWidget {
   final TimeOfDay value;
   final ValueChanged<TimeOfDay> onChanged;
 
-  const _TimePickerField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
+  const _TimePickerField({required this.label, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () async {
-        final picked = await showTimePicker(
-          context: context,
-          initialTime: value,
-        );
+        final picked = await showTimePicker(context: context, initialTime: value);
         if (picked != null) onChanged(picked);
       },
       child: InputDecorator(

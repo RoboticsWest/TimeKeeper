@@ -17,22 +17,18 @@ final sharedTickerProvider = SharedTickerFamily._();
 /// Shared ticker that emits the current DateTime at a configurable interval.
 /// Multiple widgets using the same interval will share the same ticker.
 
-final class SharedTickerProvider
-    extends
-        $FunctionalProvider<AsyncValue<DateTime>, DateTime, Stream<DateTime>>
+final class SharedTickerProvider extends $FunctionalProvider<AsyncValue<DateTime>, DateTime, Stream<DateTime>>
     with $FutureModifier<DateTime>, $StreamProvider<DateTime> {
   /// Shared ticker that emits the current DateTime at a configurable interval.
   /// Multiple widgets using the same interval will share the same ticker.
-  SharedTickerProvider._({
-    required SharedTickerFamily super.from,
-    required Duration super.argument,
-  }) : super(
-         retry: null,
-         name: r'sharedTickerProvider',
-         isAutoDispose: false,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  SharedTickerProvider._({required SharedTickerFamily super.from, required Duration super.argument})
+    : super(
+        retry: null,
+        name: r'sharedTickerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$sharedTickerHash();
@@ -46,8 +42,7 @@ final class SharedTickerProvider
 
   @$internal
   @override
-  $StreamProviderElement<DateTime> $createElement($ProviderPointer pointer) =>
-      $StreamProviderElement(pointer);
+  $StreamProviderElement<DateTime> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
 
   @override
   Stream<DateTime> create(Ref ref) {
@@ -71,8 +66,7 @@ String _$sharedTickerHash() => r'322b78d48060be660a5bc23f7a52707ea3ffffe6';
 /// Shared ticker that emits the current DateTime at a configurable interval.
 /// Multiple widgets using the same interval will share the same ticker.
 
-final class SharedTickerFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<DateTime>, Duration> {
+final class SharedTickerFamily extends $Family with $FunctionalFamilyOverride<Stream<DateTime>, Duration> {
   SharedTickerFamily._()
     : super(
         retry: null,
@@ -85,8 +79,7 @@ final class SharedTickerFamily extends $Family
   /// Shared ticker that emits the current DateTime at a configurable interval.
   /// Multiple widgets using the same interval will share the same ticker.
 
-  SharedTickerProvider call(Duration interval) =>
-      SharedTickerProvider._(argument: interval, from: this);
+  SharedTickerProvider call(Duration interval) => SharedTickerProvider._(argument: interval, from: this);
 
   @override
   String toString() => r'sharedTickerProvider';

@@ -142,10 +142,7 @@ class _DeltaChip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: kBorderRadiusRow,
-      ),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: kBorderRadiusRow),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -8,12 +8,7 @@ class TeamMemberRow extends StatelessWidget {
   final Location location;
   final DateTime timeIn;
 
-  const TeamMemberRow({
-    super.key,
-    required this.teamMember,
-    required this.location,
-    required this.timeIn,
-  });
+  const TeamMemberRow({super.key, required this.teamMember, required this.location, required this.timeIn});
 
   @override
   Widget build(BuildContext context) {

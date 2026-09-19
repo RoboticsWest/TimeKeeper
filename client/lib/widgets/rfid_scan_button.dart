@@ -48,11 +48,7 @@ class RfidScanButton extends HookWidget {
     if (listening.value) {
       return OutlinedButton.icon(
         onPressed: stopListening,
-        icon: const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        icon: const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
         label: const Text('Waiting for scan...'),
       );
     }

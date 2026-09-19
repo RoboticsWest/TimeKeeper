@@ -6,13 +6,14 @@ use crate::domains::rfid_tag::{RfidTagMutation, RfidTagQuery, RfidTagSubscriptio
 use crate::domains::schedule::ScheduleMutation;
 use crate::domains::session::{SessionMutation, SessionQuery, SessionSubscription};
 use crate::domains::session_rsvp::{SessionRsvpQuery, SessionRsvpSubscription};
-use crate::domains::settings::{SettingsMutation, SettingsQuery};
+use crate::domains::settings::{SettingsMutation, SettingsQuery, SettingsSubscription};
 use crate::domains::statistics::StatisticsQuery;
 use crate::domains::team_member::{TeamMemberMutation, TeamMemberQuery, TeamMemberSubscription};
 use crate::domains::team_member_session::{
   TeamMemberSessionMutation, TeamMemberSessionQuery, TeamMemberSessionSubscription,
 };
 use crate::domains::user::{UserMutation, UserQuery, UserSubscription};
+use crate::version::VersionQuery;
 
 #[derive(MergedObject, Default)]
 pub struct QueryRoot(
@@ -26,6 +27,7 @@ pub struct QueryRoot(
   TeamMemberQuery,
   TeamMemberSessionQuery,
   UserQuery,
+  VersionQuery,
 );
 
 #[derive(MergedObject, Default)]
@@ -48,6 +50,7 @@ pub struct SubscriptionRoot(
   RfidTagSubscription,
   SessionSubscription,
   SessionRsvpSubscription,
+  SettingsSubscription,
   TeamMemberSubscription,
   TeamMemberSessionSubscription,
   UserSubscription,

@@ -9,79 +9,29 @@ class PopupDialog extends BaseDialog {
   final DialogType type;
   final List<Widget>? actions;
 
-  PopupDialog({
-    required this.title,
-    required this.message,
-    required this.type,
-    this.actions,
-  });
+  PopupDialog({required this.title, required this.message, required this.type, this.actions});
 
-  factory PopupDialog.info({
-    required String title,
-    required Widget message,
-    List<Widget>? actions,
-  }) {
-    return PopupDialog(
-      title: title,
-      message: message,
-      type: DialogType.info,
-      actions: actions,
-    );
+  factory PopupDialog.info({required String title, required Widget message, List<Widget>? actions}) {
+    return PopupDialog(title: title, message: message, type: DialogType.info, actions: actions);
   }
 
-  factory PopupDialog.success({
-    required String title,
-    required Widget message,
-    List<Widget>? actions,
-  }) {
-    return PopupDialog(
-      title: title,
-      message: message,
-      type: DialogType.success,
-      actions: actions,
-    );
+  factory PopupDialog.success({required String title, required Widget message, List<Widget>? actions}) {
+    return PopupDialog(title: title, message: message, type: DialogType.success, actions: actions);
   }
 
-  factory PopupDialog.error({
-    required String title,
-    required Widget message,
-    List<Widget>? actions,
-  }) {
-    return PopupDialog(
-      title: title,
-      message: message,
-      type: DialogType.error,
-      actions: actions,
-    );
+  factory PopupDialog.error({required String title, required Widget message, List<Widget>? actions}) {
+    return PopupDialog(title: title, message: message, type: DialogType.error, actions: actions);
   }
 
-  factory PopupDialog.warn({
-    required String title,
-    required Widget message,
-    List<Widget>? actions,
-  }) {
-    return PopupDialog(
-      title: title,
-      message: message,
-      type: DialogType.warn,
-      actions: actions,
-    );
+  factory PopupDialog.warn({required String title, required Widget message, List<Widget>? actions}) {
+    return PopupDialog(title: title, message: message, type: DialogType.warn, actions: actions);
   }
 
-  static PopupDialog fromApiResult({
-    required ApiCallResult result,
-    Widget? successMessage,
-  }) {
+  static PopupDialog fromApiResult({required ApiCallResult result, Widget? successMessage}) {
     if (result.success) {
-      return PopupDialog.success(
-        title: 'Success',
-        message: successMessage ?? const Text('Success'),
-      );
+      return PopupDialog.success(title: 'Success', message: successMessage ?? const Text('Success'));
     }
-    return PopupDialog.error(
-      title: 'Error',
-      message: Text('Failed: ${result.message}'),
-    );
+    return PopupDialog.error(title: 'Error', message: Text('Failed: ${result.message}'));
   }
 
   Color get _bannerColor {
@@ -104,10 +54,7 @@ class PopupDialog extends BaseDialog {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ],
     );
@@ -121,14 +68,9 @@ class PopupDialog extends BaseDialog {
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minWidth: 300,
-              maxWidth: double.infinity,
-            ),
+            constraints: const BoxConstraints(minWidth: 300, maxWidth: double.infinity),
             child: IntrinsicWidth(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -152,22 +94,14 @@ class PopupDialog extends BaseDialog {
                   if (actions != null && actions!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(right: 16, bottom: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: actions!,
-                      ),
+                      child: Row(mainAxisAlignment: MainAxisAlignment.end, children: actions!),
                     )
                   else if (actions == null)
                     Padding(
                       padding: const EdgeInsets.only(right: 16, bottom: 16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
+                        children: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK'))],
                       ),
                     ),
                 ],

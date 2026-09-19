@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use async_graphql::{Context, Error, ID, Object, Result, Subscription};
+use async_graphql::{Context, Error, ID, InputObject, Object, Result, Subscription};
 use futures_util::{Stream, StreamExt};
 use tokio_stream::wrappers::BroadcastStream;
 use uuid::Uuid;
@@ -8,14 +8,20 @@ use uuid::Uuid;
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
 use crate::events::{ChangeOperation, EVENT_BUS};
-use crate::gql_common::Change;
+use crate::gql_common::{Change, Page, page_bounds};
 
 use super::logic::TeamMemberLogic;
 use super::model::TeamMember;
+use super::repository::TeamMemberFilter;
 
 const RESOURCE: &str = "team_members";
 const TABLE: &str = "team_members";
 const VALID_MEMBER_TYPES: &[&str] = &["student", "mentor"];
+
+/// Matches the `team_members_quick_pin_length` CHECK constraint (migration 0009). Enforced here
+/// as well as in the database so an over-long PIN comes back as a readable message rather than
+/// a constraint-violation string.
+const MAX_QUICK_PIN_LEN: usize = 50;
 
 fn validate_member_type(value: &str) -> Result<()> {
   if VALID_MEMBER_TYPES.contains(&value) {
@@ -36,6 +42,19 @@ fn normalize_quick_pin(quick_pin: Option<String>) -> Option<String> {
   quick_pin.map(|pin| pin.trim().to_string()).filter(|pin| !pin.is_empty())
 }
 
+/// Rejects a PIN longer than the column allows.
+///
+/// Counts characters rather than bytes, matching Postgres' `char_length`, so a multi-byte PIN
+/// is measured the same way on both sides.
+fn validate_quick_pin(quick_pin: Option<&String>) -> Result<()> {
+  match quick_pin {
+    Some(pin) if pin.chars().count() > MAX_QUICK_PIN_LEN => {
+      Err(Error::new(format!("Quick PIN must be {MAX_QUICK_PIN_LEN} characters or fewer.")))
+    }
+    _ => Ok(()),
+  }
+}
+
 /// Turns the unique-index violation into a message an admin can act on.
 fn map_quick_pin_conflict(err: &anyhow::Error) -> Error {
   let text = err.to_string();
@@ -43,6 +62,30 @@ fn map_quick_pin_conflict(err: &anyhow::Error) -> Error {
     Error::new("That PIN is already in use by another team member.")
   } else {
     Error::new(text)
+  }
+}
+
+/// Narrows `teamMemberPage`. Every field is optional; an empty list means "no constraint".
+#[derive(InputObject, Default)]
+pub struct TeamMemberFilterInput {
+  /// Case-insensitive substring over first, last and display name.
+  pub search: Option<String>,
+  /// "student" / "mentor".
+  pub member_types: Option<Vec<String>>,
+  /// True for members with a linked Discord account, false for those without.
+  pub has_discord: Option<bool>,
+  /// True for members with a quick PIN set.
+  pub has_quick_pin: Option<bool>,
+}
+
+impl From<TeamMemberFilterInput> for TeamMemberFilter {
+  fn from(input: TeamMemberFilterInput) -> Self {
+    Self {
+      search: input.search,
+      member_types: input.member_types.unwrap_or_default(),
+      has_discord: input.has_discord,
+      has_quick_pin: input.has_quick_pin,
+    }
   }
 }
 
@@ -61,6 +104,24 @@ impl TeamMemberQuery {
       }
       None => Ok(logic.get_all().await?),
     }
+  }
+
+  /// One filtered, paged slice of team members, ordered by name.
+  ///
+  /// The roster is small enough to load whole today, but the filters belong in SQL either way:
+  /// the same query backs the search box, the type chips and the "unlinked Discord" view.
+  async fn team_member_page(
+    &self,
+    ctx: &Context<'_>,
+    filter: Option<TeamMemberFilterInput>,
+    offset: Option<i32>,
+    limit: Option<i32>,
+  ) -> Result<Page<TeamMember>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    let (limit, offset) = page_bounds(offset, limit);
+    let filter: TeamMemberFilter = filter.unwrap_or_default().into();
+    let (items, total) = logic(ctx)?.query_page(&filter, offset, limit).await?;
+    Ok(Page::new(items, total, offset, limit))
   }
 }
 
@@ -95,6 +156,7 @@ impl TeamMemberMutation {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     validate_member_type(&member_type)?;
     let quick_pin = normalize_quick_pin(quick_pin);
+    validate_quick_pin(quick_pin.as_ref())?;
     logic(ctx)?
       .add(
         &first_name,
@@ -128,6 +190,7 @@ impl TeamMemberMutation {
       return Err(Error::new("Team member not found"));
     }
     let quick_pin = normalize_quick_pin(quick_pin);
+    validate_quick_pin(quick_pin.as_ref())?;
     logic
       .update(
         id,

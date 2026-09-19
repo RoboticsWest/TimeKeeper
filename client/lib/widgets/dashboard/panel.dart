@@ -46,9 +46,7 @@ class DashboardPanel extends StatelessWidget {
         color: theme.colorScheme.surfaceContainerLowest,
         borderRadius: kBorderRadiusCard,
         border: Border.all(color: theme.dividerColor),
-        boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 6, offset: Offset(0, 3)),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 6, offset: Offset(0, 3))],
       ),
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       child: Column(
@@ -63,20 +61,13 @@ class DashboardPanel extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w700),
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (subtitle != null)
                       Text(
                         subtitle!,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
                         overflow: TextOverflow.ellipsis,
                       ),
                   ],
@@ -91,10 +82,7 @@ class DashboardPanel extends StatelessWidget {
                 ? Center(
                     child: Text(
                       emptyMessage,
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
                     ),
                   )
                 : child,

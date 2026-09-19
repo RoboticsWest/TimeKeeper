@@ -7,9 +7,7 @@ import 'package:time_keeper/utils/logger.dart';
 /// Wraps a GraphQL query/mutation call and returns a Result type instead of throwing exceptions.
 /// Callers pull whichever fields they need out of the returned JSON map themselves - no codegen,
 /// no generated response types.
-Future<ApiResult<Map<String, dynamic>>> callGraphQLEndpoint(
-  Future<QueryResult> Function() fn,
-) async {
+Future<ApiResult<Map<String, dynamic>>> callGraphQLEndpoint(Future<QueryResult> Function() fn) async {
   try {
     final result = await fn().timeout(const Duration(seconds: 15));
 

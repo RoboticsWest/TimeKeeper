@@ -24,8 +24,7 @@ final logoProvider = LogoNotifierProvider._();
 /// This is all that remains of the old "branding" concept — the
 /// server-configurable primary/secondary colors were removed in favour of the
 /// hand-authored theme, which needs no round-trip to render.
-final class LogoNotifierProvider
-    extends $NotifierProvider<LogoNotifier, Uint8List?> {
+final class LogoNotifierProvider extends $NotifierProvider<LogoNotifier, Uint8List?> {
   /// The server-configured logo, cached in memory and refreshed whenever the
   /// connection comes back up.
   ///
@@ -52,10 +51,7 @@ final class LogoNotifierProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Uint8List? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Uint8List?>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Uint8List?>(value));
   }
 }
 
@@ -75,13 +71,7 @@ abstract class _$LogoNotifier extends $Notifier<Uint8List?> {
   void runBuild() {
     final ref = this.ref as $Ref<Uint8List?, Uint8List?>;
     final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<Uint8List?, Uint8List?>,
-              Uint8List?,
-              Object?,
-              Object?
-            >;
+        ref.element as $ClassProviderElement<AnyNotifier<Uint8List?, Uint8List?>, Uint8List?, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

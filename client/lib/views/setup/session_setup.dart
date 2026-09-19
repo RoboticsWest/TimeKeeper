@@ -49,7 +49,8 @@ class SessionSetupTab extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final adminPasswordController = useTextEditingController();
-    final thresholdController = useTextEditingController();
+    final checkInWindowController = useTextEditingController();
+    final autoCheckoutController = useTextEditingController();
     final selectedTimezone = useState('UTC');
 
     // Load current settings on mount
@@ -57,8 +58,8 @@ class SessionSetupTab extends HookConsumerWidget {
       Future<void> loadSettings() async {
         final settings = await ref.read(settingsQueryProvider.future);
         if (settings != null) {
-          final hours = settings.nextSessionThresholdSecs / 3600;
-          thresholdController.text = hours.toString();
+          checkInWindowController.text = (settings.checkInWindowSecs / 3600).toString();
+          autoCheckoutController.text = (settings.autoCheckoutAfterSecs / 3600).toString();
           selectedTimezone.value = settings.timezone.isEmpty ? 'UTC' : settings.timezone;
         }
       }
@@ -94,9 +95,7 @@ class SessionSetupTab extends HookConsumerWidget {
           hintText: 'Enter password',
           obscureText: true,
           onUpdate: () async {
-            final res = await ref
-                .read(userServiceProvider.notifier)
-                .updateAdminPassword(adminPasswordController.text);
+            final res = await ref.read(userServiceProvider.notifier).updateAdminPassword(adminPasswordController.text);
 
             // Show error dialog if request failed
             if (context.mounted) {
@@ -106,24 +105,45 @@ class SessionSetupTab extends HookConsumerWidget {
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
-          label: 'Next Session Threshold (hours)',
+          label: 'Check-in Window (hours)',
           description:
-              'Time before a session starts to consider check-ins for the next session and auto-finish the current one',
-          controller: thresholdController,
+              'How early before a session starts — and how late after it ends — a kiosk scan still '
+              'checks someone in to that session',
+          controller: checkInWindowController,
           hintText: 'e.g. 4',
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-          ],
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
           onUpdate: () async {
-            final hours = double.tryParse(thresholdController.text);
+            final hours = double.tryParse(checkInWindowController.text);
             if (hours == null || hours <= 0) return;
-
-            final secs = (hours * 3600).round();
 
             final res = await ref
                 .read(settingsServiceProvider.notifier)
-                .updateGeneral(nextSessionThresholdSecs: secs);
+                .updateGeneral(checkInWindowSecs: (hours * 3600).round());
+
+            if (context.mounted) {
+              PopupDialog.fromApiResult(result: res).show(context);
+            }
+          },
+        ),
+        const SizedBox(height: 24),
+        TextFieldSetting(
+          label: 'Auto Check-out After (hours)',
+          description:
+              'How long after a session was scheduled to end before anyone still signed in is '
+              'checked out automatically. Members are also checked out as soon as the next '
+              'session at that location starts.',
+          controller: autoCheckoutController,
+          hintText: 'e.g. 24',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
+          onUpdate: () async {
+            final hours = double.tryParse(autoCheckoutController.text);
+            if (hours == null || hours <= 0) return;
+
+            final res = await ref
+                .read(settingsServiceProvider.notifier)
+                .updateGeneral(autoCheckoutAfterSecs: (hours * 3600).round());
 
             if (context.mounted) {
               PopupDialog.fromApiResult(result: res).show(context);
@@ -141,16 +161,9 @@ class SessionSetupTab extends HookConsumerWidget {
               Expanded(
                 child: DropdownButtonFormField<String>(
                   initialValue: selectedTimezone.value,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(border: OutlineInputBorder()),
                   items: _timezones
-                      .map(
-                        (tz) => DropdownMenuItem(
-                          value: tz,
-                          child: Text(tz == 'UTC' ? 'UTC' : 'UTC$tz'),
-                        ),
-                      )
+                      .map((tz) => DropdownMenuItem(value: tz, child: Text(tz == 'UTC' ? 'UTC' : 'UTC$tz')))
                       .toList(),
                   onChanged: (value) {
                     if (value != null) {
@@ -178,9 +191,7 @@ class SessionSetupTab extends HookConsumerWidget {
             if (file.bytes != null) {
               ConfirmDialog.warn(
                 title: 'Confirm Upload',
-                message: const Text(
-                  'Uploading a schedule can have impacts on existing data integrity',
-                ),
+                message: const Text('Uploading a schedule can have impacts on existing data integrity'),
                 onConfirmAsyncApi: () async {
                   return await uploadCsvSchedule(file.bytes!);
                 },
@@ -200,9 +211,7 @@ class SessionSetupTab extends HookConsumerWidget {
             if (file.bytes != null) {
               ConfirmDialog.warn(
                 title: 'Confirm Upload',
-                message: const Text(
-                  'Uploading a schedule can have impacts on existing data integrity',
-                ),
+                message: const Text('Uploading a schedule can have impacts on existing data integrity'),
                 onConfirmAsyncApi: () async {
                   return await uploadIcsSchedule(file.bytes!);
                 },

@@ -6,10 +6,7 @@ import 'package:time_keeper/widgets/tone_chip.dart';
 /// Fixed slots so a role keeps the same hue everywhere it appears, rather than
 /// one that shifts with its position in a list. Slot 0 is skipped - it is the
 /// same blue as `primary`, which is already all over the surrounding chrome.
-const Map<String, int> _roleSlots = {
-  'admin': 3,
-  'kiosk': 5,
-};
+const Map<String, int> _roleSlots = {'admin': 3, 'kiosk': 5};
 
 /// Anything added later still gets a stable colour, just not a curated one.
 int _slotFor(Role role) => _roleSlots[role.name] ?? (role.name.hashCode.abs() % (seriesColorCount - 1)) + 1;
@@ -38,16 +35,9 @@ class RoleChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (roles.isEmpty) {
-      return Text(
-        'No access',
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
-      );
+      return Text('No access', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12));
     }
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
-      children: roles.map((r) => RoleChip(role: r)).toList(),
-    );
+    return Wrap(spacing: 6, runSpacing: 4, children: roles.map((r) => RoleChip(role: r)).toList());
   }
 }

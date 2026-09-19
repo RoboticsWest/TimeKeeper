@@ -16,9 +16,7 @@ class LocationRanking extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final maxSecs = rows.isEmpty
-        ? 1
-        : rows.map((r) => r.total.inSeconds).reduce((a, b) => a > b ? a : b);
+    final maxSecs = rows.isEmpty ? 1 : rows.map((r) => r.total.inSeconds).reduce((a, b) => a > b ? a : b);
 
     return ListView.separated(
       itemCount: rows.length,
@@ -44,11 +42,7 @@ class LocationRanking extends StatelessWidget {
                 // Value wears text ink; the bar beside it carries identity.
                 Text(
                   formatDuration(row.total),
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12, fontWeight: FontWeight.w700),
                 ),
               ],
             ),

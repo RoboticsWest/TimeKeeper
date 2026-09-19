@@ -82,9 +82,7 @@ class TeamView extends HookConsumerWidget {
     final filtered = sorted.where((entry) {
       if (filterText.isEmpty) return true;
       final m = entry.value;
-      final type = m.memberType == TeamMemberType.student
-          ? 'student'
-          : 'mentor';
+      final type = m.memberType == TeamMemberType.student ? 'student' : 'mentor';
       return m.firstName.toLowerCase().contains(filterText) ||
           m.lastName.toLowerCase().contains(filterText) ||
           (m.displayName ?? '').toLowerCase().contains(filterText) ||
@@ -118,10 +116,7 @@ class TeamView extends HookConsumerWidget {
                       title: 'Clear Students',
                       description: 'all students',
                       ids: teamMembers.entries
-                          .where(
-                            (e) =>
-                                e.value.memberType == TeamMemberType.student,
-                          )
+                          .where((e) => e.value.memberType == TeamMemberType.student)
                           .map((e) => e.key)
                           .toList(),
                     ),
@@ -137,9 +132,7 @@ class TeamView extends HookConsumerWidget {
                       title: 'Clear Mentors',
                       description: 'all mentors',
                       ids: teamMembers.entries
-                          .where(
-                            (e) => e.value.memberType == TeamMemberType.mentor,
-                          )
+                          .where((e) => e.value.memberType == TeamMemberType.mentor)
                           .map((e) => e.key)
                           .toList(),
                     ),
@@ -162,11 +155,7 @@ class TeamView extends HookConsumerWidget {
                     tooltip: 'Refresh team members',
                     onPressed: refreshing.value ? null : refreshMembers,
                     icon: refreshing.value
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.refresh),
                   ),
                 ],
@@ -180,43 +169,22 @@ class TeamView extends HookConsumerWidget {
             child: EditTable(
               alternatingRows: true,
               headers: [
-                BaseTableCell(
-                  child: TableHeaderText('First Name'),
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Last Name'),
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Type'),
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Display Name'),
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('RFID Tags'),
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Discord'),
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('PIN'),
-                ),
-                BaseTableCell(
-                  child: TableHeaderText('Status'),
-                ),
+                BaseTableCell(child: TableHeaderText('First Name')),
+                BaseTableCell(child: TableHeaderText('Last Name')),
+                BaseTableCell(child: TableHeaderText('Type')),
+                BaseTableCell(child: TableHeaderText('Display Name')),
+                BaseTableCell(child: TableHeaderText('RFID Tags')),
+                BaseTableCell(child: TableHeaderText('Discord')),
+                BaseTableCell(child: TableHeaderText('PIN')),
+                BaseTableCell(child: TableHeaderText('Status')),
               ],
               headerDecoration: tableHeaderDecoration(context),
               editRows: filtered.map((entry) {
                 final id = entry.key;
                 final member = entry.value;
-                final checkedIn = isMemberCheckedIn(
-                  id,
-                  teamMemberSessions.values,
-                );
+                final checkedIn = isMemberCheckedIn(id, teamMemberSessions.values);
                 final memberTags = ref.watch(rfidTagsByMemberProvider(id));
-                final tagDisplay = memberTags.isEmpty
-                    ? '—'
-                    : memberTags.values.map((t) => t.tag).join(', ');
+                final tagDisplay = memberTags.isEmpty ? '—' : memberTags.values.map((t) => t.tag).join(', ');
 
                 return EditTableRow(
                   key: ValueKey(id),
@@ -240,19 +208,11 @@ class TeamView extends HookConsumerWidget {
                   cells: [
                     BaseTableCell(child: Text(member.firstName)),
                     BaseTableCell(child: Text(member.lastName)),
-                    BaseTableCell(
-                      child: MemberTypeChip(memberType: member.memberType),
-                    ),
-                    BaseTableCell(
-                      child: Text(member.displayName ?? '—'),
-                    ),
+                    BaseTableCell(child: MemberTypeChip(memberType: member.memberType)),
+                    BaseTableCell(child: Text(member.displayName ?? '—')),
                     BaseTableCell(child: Text(tagDisplay)),
-                    BaseTableCell(
-                      child: Text(member.discordId ?? '—'),
-                    ),
-                    BaseTableCell(
-                      child: Text(member.quickPin ?? '—'),
-                    ),
+                    BaseTableCell(child: Text(member.discordId ?? '—')),
+                    BaseTableCell(child: Text(member.quickPin ?? '—')),
                     BaseTableCell(
                       child: CheckInOutButton(
                         checkedIn: checkedIn,
@@ -289,12 +249,7 @@ class _ClearButton extends StatelessWidget {
   final Color color;
   final VoidCallback onPressed;
 
-  const _ClearButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
+  const _ClearButton({required this.label, required this.icon, required this.color, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {

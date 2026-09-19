@@ -24,10 +24,7 @@ class KioskDialog extends BaseDialog {
       message: _KioskDialogContent(sessions: sessions),
       actions: [
         Builder(
-          builder: (context) => TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
+          builder: (context) => TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
         ),
       ],
     ).show(context);
@@ -51,29 +48,16 @@ class _KioskDialogContent extends ConsumerWidget {
       child: MemberSearchList(
         teamMembers: teamMembers,
         trailingBuilder: (memberId, member) {
-          final checkedIn = isMemberCheckedIn(
-            memberId,
-            teamMemberSessions.values,
-          );
+          final checkedIn = isMemberCheckedIn(memberId, teamMemberSessions.values);
 
           return FilledButton.icon(
-            icon: Icon(
-              checkedIn ? Icons.logout : Icons.login,
-              color: Colors.white,
-            ),
-            label: Text(
-              checkedIn ? 'Check Out' : 'Check In',
-              style: const TextStyle(color: Colors.white),
-            ),
+            icon: Icon(checkedIn ? Icons.logout : Icons.login, color: Colors.white),
+            label: Text(checkedIn ? 'Check Out' : 'Check In', style: const TextStyle(color: Colors.white)),
             style: FilledButton.styleFrom(
-              backgroundColor: checkedIn
-                  ? Theme.of(context).colorScheme.error
-                  : Theme.of(context).colorScheme.primary,
+              backgroundColor: checkedIn ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary,
             ),
             onPressed: () async {
-              final result = await ref
-                  .read(sessionCheckInOutProvider.notifier)
-                  .checkInOut(memberId, currentLocation);
+              final result = await ref.read(sessionCheckInOutProvider.notifier).checkInOut(memberId, currentLocation);
               if (context.mounted) {
                 Navigator.of(context).pop();
                 switch (result) {

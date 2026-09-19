@@ -13,15 +13,8 @@ part of 'rfid_tag_provider.dart';
 final rfidTagChangesProvider = RfidTagChangesProvider._();
 
 final class RfidTagChangesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<ChangeEvent<RfidTag>>,
-          ChangeEvent<RfidTag>,
-          Stream<ChangeEvent<RfidTag>>
-        >
-    with
-        $FutureModifier<ChangeEvent<RfidTag>>,
-        $StreamProvider<ChangeEvent<RfidTag>> {
+    extends $FunctionalProvider<AsyncValue<ChangeEvent<RfidTag>>, ChangeEvent<RfidTag>, Stream<ChangeEvent<RfidTag>>>
+    with $FutureModifier<ChangeEvent<RfidTag>>, $StreamProvider<ChangeEvent<RfidTag>> {
   RfidTagChangesProvider._()
     : super(
         from: null,
@@ -38,9 +31,8 @@ final class RfidTagChangesProvider
 
   @$internal
   @override
-  $StreamProviderElement<ChangeEvent<RfidTag>> $createElement(
-    $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  $StreamProviderElement<ChangeEvent<RfidTag>> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
 
   @override
   Stream<ChangeEvent<RfidTag>> create(Ref ref) {
@@ -53,8 +45,7 @@ String _$rfidTagChangesHash() => r'cc04948f4f520a7413d2ca43dc97dbdea7c6584e';
 @ProviderFor(RfidTags)
 final rfidTagsProvider = RfidTagsProvider._();
 
-final class RfidTagsProvider
-    extends $NotifierProvider<RfidTags, Map<String, RfidTag>> {
+final class RfidTagsProvider extends $NotifierProvider<RfidTags, Map<String, RfidTag>> {
   RfidTagsProvider._()
     : super(
         from: null,
@@ -75,14 +66,11 @@ final class RfidTagsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, RfidTag> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, RfidTag>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, RfidTag>>(value));
   }
 }
 
-String _$rfidTagsHash() => r'd29a6030bdf15bd814ca282e7aada40a2019e65a';
+String _$rfidTagsHash() => r'741a5df218977f68e4f6144a935e53a2e5f952a0';
 
 abstract class _$RfidTags extends $Notifier<Map<String, RfidTag>> {
   Map<String, RfidTag> build();
@@ -105,8 +93,7 @@ abstract class _$RfidTags extends $Notifier<Map<String, RfidTag>> {
 @ProviderFor(rfidTagsSync)
 final rfidTagsSyncProvider = RfidTagsSyncProvider._();
 
-final class RfidTagsSyncProvider extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+final class RfidTagsSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
   RfidTagsSyncProvider._()
     : super(
         from: null,
@@ -123,8 +110,7 @@ final class RfidTagsSyncProvider extends $FunctionalProvider<void, void, void>
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   void create(Ref ref) {
@@ -133,36 +119,26 @@ final class RfidTagsSyncProvider extends $FunctionalProvider<void, void, void>
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
-String _$rfidTagsSyncHash() => r'91f21816580bdbd8fcfc4d4d1367796fde2cc331';
+String _$rfidTagsSyncHash() => r'a96771181b4874dcf2a5696a773dd0a83f139d79';
 
 @ProviderFor(rfidTagsByMember)
 final rfidTagsByMemberProvider = RfidTagsByMemberFamily._();
 
 final class RfidTagsByMemberProvider
-    extends
-        $FunctionalProvider<
-          Map<String, RfidTag>,
-          Map<String, RfidTag>,
-          Map<String, RfidTag>
-        >
+    extends $FunctionalProvider<Map<String, RfidTag>, Map<String, RfidTag>, Map<String, RfidTag>>
     with $Provider<Map<String, RfidTag>> {
-  RfidTagsByMemberProvider._({
-    required RfidTagsByMemberFamily super.from,
-    required String super.argument,
-  }) : super(
-         retry: null,
-         name: r'rfidTagsByMemberProvider',
-         isAutoDispose: false,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  RfidTagsByMemberProvider._({required RfidTagsByMemberFamily super.from, required String super.argument})
+    : super(
+        retry: null,
+        name: r'rfidTagsByMemberProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$rfidTagsByMemberHash();
@@ -176,9 +152,7 @@ final class RfidTagsByMemberProvider
 
   @$internal
   @override
-  $ProviderElement<Map<String, RfidTag>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
+  $ProviderElement<Map<String, RfidTag>> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   Map<String, RfidTag> create(Ref ref) {
@@ -188,10 +162,7 @@ final class RfidTagsByMemberProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(Map<String, RfidTag> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Map<String, RfidTag>>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<Map<String, RfidTag>>(value));
   }
 
   @override
@@ -207,8 +178,7 @@ final class RfidTagsByMemberProvider
 
 String _$rfidTagsByMemberHash() => r'fe9f1878874bc31d787bd614f9d364a23318e19a';
 
-final class RfidTagsByMemberFamily extends $Family
-    with $FunctionalFamilyOverride<Map<String, RfidTag>, String> {
+final class RfidTagsByMemberFamily extends $Family with $FunctionalFamilyOverride<Map<String, RfidTag>, String> {
   RfidTagsByMemberFamily._()
     : super(
         retry: null,
@@ -218,8 +188,7 @@ final class RfidTagsByMemberFamily extends $Family
         isAutoDispose: false,
       );
 
-  RfidTagsByMemberProvider call(String memberId) =>
-      RfidTagsByMemberProvider._(argument: memberId, from: this);
+  RfidTagsByMemberProvider call(String memberId) => RfidTagsByMemberProvider._(argument: memberId, from: this);
 
   @override
   String toString() => r'rfidTagsByMemberProvider';

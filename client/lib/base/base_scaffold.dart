@@ -51,11 +51,7 @@ class BaseScaffold extends HookConsumerWidget {
                 child: const SizedBox.expand(),
               ),
             ),
-          if (showRail)
-            BaseRail(
-              isExtended: isExtended.value,
-              onToggle: () => isExtended.value = !isExtended.value,
-            ),
+          if (showRail) BaseRail(isExtended: isExtended.value, onToggle: () => isExtended.value = !isExtended.value),
         ],
       ),
     );

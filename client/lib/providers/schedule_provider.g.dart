@@ -12,8 +12,7 @@ part of 'schedule_provider.dart';
 @ProviderFor(ScheduleService)
 final scheduleServiceProvider = ScheduleServiceProvider._();
 
-final class ScheduleServiceProvider
-    extends $NotifierProvider<ScheduleService, void> {
+final class ScheduleServiceProvider extends $NotifierProvider<ScheduleService, void> {
   ScheduleServiceProvider._()
     : super(
         from: null,
@@ -34,10 +33,7 @@ final class ScheduleServiceProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
   }
 }
 
@@ -49,14 +45,7 @@ abstract class _$ScheduleService extends $Notifier<void> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<void, void>, void, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

@@ -74,10 +74,7 @@ class LoginView extends HookConsumerWidget {
     Widget loginWidget() {
       return Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 25),
-            child: LogoWidget(width: 150),
-          ),
+          const Padding(padding: EdgeInsets.only(bottom: 25), child: LogoWidget(width: 150)),
           _username(usernameController),
           _password(passwordController),
           if (isLoading.value)
@@ -99,10 +96,7 @@ class LoginView extends HookConsumerWidget {
     Widget logoutWidget() {
       return Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 25),
-            child: LogoWidget(width: 150),
-          ),
+          const Padding(padding: EdgeInsets.only(bottom: 25), child: LogoWidget(width: 150)),
           Text('Logged in as $username'),
           const SizedBox(height: 20),
           SizedBox(
@@ -120,10 +114,7 @@ class LoginView extends HookConsumerWidget {
 
     return Center(
       child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(25),
-          child: isLoggedIn ? logoutWidget() : loginWidget(),
-        ),
+        child: Padding(padding: const EdgeInsets.all(25), child: isLoggedIn ? logoutWidget() : loginWidget()),
       ),
     );
   }

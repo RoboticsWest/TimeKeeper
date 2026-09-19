@@ -9,8 +9,13 @@ pub struct StatisticsQuery;
 
 #[Object]
 impl StatisticsQuery {
-  async fn leaderboard(&self, ctx: &Context<'_>) -> Result<Vec<LeaderboardEntry>> {
+  /// The hours leaderboard.
+  ///
+  /// `memberTypes` overrides the configured default filter for this call. Omit it to get
+  /// whatever `leaderboardMemberTypes` is set to; pass an explicit list (e.g. `["mentor"]`) to
+  /// ask for those types regardless of the default; pass `[]` for everyone.
+  async fn leaderboard(&self, ctx: &Context<'_>, member_types: Option<Vec<String>>) -> Result<Vec<LeaderboardEntry>> {
     let logic = ctx.data::<Arc<dyn StatisticsLogic>>()?.clone();
-    Ok(logic.get_leaderboard().await?)
+    Ok(logic.get_leaderboard(member_types).await?)
   }
 }

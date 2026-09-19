@@ -34,9 +34,7 @@ class TextFieldSetting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveMaxLines = multiline ? (maxLines > 1 ? maxLines : 5) : 1;
-    final effectiveKeyboardType = multiline
-        ? TextInputType.multiline
-        : keyboardType;
+    final effectiveKeyboardType = multiline ? TextInputType.multiline : keyboardType;
 
     final textField = TextField(
       controller: controller,

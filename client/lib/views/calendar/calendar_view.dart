@@ -25,9 +25,7 @@ class CalendarView extends HookConsumerWidget {
         ? sorted.where((entry) {
             final dt = entry.value.startTime;
             final sel = selectedDate.value!;
-            return dt.year == sel.year &&
-                dt.month == sel.month &&
-                dt.day == sel.day;
+            return dt.year == sel.year && dt.month == sel.month && dt.day == sel.day;
           }).toList()
         : sorted;
 
@@ -45,16 +43,8 @@ class CalendarView extends HookConsumerWidget {
               const Spacer(),
               SegmentedButton<bool>(
                 segments: const [
-                  ButtonSegment(
-                    value: true,
-                    icon: Icon(Icons.calendar_month),
-                    label: Text('Calendar'),
-                  ),
-                  ButtonSegment(
-                    value: false,
-                    icon: Icon(Icons.table_rows),
-                    label: Text('Table'),
-                  ),
+                  ButtonSegment(value: true, icon: Icon(Icons.calendar_month), label: Text('Calendar')),
+                  ButtonSegment(value: false, icon: Icon(Icons.table_rows), label: Text('Table')),
                 ],
                 selected: {showCalendar.value},
                 onSelectionChanged: (value) {
@@ -84,10 +74,7 @@ class CalendarView extends HookConsumerWidget {
                 padding: const EdgeInsets.only(top: 12, bottom: 4),
                 child: Row(
                   children: [
-                    Text(
-                      'Showing: ${formatDate(selectedDate.value!)}',
-                      style: theme.textTheme.titleSmall,
-                    ),
+                    Text('Showing: ${formatDate(selectedDate.value!)}', style: theme.textTheme.titleSmall),
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => selectedDate.value = null,

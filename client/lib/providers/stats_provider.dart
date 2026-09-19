@@ -15,11 +15,7 @@ part 'stats_provider.g.dart';
 
 /// Regular vs overtime split for a single member session, clipped to the
 /// session's planned window. Time outside that window is overtime.
-({Duration regular, Duration overtime}) splitMemberSession(
-  TeamMemberSession ms,
-  Session session,
-  DateTime asOf,
-) {
+({Duration regular, Duration overtime}) splitMemberSession(TeamMemberSession ms, Session session, DateTime asOf) {
   final checkOut = ms.checkOutTime ?? asOf;
   final total = checkOut.difference(ms.checkInTime);
   if (total <= Duration.zero) return (regular: Duration.zero, overtime: Duration.zero);
@@ -42,8 +38,7 @@ class StatsFilter extends _$StatsFilter {
 
 /// Minute resolution: open sessions keep accruing time, but quantising here
 /// means the aggregates recompute once a minute rather than on every tick.
-DateTime _quantise(DateTime value) =>
-    DateTime(value.year, value.month, value.day, value.hour, value.minute);
+DateTime _quantise(DateTime value) => DateTime(value.year, value.month, value.day, value.hour, value.minute);
 
 /// The active query, with `asOf` refreshed from the shared ticker.
 @riverpod
@@ -160,9 +155,10 @@ DateTime _nextBucket(DateTime start, StatsBucket bucket) {
 
 /// Hours and headcount per bucket.
 ///
-/// Unlike the helper it replaces, this includes unfinished sessions — the KPI
-/// overtime figure always counted them, so excluding them here made the chart
-/// disagree with the headline number above it.
+/// Hours are *session* hours: how long each session actually ran, split against its scheduled
+/// window. They are deliberately not the sum of everyone's attendance — a four-hour session
+/// with twelve people present lasted four hours, not forty-eight. Headcount still counts
+/// people, which is what makes the two series readable side by side.
 @riverpod
 List<HoursBucket> hoursSeries(Ref ref, StatsQuery query) {
   final scope = ref.watch(statsScopeProvider(query));
@@ -172,16 +168,16 @@ List<HoursBucket> hoursSeries(Ref ref, StatsQuery query) {
   final overtime = <DateTime, Duration>{};
   final heads = <DateTime, Set<String>>{};
 
-  for (final entry in scope.msBySession.entries) {
-    final session = scope.sessions[entry.key];
-    if (session == null) continue;
+  for (final entry in scope.sessions.entries) {
+    final session = entry.value;
     final key = bucketStart(session.startTime, bucket);
 
-    for (final ms in entry.value) {
-      final split = splitMemberSession(ms, session, scope.asOf);
-      regular[key] = (regular[key] ?? Duration.zero) + split.regular;
-      overtime[key] = (overtime[key] ?? Duration.zero) + split.overtime;
-      heads.putIfAbsent(key, () => <String>{}).add(ms.teamMemberId);
+    regular[key] = (regular[key] ?? Duration.zero) + session.regularDuration(scope.asOf);
+    overtime[key] = (overtime[key] ?? Duration.zero) + session.overtimeDuration(scope.asOf);
+
+    final bucketHeads = heads.putIfAbsent(key, () => <String>{});
+    for (final ms in scope.msBySession[entry.key] ?? const <TeamMemberSession>[]) {
+      bucketHeads.add(ms.teamMemberId);
     }
   }
 
@@ -238,7 +234,10 @@ List<MemberHoursRow> memberHoursRows(Ref ref, StatsQuery query) {
   return rows;
 }
 
-/// Locations ranked by total time logged.
+/// Locations ranked by how many hours of session they hosted.
+///
+/// Session hours, not man-hours: a room that held one long session should not outrank one that
+/// held three simply because more people happened to attend the first.
 @riverpod
 List<LocationRankRow> locationRanking(Ref ref, StatsQuery query) {
   final scope = ref.watch(statsScopeProvider(query));
@@ -248,20 +247,13 @@ List<LocationRankRow> locationRanking(Ref ref, StatsQuery query) {
   final heads = <String, int>{};
 
   for (final entry in scope.sessions.entries) {
-    final memberSessions = scope.msBySession[entry.key];
-    if (memberSessions == null || memberSessions.isEmpty) continue;
+    final session = entry.value;
+    final memberSessions = scope.msBySession[entry.key] ?? const <TeamMemberSession>[];
+    final locationId = session.locationId;
 
-    final locationId = entry.value.locationId;
-    var total = Duration.zero;
-    for (final ms in memberSessions) {
-      final split = splitMemberSession(ms, entry.value, scope.asOf);
-      total += split.regular + split.overtime;
-    }
-
-    totals[locationId] = (totals[locationId] ?? Duration.zero) + total;
+    totals[locationId] = (totals[locationId] ?? Duration.zero) + session.actualDuration(scope.asOf);
     sessionCounts[locationId] = (sessionCounts[locationId] ?? 0) + 1;
-    heads[locationId] =
-        (heads[locationId] ?? 0) + memberSessions.map((ms) => ms.teamMemberId).toSet().length;
+    heads[locationId] = (heads[locationId] ?? 0) + memberSessions.map((ms) => ms.teamMemberId).toSet().length;
   }
 
   final rows = [
@@ -369,6 +361,14 @@ AttendanceInsights attendanceInsights(Ref ref, StatsQuery query) {
 }
 
 /// Headline numbers for the KPI strip.
+///
+/// Hours are session hours. "Total hours" is how long the team's sessions ran, so two scheduled
+/// five-hour sessions that each overran by an hour read as 12h total / 10h regular / 2h
+/// overtime — regardless of whether two people attended or two hundred. Summing per-member
+/// attendance instead made the same two sessions read as hundreds of hours, and dragged the
+/// overtime percentage and the activity chart along with it.
+///
+/// Member counts and check-ins stay per-person; those are questions about people.
 @riverpod
 StatsKpis statsKpis(Ref ref, StatsQuery query) {
   final scope = ref.watch(statsScopeProvider(query));
@@ -376,18 +376,13 @@ StatsKpis statsKpis(Ref ref, StatsQuery query) {
 
   var regular = Duration.zero;
   var overtime = Duration.zero;
-  var checkIns = 0;
 
-  for (final entry in scope.msBySession.entries) {
-    final session = scope.sessions[entry.key];
-    if (session == null) continue;
-    for (final ms in entry.value) {
-      final split = splitMemberSession(ms, session, scope.asOf);
-      regular += split.regular;
-      overtime += split.overtime;
-      checkIns++;
-    }
+  for (final session in scope.sessions.values) {
+    regular += session.regularDuration(scope.asOf);
+    overtime += session.overtimeDuration(scope.asOf);
   }
+
+  final checkIns = scope.msBySession.values.fold(0, (sum, list) => sum + list.length);
 
   return StatsKpis(
     totalHours: regular + overtime,

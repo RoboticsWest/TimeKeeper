@@ -22,9 +22,7 @@ class MembersGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final maxSecs = rows.isEmpty
-        ? 1
-        : rows.map((r) => r.total.inSeconds).reduce((a, b) => a > b ? a : b);
+    final maxSecs = rows.isEmpty ? 1 : rows.map((r) => r.total.inSeconds).reduce((a, b) => a > b ? a : b);
 
     return DataGrid<MemberHoursRow>(
       rows: rows,
@@ -49,10 +47,7 @@ class MembersGrid extends StatelessWidget {
             children: [
               SizedBox(
                 width: 58,
-                child: Text(
-                  formatDuration(row.total),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                child: Text(formatDuration(row.total), style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
               Expanded(
                 child: Stack(
@@ -65,9 +60,7 @@ class MembersGrid extends StatelessWidget {
                       ),
                     ),
                     FractionallySizedBox(
-                      widthFactor: maxSecs > 0
-                          ? (row.total.inSeconds / maxSecs).clamp(0.0, 1.0)
-                          : 0.0,
+                      widthFactor: maxSecs > 0 ? (row.total.inSeconds / maxSecs).clamp(0.0, 1.0) : 0.0,
                       child: Container(
                         height: 6,
                         decoration: BoxDecoration(
@@ -140,10 +133,7 @@ class _OvertimeCell extends StatelessWidget {
                 widthFactor: row.overtimeRatio.clamp(0.0, 1.0),
                 child: Container(
                   height: 4,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
                 ),
               ),
             ],

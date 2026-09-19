@@ -154,18 +154,8 @@ enum AppRoute {
   Color colorFor(Brightness brightness) => seriesColor(colorSlot ?? 0, brightness);
 
   /// Navigate to this route using go_router's goNamed method
-  void go(
-    BuildContext context, {
-    Map<String, String>? pathParams,
-    Map<String, dynamic>? queryParams,
-    Object? extra,
-  }) {
-    context.goNamed(
-      name,
-      pathParameters: pathParams ?? {},
-      queryParameters: queryParams ?? {},
-      extra: extra,
-    );
+  void go(BuildContext context, {Map<String, String>? pathParams, Map<String, dynamic>? queryParams, Object? extra}) {
+    context.goNamed(name, pathParameters: pathParams ?? {}, queryParameters: queryParams ?? {}, extra: extra);
   }
 
   /// Navigate to this route using go_router's pushNamed method

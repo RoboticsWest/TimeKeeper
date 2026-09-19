@@ -18,22 +18,12 @@ void showUserDialog(
 
   PopupDialog.info(
     title: isEdit ? 'Edit User' : 'Add User',
-    message: _UserForm(
-      isEdit: isEdit,
-      userId: id,
-      initialUsername: existingUsername,
-      initialRoles: existingRoles,
-    ),
+    message: _UserForm(isEdit: isEdit, userId: id, initialUsername: existingUsername, initialRoles: existingRoles),
     actions: const [],
   ).show(context);
 }
 
-void showDeleteUserDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  required String id,
-  required String username,
-}) {
+void showDeleteUserDialog(BuildContext context, WidgetRef ref, {required String id, required String username}) {
   ConfirmDialog.warn(
     title: 'Delete User',
     message: Text('Are you sure you want to delete "$username"?'),
@@ -50,12 +40,7 @@ class _UserForm extends HookConsumerWidget {
   final String? initialUsername;
   final List<Role> initialRoles;
 
-  const _UserForm({
-    required this.isEdit,
-    this.userId,
-    this.initialUsername,
-    this.initialRoles = const [],
-  });
+  const _UserForm({required this.isEdit, this.userId, this.initialUsername, this.initialRoles = const []});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -73,10 +58,7 @@ class _UserForm extends HookConsumerWidget {
         children: [
           TextField(
             controller: usernameController,
-            decoration: const InputDecoration(
-              labelText: 'Username',
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -94,9 +76,9 @@ class _UserForm extends HookConsumerWidget {
             'What this account can do in TimeKeeper. This is not team membership - '
             'students and mentors live under Team and have no login. '
             'Without a role a user can sign in but do nothing else.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           rolesAsync.when(
@@ -159,11 +141,7 @@ class _UserForm extends HookConsumerWidget {
                                   password: password.isNotEmpty ? password : null,
                                   roleIds: selectedRoleIds.value.toList(),
                                 )
-                              : await notifier.create(
-                                  username,
-                                  password,
-                                  roleIds: selectedRoleIds.value.toList(),
-                                );
+                              : await notifier.create(username, password, roleIds: selectedRoleIds.value.toList());
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
@@ -182,11 +160,7 @@ class _UserForm extends HookConsumerWidget {
                         }
                       },
                 child: isLoading.value
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],

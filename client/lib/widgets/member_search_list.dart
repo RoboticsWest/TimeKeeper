@@ -8,11 +8,7 @@ class MemberSearchList extends HookWidget {
   final Map<String, TeamMember> teamMembers;
   final Widget Function(String memberId, TeamMember member) trailingBuilder;
 
-  const MemberSearchList({
-    super.key,
-    required this.teamMembers,
-    required this.trailingBuilder,
-  });
+  const MemberSearchList({super.key, required this.teamMembers, required this.trailingBuilder});
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +26,7 @@ class MemberSearchList extends HookWidget {
                       (member.displayName ?? '').toLowerCase().contains(query);
                 }).toList()
           ..sort(
-            (a, b) => (a.value.displayName ?? '').toLowerCase().compareTo(
-              (b.value.displayName ?? '').toLowerCase(),
-            ),
+            (a, b) => (a.value.displayName ?? '').toLowerCase().compareTo((b.value.displayName ?? '').toLowerCase()),
           );
 
     return Column(
@@ -54,12 +48,10 @@ class MemberSearchList extends HookWidget {
           child: filteredMembers.isEmpty
               ? Center(
                   child: Text(
-                    searchText.value.isEmpty
-                        ? 'Type to search for a team member'
-                        : 'No members found',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                    searchText.value.isEmpty ? 'Type to search for a team member' : 'No members found',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 )
               : ListView.builder(

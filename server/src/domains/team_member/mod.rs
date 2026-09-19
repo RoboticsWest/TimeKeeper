@@ -8,4 +8,4 @@ pub use csv_parser::{TeamMemberCsvParser, TeamMemberCsvRow};
 pub use gql::{TeamMemberMutation, TeamMemberQuery, TeamMemberSubscription};
 pub use logic::{DefaultTeamMemberLogic, TeamMemberLogic};
 pub use model::TeamMember;
-pub use repository::{PgTeamMemberRepository, TeamMemberRepository};
+pub use repository::{PgTeamMemberRepository, TeamMemberFilter, TeamMemberRepository};

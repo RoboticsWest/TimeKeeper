@@ -11,24 +11,16 @@ import 'package:time_keeper/router/deferred_widget.dart';
 import 'package:time_keeper/views/kiosk/kiosk_view.dart' deferred as kiosk;
 import 'package:time_keeper/views/login/login_view.dart' deferred as login;
 import 'package:time_keeper/views/setup/setup_view.dart' deferred as setup;
-import 'package:time_keeper/views/settings/settings_view.dart'
-    deferred as settings;
-import 'package:time_keeper/views/sessions/session_view.dart'
-    deferred as sessions;
+import 'package:time_keeper/views/settings/settings_view.dart' deferred as settings;
+import 'package:time_keeper/views/sessions/session_view.dart' deferred as sessions;
 import 'package:time_keeper/views/team/team_view.dart' deferred as team;
-import 'package:time_keeper/views/locations/locations_view.dart'
-    deferred as locations;
-import 'package:time_keeper/views/notifications/notifications_view.dart'
-    deferred as notifications;
+import 'package:time_keeper/views/locations/locations_view.dart' deferred as locations;
+import 'package:time_keeper/views/notifications/notifications_view.dart' deferred as notifications;
 import 'package:time_keeper/views/users/users_view.dart' deferred as users;
-import 'package:time_keeper/views/leaderboard/leaderboard_view.dart'
-    deferred as leaderboard;
-import 'package:time_keeper/views/attendance/attendance_view.dart'
-    deferred as attendance;
-import 'package:time_keeper/views/statistics/statistics_view.dart'
-    deferred as statistics;
-import 'package:time_keeper/views/calendar/calendar_view.dart'
-    deferred as calendar;
+import 'package:time_keeper/views/leaderboard/leaderboard_view.dart' deferred as leaderboard;
+import 'package:time_keeper/views/attendance/attendance_view.dart' deferred as attendance;
+import 'package:time_keeper/views/statistics/statistics_view.dart' deferred as statistics;
+import 'package:time_keeper/views/calendar/calendar_view.dart' deferred as calendar;
 
 part 'router.g.dart';
 
@@ -70,10 +62,7 @@ class _DelayedAnimationWrapper extends HookWidget {
 ///
 /// The animation waits for the widget to complete its first build before
 /// starting, ensuring smooth transitions without visible widget rebuilds.
-CustomTransitionPage<void> _buildTransitionPage({
-  required LocalKey key,
-  required Widget child,
-}) {
+CustomTransitionPage<void> _buildTransitionPage({required LocalKey key, required Widget child}) {
   return CustomTransitionPage(
     key: key,
     child: _DelayedAnimationWrapper(child: child),
@@ -87,13 +76,10 @@ CustomTransitionPage<void> _buildTransitionPage({
             end: 1.0,
           ).animate(CurvedAnimation(parent: animation, curve: Curves.easeIn)),
           child: SlideTransition(
-            position:
-                Tween<Offset>(
-                  begin: const Offset(0.0, 0.03),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
-                ),
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 0.03),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
             child: child,
           ),
         ),
@@ -102,12 +88,20 @@ CustomTransitionPage<void> _buildTransitionPage({
   );
 }
 
+/// The router's navigator, exposed so app-level dialogs can reach it.
+///
+/// `MaterialApp.router`'s `builder` wraps the navigator rather than sitting inside it, so a
+/// widget there has no `Navigator` ancestor and `showDialog` throws. Anything that needs to
+/// put a route on screen from outside the widget tree's navigator goes through this key.
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 @Riverpod(keepAlive: true)
 GoRouter router(Ref ref) {
   final isLoggedIn = ref.watch(isLoggedInProvider);
   final isAdmin = ref.watch(isAdminProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoute.kiosk.path,
     routes: <RouteBase>[
       // Shell Routes (for standard displays)

@@ -7,6 +7,7 @@ import 'package:time_keeper/providers/theme_provider.dart';
 import 'package:time_keeper/providers/token_validator_provider.dart';
 import 'package:time_keeper/router/router.dart';
 import 'package:time_keeper/theme.dart';
+import 'package:time_keeper/widgets/dialogs/update_available_dialog.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -35,7 +36,10 @@ class App extends ConsumerWidget {
       builder: (context, child) => MediaQuery.withClampedTextScaling(
         minScaleFactor: 0.95,
         maxScaleFactor: 0.95,
-        child: _DebugSizeOverride(child: child ?? const SizedBox.shrink()),
+        // Inside the router's navigator so the dialog has somewhere to go, and above every
+        // route so an out-of-date client is told wherever it happens to be — including the
+        // login screen, which is the most likely place for a stale install to sit.
+        child: UpdateAvailableGate(child: _DebugSizeOverride(child: child ?? const SizedBox.shrink())),
       ),
     );
   }

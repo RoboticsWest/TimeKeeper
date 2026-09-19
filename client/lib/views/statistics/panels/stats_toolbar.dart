@@ -31,19 +31,10 @@ class StatsToolbar extends ConsumerWidget {
         context: context,
         firstDate: DateTime(2015),
         lastDate: DateTime(now.year + 1),
-        initialDateRange: DateTimeRange(
-          start: query.customStart ?? query.resolve().start,
-          end: query.customEnd ?? now,
-        ),
+        initialDateRange: DateTimeRange(start: query.customStart ?? query.resolve().start, end: query.customEnd ?? now),
       );
       if (picked == null) return;
-      notifier.setQuery(
-        query.copyWith(
-          range: StatsRange.custom,
-          customStart: picked.start,
-          customEnd: picked.end,
-        ),
-      );
+      notifier.setQuery(query.copyWith(range: StatsRange.custom, customStart: picked.start, customEnd: picked.end));
     }
 
     final title = Row(
@@ -52,11 +43,7 @@ class StatsToolbar extends ConsumerWidget {
         const SizedBox(width: 8),
         Text(
           'Statistics',
-          style: TextStyle(
-            color: theme.colorScheme.onSurface,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w700),
         ),
         const SizedBox(width: 10),
         Flexible(
@@ -90,9 +77,7 @@ class StatsToolbar extends ConsumerWidget {
       _MultiSelect<String>(
         label: 'Locations',
         selected: query.locationIds,
-        options: {
-          for (final entry in locations.entries) entry.key: entry.value.location,
-        },
+        options: {for (final entry in locations.entries) entry.key: entry.value.location},
         onChanged: (value) => notifier.setQuery(query.copyWith(locationIds: value)),
       ),
       _MultiSelect<TeamMemberType>(
@@ -144,18 +129,11 @@ class _MultiSelect<T> extends StatelessWidget {
   final Map<T, String> options;
   final ValueChanged<Set<T>> onChanged;
 
-  const _MultiSelect({
-    required this.label,
-    required this.selected,
-    required this.options,
-    required this.onChanged,
-  });
+  const _MultiSelect({required this.label, required this.selected, required this.options, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    final text = selected.isEmpty
-        ? 'All ${label.toLowerCase()}'
-        : '${selected.length} of ${options.length}';
+    final text = selected.isEmpty ? 'All ${label.toLowerCase()}' : '${selected.length} of ${options.length}';
 
     return MenuAnchor(
       menuChildren: [
@@ -180,9 +158,7 @@ class _MultiSelect<T> extends StatelessWidget {
       ],
       builder: (context, controller, child) => OutlinedButton(
         onPressed: () => controller.isOpen ? controller.close() : controller.open(),
-        style: OutlinedButton.styleFrom(
-          shape: const RoundedRectangleBorder(borderRadius: kBorderRadiusRow),
-        ),
+        style: OutlinedButton.styleFrom(shape: const RoundedRectangleBorder(borderRadius: kBorderRadiusRow)),
         child: Text(text),
       ),
     );

@@ -11,4 +11,5 @@ pub mod scheduler;
 pub mod schema;
 pub mod server;
 pub mod time;
+pub mod version;
 pub mod web;

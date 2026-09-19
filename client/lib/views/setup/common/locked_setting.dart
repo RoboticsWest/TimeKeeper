@@ -68,10 +68,7 @@ class LockedSetting extends HookWidget {
                     isUnlocked.value = false;
                   },
                   style: severity != LockedSettingSeverity.standard
-                      ? FilledButton.styleFrom(
-                          backgroundColor: severityColor,
-                          foregroundColor: onColor,
-                        )
+                      ? FilledButton.styleFrom(backgroundColor: severityColor, foregroundColor: onColor)
                       : null,
                   icon: Icon(actionIcon),
                   label: Text(actionButtonLabel),
@@ -95,10 +92,9 @@ class LockedSetting extends HookWidget {
                   Expanded(
                     child: Text(
                       noticeMessage!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: severityColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: severityColor, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],

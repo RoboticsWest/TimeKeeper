@@ -144,9 +144,7 @@ class _DataGridState<T> extends State<DataGrid<T>> {
                   itemBuilder: (context, index) {
                     return DecoratedBox(
                       decoration: BoxDecoration(
-                        color: index.isOdd
-                            ? theme.colorScheme.surfaceContainerLow
-                            : Colors.transparent,
+                        color: index.isOdd ? theme.colorScheme.surfaceContainerLow : Colors.transparent,
                       ),
                       child: Row(
                         children: [
@@ -158,10 +156,7 @@ class _DataGridState<T> extends State<DataGrid<T>> {
                                 child: Align(
                                   alignment: column.alignment,
                                   child: DefaultTextStyle.merge(
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface,
-                                      fontSize: 12,
-                                    ),
+                                    style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                     child: column.cell(rows[index]),

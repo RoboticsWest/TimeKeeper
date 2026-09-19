@@ -17,27 +17,15 @@ void showAttendanceDialog(
 }) {
   PopupDialog.info(
     title: 'Edit Check-In',
-    message: _AttendanceForm(
-      id: id,
-      existing: existing,
-      memberName: memberName,
-      sessionLabel: sessionLabel,
-    ),
+    message: _AttendanceForm(id: id, existing: existing, memberName: memberName, sessionLabel: sessionLabel),
     actions: const [],
   ).show(context);
 }
 
-void showDeleteAttendanceDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  required String id,
-  required String memberName,
-}) {
+void showDeleteAttendanceDialog(BuildContext context, WidgetRef ref, {required String id, required String memberName}) {
   ConfirmDialog.warn(
     title: 'Delete Check-In',
-    message: Text(
-      'Are you sure you want to delete the check-in record for "$memberName"?',
-    ),
+    message: Text('Are you sure you want to delete the check-in record for "$memberName"?'),
     confirmText: 'Delete',
     onConfirmAsyncApi: () => ref.read(teamMemberSessionsProvider.notifier).delete(id),
     showResultDialog: true,
@@ -69,14 +57,8 @@ class _AttendanceForm extends HookConsumerWidget {
     final checkOutDt = existing.checkOutTime;
 
     final checkOutEnabled = useState(hasCheckOut);
-    final checkOutDate = useState(
-      checkOutDt ?? checkInDt.add(const Duration(hours: 2)),
-    );
-    final checkOutTime = useState(
-      TimeOfDay.fromDateTime(
-        checkOutDt ?? checkInDt.add(const Duration(hours: 2)),
-      ),
-    );
+    final checkOutDate = useState(checkOutDt ?? checkInDt.add(const Duration(hours: 2)));
+    final checkOutTime = useState(TimeOfDay.fromDateTime(checkOutDt ?? checkInDt.add(const Duration(hours: 2))));
     final isLoading = useState(false);
 
     return SizedBox(
@@ -86,16 +68,13 @@ class _AttendanceForm extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Read-only info
-          Text(
-            'Member: $memberName',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          Text('Member: $memberName', style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: 4),
           Text(
             'Session: $sessionLabel',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
 
@@ -128,10 +107,7 @@ class _AttendanceForm extends HookConsumerWidget {
             children: [
               Text('Check Out', style: Theme.of(context).textTheme.titleSmall),
               const Spacer(),
-              Switch(
-                value: checkOutEnabled.value,
-                onChanged: (v) => checkOutEnabled.value = v,
-              ),
+              Switch(value: checkOutEnabled.value, onChanged: (v) => checkOutEnabled.value = v),
             ],
           ),
           const SizedBox(height: 8),
@@ -158,9 +134,9 @@ class _AttendanceForm extends HookConsumerWidget {
           else
             Text(
               'No check-out time (still checked in)',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
 
           const SizedBox(height: 24),
@@ -170,9 +146,7 @@ class _AttendanceForm extends HookConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: isLoading.value
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                onPressed: isLoading.value ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
@@ -200,9 +174,7 @@ class _AttendanceForm extends HookConsumerWidget {
 
                           if (outDt.isBefore(inDt) || outDt.isAtSameMomentAs(inDt)) {
                             if (context.mounted) {
-                              SnackBarDialog.info(
-                                message: 'Check-out must be after check-in time',
-                              ).show(context);
+                              SnackBarDialog.info(message: 'Check-out must be after check-in time').show(context);
                             }
                             return;
                           }
@@ -210,16 +182,12 @@ class _AttendanceForm extends HookConsumerWidget {
 
                         isLoading.value = true;
                         try {
-                          final result = await ref
-                              .read(teamMemberSessionsProvider.notifier)
-                              .update(id, inDt, outDt);
+                          final result = await ref.read(teamMemberSessionsProvider.notifier).update(id, inDt, outDt);
 
                           if (context.mounted) {
                             Navigator.of(context).pop();
                             if (result.success) {
-                              SnackBarDialog.success(
-                                message: 'Check-in updated successfully',
-                              ).show(context);
+                              SnackBarDialog.success(message: 'Check-in updated successfully').show(context);
                             } else {
                               SnackBarDialog.fromApiResult(result: result).show(context);
                             }
@@ -229,11 +197,7 @@ class _AttendanceForm extends HookConsumerWidget {
                         }
                       },
                 child: isLoading.value
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('Save'),
               ),
             ],
@@ -249,11 +213,7 @@ class _DatePickerField extends StatelessWidget {
   final DateTime value;
   final ValueChanged<DateTime> onChanged;
 
-  const _DatePickerField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
+  const _DatePickerField({required this.label, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -284,20 +244,13 @@ class _TimePickerField extends StatelessWidget {
   final TimeOfDay value;
   final ValueChanged<TimeOfDay> onChanged;
 
-  const _TimePickerField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
+  const _TimePickerField({required this.label, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () async {
-        final picked = await showTimePicker(
-          context: context,
-          initialTime: value,
-        );
+        final picked = await showTimePicker(context: context, initialTime: value);
         if (picked != null) onChanged(picked);
       },
       child: InputDecorator(

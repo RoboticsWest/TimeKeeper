@@ -55,11 +55,7 @@ class KpiStrip extends StatelessWidget {
         value: formatDuration(kpis.overtimeHours),
         icon: Icons.running_with_errors,
         // More overtime is not an improvement.
-        delta: _delta(
-          kpis.overtimeHours.inSeconds,
-          previous?.overtimeHours.inSeconds,
-          higherIsBetter: false,
-        ),
+        delta: _delta(kpis.overtimeHours.inSeconds, previous?.overtimeHours.inSeconds, higherIsBetter: false),
       ),
       KpiTile(
         label: 'Overtime %',

@@ -1,40 +1,27 @@
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use super::model::Notification;
-use super::repository::NotificationRepository;
+use super::repository::{NewNotification, NotificationRepository};
 
 #[async_trait]
 pub trait NotificationLogic: Send + Sync {
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Notification>>;
   async fn get_all(&self) -> anyhow::Result<Vec<Notification>>;
-  #[allow(clippy::too_many_arguments)]
-  async fn add(
-    &self,
-    notification_type: &str,
-    session_id: Uuid,
-    team_member_id: Option<Uuid>,
-    sent: bool,
-    discord_message_id: Option<&str>,
-  ) -> anyhow::Result<Notification>;
-  #[allow(clippy::too_many_arguments)]
-  async fn update(
-    &self,
-    id: Uuid,
-    notification_type: &str,
-    session_id: Uuid,
-    team_member_id: Option<Uuid>,
-    sent: bool,
-    discord_message_id: Option<&str>,
-  ) -> anyhow::Result<Option<Notification>>;
+  async fn schedule(&self, new: NewNotification<'_>) -> anyhow::Result<Notification>;
+  async fn set_status(&self, id: Uuid, status: &str) -> anyhow::Result<Option<Notification>>;
+  async fn mark_sent(&self, id: Uuid, discord_message_id: Option<&str>) -> anyhow::Result<Option<Notification>>;
+  async fn clear_message_id(&self, id: Uuid) -> anyhow::Result<()>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
   async fn clear(&self) -> anyhow::Result<()>;
 
   /// All notifications belonging to a given session.
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<Notification>>;
-  /// All notifications that have not yet been sent.
-  async fn get_unsent(&self) -> anyhow::Result<Vec<Notification>>;
-  /// Whether a notification of this type/session/team-member combination already exists.
+  /// Everything still pending whose scheduled time has arrived.
+  async fn get_due(&self, now: DateTime<Utc>) -> anyhow::Result<Vec<Notification>>;
+  /// Whether a notification of this type/session/team-member combination already exists, in any
+  /// status.
   async fn exists(
     &self,
     notification_type: &str,
@@ -63,51 +50,36 @@ impl<R: NotificationRepository> NotificationLogic for DefaultNotificationLogic<R
     self.repo.get_all().await
   }
 
-  async fn add(
-    &self,
-    notification_type: &str,
-    session_id: Uuid,
-    team_member_id: Option<Uuid>,
-    sent: bool,
-    discord_message_id: Option<&str>,
-  ) -> anyhow::Result<Notification> {
-    let record = self.repo.add(notification_type, session_id, team_member_id, sent, discord_message_id).await?;
-
-    Ok(record)
+  async fn schedule(&self, new: NewNotification<'_>) -> anyhow::Result<Notification> {
+    self.repo.schedule(new).await
   }
 
-  async fn update(
-    &self,
-    id: Uuid,
-    notification_type: &str,
-    session_id: Uuid,
-    team_member_id: Option<Uuid>,
-    sent: bool,
-    discord_message_id: Option<&str>,
-  ) -> anyhow::Result<Option<Notification>> {
-    let record = self.repo.update(id, notification_type, session_id, team_member_id, sent, discord_message_id).await?;
+  async fn set_status(&self, id: Uuid, status: &str) -> anyhow::Result<Option<Notification>> {
+    self.repo.set_status(id, status).await
+  }
 
-    Ok(record)
+  async fn mark_sent(&self, id: Uuid, discord_message_id: Option<&str>) -> anyhow::Result<Option<Notification>> {
+    self.repo.mark_sent(id, discord_message_id).await
+  }
+
+  async fn clear_message_id(&self, id: Uuid) -> anyhow::Result<()> {
+    self.repo.clear_message_id(id).await
   }
 
   async fn remove(&self, id: Uuid) -> anyhow::Result<()> {
-    self.repo.remove(id).await?;
-
-    Ok(())
+    self.repo.remove(id).await
   }
 
   async fn clear(&self) -> anyhow::Result<()> {
-    self.repo.clear().await?;
-
-    Ok(())
+    self.repo.clear().await
   }
 
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<Notification>> {
     self.repo.get_by_session_id(session_id).await
   }
 
-  async fn get_unsent(&self) -> anyhow::Result<Vec<Notification>> {
-    self.repo.get_unsent().await
+  async fn get_due(&self, now: DateTime<Utc>) -> anyhow::Result<Vec<Notification>> {
+    self.repo.get_due(now).await
   }
 
   async fn exists(

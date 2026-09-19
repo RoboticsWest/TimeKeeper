@@ -21,12 +21,7 @@ class _Section {
   final int colorSlot;
   final Widget Function() build;
 
-  const _Section({
-    required this.label,
-    required this.icon,
-    required this.colorSlot,
-    required this.build,
-  });
+  const _Section({required this.label, required this.icon, required this.colorSlot, required this.build});
 }
 
 /// Server configuration.
@@ -40,42 +35,12 @@ class SetupView extends HookConsumerWidget {
   static const double _sectionListWidth = 200;
 
   static final List<_Section> _sections = [
-    _Section(
-      label: 'Sessions',
-      icon: Icons.event_note,
-      colorSlot: 1,
-      build: SessionSetupTab.new,
-    ),
-    _Section(
-      label: 'Team Members',
-      icon: Icons.supervised_user_circle,
-      colorSlot: 2,
-      build: MemberSetupTab.new,
-    ),
-    _Section(
-      label: 'Branding',
-      icon: Icons.palette,
-      colorSlot: 4,
-      build: BrandingSetupTab.new,
-    ),
-    _Section(
-      label: 'Integrations',
-      icon: Icons.hub,
-      colorSlot: 6,
-      build: IntegrationsSetupTab.new,
-    ),
-    _Section(
-      label: 'Data',
-      icon: Icons.table_chart,
-      colorSlot: 3,
-      build: DataSetupTab.new,
-    ),
-    _Section(
-      label: 'Database',
-      icon: Icons.storage,
-      colorSlot: 7,
-      build: DatabaseSetupTab.new,
-    ),
+    _Section(label: 'Sessions', icon: Icons.event_note, colorSlot: 1, build: SessionSetupTab.new),
+    _Section(label: 'Team Members', icon: Icons.supervised_user_circle, colorSlot: 2, build: MemberSetupTab.new),
+    _Section(label: 'Branding', icon: Icons.palette, colorSlot: 4, build: BrandingSetupTab.new),
+    _Section(label: 'Integrations', icon: Icons.hub, colorSlot: 6, build: IntegrationsSetupTab.new),
+    _Section(label: 'Data', icon: Icons.table_chart, colorSlot: 3, build: DataSetupTab.new),
+    _Section(label: 'Database', icon: Icons.storage, colorSlot: 7, build: DatabaseSetupTab.new),
   ];
 
   @override
@@ -96,11 +61,7 @@ class SetupView extends HookConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
               for (var i = 0; i < _sections.length; i++)
-                _SectionTile(
-                  section: _sections[i],
-                  isSelected: selected.value == i,
-                  onTap: () => selected.value = i,
-                ),
+                _SectionTile(section: _sections[i], isSelected: selected.value == i, onTap: () => selected.value = i),
             ],
           ),
         ),
@@ -115,11 +76,7 @@ class _SectionTile extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _SectionTile({
-    required this.section,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _SectionTile({required this.section, required this.isSelected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -137,19 +94,13 @@ class _SectionTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Row(
               children: [
-                Icon(
-                  section.icon,
-                  size: 20,
-                  color: seriesColor(section.colorSlot, Theme.of(context).brightness),
-                ),
+                Icon(section.icon, size: 20, color: seriesColor(section.colorSlot, Theme.of(context).brightness)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     section.label,
                     style: TextStyle(
-                      color: isSelected
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.onSurfaceVariant,
+                      color: isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     ),

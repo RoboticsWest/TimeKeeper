@@ -12,8 +12,7 @@ part of 'scan_debounce_provider.dart';
 @ProviderFor(ScanDebounceMins)
 final scanDebounceMinsProvider = ScanDebounceMinsProvider._();
 
-final class ScanDebounceMinsProvider
-    extends $NotifierProvider<ScanDebounceMins, int> {
+final class ScanDebounceMinsProvider extends $NotifierProvider<ScanDebounceMins, int> {
   ScanDebounceMinsProvider._()
     : super(
         from: null,
@@ -34,10 +33,7 @@ final class ScanDebounceMinsProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(int value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<int>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<int>(value));
   }
 }
 
@@ -49,14 +45,7 @@ abstract class _$ScanDebounceMins extends $Notifier<int> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<int, int>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<int, int>,
-              int,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<AnyNotifier<int, int>, int, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

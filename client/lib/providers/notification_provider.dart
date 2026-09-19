@@ -3,33 +3,46 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/notification.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/providers/realtime_collection.dart';
 import 'package:time_keeper/utils/api_result.dart';
+import 'package:time_keeper/utils/time_utils.dart';
 
 part 'notification_provider.g.dart';
 
-const _notificationFields = 'id notificationType sessionId teamMemberId sent discordMessageId';
+const _notificationFields = 'id notificationType sessionId teamMemberId discordMessageId scheduledFor sentAt status';
 
-const _notificationsQuery = '''
+const _notificationsQuery =
+    '''
   query Notifications {
     notifications { $_notificationFields }
   }
 ''';
 
-const _notificationChangesSubscription = '''
+const _notificationChangesSubscription =
+    '''
   subscription NotificationChanges {
     notificationChanges { operation id data { $_notificationFields } }
   }
 ''';
 
-const _createNotificationMutation = '''
-  mutation CreateNotification(\$notificationType: String!, \$sessionId: UUID!, \$teamMemberId: UUID, \$sent: Boolean!) {
-    createNotification(notificationType: \$notificationType, sessionId: \$sessionId, teamMemberId: \$teamMemberId, sent: \$sent) { $_notificationFields }
+const _scheduleNotificationMutation =
+    '''
+  mutation ScheduleNotification(\$notificationType: String!, \$sessionId: UUID!, \$teamMemberId: UUID, \$scheduledFor: DateTime) {
+    scheduleNotification(notificationType: \$notificationType, sessionId: \$sessionId, teamMemberId: \$teamMemberId, scheduledFor: \$scheduledFor) { $_notificationFields }
   }
 ''';
 
-const _updateNotificationMutation = '''
-  mutation UpdateNotification(\$id: UUID!, \$notificationType: String!, \$sessionId: UUID!, \$teamMemberId: UUID, \$sent: Boolean!) {
-    updateNotification(id: \$id, notificationType: \$notificationType, sessionId: \$sessionId, teamMemberId: \$teamMemberId, sent: \$sent) { $_notificationFields }
+const _setNotificationStatusMutation =
+    '''
+  mutation SetNotificationStatus(\$id: UUID!, \$status: String!) {
+    setNotificationStatus(id: \$id, status: \$status) { $_notificationFields }
+  }
+''';
+
+const _cancelNotificationMutation =
+    '''
+  mutation CancelNotification(\$id: UUID!) {
+    cancelNotification(id: \$id) { $_notificationFields }
   }
 ''';
 
@@ -46,7 +59,8 @@ Stream<ChangeEvent<Notification>> notificationChanges(Ref ref) {
       .subscribe(SubscriptionOptions(document: gql(_notificationChangesSubscription)))
       .where((result) => result.data != null)
       .map(
-        (result) => ChangeEvent.fromJson(result.data!['notificationChanges'] as Map<String, dynamic>, Notification.fromJson),
+        (result) =>
+            ChangeEvent.fromJson(result.data!['notificationChanges'] as Map<String, dynamic>, Notification.fromJson),
       );
 }
 
@@ -54,21 +68,24 @@ Stream<ChangeEvent<Notification>> notificationChanges(Ref ref) {
 class Notifications extends _$Notifications {
   @override
   Map<String, Notification> build() {
+    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
+    // Without this a fetch that failed at startup is never retried.
+    ref.watch(timeKeeperGraphQLClientProvider);
     _fetchInitial();
     return {};
   }
 
   Future<void> _fetchInitial() async {
-    final client = ref.read(timeKeeperGraphQLClientProvider);
-    final result = await client.query(
-      QueryOptions(document: gql(_notificationsQuery), fetchPolicy: FetchPolicy.noCache),
+    final items = await fetchCollection<Notification>(
+      ref: ref,
+      document: _notificationsQuery,
+      rootField: 'notifications',
+      fromJson: Notification.fromJson,
+      idOf: (item) => item.id,
     );
-    if (result.hasException || result.data == null) return;
-
-    final items = (result.data!['notifications'] as List<dynamic>)
-        .map((e) => Notification.fromJson(e as Map<String, dynamic>))
-        .toList();
-    state = {for (final item in items) item.id: item};
+    // Null means every attempt failed; keep what we have rather than
+    // replacing real data with an empty map.
+    if (items != null) state = items;
   }
 
   Future<void> refresh() => _fetchInitial();
@@ -77,31 +94,29 @@ class Notifications extends _$Notifications {
     state = applyChangeToMap(state, change);
   }
 
-  Future<ApiCallResult> create({
+  /// Schedules a notification. Idempotent server-side: scheduling one that already exists
+  /// returns the existing row rather than duplicating it or resetting its status.
+  Future<ApiCallResult> schedule({
     required String notificationType,
     required String sessionId,
     String? teamMemberId,
-    required bool sent,
-  }) => _mutate(_createNotificationMutation, {
+    DateTime? scheduledFor,
+  }) => _mutate(_scheduleNotificationMutation, {
     'notificationType': notificationType,
     'sessionId': sessionId,
     'teamMemberId': teamMemberId,
-    'sent': sent,
+    'scheduledFor': toServerTimeOrNull(scheduledFor),
   });
 
-  Future<ApiCallResult> update({
-    required String id,
-    required String notificationType,
-    required String sessionId,
-    String? teamMemberId,
-    required bool sent,
-  }) => _mutate(_updateNotificationMutation, {
-    'id': id,
-    'notificationType': notificationType,
-    'sessionId': sessionId,
-    'teamMemberId': teamMemberId,
-    'sent': sent,
-  });
+  Future<ApiCallResult> setStatus({required String id, required String status}) =>
+      _mutate(_setNotificationStatusMutation, {'id': id, 'status': status});
+
+  /// Switches off a scheduled reminder without deleting it.
+  ///
+  /// Preferred over [delete]: a cancelled row still records that this reminder was deliberately
+  /// suppressed, whereas a deleted one is indistinguishable from one never scheduled — which is
+  /// exactly how the old model ended up re-sending reminders people had removed.
+  Future<ApiCallResult> cancel(String id) => _mutate(_cancelNotificationMutation, {'id': id});
 
   Future<ApiCallResult> delete(String id) => _mutate(_deleteNotificationMutation, {'id': id});
 
@@ -122,9 +137,11 @@ class Notifications extends _$Notifications {
 
 @Riverpod(keepAlive: true)
 void notificationsSync(Ref ref) {
-  ref.listen(notificationChangesProvider, (previous, next) {
-    next.whenData((change) {
-      ref.read(notificationsProvider.notifier).applyChange(change);
-    });
-  });
+  ref.listen(
+    notificationChangesProvider,
+    changeListener<Notification>(
+      apply: (change) => ref.read(notificationsProvider.notifier).applyChange(change),
+      refresh: () => ref.read(notificationsProvider.notifier).refresh(),
+    ),
+  );
 }

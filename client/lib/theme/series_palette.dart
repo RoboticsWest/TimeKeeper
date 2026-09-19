@@ -48,8 +48,7 @@ Color seriesColor(int index, Brightness brightness) {
 }
 
 /// Categorical color for [index], reading brightness from [context].
-Color seriesColorOf(BuildContext context, int index) =>
-    seriesColor(index, Theme.of(context).brightness);
+Color seriesColorOf(BuildContext context, int index) => seriesColor(index, Theme.of(context).brightness);
 
 /// Slot 0 is blue, which collides with the app's primary. Anything that sits
 /// next to primary-colored chrome — rail icons especially — picks from here

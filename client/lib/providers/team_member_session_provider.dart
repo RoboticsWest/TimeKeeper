@@ -3,25 +3,30 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/models/change_event.dart';
 import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/providers/realtime_collection.dart';
 import 'package:time_keeper/utils/api_result.dart';
+import 'package:time_keeper/utils/time_utils.dart';
 
 part 'team_member_session_provider.g.dart';
 
 const _teamMemberSessionFields = 'id teamMemberId sessionId checkInTime checkOutTime';
 
-const _teamMemberSessionsQuery = '''
+const _teamMemberSessionsQuery =
+    '''
   query TeamMemberSessions {
     teamMemberSessions { $_teamMemberSessionFields }
   }
 ''';
 
-const _teamMemberSessionChangesSubscription = '''
+const _teamMemberSessionChangesSubscription =
+    '''
   subscription TeamMemberSessionChanges {
     teamMemberSessionChanges { operation id data { $_teamMemberSessionFields } }
   }
 ''';
 
-const _updateTeamMemberSessionMutation = '''
+const _updateTeamMemberSessionMutation =
+    '''
   mutation UpdateTeamMemberSession(\$id: UUID!, \$checkInTime: DateTime!, \$checkOutTime: DateTime) {
     updateTeamMemberSession(id: \$id, checkInTime: \$checkInTime, checkOutTime: \$checkOutTime) { $_teamMemberSessionFields }
   }
@@ -57,21 +62,24 @@ Stream<ChangeEvent<TeamMemberSession>> teamMemberSessionChanges(Ref ref) {
 class TeamMemberSessions extends _$TeamMemberSessions {
   @override
   Map<String, TeamMemberSession> build() {
+    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
+    // Without this a fetch that failed at startup is never retried.
+    ref.watch(timeKeeperGraphQLClientProvider);
     _fetchInitial();
     return {};
   }
 
   Future<void> _fetchInitial() async {
-    final client = ref.read(timeKeeperGraphQLClientProvider);
-    final result = await client.query(
-      QueryOptions(document: gql(_teamMemberSessionsQuery), fetchPolicy: FetchPolicy.noCache),
+    final items = await fetchCollection<TeamMemberSession>(
+      ref: ref,
+      document: _teamMemberSessionsQuery,
+      rootField: 'teamMemberSessions',
+      fromJson: TeamMemberSession.fromJson,
+      idOf: (item) => item.id,
     );
-    if (result.hasException || result.data == null) return;
-
-    final items = (result.data!['teamMemberSessions'] as List<dynamic>)
-        .map((e) => TeamMemberSession.fromJson(e as Map<String, dynamic>))
-        .toList();
-    state = {for (final item in items) item.id: item};
+    // Null means every attempt failed; keep what we have rather than
+    // replacing real data with an empty map.
+    if (items != null) state = items;
   }
 
   Future<void> refresh() => _fetchInitial();
@@ -80,12 +88,10 @@ class TeamMemberSessions extends _$TeamMemberSessions {
     state = applyChangeToMap(state, change);
   }
 
-  Future<ApiCallResult> update(String id, DateTime checkInTime, DateTime? checkOutTime) =>
-      _mutate(_updateTeamMemberSessionMutation, {
-        'id': id,
-        'checkInTime': checkInTime.toUtc().toIso8601String(),
-        'checkOutTime': checkOutTime?.toUtc().toIso8601String(),
-      });
+  Future<ApiCallResult> update(String id, DateTime checkInTime, DateTime? checkOutTime) => _mutate(
+    _updateTeamMemberSessionMutation,
+    {'id': id, 'checkInTime': toServerTime(checkInTime), 'checkOutTime': toServerTimeOrNull(checkOutTime)},
+  );
 
   Future<ApiCallResult> delete(String id) => _mutate(_deleteTeamMemberSessionMutation, {'id': id});
 
@@ -109,9 +115,11 @@ class TeamMemberSessions extends _$TeamMemberSessions {
 
 @Riverpod(keepAlive: true)
 void teamMemberSessionsSync(Ref ref) {
-  ref.listen(teamMemberSessionChangesProvider, (previous, next) {
-    next.whenData((change) {
-      ref.read(teamMemberSessionsProvider.notifier).applyChange(change);
-    });
-  });
+  ref.listen(
+    teamMemberSessionChangesProvider,
+    changeListener<TeamMemberSession>(
+      apply: (change) => ref.read(teamMemberSessionsProvider.notifier).applyChange(change),
+      refresh: () => ref.read(teamMemberSessionsProvider.notifier).refresh(),
+    ),
+  );
 }

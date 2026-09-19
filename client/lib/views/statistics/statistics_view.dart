@@ -47,9 +47,7 @@ class StatisticsView extends HookConsumerWidget {
         ? const <DayMemberRow>[]
         : ref.watch(dayDetailProvider(query, selectedDay.value!));
 
-    final memberRows = overtimeOnly.value
-        ? members.where((row) => row.overtime > Duration.zero).toList()
-        : members;
+    final memberRows = overtimeOnly.value ? members.where((row) => row.overtime > Duration.zero).toList() : members;
 
     Future<void> exportCsv() async {
       final csv = buildCsv(
@@ -81,10 +79,7 @@ class StatisticsView extends HookConsumerWidget {
       isEmpty: series.isEmpty,
       actions: [
         SegmentedButton<ActivityMetric>(
-          segments: [
-            for (final value in ActivityMetric.values)
-              ButtonSegment(value: value, label: Text(value.label)),
-          ],
+          segments: [for (final value in ActivityMetric.values) ButtonSegment(value: value, label: Text(value.label))],
           selected: {metric.value},
           showSelectedIcon: false,
           style: const ButtonStyle(visualDensity: VisualDensity.compact),
@@ -94,8 +89,7 @@ class StatisticsView extends HookConsumerWidget {
         SegmentedButton<StatsBucket>(
           segments: [
             for (final value in StatsBucket.values)
-              if (value != StatsBucket.auto)
-                ButtonSegment(value: value, label: Text(value.label)),
+              if (value != StatsBucket.auto) ButtonSegment(value: value, label: Text(value.label)),
           ],
           selected: {query.effectiveBucket()},
           showSelectedIcon: false,

@@ -5,6 +5,7 @@ import 'package:time_keeper/providers/notification_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/session_rsvp_provider.dart';
+import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/providers/user_provider.dart';
@@ -54,6 +55,8 @@ class AppDataSync extends _$AppDataSync {
     ref.read(locationsSyncProvider);
     ref.read(notificationsSyncProvider);
     ref.read(sessionsSyncProvider);
+    // Settings are a single row rather than a collection, so they have their own stream.
+    ref.read(settingsChangesProvider);
   }
 
   void _refreshAll() {
@@ -65,5 +68,6 @@ class AppDataSync extends _$AppDataSync {
     ref.read(locationsProvider.notifier).refresh();
     ref.read(notificationsProvider.notifier).refresh();
     ref.read(sessionsProvider.notifier).refresh();
+    ref.invalidate(settingsQueryProvider);
   }
 }

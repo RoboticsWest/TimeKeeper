@@ -37,10 +37,7 @@ class CheckInHeatmapChart extends StatelessWidget {
                         child: Center(
                           child: Text(
                             weekdayAbbr[day],
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontSize: 9,
-                            ),
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 9),
                           ),
                         ),
                       ),
@@ -99,10 +96,7 @@ class CheckInHeatmapChart extends StatelessWidget {
                       child: Center(
                         child: Text(
                           hour % 3 == 0 ? '$hour' : '',
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontSize: 9,
-                          ),
+                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 9),
                         ),
                       ),
                     ),

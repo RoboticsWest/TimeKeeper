@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use async_graphql::{Context, Error, ID, Object, Result, SimpleObject, Subscription};
+use async_graphql::{Context, Error, ID, InputObject, Object, Result, SimpleObject, Subscription};
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, StreamExt};
 use tokio_stream::wrappers::BroadcastStream;
@@ -11,12 +11,15 @@ use uuid::Uuid;
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
 use crate::events::{ChangeOperation, EVENT_BUS};
-use crate::gql_common::Change;
+use crate::gql_common::{Change, Page, page_bounds};
 
+use crate::domains::notification::{LateReminderPolicy, plan_session_reminders};
+use crate::domains::settings::SettingsLogic;
 use crate::domains::team_member::TeamMemberLogic;
 
 use super::logic::SessionLogic;
 use super::model::Session;
+use super::repository::SessionFilter;
 
 const RESOURCE: &str = "sessions";
 const TABLE: &str = "sessions";
@@ -70,13 +73,116 @@ fn record_pin_failure() {
   }
 }
 
+/// Narrows `sessionPage`. Every field is optional; an empty list means "no constraint".
+#[derive(InputObject, Default)]
+pub struct SessionFilterInput {
+  /// Sessions starting at or after this instant.
+  pub from: Option<DateTime<Utc>>,
+  /// Sessions starting strictly before this instant.
+  pub to: Option<DateTime<Utc>>,
+  pub location_ids: Option<Vec<Uuid>>,
+  /// True for finished sessions only, false for unfinished, omitted for both.
+  pub finished: Option<bool>,
+}
+
+impl From<SessionFilterInput> for SessionFilter {
+  fn from(input: SessionFilterInput) -> Self {
+    Self {
+      from: input.from,
+      to: input.to,
+      location_ids: input.location_ids.unwrap_or_default(),
+      finished: input.finished,
+    }
+  }
+}
+
+/// What creating a session at these times would do to its Discord reminders.
+///
+/// The Sessions dialog queries this before creating, so an admin scheduling a session two hours
+/// out is told that the 24-hour reminder is already overdue and asked whether to send it - rather
+/// than discovering it by seeing "@here Session tomorrow" appear seconds later for a session
+/// starting the same afternoon.
+#[derive(SimpleObject)]
+pub struct SessionReminderPreview {
+  /// True when at least one reminder's lead time has already elapsed.
+  pub has_late_reminder: bool,
+  /// Human-readable names of the reminders that would fire immediately.
+  pub late_reminders: Vec<String>,
+  /// How the session's day would render in a message right now ("today", "tomorrow", ...).
+  pub relative_day: String,
+}
+
 #[derive(Default)]
 pub struct SessionQuery;
 
 #[Object]
 impl SessionQuery {
+  /// Every session.
+  ///
+  /// Kept for the kiosk and the calendar, which need the whole set. History views should use
+  /// `sessionPage` — this grows by a few hundred rows a season.
   async fn sessions(&self, ctx: &Context<'_>) -> Result<Vec<Session>> {
     Ok(logic(ctx)?.get_all().await?)
+  }
+
+  /// One filtered, paged slice of sessions, newest start first.
+  async fn session_page(
+    &self,
+    ctx: &Context<'_>,
+    filter: Option<SessionFilterInput>,
+    offset: Option<i32>,
+    limit: Option<i32>,
+  ) -> Result<Page<Session>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    let (limit, offset) = page_bounds(offset, limit);
+    let filter: SessionFilter = filter.unwrap_or_default().into();
+    let (items, total) = logic(ctx)?.query_page(&filter, offset, limit).await?;
+    Ok(Page::new(items, total, offset, limit))
+  }
+
+  /// Dry-run of the reminder scheduling for a session that does not exist yet.
+  async fn session_reminder_preview(
+    &self,
+    ctx: &Context<'_>,
+    start_time: DateTime<Utc>,
+    end_time: DateTime<Utc>,
+    location_id: Uuid,
+  ) -> Result<SessionReminderPreview> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    let settings = ctx.data::<Arc<dyn SettingsLogic>>()?.get().await?;
+    let now = Utc::now();
+
+    // A throwaway session standing in for the one about to be created.
+    let candidate = Session {
+      id: Uuid::nil(),
+      start_time,
+      end_time,
+      location_id,
+      finished: false,
+      actual_start_time: None,
+      actual_end_time: None,
+    };
+
+    let planned = plan_session_reminders(&candidate, &settings, now, LateReminderPolicy::SendNow);
+    let late_reminders: Vec<String> = planned
+      .iter()
+      .filter(|p| p.is_late)
+      .map(|p| match p.notification_type {
+        crate::domains::notification::TYPE_SESSION_START_REMINDER => "Session start reminder".to_string(),
+        crate::domains::notification::TYPE_SESSION_END_REMINDER => "Session end reminder".to_string(),
+        other => other.to_string(),
+      })
+      .collect();
+
+    Ok(SessionReminderPreview {
+      has_late_reminder: !late_reminders.is_empty(),
+      late_reminders,
+      relative_day: crate::time::format_relative_day(
+        start_time.timestamp(),
+        crate::time::parse_tz(&settings.timezone),
+        now.timestamp(),
+      ),
+    })
   }
 }
 
@@ -85,15 +191,24 @@ pub struct SessionMutation;
 
 #[Object]
 impl SessionMutation {
+  /// Creates a session.
+  ///
+  /// `send_late_reminder` decides what happens to a reminder whose lead time has already
+  /// elapsed: `true` sends it on the next tick, `false` records it as skipped. Defaults to
+  /// `false` so a caller that does not ask the question never fires a surprise announcement;
+  /// the UI asks and passes the operator's answer through.
   async fn create_session(
     &self,
     ctx: &Context<'_>,
     start_time: DateTime<Utc>,
     end_time: DateTime<Utc>,
     location_id: Uuid,
+    send_late_reminder: Option<bool>,
   ) -> Result<Session> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
-    Ok(logic(ctx)?.create(start_time, end_time, location_id).await?)
+    let policy =
+      if send_late_reminder.unwrap_or(false) { LateReminderPolicy::SendNow } else { LateReminderPolicy::Skip };
+    Ok(logic(ctx)?.create(start_time, end_time, location_id, policy).await?)
   }
 
   #[allow(clippy::too_many_arguments)]

@@ -18,7 +18,8 @@ use super::model::Settings;
 use super::repository::{LogoRepository, SettingsRepository};
 
 pub struct GeneralUpdate {
-  pub next_session_threshold_secs: Option<i64>,
+  pub check_in_window_secs: Option<i64>,
+  pub auto_checkout_after_secs: Option<i64>,
   pub timezone: Option<String>,
   pub quick_pin_enabled: Option<bool>,
 }
@@ -151,8 +152,11 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
 
   async fn update_general(&self, update: GeneralUpdate) -> anyhow::Result<()> {
     let mut settings = self.repo.get().await?;
-    if let Some(v) = update.next_session_threshold_secs {
-      settings.next_session_threshold_secs = v;
+    if let Some(v) = update.check_in_window_secs {
+      settings.check_in_window_secs = v;
+    }
+    if let Some(v) = update.auto_checkout_after_secs {
+      settings.auto_checkout_after_secs = v;
     }
     if let Some(v) = update.timezone {
       settings.timezone = v;

@@ -39,12 +39,7 @@ void showTeamMemberDialog(
   ).show(context);
 }
 
-void showDeleteTeamMemberDialog(
-  BuildContext context,
-  WidgetRef ref, {
-  required String id,
-  required String name,
-}) {
+void showDeleteTeamMemberDialog(BuildContext context, WidgetRef ref, {required String id, required String name}) {
   ConfirmDialog.warn(
     title: 'Delete Team Member',
     message: Text('Are you sure you want to delete "$name"?'),
@@ -78,31 +73,17 @@ class _TeamMemberForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final firstNameController = useTextEditingController(
-      text: initialFirstName ?? '',
-    );
-    final lastNameController = useTextEditingController(
-      text: initialLastName ?? '',
-    );
-    final displayNameController = useTextEditingController(
-      text: initialDisplayName ?? '',
-    );
+    final firstNameController = useTextEditingController(text: initialFirstName ?? '');
+    final lastNameController = useTextEditingController(text: initialLastName ?? '');
+    final displayNameController = useTextEditingController(text: initialDisplayName ?? '');
     final newRfidTagController = useTextEditingController();
-    final discordIdController = useTextEditingController(
-      text: initialDiscordId ?? '',
-    );
-    final quickPinController = useTextEditingController(
-      text: initialQuickPin ?? '',
-    );
-    final memberType = useState<TeamMemberType>(
-      initialMemberType ?? TeamMemberType.student,
-    );
+    final discordIdController = useTextEditingController(text: initialDiscordId ?? '');
+    final quickPinController = useTextEditingController(text: initialQuickPin ?? '');
+    final memberType = useState<TeamMemberType>(initialMemberType ?? TeamMemberType.student);
     final isLoading = useState(false);
 
     // Existing RFID tags for this member (only shown in edit mode)
-    final existingTags = isEdit
-        ? ref.watch(rfidTagsByMemberProvider(memberId!))
-        : <String, RfidTag>{};
+    final existingTags = isEdit ? ref.watch(rfidTagsByMemberProvider(memberId!)) : <String, RfidTag>{};
 
     return SizedBox(
       width: 400,
@@ -115,20 +96,14 @@ class _TeamMemberForm extends HookConsumerWidget {
               Expanded(
                 child: TextField(
                   controller: firstNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'First Name',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'First Name', border: OutlineInputBorder()),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
                   controller: lastNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Last Name',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Last Name', border: OutlineInputBorder()),
                 ),
               ),
             ],
@@ -138,14 +113,8 @@ class _TeamMemberForm extends HookConsumerWidget {
           const SizedBox(height: 8),
           SegmentedButton<TeamMemberType>(
             segments: const [
-              ButtonSegment(
-                value: TeamMemberType.student,
-                label: Text('Student'),
-              ),
-              ButtonSegment(
-                value: TeamMemberType.mentor,
-                label: Text('Mentor'),
-              ),
+              ButtonSegment(value: TeamMemberType.student, label: Text('Student')),
+              ButtonSegment(value: TeamMemberType.mentor, label: Text('Mentor')),
             ],
             selected: {memberType.value},
             onSelectionChanged: (selected) {
@@ -155,10 +124,7 @@ class _TeamMemberForm extends HookConsumerWidget {
           const SizedBox(height: 16),
           TextField(
             controller: displayNameController,
-            decoration: const InputDecoration(
-              labelText: 'Display Name (optional)',
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(labelText: 'Display Name (optional)', border: OutlineInputBorder()),
           ),
           const SizedBox(height: 16),
           Text('RFID Tags', style: Theme.of(context).textTheme.titleSmall),
@@ -170,12 +136,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        entry.value.tag,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
+                    Expanded(child: Text(entry.value.tag, style: Theme.of(context).textTheme.bodyMedium)),
                     IconButton(
                       icon: const Icon(Icons.close, size: 18),
                       onPressed: () async {
@@ -191,9 +152,9 @@ class _TeamMemberForm extends HookConsumerWidget {
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
                 'No RFID tags',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
           const SizedBox(height: 4),
@@ -202,10 +163,7 @@ class _TeamMemberForm extends HookConsumerWidget {
               Expanded(
                 child: TextField(
                   controller: newRfidTagController,
-                  decoration: const InputDecoration(
-                    labelText: 'Add RFID Tag',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Add RFID Tag', border: OutlineInputBorder()),
                 ),
               ),
               const SizedBox(width: 8),
@@ -213,10 +171,7 @@ class _TeamMemberForm extends HookConsumerWidget {
               if (isEdit) ...[
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(
-                    Icons.add,
-                    color: Colors.green,
-                  ),
+                  icon: const Icon(Icons.add, color: Colors.green),
                   onPressed: () async {
                     final tag = newRfidTagController.text.trim();
                     if (tag.isEmpty) return;
@@ -234,7 +189,8 @@ class _TeamMemberForm extends HookConsumerWidget {
             controller: discordIdController,
             decoration: const InputDecoration(
               labelText: 'Discord ID (optional)',
-              helperText: 'Numeric user ID — enable Developer Mode in Discord, '
+              helperText:
+                  'Numeric user ID — enable Developer Mode in Discord, '
                   'then right-click the user and "Copy User ID"',
               border: OutlineInputBorder(),
             ),
@@ -245,20 +201,23 @@ class _TeamMemberForm extends HookConsumerWidget {
             controller: quickPinController,
             decoration: const InputDecoration(
               labelText: 'Quick PIN (optional)',
-              helperText: 'Typed at the kiosk to sign in without a card. '
-                  'Any length, and must be unique across the team.',
+              helperText:
+                  'Typed at the kiosk to sign in without a card. '
+                  'Up to $kMaxQuickPinLength characters, and must be unique across the team.',
               border: OutlineInputBorder(),
+              counterText: '',
             ),
             keyboardType: TextInputType.number,
+            // Matches the server check and the DB constraint; stopping it at the keyboard is
+            // friendlier than a round-trip rejection.
+            maxLength: kMaxQuickPinLength,
           ),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: isLoading.value
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                onPressed: isLoading.value ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               const SizedBox(width: 8),
@@ -270,13 +229,10 @@ class _TeamMemberForm extends HookConsumerWidget {
                         final lastName = lastNameController.text.trim();
                         final displayName = displayNameController.text.trim();
                         final newRfidTag = newRfidTagController.text.trim();
-                        final discordId = discordIdController.text
-                            .trim();
+                        final discordId = discordIdController.text.trim();
                         final quickPin = quickPinController.text.trim();
                         final type = memberType.value;
-                        final label = displayName.isNotEmpty
-                            ? displayName
-                            : '$firstName $lastName'.trim();
+                        final label = displayName.isNotEmpty ? displayName : '$firstName $lastName'.trim();
 
                         isLoading.value = true;
                         try {
@@ -306,14 +262,10 @@ class _TeamMemberForm extends HookConsumerWidget {
                             // Since team members sync via subscription, we find the newly created member by name
                             final members = ref.read(teamMembersProvider);
                             final newEntry = members.entries.where(
-                              (e) =>
-                                  e.value.firstName == firstName &&
-                                  e.value.lastName == lastName,
+                              (e) => e.value.firstName == firstName && e.value.lastName == lastName,
                             );
                             if (newEntry.isNotEmpty) {
-                              await ref
-                                  .read(rfidTagsProvider.notifier)
-                                  .create(newEntry.first.key, newRfidTag);
+                              await ref.read(rfidTagsProvider.notifier).create(newEntry.first.key, newRfidTag);
                             }
                           }
 
@@ -321,9 +273,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                             Navigator.of(context).pop();
                             if (result.success) {
                               SnackBarDialog.success(
-                                message: isEdit
-                                    ? '"$label" updated successfully'
-                                    : '"$label" created successfully',
+                                message: isEdit ? '"$label" updated successfully' : '"$label" created successfully',
                               ).show(context);
                             } else {
                               SnackBarDialog.fromApiResult(result: result).show(context);
@@ -334,11 +284,7 @@ class _TeamMemberForm extends HookConsumerWidget {
                         }
                       },
                 child: isLoading.value
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(isEdit ? 'Save' : 'Create'),
               ),
             ],

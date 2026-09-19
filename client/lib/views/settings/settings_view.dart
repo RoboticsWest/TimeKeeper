@@ -32,14 +32,10 @@ class SettingsView extends HookConsumerWidget {
     final currentLocationId = ref.watch(currentLocationProvider);
 
     final addressController = useTextEditingController(text: serverIp);
-    final graphqlPortController = useTextEditingController(
-      text: graphqlPort.toString(),
-    );
+    final graphqlPortController = useTextEditingController(text: graphqlPort.toString());
 
     final debounceMins = ref.watch(scanDebounceMinsProvider);
-    final debounceController = useTextEditingController(
-      text: debounceMins.toString(),
-    );
+    final debounceController = useTextEditingController(text: debounceMins.toString());
 
     final selectedLocationId = useState<String?>(currentLocationId);
     final kioskMode = ref.watch(kioskModeProvider);
@@ -55,19 +51,14 @@ class SettingsView extends HookConsumerWidget {
           items: [
             const DropdownMenuItem<String?>(value: null, child: Text('None')),
             ...locations.entries.map(
-              (entry) => DropdownMenuItem<String?>(
-                value: entry.key,
-                child: Text(entry.value.location),
-              ),
+              (entry) => DropdownMenuItem<String?>(value: entry.key, child: Text(entry.value.location)),
             ),
           ],
           onChanged: (value) {
             selectedLocationId.value = value;
           },
           onUpdate: () {
-            ref
-                .read(currentLocationProvider.notifier)
-                .setLocation(selectedLocationId.value);
+            ref.read(currentLocationProvider.notifier).setLocation(selectedLocationId.value);
             _showConfirmation(context, 'Device location updated');
           },
         ),
@@ -80,9 +71,7 @@ class SettingsView extends HookConsumerWidget {
                 : 'Only available on desktop platforms',
           ),
           value: kioskMode,
-          onChanged: isKioskModeSupported
-              ? (_) => ref.read(kioskModeProvider.notifier).toggle()
-              : null,
+          onChanged: isKioskModeSupported ? (_) => ref.read(kioskModeProvider.notifier).toggle() : null,
         ),
         const SizedBox(height: 24),
         TextFieldSetting(
