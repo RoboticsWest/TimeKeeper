@@ -17,6 +17,7 @@ use super::model::Settings;
 
 const RESOURCE: &str = "settings";
 const TABLE: &str = "settings";
+const LOGO_TABLE: &str = "logos";
 const VALID_MEMBER_TYPES: &[&str] = &["student", "mentor"];
 
 fn logic(ctx: &Context<'_>) -> Result<Arc<dyn SettingsLogic>> {
@@ -214,6 +215,37 @@ impl SettingsSubscription {
       async move {
         change.ok()?;
         logic.get().await.ok()
+      }
+    }))
+  }
+}
+
+#[derive(Default)]
+pub struct LogoSubscription;
+
+#[Subscription]
+impl LogoSubscription {
+  /// Pushes the logo whenever it is replaced.
+  ///
+  /// `logos` is a single-row table like `settings`, so this emits the new value directly
+  /// rather than a `Change`. Emitted base64-encoded, matching the `logo` query; `None` means
+  /// the logo was cleared.
+  ///
+  /// Without this an admin uploading a new logo only changed it on their own machine - every
+  /// other client kept the one it fetched when it last reconnected.
+  async fn logo_changes(&self, ctx: &Context<'_>) -> Result<impl Stream<Item = Option<String>>> {
+    let logic = logic(ctx)?;
+    let Some(bus) = EVENT_BUS.get() else {
+      return Err(Error::new("Event bus not initialized"));
+    };
+    let rx = bus.subscribe(LOGO_TABLE);
+
+    Ok(BroadcastStream::new(rx).filter_map(move |change| {
+      let logic = logic.clone();
+      async move {
+        change.ok()?;
+        let bytes = logic.get_logo().await.ok()?;
+        Some(bytes.map(|b| base64::engine::general_purpose::STANDARD.encode(b)))
       }
     }))
   }

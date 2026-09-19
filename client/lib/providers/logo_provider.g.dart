@@ -55,7 +55,7 @@ final class LogoNotifierProvider extends $NotifierProvider<LogoNotifier, Uint8Li
   }
 }
 
-String _$logoNotifierHash() => r'f84320977fcf9dac34fadcf18a2b0880632f3b87';
+String _$logoNotifierHash() => r'ce01d127cc777972b7f8d1e08e273787b9e347fc';
 
 /// The server-configured logo, cached in memory and refreshed whenever the
 /// connection comes back up.

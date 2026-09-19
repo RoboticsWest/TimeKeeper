@@ -104,6 +104,48 @@ final class SettingsQueryProvider extends $FunctionalProvider<AsyncValue<Setting
 
 String _$settingsQueryHash() => r'4277f171fe52bebb27b30bf1430ec16b21ad34b4';
 
+/// The logo, pushed whenever it is replaced.
+///
+/// Base64-encoded to match [logoQuery]; null means the logo was cleared.
+
+@ProviderFor(logoChanges)
+final logoChangesProvider = LogoChangesProvider._();
+
+/// The logo, pushed whenever it is replaced.
+///
+/// Base64-encoded to match [logoQuery]; null means the logo was cleared.
+
+final class LogoChangesProvider extends $FunctionalProvider<AsyncValue<String?>, String?, Stream<String?>>
+    with $FutureModifier<String?>, $StreamProvider<String?> {
+  /// The logo, pushed whenever it is replaced.
+  ///
+  /// Base64-encoded to match [logoQuery]; null means the logo was cleared.
+  LogoChangesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'logoChangesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$logoChangesHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<String?> $createElement($ProviderPointer pointer) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<String?> create(Ref ref) {
+    return logoChanges(ref);
+  }
+}
+
+String _$logoChangesHash() => r'456a0fe3265bc6e61279b0c22b075bc59373a820';
+
 @ProviderFor(logoQuery)
 final logoQueryProvider = LogoQueryProvider._();
 

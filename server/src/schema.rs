@@ -6,7 +6,7 @@ use crate::domains::rfid_tag::{RfidTagMutation, RfidTagQuery, RfidTagSubscriptio
 use crate::domains::schedule::ScheduleMutation;
 use crate::domains::session::{SessionMutation, SessionQuery, SessionSubscription};
 use crate::domains::session_rsvp::{SessionRsvpQuery, SessionRsvpSubscription};
-use crate::domains::settings::{SettingsMutation, SettingsQuery, SettingsSubscription};
+use crate::domains::settings::{LogoSubscription, SettingsMutation, SettingsQuery, SettingsSubscription};
 use crate::domains::statistics::StatisticsQuery;
 use crate::domains::team_member::{TeamMemberMutation, TeamMemberQuery, TeamMemberSubscription};
 use crate::domains::team_member_session::{
@@ -51,6 +51,7 @@ pub struct SubscriptionRoot(
   SessionSubscription,
   SessionRsvpSubscription,
   SettingsSubscription,
+  LogoSubscription,
   TeamMemberSubscription,
   TeamMemberSessionSubscription,
   UserSubscription,

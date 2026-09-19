@@ -25,16 +25,25 @@ class LogoNotifier extends _$LogoNotifier {
       }
     });
 
+    // An admin replacing the logo used to change it only on their own machine: every other
+    // client kept whatever it fetched when it last reconnected. The push carries the new
+    // value, so there is nothing to re-fetch.
+    ref.listen<AsyncValue<String?>>(logoChangesProvider, (previous, next) {
+      next.whenData(_applyLogo);
+    });
+
     return null;
   }
 
-  Future<void> _fetchLogo() async {
-    final logoBase64 = await ref.read(logoQueryProvider.future);
+  void _applyLogo(String? logoBase64) {
     final logoBytes = logoBase64 != null && logoBase64.isNotEmpty ? base64Decode(logoBase64) : null;
-
     if (!listEquals(state, logoBytes)) {
       state = logoBytes;
     }
+  }
+
+  Future<void> _fetchLogo() async {
+    _applyLogo(await ref.read(logoQueryProvider.future));
   }
 
   Future<void> refresh() async {

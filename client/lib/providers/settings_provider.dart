@@ -35,6 +35,12 @@ const _logoQuery = r'''
   }
 ''';
 
+const _logoChangesSubscription = r'''
+  subscription LogoChanges {
+    logoChanges
+  }
+''';
+
 const _discordRolesQuery = r'''
   query DiscordRoles {
     discordRoles { id name }
@@ -69,6 +75,18 @@ Future<Settings?> settingsQuery(Ref ref) async {
   final result = await client.query(QueryOptions(document: gql(_settingsQuery), fetchPolicy: FetchPolicy.noCache));
   if (result.hasException || result.data == null) return null;
   return Settings.fromJson(result.data!['settings'] as Map<String, dynamic>);
+}
+
+/// The logo, pushed whenever it is replaced.
+///
+/// Base64-encoded to match [logoQuery]; null means the logo was cleared.
+@Riverpod(keepAlive: true)
+Stream<String?> logoChanges(Ref ref) {
+  final client = ref.watch(timeKeeperGraphQLClientProvider);
+  return client
+      .subscribe(SubscriptionOptions(document: gql(_logoChangesSubscription)))
+      .where((result) => result.data != null)
+      .map((result) => result.data!['logoChanges'] as String?);
 }
 
 @riverpod
