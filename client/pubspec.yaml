@@ -29,6 +29,7 @@ dependencies:
   dart_pcsc: ^2.0.2
   marionette_flutter: ^0.6.0
   web: ^1.1.1
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:

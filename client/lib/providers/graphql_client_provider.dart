@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/network_config_provider.dart';
 import 'package:time_keeper/utils/logger.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 part 'graphql_client_provider.g.dart';
 
@@ -59,6 +60,17 @@ class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
         // server is unreachable.
         delayBetweenReconnectionAttempts: const Duration(seconds: 2),
         inactivityTimeout: const Duration(seconds: 30),
+        // The package never observes the channel's `ready` future, so a failed
+        // first connect (server still booting) leaves that error unhandled in
+        // the zone - the big "RethrownDartError / WebSocketException: Failed to
+        // connect WebSocket" trace in the web console whenever the socket opens
+        // before the server is accepting. Observing `ready` swallows it; the
+        // reconnect loop above still drives the actual retry.
+        connectFn: (uri, protocols) {
+          final channel = WebSocketChannel.connect(uri, protocols: protocols);
+          unawaited(channel.ready.then((_) {}, onError: (_) {}));
+          return channel;
+        },
       ),
     );
     _wsLink = wsLink;

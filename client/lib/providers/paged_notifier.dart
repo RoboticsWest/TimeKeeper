@@ -87,9 +87,17 @@ mixin PagedAsyncNotifier<T> {
 
   /// Jumps to the first page — used when the filter changes, since pages are keyed to the
   /// filter's total ordering.
+  ///
+  /// The refetch is pushed onto a later event-loop turn because views apply their initial
+  /// filter from a `useEffect`, which fires while the widget tree is still building. `load`
+  /// writes `AsyncLoading` synchronously, and doing that during a build trips Riverpod's debug
+  /// guard against modifying providers while the tree is building. The extra hop is harmless
+  /// for the event-handler call sites.
   void resetToFirstPage() {
     _offset = 0;
-    unawaited(load(clear: true));
+    Future<void>(() {
+      unawaited(load(clear: true));
+    });
   }
 
   void nextPage() {
