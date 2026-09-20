@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:time_keeper/models/session_rsvp.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
+import 'package:time_keeper/providers/session_rsvp_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
@@ -33,8 +35,8 @@ class HomeView extends HookConsumerWidget {
     final sessionList = ref.watch(sessionsProvider);
     final deviceLocationId = ref.watch(currentLocationProvider);
     final locations = ref.watch(locationsProvider);
-    final teamMembers = ref.watch(teamMembersProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
+    final sessionRsvps = ref.watch(sessionRsvpsProvider);
     final thresholdDuration = useState<Duration>(Duration.zero);
     final isUpcoming = useState(false);
 
@@ -58,6 +60,27 @@ class HomeView extends HookConsumerWidget {
     final checkedInCount = currentSessionId != null
         ? teamMemberSessions.values.where((ms) => ms.sessionId == currentSessionId && ms.checkOutTime == null).length
         : 0;
+
+    // RSVP "going"/"not going" and distinct people who have checked in (at all,
+    // even if already gone) for the current session.
+    var rsvpGoingCount = 0;
+    var rsvpNotGoingCount = 0;
+    var uniqueSeenCount = 0;
+    if (currentSessionId != null) {
+      for (final rsvp in sessionRsvps.values) {
+        if (rsvp.sessionId != currentSessionId) continue;
+        if (rsvp.status == RsvpStatus.going) {
+          rsvpGoingCount++;
+        } else if (rsvp.status == RsvpStatus.notGoing) {
+          rsvpNotGoingCount++;
+        }
+      }
+      uniqueSeenCount = teamMemberSessions.values
+          .where((ms) => ms.sessionId == currentSessionId)
+          .map((ms) => ms.teamMemberId)
+          .toSet()
+          .length;
+    }
 
     final hasKiosk = ref.watch(hasAnyPermissionProvider);
     final quickPinEnabled = ref.watch(settingsQueryProvider).value?.quickPinEnabled ?? false;
@@ -163,7 +186,9 @@ class HomeView extends HookConsumerWidget {
           locations: locations,
           deviceLocationName: deviceLocationId != null ? locations[deviceLocationId]?.location : null,
           checkedInCount: checkedInCount,
-          totalMembers: teamMembers.length,
+          rsvpGoingCount: rsvpGoingCount,
+          rsvpNotGoingCount: rsvpNotGoingCount,
+          uniqueSeenCount: uniqueSeenCount,
         ),
         Expanded(child: CheckedInList()),
       ],

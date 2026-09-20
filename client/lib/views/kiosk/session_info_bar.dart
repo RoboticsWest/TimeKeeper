@@ -12,7 +12,9 @@ class SessionInfoBar extends StatelessWidget {
   final Map<String, Location> locations;
   final String? deviceLocationName;
   final int checkedInCount;
-  final int totalMembers;
+  final int rsvpGoingCount;
+  final int rsvpNotGoingCount;
+  final int uniqueSeenCount;
 
   const SessionInfoBar({
     super.key,
@@ -22,11 +24,37 @@ class SessionInfoBar extends StatelessWidget {
     this.locations = const {},
     this.deviceLocationName,
     this.checkedInCount = 0,
-    this.totalMembers = 0,
+    this.rsvpGoingCount = 0,
+    this.rsvpNotGoingCount = 0,
+    this.uniqueSeenCount = 0,
   });
 
   String _locationName(Session session) {
     return locations[session.locationId]?.location ?? '';
+  }
+
+  bool get hasRsvps => rsvpGoingCount + rsvpNotGoingCount > 0;
+
+  /// The attendance denominator: the RSVP "going" count, raised by however many
+  /// distinct people have actually shown up so far (a session can exceed its
+  /// RSVPs). 0 until there is any expectation at all.
+  int get expected => rsvpGoingCount > uniqueSeenCount ? rsvpGoingCount : uniqueSeenCount;
+
+  Widget _statIcon(ThemeData theme, Color color, IconData icon, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color.withValues(alpha: 0.7)),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: color.withValues(alpha: 0.7),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -135,13 +163,31 @@ class SessionInfoBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Icon(Icons.people, size: 14, color: color.withValues(alpha: 0.7)),
-            const SizedBox(width: 4),
-            Text(
-              '$checkedInCount / $totalMembers',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: color.withValues(alpha: 0.7),
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 4,
+                  children: [
+                    // Present now / expected: starts at the RSVP "going" count and
+                    // is raised by however many distinct people actually show up,
+                    // so it reads 0/5 before the session and 8/12 once 12 unique
+                    // people have turned up. The numerator is who is here right now.
+                    _statIcon(
+                      theme,
+                      color,
+                      Icons.people,
+                      expected > 0 ? '$checkedInCount / $expected' : '$checkedInCount',
+                    ),
+                    if (hasRsvps)
+                      _statIcon(theme, color, Icons.event_available, '$rsvpGoingCount'),
+                    if (rsvpNotGoingCount > 0)
+                      _statIcon(theme, color, Icons.event_busy, '$rsvpNotGoingCount'),
+                  ],
+                ),
               ),
             ),
           ],
