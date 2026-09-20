@@ -34,8 +34,7 @@
   </head>
   <body>
     <!--
-      This app is served from GitHub Pages, which does not let us set cache headers. After a
-      deploy the old service worker can keep serving stale main.dart.js_*.part.js, and the app
+      After a deploy the old service worker can keep serving stale main.dart.js_*.part.js, and the app
       then dies with "DeferredLoadException ... part not loaded". Clear the stale caches and
       reload once instead of asking the user to wipe their site storage. Each visit self-heals
       at most twice, so a genuinely broken deploy cannot loop.
