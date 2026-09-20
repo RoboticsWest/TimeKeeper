@@ -1,9 +1,12 @@
-use chrono::{Timelike, Utc};
+use chrono::Utc;
 use serenity::all::{Context, CreateEmbed, CreateMessage, Message};
 
 use crate::domains::settings::DEFAULT_MAINTENANCE_MESSAGE;
+use crate::domains::statistics::achievements;
+use crate::domains::statistics::logic::LeaderboardEntry;
+use crate::domains::statistics::profile::{self, MemberProfile, ProfileInput};
 use crate::domains::team_member::TeamMember;
-use crate::time::{format_datetime, parse_tz};
+use crate::time::{format_datetime, format_full_date, parse_tz};
 
 use super::deps::DiscordDeps;
 use super::embeds;
@@ -25,6 +28,27 @@ impl From<CreateEmbed> for Reply {
 
 fn member_name(member: &TeamMember) -> &str {
   member.display_name.as_deref().unwrap_or("Unknown")
+}
+
+/// Capitalise the first character — turning a stored lowercase member type into a field label.
+fn capitalize(s: &str) -> String {
+  let mut chars = s.chars();
+  match chars.next() {
+    Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    None => String::new(),
+  }
+}
+
+/// A clocked time-of-day, minutes since midnight, as `h:mmAM/PM`.
+fn clock_time(total_minutes: i64) -> String {
+  let hour = total_minutes / 60;
+  let minute = total_minutes % 60;
+  let mut hour12 = hour % 12;
+  if hour12 == 0 {
+    hour12 = 12;
+  }
+  let period = if hour < 12 { "AM" } else { "PM" };
+  format!("{hour12}:{minute:02}{period}")
 }
 
 pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
@@ -58,6 +82,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
     "link" => Some(link_member(msg, args, deps).await.into()),
     "checkout" => Some(checkout(msg, deps).await.into()),
     "mystats" => Some(mystats(msg, deps).await.into()),
+    "achievements" => Some(achievements(msg, deps).await.into()),
     _ => None,
   };
 
@@ -69,7 +94,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
 /// Commands the bot recognises. Kept next to the dispatch `match` — a command added there and
 /// forgotten here still works, it just answers normally during maintenance.
 const COMMANDS: &[&str] =
-  &["ping", "help", "leaderboard", "sessions", "checkedin", "locations", "link", "checkout", "mystats"];
+  &["ping", "help", "leaderboard", "sessions", "checkedin", "locations", "link", "checkout", "mystats", "achievements"];
 
 fn is_known_command(cmd: &str) -> bool {
   COMMANDS.contains(&cmd)
@@ -415,14 +440,25 @@ async fn checkout(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   }
 }
 
-/// A caller's own stats: what the leaderboard says about them plus their sessions attended
-/// and average check-in time.
+/// A caller's profile, plus the bits of presentation that only `!mystats` needs.
+struct LoadedProfile {
+  name: String,
+  member_type: String,
+  profile: MemberProfile,
+  /// Their first check-in, formatted — the schema keeps no enrollment date, so the earliest
+  /// check-in is the closest honest answer to "in TimeKeeper since".
+  member_since: Option<String>,
+}
+
+/// Loads everything the caller's stat card and achievement list are derived from, or the embed
+/// explaining why it could not be.
 ///
-/// Rank and the hour buckets come from the same leaderboard computation `!leaderboard` shows,
-/// so the number always matches the public board — including the overtime display setting,
-/// which folds overtime into regular hours when it is off. The extras are derived straight from
-/// the member's attendance records.
-async fn mystats(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
+/// Both ranks come from the same leaderboard computation `!leaderboard` shows, but run over
+/// every member type unfiltered — so the configured `leaderboard_member_types` default can
+/// never hide the caller. The relative rank is the caller's position within their own member
+/// type (exactly `!leaderboard students` / `!leaderboard mentors`), the global one their
+/// position against everyone.
+async fn load_profile(msg: &Message, deps: &DiscordDeps) -> Result<LoadedProfile, Box<CreateEmbed>> {
   let discord_id = msg.author.id.to_string();
 
   let member = match deps.team_members.get_by_discord_id(&discord_id).await {
@@ -432,76 +468,136 @@ async fn mystats(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
         Ok(s) if s.discord_self_link_enabled => "Use `!link Name` to link it.",
         _ => "Ask an admin to link it.",
       };
-      return embeds::warning("Not linked", &format!("Your Discord account is not linked to a team member. {hint}"));
+      return Err(Box::new(embeds::warning(
+        "Not linked",
+        &format!("Your Discord account is not linked to a team member. {hint}"),
+      )));
     }
-    Err(e) => return embeds::error(&format!("Error loading team members: {e}")),
+    Err(e) => return Err(Box::new(embeds::error(&format!("Error loading team members: {e}")))),
   };
-
-  let name = member_name(&member).to_string();
 
   let settings = match deps.settings.get().await {
     Ok(s) => s,
-    Err(e) => return embeds::error(&format!("Error loading settings: {e}")),
+    Err(e) => return Err(Box::new(embeds::error(&format!("Error loading settings: {e}")))),
   };
+  let tz = parse_tz(&settings.timezone);
 
-  let entries = match deps.statistics.get_leaderboard(None).await {
+  // Everyone, unfiltered: the caller must always be found, whatever the board default is.
+  let entries = match deps.statistics.get_leaderboard(Some(Vec::new())).await {
     Ok(e) => e,
-    Err(e) => return embeds::error(&format!("Error computing leaderboard: {e}")),
+    Err(e) => return Err(Box::new(embeds::error(&format!("Error computing leaderboard: {e}")))),
   };
 
-  // The configured default member-type filter decides who appears, exactly like `!leaderboard`;
-  // a member filtered out by it simply has no rank here either.
-  let rank = entries.iter().position(|e| e.team_member_id == member.id);
-  let entry = rank.map(|i| &entries[i]);
+  let global_position = entries.iter().position(|e| e.team_member_id == member.id);
+  let entry = global_position.map(|i| &entries[i]);
 
-  let total_secs = entry.map_or(0.0, |e| e.total_secs);
-  let this_week_secs = entry.map_or(0.0, |e| e.this_week.regular_secs + e.this_week.overtime_secs);
-  // Zero both when there is no overtime and when the leaderboard folds it into regular hours.
-  let overtime_secs = entry.map_or(0.0, |e| e.all_time.overtime_secs);
-  let active_secs = entry.map_or(0.0, |e| e.active_session.regular_secs + e.active_session.overtime_secs);
+  // The relative board is `!leaderboard <member type>` exactly: the same member-type entries
+  // that override produces, ordered the same way.
+  let group: Vec<&LeaderboardEntry> =
+    entries.iter().filter(|e| e.team_member.member_type == member.member_type).collect();
+  let group_position = group.iter().position(|e| e.team_member_id == member.id);
+
+  let sessions = match deps.sessions.get_all().await {
+    Ok(s) => s,
+    Err(e) => return Err(Box::new(embeds::error(&format!("Error loading sessions: {e}")))),
+  };
 
   let member_sessions = match deps.team_member_sessions.get_by_member_id(member.id).await {
     Ok(ms) => ms,
-    Err(e) => return embeds::error(&format!("Error loading attendance: {e}")),
+    Err(e) => return Err(Box::new(embeds::error(&format!("Error loading attendance: {e}")))),
   };
 
-  let sessions_attended = member_sessions.len();
+  let member_since =
+    member_sessions.iter().map(|ms| ms.check_in_time).min().map(|first| format_full_date(first.timestamp(), tz));
 
-  let avg_check_in = if member_sessions.is_empty() {
-    None
-  } else {
-    let tz = parse_tz(&settings.timezone);
-    let total_minutes: i64 = member_sessions
-      .iter()
-      .map(|ms| {
-        let local = ms.check_in_time.with_timezone(&tz);
-        i64::from(local.hour() * 60 + local.minute())
-      })
-      .sum();
-    // Rounds to the nearest minute; rendered in the operator's configured timezone.
-    #[allow(clippy::cast_possible_truncation)]
+  let profile = profile::build(&ProfileInput {
+    member_type: member.member_type.clone(),
+    member_sessions: &member_sessions,
+    sessions: &sessions,
+    tz,
+    now: Utc::now(),
+    total_secs: entry.map_or(0.0, |e| e.total_secs),
+    this_week_secs: entry.map_or(0.0, |e| e.this_week.regular_secs + e.this_week.overtime_secs),
+    active_secs: entry.map_or(0.0, |e| e.active_session.regular_secs + e.active_session.overtime_secs),
+    global_rank: global_position.map(|i| (i + 1, entries.len())),
+    group_rank: group_position.map(|i| (i + 1, group.len())),
+  });
+
+  Ok(LoadedProfile {
+    name: member_name(&member).to_string(),
+    member_type: capitalize(&member.member_type),
+    profile,
+    member_since,
+  })
+}
+
+/// A caller's own stat card: title, achievement progress, ranks and hour buckets.
+///
+/// Hour buckets mirror the public board; the extras are derived straight from the caller's
+/// attendance records, so overtime is always the real figure regardless of the leaderboard's
+/// overtime display setting.
+async fn mystats(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
+  let loaded = match load_profile(msg, deps).await {
+    Ok(loaded) => loaded,
+    Err(embed) => return *embed,
+  };
+  let p = &loaded.profile;
+
+  let title = achievements::title_for(p);
+  let overtime_pct = p.overtime_pct();
+  let overtime = (p.overtime_secs > 0.0).then(|| format!("{} ({}%)", format_secs(p.overtime_secs), overtime_pct));
+
+  // Attendance counts finished sessions only, so upcoming ones can't pad the denominator.
+  let attendance = (p.sessions_possible > 0).then_some((p.sessions_attended, p.sessions_possible));
+
+  let longest_session = p.longest_stint_secs.map(|secs| {
     #[allow(clippy::cast_precision_loss)]
-    let avg = (total_minutes as f64 / member_sessions.len() as f64).round() as i64;
-    let hour = avg / 60;
-    let minute = avg % 60;
-    let mut hour12 = hour % 12;
-    if hour12 == 0 {
-      hour12 = 12;
-    }
-    let period = if hour < 12 { "AM" } else { "PM" };
-    Some(format!("{hour12}:{minute:02}{period}"))
-  };
+    format_secs(secs as f64)
+  });
 
   embeds::my_stats(&embeds::MyStats {
-    name,
-    rank: rank.map(|i| (i + 1, entries.len())),
-    total: format_secs(total_secs),
-    this_week: format_secs(this_week_secs),
-    overtime: (overtime_secs > 0.0).then(|| format_secs(overtime_secs)),
-    active_session: (active_secs > 0.0).then(|| format_secs(active_secs)),
-    sessions_attended,
-    avg_check_in,
+    name: loaded.name,
+    title: title.name.to_string(),
+    title_reason: title.reason.to_string(),
+    achievements: achievements::progress(p),
+    member_type: loaded.member_type,
+    group_rank: p.group_rank,
+    global_rank: p.global_rank,
+    member_since: loaded.member_since,
+    attendance,
+    forgot_checkout: p.forgot_checkout,
+    total: format_secs(p.total_secs),
+    this_week: format_secs(p.this_week_secs),
+    overtime,
+    active_session: (p.active_secs > 0.0).then(|| format_secs(p.active_secs)),
+    sessions_attended: p.sessions_attended,
+    longest_session,
+    avg_check_in: p.avg_check_in_minutes.map(clock_time),
+    avg_check_out: p.avg_check_out_minutes.map(clock_time),
+    latest_check_out: p.latest_check_out_minutes.map(clock_time),
   })
+}
+
+/// The caller's achievement collection: what they hold and a preview of what they do not.
+///
+/// Nothing here is stored — an achievement is held for exactly as long as its condition is true
+/// of the caller's profile, so the list is recomputed on every call.
+async fn achievements(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
+  let loaded = match load_profile(msg, deps).await {
+    Ok(loaded) => loaded,
+    Err(embed) => return *embed,
+  };
+
+  let line = |a: &'static achievements::Achievement| embeds::AchievementLine {
+    emoji: a.emoji.to_string(),
+    name: a.name.to_string(),
+    how: a.how.to_string(),
+  };
+
+  let earned: Vec<embeds::AchievementLine> = achievements::earned(&loaded.profile).into_iter().map(line).collect();
+  let locked: Vec<embeds::AchievementLine> = achievements::locked(&loaded.profile).into_iter().map(line).collect();
+
+  embeds::achievements(&loaded.name, &earned, &locked, achievements::ACHIEVEMENTS.len())
 }
 
 #[cfg(test)]

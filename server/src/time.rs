@@ -42,6 +42,12 @@ pub fn format_date(secs: i64, tz: FixedOffset) -> String {
   to_local(secs, tz).format("%b %-d").to_string()
 }
 
+/// Format full date with the year (e.g. "Feb 19, 2026") — for "member since"-style stats,
+/// where a bare "Feb 19" stops meaning anything once more than one year is involved.
+pub fn format_full_date(secs: i64, tz: FixedOffset) -> String {
+  to_local(secs, tz).format("%b %-d, %Y").to_string()
+}
+
 /// Format short datetime (e.g. "Thu, Feb 19, 3:00PM")
 pub fn format_datetime(secs: i64, tz: FixedOffset) -> String {
   to_local(secs, tz).format("%a, %b %-d, %-I:%M%p").to_string()

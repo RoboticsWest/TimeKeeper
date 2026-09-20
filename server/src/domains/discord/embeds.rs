@@ -13,6 +13,8 @@
 //! return a `CreateEmbed`. That keeps them unit-testable without a database or
 //! a gateway connection, which matters because there is no test guild here.
 
+use std::fmt::Write;
+
 use serenity::all::{Colour, CreateEmbed, CreateEmbedFooter};
 
 /// Brand blue, `#0751B9` — the same `kBrandBlue` the app uses as `primary`.
@@ -76,7 +78,8 @@ pub fn help_text() -> String {
    `!locations` — List all locations\n\
    `!link Name` — Link your Discord account to a team member\n\
    `!checkout` — Check yourself out of the current session\n\
-   `!mystats` — Your own attendance stats and leaderboard rank\n\
+   `!mystats` — Your own attendance stats, title and leaderboard rank\n\
+   `!achievements` — The achievements you have unlocked, and what is left\n\
    `!help` — Show this message"
     .to_string()
 }
@@ -190,37 +193,95 @@ pub fn locations(names: &[String]) -> CreateEmbed {
   inline_fields(base(&format!("Locations ({})", names.len()), BRAND_BLUE), &items)
 }
 
-/// A member's personal stats card — what the leaderboard says about them plus a few extras
-/// (sessions attended, average check-in time) that only make sense about one person.
+/// A member's personal stats card — relative (group) and global leaderboard ranks plus a
+/// mix of board-derived hour buckets and record-derived extras.
 pub struct MyStats {
   pub name: String,
-  /// Position on the leaderboard and how many entries it has, when the member is ranked.
-  pub rank: Option<(usize, usize)>,
+  /// The title derived for this profile, and why they hold it. Recomputed on every card — no
+  /// title is ever stored, so the catalogue can be reshuffled freely.
+  pub title: String,
+  pub title_reason: String,
+  /// (achievements held, achievements in the catalogue).
+  pub achievements: (usize, usize),
+  /// The member's type, capitalised; used as the "X rank" field label (e.g. "Mentor").
+  pub member_type: String,
+  /// Position within the member's own group (everyone with the same member type) and how
+  /// many that group has, when the member is ranked.
+  pub group_rank: Option<(usize, usize)>,
+  /// Position on the all-members leaderboard and how many entries it has, when ranked.
+  pub global_rank: Option<(usize, usize)>,
+  /// When the member first checked in — their first shift, since the schema stores no
+  /// enrollment date.
+  pub member_since: Option<String>,
+  /// (sessions the member attended, finished sessions the club has run) — some way to read
+  /// their attendance, present once any session has finished.
+  pub attendance: Option<(usize, usize)>,
+  /// How many times the system had to sign the member out (checkout exactly on the scheduled
+  /// session end) because they never did.
+  pub forgot_checkout: usize,
   pub total: String,
   pub this_week: String,
-  /// Only present when the leaderboard's overtime display setting makes it meaningful.
+  /// The member's real overtime, as "1h 5m (6%)" — always present when they have any,
+  /// independent of the leaderboard's overtime display setting.
   pub overtime: Option<String>,
   pub active_session: Option<String>,
   pub sessions_attended: usize,
+  /// Their longest single stint signed in, as "6h 20m".
+  pub longest_session: Option<String>,
   pub avg_check_in: Option<String>,
+  pub avg_check_out: Option<String>,
+  /// Their latest checkout time-of-day across all sessions — the night owl award.
+  pub latest_check_out: Option<String>,
 }
 
-/// Rendered as inline fields so desktop gets a tidy two-row stats grid and a phone stacks the
-/// same fields — the same `inline_fields` rule as the rest of the bot.
+/// One rank cell: a medal for a top-three position, otherwise a plain "N of total".
+fn rank_field(position: usize, total: usize) -> String {
+  let medal = match position {
+    1 => "\u{1f947} ",
+    2 => "\u{1f948} ",
+    3 => "\u{1f949} ",
+    _ => "",
+  };
+  format!("{medal}#{position} of {total}")
+}
+
+/// The mood for an attendance percentage — the more sessions actually rocked up to, the
+/// happier they get.
+fn attendance_emoji(pct: u8) -> &'static str {
+  match pct {
+    100 => "\u{1f525}",
+    90..=99 => "\u{1f604}",
+    75..=89 => "\u{1f642}",
+    50..=74 => "\u{1f62c}",
+    _ => "\u{1f634}",
+  }
+}
+
+/// Rendered as inline fields so desktop gets a tidy stats grid and a phone stacks the same
+/// fields — the same `inline_fields` rule as the rest of the bot. Relative rank comes first:
+/// the group board is the one a student or mentor actually competes on.
 pub fn my_stats(stats: &MyStats) -> CreateEmbed {
   let mut items: Vec<(String, String)> = Vec::new();
 
-  match stats.rank {
-    Some((position, total)) => {
-      let medal = match position {
-        1 => "\u{1f947} ",
-        2 => "\u{1f948} ",
-        3 => "\u{1f949} ",
-        _ => "",
-      };
-      items.push(("Rank".to_string(), format!("{medal}#{position} of {total}")));
+  let group_label = format!("{} rank", stats.member_type);
+  match stats.group_rank {
+    Some((position, total)) => items.push((group_label, rank_field(position, total))),
+    None => items.push((group_label, "Not ranked yet".to_string())),
+  }
+  match stats.global_rank {
+    Some((position, total)) => items.push(("Global rank".to_string(), rank_field(position, total))),
+    None => items.push(("Global rank".to_string(), "Not ranked yet".to_string())),
+  }
+
+  items.push(("In TimeKeeper since".to_string(), stats.member_since.clone().unwrap_or_else(|| "\u{2014}".to_string())));
+  match stats.attendance {
+    Some((attended, total)) => {
+      #[allow(clippy::cast_possible_truncation)]
+      let pct = attended.saturating_mul(100).checked_div(total).unwrap_or(100) as u8;
+      items
+        .push(("Attendance".to_string(), format!("{attended} of {total} sessions ({pct}%) {}", attendance_emoji(pct))));
     }
-    None => items.push(("Rank".to_string(), "Not on the leaderboard yet".to_string())),
+    None => items.push(("Attendance".to_string(), "No sessions yet".to_string())),
   }
 
   items.push(("All-time hours".to_string(), stats.total.clone()));
@@ -228,13 +289,79 @@ pub fn my_stats(stats: &MyStats) -> CreateEmbed {
   if let Some(overtime) = &stats.overtime {
     items.push(("Overtime".to_string(), overtime.clone()));
   }
+  items.push(("Sessions attended".to_string(), stats.sessions_attended.to_string()));
+  items.push(("Forgot to check out".to_string(), stats.forgot_checkout.to_string()));
+  if let Some(longest) = &stats.longest_session {
+    items.push(("Longest session".to_string(), longest.clone()));
+  }
+  items.push(("Avg check-in".to_string(), stats.avg_check_in.clone().unwrap_or_else(|| "\u{2014}".to_string())));
+  items.push(("Avg check-out".to_string(), stats.avg_check_out.clone().unwrap_or_else(|| "\u{2014}".to_string())));
+  if let Some(latest) = &stats.latest_check_out {
+    items.push(("Latest check-out".to_string(), latest.clone()));
+  }
   if let Some(active) = &stats.active_session {
     items.push(("Active session".to_string(), active.clone()));
   }
-  items.push(("Sessions attended".to_string(), stats.sessions_attended.to_string()));
-  items.push(("Avg check-in".to_string(), stats.avg_check_in.clone().unwrap_or_else(|| "\u{2014}".to_string())));
 
-  inline_fields(base(&format!("Stats for {}", stats.name), BRAND_BLUE), &items)
+  let (earned, total) = stats.achievements;
+  items.push(("Achievements".to_string(), format!("{earned} of {total} \u{1f3c6}")));
+
+  // The title is the description rather than a field: it is the headline of the card, and a
+  // description spans the full width instead of being squeezed into a third of a row.
+  let header = base(&format!("Stats for {}", stats.name), BRAND_BLUE)
+    .description(format!("**{}**\n*{}*", stats.title, stats.title_reason));
+  inline_fields(header, &items)
+}
+
+/// One line per achievement in a `!achievements` listing.
+pub struct AchievementLine {
+  pub emoji: String,
+  pub name: String,
+  /// How it is earned — the "hover text", shown inline because Discord has no tooltip.
+  pub how: String,
+}
+
+/// A member's collection: what they hold, then what is still out there.
+///
+/// Rendered as a description rather than fields. Fields cap at 25 and truncate long values,
+/// while a description holds 4096 characters and keeps one achievement per line, which is what
+/// makes the list scannable on a phone.
+pub fn achievements(name: &str, earned: &[AchievementLine], locked: &[AchievementLine], total: usize) -> CreateEmbed {
+  let mut body = format!("**{} of {total} unlocked**\n", earned.len());
+
+  if earned.is_empty() {
+    body.push_str("\nNothing yet — check in to a session and the first one is yours.\n");
+  } else {
+    body.push('\n');
+    for line in earned {
+      let _ = writeln!(body, "{} **{}** — {}", line.emoji, line.name, line.how);
+    }
+  }
+
+  // Only a handful of the locked ones: the full list is dozens long and buries what they have.
+  if !locked.is_empty() {
+    body.push_str("\n**Still to get**\n");
+    for line in locked.iter().take(LOCKED_PREVIEW) {
+      let _ = writeln!(body, "\u{1f512} **{}** — {}", line.name, line.how);
+    }
+    if locked.len() > LOCKED_PREVIEW {
+      let _ = writeln!(body, "\u{2026}and {} more, some of them secret.", locked.len() - LOCKED_PREVIEW);
+    }
+  }
+
+  base(&format!("Achievements for {name}"), BRAND_BLUE).description(truncate_description(&body))
+}
+
+/// How many unearned achievements a listing previews before collapsing into a count.
+const LOCKED_PREVIEW: usize = 8;
+
+/// Discord rejects an embed whose description exceeds 4096 characters.
+fn truncate_description(body: &str) -> String {
+  const LIMIT: usize = 4000;
+  if body.chars().count() <= LIMIT {
+    return body.to_string();
+  }
+  body.chars().take(LIMIT).collect::<String>() + "\n\u{2026}"
 }
 
 /// The facts behind a session notification, shown next to the operator's own
@@ -389,13 +516,24 @@ mod tests {
   fn my_stats_builds_a_ranked_personal_card() {
     let stats = MyStats {
       name: "Ada".into(),
-      rank: Some((4, 27)),
+      title: "The Night Owl".into(),
+      title_reason: "You have signed out at 10pm or later.".into(),
+      achievements: (12, 48),
+      member_type: "Mentor".into(),
+      group_rank: Some((2, 6)),
+      global_rank: Some((4, 27)),
+      member_since: Some("Feb 19, 2026".into()),
+      attendance: Some((12, 15)),
+      forgot_checkout: 3,
       total: "18h 30m".into(),
       this_week: "3h 15m".into(),
-      overtime: Some("1h 5m".into()),
+      overtime: Some("1h 5m (6%)".into()),
       active_session: None,
       sessions_attended: 12,
+      longest_session: Some("6h 20m".into()),
       avg_check_in: Some("2:15PM".into()),
+      avg_check_out: Some("6:40PM".into()),
+      latest_check_out: Some("9:47PM".into()),
     };
 
     let v = json(my_stats(&stats));
@@ -403,49 +541,98 @@ mod tests {
     let fields = v["fields"].as_array().expect("fields");
     let by_name: HashMap<&str, &str> =
       fields.iter().map(|f| (f["name"].as_str().expect("name"), f["value"].as_str().expect("value"))).collect();
-    assert_eq!(by_name["Rank"], "#4 of 27");
+    assert!(by_name.contains_key("Mentor rank"), "relative rank is named for the group");
+    assert_eq!(by_name["Mentor rank"], "\u{1f948} #2 of 6", "a group top-three gets the silver medal");
+    assert_eq!(by_name["Global rank"], "#4 of 27");
+    assert_eq!(by_name["In TimeKeeper since"], "Feb 19, 2026");
+    assert_eq!(by_name["Attendance"], "12 of 15 sessions (80%) \u{1f642}");
     assert_eq!(by_name["All-time hours"], "18h 30m");
     assert_eq!(by_name["This week"], "3h 15m");
-    assert_eq!(by_name["Overtime"], "1h 5m");
+    assert_eq!(by_name["Overtime"], "1h 5m (6%)");
     assert_eq!(by_name["Sessions attended"], "12");
+    assert_eq!(by_name["Forgot to check out"], "3");
+    assert_eq!(by_name["Longest session"], "6h 20m");
     assert_eq!(by_name["Avg check-in"], "2:15PM");
+    assert_eq!(by_name["Avg check-out"], "6:40PM");
+    assert_eq!(by_name["Latest check-out"], "9:47PM");
     assert!(!by_name.contains_key("Active session"));
+
+    // Relative rank leads the card, before the global one.
+    assert_eq!(fields[0]["name"], "Mentor rank");
+    assert_eq!(fields[1]["name"], "Global rank");
   }
 
   #[test]
   fn my_stats_medals_and_falls_back_for_unranked_members() {
     let v = json(my_stats(&MyStats {
       name: "Grace".into(),
-      rank: Some((1, 27)),
+      title: "The Perfectionist".into(),
+      title_reason: "You have not missed a single session.".into(),
+      achievements: (20, 48),
+      member_type: "Student".into(),
+      group_rank: Some((1, 9)),
+      global_rank: Some((3, 27)),
+      member_since: Some("Mar 1, 2025".into()),
+      attendance: Some((20, 20)),
+      forgot_checkout: 0,
       total: "40h 0m".into(),
       this_week: "1h 0m".into(),
       overtime: None,
       active_session: Some("0h 30m".into()),
       sessions_attended: 20,
+      longest_session: Some("8h 0m".into()),
       avg_check_in: None,
+      avg_check_out: None,
+      latest_check_out: Some("10:15PM".into()),
     }));
     let fields = v["fields"].as_array().expect("fields");
-    let rank = &fields[0];
-    assert_eq!(rank["name"], "Rank");
-    assert!(rank["value"].as_str().expect("value").contains('\u{1f947}'), "the leader carries the gold medal");
+    assert_eq!(fields[0]["name"], "Student rank");
+    assert!(
+      fields[0]["value"].as_str().expect("value").contains('\u{1f947}'),
+      "the group leader carries the gold medal"
+    );
+    assert!(
+      fields[1]["value"].as_str().expect("value").contains('\u{1f949}'),
+      "a global top-three gets the bronze medal"
+    );
+    assert!(
+      fields[3]["value"].as_str().expect("value").contains('\u{1f525}'),
+      "every session attended brings the fire"
+    );
 
     let unranked = json(my_stats(&MyStats {
       name: "Alan".into(),
-      rank: None,
+      title: "The Unwritten".into(),
+      title_reason: "No attendance on record yet.".into(),
+      achievements: (0, 48),
+      member_type: "Mentor".into(),
+      group_rank: None,
+      global_rank: None,
+      member_since: None,
+      attendance: Some((0, 6)),
+      forgot_checkout: 0,
       total: "0h 0m".into(),
       this_week: "0h 0m".into(),
       overtime: None,
       active_session: None,
       sessions_attended: 0,
+      longest_session: None,
       avg_check_in: None,
+      avg_check_out: None,
+      latest_check_out: None,
     }));
     let unranked_fields = unranked["fields"].as_array().expect("fields");
     let by_name: HashMap<&str, &str> = unranked_fields
       .iter()
       .map(|f| (f["name"].as_str().expect("name"), f["value"].as_str().expect("value")))
       .collect();
-    assert_eq!(by_name["Rank"], "Not on the leaderboard yet");
+    assert_eq!(by_name["Mentor rank"], "Not ranked yet");
+    assert_eq!(by_name["Global rank"], "Not ranked yet");
+    assert_eq!(by_name["In TimeKeeper since"], "\u{2014}");
+    assert_eq!(by_name["Attendance"], "0 of 6 sessions (0%) \u{1f634}");
+    assert_eq!(by_name["Forgot to check out"], "0");
     assert_eq!(by_name["Avg check-in"], "\u{2014}");
+    assert_eq!(by_name["Avg check-out"], "\u{2014}");
   }
 
   #[test]

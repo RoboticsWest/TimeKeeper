@@ -156,6 +156,10 @@ jobs:
             set -e
             cp -p "/srv/timekeeper/web/v/${{ github.sha }}/index.html" /srv/timekeeper/web/index.html.new
             mv -f /srv/timekeeper/web/index.html.new /srv/timekeeper/web/index.html
+            # Migration/cleanup: pre-versioned deploys put the build at root, and nothing
+            # but index.html + v/ is referenced anymore. Keeps root tidy on every deploy.
+            find /srv/timekeeper/web -mindepth 1 -maxdepth 1 \
+              ! -name index.html ! -name v -exec rm -rf {} +
             SAVE_RELEASES=2
             counter=0
             for d in $(ls -1dt /srv/timekeeper/web/v/*/ 2>/dev/null); do
