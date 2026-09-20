@@ -76,6 +76,7 @@ pub fn help_text() -> String {
    `!locations` — List all locations\n\
    `!link Name` — Link your Discord account to a team member\n\
    `!checkout` — Check yourself out of the current session\n\
+   `!mystats` — Your own attendance stats and leaderboard rank\n\
    `!help` — Show this message"
     .to_string()
 }
@@ -189,6 +190,53 @@ pub fn locations(names: &[String]) -> CreateEmbed {
   inline_fields(base(&format!("Locations ({})", names.len()), BRAND_BLUE), &items)
 }
 
+/// A member's personal stats card — what the leaderboard says about them plus a few extras
+/// (sessions attended, average check-in time) that only make sense about one person.
+pub struct MyStats {
+  pub name: String,
+  /// Position on the leaderboard and how many entries it has, when the member is ranked.
+  pub rank: Option<(usize, usize)>,
+  pub total: String,
+  pub this_week: String,
+  /// Only present when the leaderboard's overtime display setting makes it meaningful.
+  pub overtime: Option<String>,
+  pub active_session: Option<String>,
+  pub sessions_attended: usize,
+  pub avg_check_in: Option<String>,
+}
+
+/// Rendered as inline fields so desktop gets a tidy two-row stats grid and a phone stacks the
+/// same fields — the same `inline_fields` rule as the rest of the bot.
+pub fn my_stats(stats: &MyStats) -> CreateEmbed {
+  let mut items: Vec<(String, String)> = Vec::new();
+
+  match stats.rank {
+    Some((position, total)) => {
+      let medal = match position {
+        1 => "\u{1f947} ",
+        2 => "\u{1f948} ",
+        3 => "\u{1f949} ",
+        _ => "",
+      };
+      items.push(("Rank".to_string(), format!("{medal}#{position} of {total}")));
+    }
+    None => items.push(("Rank".to_string(), "Not on the leaderboard yet".to_string())),
+  }
+
+  items.push(("All-time hours".to_string(), stats.total.clone()));
+  items.push(("This week".to_string(), stats.this_week.clone()));
+  if let Some(overtime) = &stats.overtime {
+    items.push(("Overtime".to_string(), overtime.clone()));
+  }
+  if let Some(active) = &stats.active_session {
+    items.push(("Active session".to_string(), active.clone()));
+  }
+  items.push(("Sessions attended".to_string(), stats.sessions_attended.to_string()));
+  items.push(("Avg check-in".to_string(), stats.avg_check_in.clone().unwrap_or_else(|| "\u{2014}".to_string())));
+
+  inline_fields(base(&format!("Stats for {}", stats.name), BRAND_BLUE), &items)
+}
+
 /// The facts behind a session notification, shown next to the operator's own
 /// message text rather than instead of it.
 ///
@@ -207,6 +255,8 @@ pub fn session_facts(title: &str, colour: Colour, location: &str, start_secs: i6
 
 #[cfg(test)]
 mod tests {
+  use std::collections::HashMap;
+
   use super::*;
 
   /// `CreateEmbed` has no getters, but it serialises to the JSON Discord
@@ -233,7 +283,9 @@ mod tests {
   fn help_is_a_plain_text_command_list() {
     let text = help_text();
     assert!(text.starts_with("**TimeKeeper commands**"));
-    for command in ["!ping", "!leaderboard", "!sessions", "!checkedin", "!locations", "!link", "!checkout", "!help"] {
+    for command in
+      ["!ping", "!leaderboard", "!sessions", "!checkedin", "!locations", "!link", "!checkout", "!mystats", "!help"]
+    {
       assert!(text.contains(command), "help should mention {command}");
     }
   }
@@ -331,6 +383,69 @@ mod tests {
   fn short_name_lists_are_not_truncated() {
     let v = json(locations(&["Workshop".to_string(), "Shop".to_string()]));
     assert_eq!(v["fields"].as_array().expect("fields").len(), 2);
+  }
+
+  #[test]
+  fn my_stats_builds_a_ranked_personal_card() {
+    let stats = MyStats {
+      name: "Ada".into(),
+      rank: Some((4, 27)),
+      total: "18h 30m".into(),
+      this_week: "3h 15m".into(),
+      overtime: Some("1h 5m".into()),
+      active_session: None,
+      sessions_attended: 12,
+      avg_check_in: Some("2:15PM".into()),
+    };
+
+    let v = json(my_stats(&stats));
+    assert_eq!(v["title"], "Stats for Ada");
+    let fields = v["fields"].as_array().expect("fields");
+    let by_name: HashMap<&str, &str> =
+      fields.iter().map(|f| (f["name"].as_str().expect("name"), f["value"].as_str().expect("value"))).collect();
+    assert_eq!(by_name["Rank"], "#4 of 27");
+    assert_eq!(by_name["All-time hours"], "18h 30m");
+    assert_eq!(by_name["This week"], "3h 15m");
+    assert_eq!(by_name["Overtime"], "1h 5m");
+    assert_eq!(by_name["Sessions attended"], "12");
+    assert_eq!(by_name["Avg check-in"], "2:15PM");
+    assert!(!by_name.contains_key("Active session"));
+  }
+
+  #[test]
+  fn my_stats_medals_and_falls_back_for_unranked_members() {
+    let v = json(my_stats(&MyStats {
+      name: "Grace".into(),
+      rank: Some((1, 27)),
+      total: "40h 0m".into(),
+      this_week: "1h 0m".into(),
+      overtime: None,
+      active_session: Some("0h 30m".into()),
+      sessions_attended: 20,
+      avg_check_in: None,
+    }));
+    let fields = v["fields"].as_array().expect("fields");
+    let rank = &fields[0];
+    assert_eq!(rank["name"], "Rank");
+    assert!(rank["value"].as_str().expect("value").contains('\u{1f947}'), "the leader carries the gold medal");
+
+    let unranked = json(my_stats(&MyStats {
+      name: "Alan".into(),
+      rank: None,
+      total: "0h 0m".into(),
+      this_week: "0h 0m".into(),
+      overtime: None,
+      active_session: None,
+      sessions_attended: 0,
+      avg_check_in: None,
+    }));
+    let unranked_fields = unranked["fields"].as_array().expect("fields");
+    let by_name: HashMap<&str, &str> = unranked_fields
+      .iter()
+      .map(|f| (f["name"].as_str().expect("name"), f["value"].as_str().expect("value")))
+      .collect();
+    assert_eq!(by_name["Rank"], "Not on the leaderboard yet");
+    assert_eq!(by_name["Avg check-in"], "\u{2014}");
   }
 
   #[test]

@@ -157,6 +157,11 @@ class NotificationsView extends HookConsumerWidget {
                 ? _LoadingOrError(page: page, onRetry: notifier.refresh)
                 : EditTable(
                     alternatingRows: true,
+                    // Five text-heavy columns spread across 12 flex units would force a 1552px
+                    // minimum width (that is what chronically overflowed a half-width pane even
+                    // when empty). Like attendance, notifications is five dense columns — 90px
+                    // per flex unit lands the same ~1192px natural width it sits at.
+                    minFlexWidth: 90,
                     headers: [
                       BaseTableCell(child: TableHeaderText('Type'), flex: 3),
                       BaseTableCell(child: TableHeaderText('Session'), flex: 4),

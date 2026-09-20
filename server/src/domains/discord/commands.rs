@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{Timelike, Utc};
 use serenity::all::{Context, CreateEmbed, CreateMessage, Message};
 
 use crate::domains::settings::DEFAULT_MAINTENANCE_MESSAGE;
@@ -57,6 +57,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
     "locations" => Some(locations(deps).await.into()),
     "link" => Some(link_member(msg, args, deps).await.into()),
     "checkout" => Some(checkout(msg, deps).await.into()),
+    "mystats" => Some(mystats(msg, deps).await.into()),
     _ => None,
   };
 
@@ -67,7 +68,8 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
 
 /// Commands the bot recognises. Kept next to the dispatch `match` — a command added there and
 /// forgotten here still works, it just answers normally during maintenance.
-const COMMANDS: &[&str] = &["ping", "help", "leaderboard", "sessions", "checkedin", "locations", "link", "checkout"];
+const COMMANDS: &[&str] =
+  &["ping", "help", "leaderboard", "sessions", "checkedin", "locations", "link", "checkout", "mystats"];
 
 fn is_known_command(cmd: &str) -> bool {
   COMMANDS.contains(&cmd)
@@ -411,6 +413,95 @@ async fn checkout(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
       &format!("**{name}** was checked out at {}.", format_datetime(checkout_time.timestamp(), tz)),
     )
   }
+}
+
+/// A caller's own stats: what the leaderboard says about them plus their sessions attended
+/// and average check-in time.
+///
+/// Rank and the hour buckets come from the same leaderboard computation `!leaderboard` shows,
+/// so the number always matches the public board — including the overtime display setting,
+/// which folds overtime into regular hours when it is off. The extras are derived straight from
+/// the member's attendance records.
+async fn mystats(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
+  let discord_id = msg.author.id.to_string();
+
+  let member = match deps.team_members.get_by_discord_id(&discord_id).await {
+    Ok(Some(m)) => m,
+    Ok(None) => {
+      let hint = match deps.settings.get().await {
+        Ok(s) if s.discord_self_link_enabled => "Use `!link Name` to link it.",
+        _ => "Ask an admin to link it.",
+      };
+      return embeds::warning("Not linked", &format!("Your Discord account is not linked to a team member. {hint}"));
+    }
+    Err(e) => return embeds::error(&format!("Error loading team members: {e}")),
+  };
+
+  let name = member_name(&member).to_string();
+
+  let settings = match deps.settings.get().await {
+    Ok(s) => s,
+    Err(e) => return embeds::error(&format!("Error loading settings: {e}")),
+  };
+
+  let entries = match deps.statistics.get_leaderboard(None).await {
+    Ok(e) => e,
+    Err(e) => return embeds::error(&format!("Error computing leaderboard: {e}")),
+  };
+
+  // The configured default member-type filter decides who appears, exactly like `!leaderboard`;
+  // a member filtered out by it simply has no rank here either.
+  let rank = entries.iter().position(|e| e.team_member_id == member.id);
+  let entry = rank.map(|i| &entries[i]);
+
+  let total_secs = entry.map_or(0.0, |e| e.total_secs);
+  let this_week_secs = entry.map_or(0.0, |e| e.this_week.regular_secs + e.this_week.overtime_secs);
+  // Zero both when there is no overtime and when the leaderboard folds it into regular hours.
+  let overtime_secs = entry.map_or(0.0, |e| e.all_time.overtime_secs);
+  let active_secs = entry.map_or(0.0, |e| e.active_session.regular_secs + e.active_session.overtime_secs);
+
+  let member_sessions = match deps.team_member_sessions.get_by_member_id(member.id).await {
+    Ok(ms) => ms,
+    Err(e) => return embeds::error(&format!("Error loading attendance: {e}")),
+  };
+
+  let sessions_attended = member_sessions.len();
+
+  let avg_check_in = if member_sessions.is_empty() {
+    None
+  } else {
+    let tz = parse_tz(&settings.timezone);
+    let total_minutes: i64 = member_sessions
+      .iter()
+      .map(|ms| {
+        let local = ms.check_in_time.with_timezone(&tz);
+        i64::from(local.hour() * 60 + local.minute())
+      })
+      .sum();
+    // Rounds to the nearest minute; rendered in the operator's configured timezone.
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_precision_loss)]
+    let avg = (total_minutes as f64 / member_sessions.len() as f64).round() as i64;
+    let hour = avg / 60;
+    let minute = avg % 60;
+    let mut hour12 = hour % 12;
+    if hour12 == 0 {
+      hour12 = 12;
+    }
+    let period = if hour < 12 { "AM" } else { "PM" };
+    Some(format!("{hour12}:{minute:02}{period}"))
+  };
+
+  embeds::my_stats(&embeds::MyStats {
+    name,
+    rank: rank.map(|i| (i + 1, entries.len())),
+    total: format_secs(total_secs),
+    this_week: format_secs(this_week_secs),
+    overtime: (overtime_secs > 0.0).then(|| format_secs(overtime_secs)),
+    active_session: (active_secs > 0.0).then(|| format_secs(active_secs)),
+    sessions_attended,
+    avg_check_in,
+  })
 }
 
 #[cfg(test)]

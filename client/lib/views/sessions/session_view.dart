@@ -13,6 +13,7 @@ import 'package:time_keeper/views/sessions/session_table.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/searchable_dropdown.dart';
+import 'package:time_keeper/widgets/tables/client_pagination.dart';
 import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 
@@ -103,6 +104,10 @@ class SessionView extends HookConsumerWidget {
           locationName.toLowerCase().contains(filterText) ||
           status.contains(filterText);
     }).toList();
+
+    // Calendar mode holds the full (client-filtered) set in memory, so its table pages on the
+    // client while table mode pages server-side through `sessionPageProvider`.
+    final clientPaging = useClientPagination(filtered.length);
 
     final locationItems = locations.entries.toList()
       ..sort((a, b) => a.value.location.toLowerCase().compareTo(b.value.location.toLowerCase()));
@@ -242,12 +247,22 @@ class SessionView extends HookConsumerWidget {
           // Table
           Expanded(
             child: showCalendar.value
-                ? SessionTable(sessions: filtered)
+                ? SessionTable(sessions: clientPaging.slice(filtered))
                 : currentPage == null
                 ? _LoadingOrError(page: page, onRetry: notifier.refresh)
                 : SessionTable(sessions: currentPage.items.map((session) => MapEntry(session.id, session)).toList()),
           ),
-          if (!showCalendar.value && currentPage != null)
+          if (showCalendar.value)
+            PaginationBar(
+              totalCount: filtered.length,
+              offset: clientPaging.clampedOffset(filtered.length),
+              pageSize: clientPaging.pageSize,
+              hasMore: clientPaging.offset + clientPaging.pageSize < filtered.length,
+              onPageSizeChanged: clientPaging.setPageSize,
+              onPrevious: clientPaging.previousPage,
+              onNext: clientPaging.nextPage,
+            )
+          else if (currentPage != null)
             PaginationBar(
               totalCount: currentPage.totalCount,
               offset: currentPage.offset,

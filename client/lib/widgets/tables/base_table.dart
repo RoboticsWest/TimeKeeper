@@ -145,6 +145,12 @@ class BaseTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        // With no rows there is nothing whose readability the flex floor protects — a bare
+        // header row flexes into whatever space it is handed, so an empty table must never
+        // trigger the fixed-width horizontal scroll.
+        if (rows.isEmpty) {
+          return _table(context);
+        }
         final natural = _naturalWidth();
         if (!constraints.maxWidth.isFinite || constraints.maxWidth >= natural) {
           return _table(context);

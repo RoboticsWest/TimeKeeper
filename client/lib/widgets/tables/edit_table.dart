@@ -78,6 +78,7 @@ class EditTable extends BaseTable {
     super.evenRowColor,
     super.oddRowColor,
     super.cellPadding,
+    super.minFlexWidth,
   }) : super(headers: headers, rows: editRows) {
     // Add blank columns to headers for the action buttons
     if (headers != null) {
