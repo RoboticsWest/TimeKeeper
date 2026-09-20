@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Achievements board. Screenshot placeholder.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1526"/>
+      <stop offset="0.55" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#090f1b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1">
+      <stop offset="0" stop-color="#4E8DF8" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#4E8DF8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b9bff"/>
+      <stop offset="1" stop-color="#2f6fe0"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <circle cx="300" cy="120" r="340" fill="url(#glow)"/>
+  <circle cx="1040" cy="560" r="380" fill="url(#glow)"/>
+
+  <!-- faint grid -->
+  <g stroke="#1e2a44" stroke-width="1" opacity="0.5">
+    <path d="M0 135H1200M0 270H1200M0 405H1200M0 540H1200"/>
+    <path d="M150 0V675M300 0V675M450 0V675M600 0V675M750 0V675M900 0V675M1050 0V675"/>
+  </g>
+
+  <!-- app window frame -->
+  <g>
+    <rect x="170" y="120" width="860" height="420" rx="14" fill="#0b1220" stroke="#243047" stroke-width="1.5"/>
+    <rect x="170" y="120" width="860" height="46" rx="14" fill="#131c30" stroke="#243047" stroke-width="1.5"/>
+    <rect x="170" y="150" width="860" height="16" fill="#131c30"/>
+    <circle cx="196" cy="143" r="6" fill="#ff5f57"/>
+    <circle cx="218" cy="143" r="6" fill="#febc2e"/>
+    <circle cx="240" cy="143" r="6" fill="#28c840"/>
+    <rect x="640" y="131" width="140" height="24" rx="12" fill="#0d1526" stroke="#243047" stroke-width="1"/>
+  </g>
+
+  <!-- image placeholder icon -->
+  <g>
+    <rect x="508" y="212" width="184" height="128" rx="10" fill="url(#accent)" opacity="0.16"/>
+    <rect x="508" y="212" width="184" height="128" rx="10" fill="none" stroke="url(#accent)" stroke-width="2" stroke-dasharray="7 7" opacity="0.9"/>
+    <circle cx="552" cy="262" r="12" fill="#cfe0ff" opacity="0.95"/>
+    <path d="M536 322 L574 288 L596 306 L618 282 L648 322 Z" fill="#4E8DF8" opacity="0.55"/>
+  </g>
+
+  <!-- titles -->
+  <text x="600" y="414" text-anchor="middle" font-family="Ubuntu, system-ui, sans-serif" font-size="34" font-weight="650" fill="#e2e8f0">Achievements board</text>
+  <text x="600" y="452" text-anchor="middle" font-family="Ubuntu, system-ui, sans-serif" font-size="19" fill="#7c8db0">Screenshot coming soon — replace this image</text>
+
+  <!-- badge -->
+  <g>
+    <rect x="499" y="486" width="202" height="30" rx="15" fill="#161f35" stroke="#243047" stroke-width="1"/>
+    <circle cx="521" cy="501" r="4" fill="#4E8DF8"/>
+    <text x="614" y="506" text-anchor="middle" font-family="Ubuntu, system-ui, sans-serif" font-size="14" font-weight="600" fill="#93a4c4" letter-spacing="0.5">achievements.png</text>
+  </g>
+</svg>
