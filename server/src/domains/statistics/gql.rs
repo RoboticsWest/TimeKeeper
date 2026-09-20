@@ -36,7 +36,7 @@ impl StatisticsQuery {
     Ok(logic.get_member(team_member_id).await?)
   }
 
-  /// Every achievement there is to collect, rated for rarity against the real team.
+  /// Every achievement there is to collect, rated for rarity against the members actually in use.
   ///
   /// Gated despite being the same list for everybody: the rarity figures are aggregates over
   /// the roster, and the team's size is not public information.

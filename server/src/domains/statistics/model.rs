@@ -70,6 +70,9 @@ pub struct TeamMemberStats {
   /// Overtime DMs actually delivered to this member.
   pub overtime_warnings: i64,
   pub updated_at: DateTime<Utc>,
+  /// When the member was added. `None` only when no evidence of it survives — a member whose id
+  /// predates UUIDv7 and who has never checked in.
+  pub joined_at: Option<DateTime<Utc>>,
 }
 
 impl TeamMemberStats {
@@ -78,6 +81,6 @@ impl TeamMemberStats {
   /// only reached for a member created before that trigger existed.
   #[must_use]
   pub fn zeroed(team_member_id: Uuid) -> Self {
-    Self { team_member_id, check_ins: 0, overtime_warnings: 0, updated_at: Utc::now() }
+    Self { team_member_id, check_ins: 0, overtime_warnings: 0, updated_at: Utc::now(), joined_at: None }
   }
 }

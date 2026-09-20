@@ -32,7 +32,8 @@ class AchievementBadge extends StatelessWidget {
     final tooltip = secret
         ? 'A hidden achievement. Keep going.'
         : '${achievement.name}\n${achievement.how}'
-              '\n\n${achievement.rarityText} (${achievement.holders} of ${achievement.totalMembers})'
+              '\n\n${achievement.rarityText} (${achievement.holders} of '
+              '${achievement.totalMembers} active)'
               '${earned ? '' : '\n\nNot yet earned'}';
 
     final ground = earned

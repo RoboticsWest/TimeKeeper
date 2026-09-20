@@ -93,7 +93,7 @@ void main() {
     expect(find.text('1 of 2 unlocked'), findsOneWidget);
   });
 
-  test('rarity bands follow the share of the team holding a badge', () {
+  test('rarity bands follow the share of active members holding a badge', () {
     // Mirrors `rarity_label` on the server. If these two ever disagree, the same badge is
     // "Rare" in the app and "Uncommon" in Discord, which is worse than showing neither.
     expect(achievement(key: 'a', name: 'a', holders: 0, totalMembers: 12).rarityLabel, 'Unclaimed');

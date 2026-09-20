@@ -29,12 +29,18 @@ use super::model::{AttendanceStats, TeamMemberStats};
 use super::profile::{self, MemberProfile, ProfileInput};
 use super::repository::MemberStatsRepository;
 
-/// One member's derived figures, plus the first check-in a stat card wants to show.
+/// One member's derived figures, plus the dates a stat card wants to show.
 pub struct MemberSnapshot {
   pub profile: MemberProfile,
-  /// Their earliest check-in. The schema keeps no enrollment date, so this is the closest
-  /// honest answer to "in TimeKeeper since".
+  /// Their earliest check-in.
   pub first_check_in: Option<DateTime<Utc>>,
+  /// When they joined — the recorded `joined_at` (migration 0014), falling back to their first
+  /// check-in for a member the backfill could find no evidence for.
+  ///
+  /// The fallback matters for the case that prompted this: a member who is on the roster and
+  /// linked but has never scanned in used to render as an em dash, because the earliest check-in
+  /// was the only source and they had none.
+  pub member_since: Option<DateTime<Utc>>,
 }
 
 /// One achievement as it stands for a particular member.
@@ -52,20 +58,23 @@ pub struct AchievementView {
   pub earned: bool,
   /// How many team members currently hold this one.
   pub holders: i32,
-  /// How many members there are to hold it — the denominator behind [`rarity_pct`].
+  /// How many members are actually in use — the denominator behind [`rarity_pct`]. A roster can
+  /// hold far more names than a club has ever seen, and imported-but-unused members must not
+  /// make a badge look rarer than it is.
   pub total_members: i32,
-  /// Share of the team holding this, 0-100. The whole point of a collection is that some of it
-  /// is hard to get; without this every badge looks equally ordinary.
+  /// Share of the members actually in use holding this, 0-100. The whole point of a collection
+  /// is that some of it is hard to get; without this every badge looks equally ordinary.
   ///
   /// Zero when there are no members at all, rather than undefined.
   pub rarity_pct: f64,
 }
 
 impl AchievementView {
-  /// A one-word description of how hard this is to hold, from the share of the team that does.
+  /// A one-word description of how hard this is to hold, from the share of the active team that
+  /// does.
   ///
   /// Bands rather than a bare percentage because "12%" means nothing without knowing the team
-  /// size, and on a roster of twelve every figure is a multiple of eight.
+  /// size, and on a dozen active members every figure is a multiple of eight.
   #[must_use]
   pub fn rarity_label(&self) -> &'static str {
     if self.total_members == 0 {
@@ -136,7 +145,7 @@ impl DefaultAccoladesLogic {
   }
 
   /// Builds a profile for every member from a single load of the whole picture.
-  async fn snapshot_all(&self) -> anyhow::Result<HashMap<Uuid, MemberSnapshot>> {
+  async fn snapshot_all(&self) -> anyhow::Result<SnapshotSet> {
     let settings = self.settings.get().await?;
     let tz = parse_tz(&settings.timezone);
     let now = Utc::now();
@@ -188,6 +197,7 @@ impl DefaultAccoladesLogic {
       let counters = stats_row_by_member.get(&member.id).cloned().unwrap_or_else(|| TeamMemberStats::zeroed(member.id));
 
       let first_check_in = member_sessions.iter().map(|ms| ms.check_in_time).min();
+      let member_since = counters.joined_at.or(first_check_in);
 
       let profile = profile::build(&ProfileInput {
         member_type: member.member_type.clone(),
@@ -204,11 +214,23 @@ impl DefaultAccoladesLogic {
         group_rank,
       });
 
-      snapshots.insert(member.id, MemberSnapshot { profile, first_check_in });
+      snapshots.insert(member.id, MemberSnapshot { profile, first_check_in, member_since });
     }
 
-    Ok(snapshots)
+    Ok(SnapshotSet { by_member: snapshots, active_members: attendance_by_member.len() })
   }
+}
+
+/// Everything one accolade pass needs from the database, in one load.
+struct SnapshotSet {
+  by_member: HashMap<Uuid, MemberSnapshot>,
+  /// The pool rarity is measured against: distinct members with at least one attendance record.
+  ///
+  /// This is the same "unique members" figure the app's stats dashboards call a member "active"
+  /// — people who have actually checked in, not every name imported onto the roster. Several
+  /// hundred members can be on the books while a few dozen are in use, and badges measure how
+  /// special something is among the people who actually turn up.
+  active_members: usize,
 }
 
 /// How many members hold each achievement, keyed on achievement key.
@@ -254,24 +276,25 @@ fn accolades_for(
 #[async_trait]
 impl AccoladesLogic for DefaultAccoladesLogic {
   async fn profile_for(&self, team_member_id: Uuid) -> anyhow::Result<Option<MemberSnapshot>> {
-    Ok(self.snapshot_all().await?.remove(&team_member_id))
+    Ok(self.snapshot_all().await?.by_member.remove(&team_member_id))
   }
 
   async fn for_all(&self) -> anyhow::Result<Vec<MemberAccolades>> {
-    let snapshots = self.snapshot_all().await?;
+    let set = self.snapshot_all().await?;
     let members = self.team_members.get_all().await?;
 
-    // Rarity is measured against everyone with a profile, which is every member — including the
-    // ones holding nothing. Counting only members who hold *something* would quietly inflate
-    // every percentage and make a common badge look special.
-    let profiles: Vec<&MemberProfile> = snapshots.values().map(|s| &s.profile).collect();
-    let total_members = i32::try_from(profiles.len()).unwrap_or(i32::MAX);
+    // Profiles cover every member so nobody's badges are missed, but rarity is measured against
+    // the ones actually in use — a roster can outnumber the club by ten to one. Counting only
+    // members who hold *something* would quietly inflate every percentage the other way, so
+    // holders are still counted over everyone, while the denominator is the active pool.
+    let profiles: Vec<&MemberProfile> = set.by_member.values().map(|s| &s.profile).collect();
+    let total_members = i32::try_from(set.active_members).unwrap_or(i32::MAX);
     let holders = count_holders(&profiles);
 
     let mut all: Vec<MemberAccolades> = members
       .into_iter()
       .filter_map(|member| {
-        let snapshot = snapshots.get(&member.id)?;
+        let snapshot = set.by_member.get(&member.id)?;
         let name = member.display_name.clone().unwrap_or_else(|| format!("{} {}", member.first_name, member.last_name));
         Some(accolades_for(member.id, name, &snapshot.profile, &holders, total_members))
       })
@@ -290,9 +313,9 @@ impl AccoladesLogic for DefaultAccoladesLogic {
   }
 
   async fn catalogue(&self) -> anyhow::Result<Vec<AchievementView>> {
-    let snapshots = self.snapshot_all().await?;
-    let profiles: Vec<&MemberProfile> = snapshots.values().map(|s| &s.profile).collect();
-    let total_members = i32::try_from(profiles.len()).unwrap_or(i32::MAX);
+    let set = self.snapshot_all().await?;
+    let profiles: Vec<&MemberProfile> = set.by_member.values().map(|s| &s.profile).collect();
+    let total_members = i32::try_from(set.active_members).unwrap_or(i32::MAX);
     let holders = count_holders(&profiles);
 
     Ok(ACHIEVEMENTS.iter().map(|a| view_for(a, false, &holders, total_members)).collect())
@@ -321,5 +344,43 @@ fn view_for(
     holders: held,
     total_members,
     rarity_pct,
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  fn empty_holders() -> HashMap<&'static str, i32> {
+    ACHIEVEMENTS.iter().map(|a| (a.key, 0)).collect()
+  }
+
+  #[test]
+  fn rarity_is_measured_against_the_active_pool() {
+    // Two of six active members hold the badge: nobody is holding anything, so the hold share
+    // is computed against the pool that actually checks in, not whatever the roster imported.
+    let mut holders = empty_holders();
+    holders.insert("first_steps", 3);
+    let view = view_for(&ACHIEVEMENTS[0], false, &holders, 60);
+    assert_eq!(view.holders, 3);
+    assert_eq!(view.total_members, 60);
+    assert!((view.rarity_pct - 5.0).abs() < 1e-9);
+    assert_eq!(view.rarity_label(), "Legendary");
+  }
+
+  #[test]
+  fn a_badge_nobody_holds_is_unclaimed() {
+    let holders = empty_holders();
+    let view = view_for(&ACHIEVEMENTS[0], false, &holders, 60);
+    assert!(view.rarity_pct.abs() < 1e-9);
+    assert_eq!(view.rarity_label(), "Unclaimed");
+  }
+
+  #[test]
+  fn rarity_is_unrated_without_an_active_pool() {
+    let holders = empty_holders();
+    let view = view_for(&ACHIEVEMENTS[0], false, &holders, 0);
+    assert!(view.rarity_pct.abs() < 1e-9);
+    assert_eq!(view.rarity_label(), "Unrated");
   }
 }

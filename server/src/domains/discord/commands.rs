@@ -89,7 +89,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
     "link" => Some(link_member(msg, args, deps).await.into()),
     "checkout" => Some(checkout(msg, deps).await.into()),
     "mystats" => Some(mystats(msg, deps).await.into()),
-    "achievements" => Some(achievements(msg, deps).await.into()),
+    "achievements" => Some(achievements(msg, args, deps).await),
     "badges" => Some(badges(msg, deps).await),
     _ => None,
   };
@@ -514,7 +514,7 @@ async fn load_profile(msg: &Message, deps: &DiscordDeps) -> Result<LoadedProfile
   Ok(LoadedProfile {
     name: member_name(&member).to_string(),
     member_type: capitalize(&member.member_type),
-    member_since: snapshot.first_check_in.map(|first| format_full_date(first.timestamp(), tz)),
+    member_since: snapshot.member_since.map(|since| format_full_date(since.timestamp(), tz)),
     profile: snapshot.profile,
   })
 }
@@ -566,11 +566,39 @@ async fn mystats(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   })
 }
 
+/// A `!achievements` subcommand, defaulting to the caller's own collection.
+#[derive(Debug, PartialEq, Eq)]
+enum AchievementsCommand {
+  Mine,
+  Help,
+  All,
+}
+
+/// Parses the subcommand from whatever followed `!achievements`. Anything unrecognised is the
+/// caller's own collection — an empty invocation is the common one, so it must be the default.
+fn achievements_command(arg: &str) -> AchievementsCommand {
+  match arg.trim().to_lowercase().as_str() {
+    "help" => AchievementsCommand::Help,
+    "all" => AchievementsCommand::All,
+    _ => AchievementsCommand::Mine,
+  }
+}
+
+/// `!achievements` — the caller's collection by default, with the same three-way split as the
+/// leaderboard family: `help` explains the commands, `all` ranks every member.
+async fn achievements(msg: &Message, args: &str, deps: &DiscordDeps) -> Reply {
+  match achievements_command(args) {
+    AchievementsCommand::Help => embeds::achievements_help().into(),
+    AchievementsCommand::All => achievements_all(deps).await.into(),
+    AchievementsCommand::Mine => my_achievements(msg, deps).await.into(),
+  }
+}
+
 /// The caller's achievement collection: what they hold and a preview of what they do not.
 ///
 /// Nothing here is stored — an achievement is held for exactly as long as its condition is true
 /// of the caller's profile, so the list is recomputed on every call.
-async fn achievements(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
+async fn my_achievements(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   let loaded = match load_profile(msg, deps).await {
     Ok(loaded) => loaded,
     Err(embed) => return *embed,
@@ -586,6 +614,30 @@ async fn achievements(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   let locked: Vec<embeds::AchievementLine> = achievements::locked(&loaded.profile).into_iter().map(line).collect();
 
   embeds::achievements(&loaded.name, &earned, &locked, achievements::ACHIEVEMENTS.len())
+}
+
+/// `!achievements all` — every member ranked by how much of the catalogue they hold.
+///
+/// Like `!leaderboard`, the ordering is the shared accolades logic's: most decorated first, a
+/// member's name breaking the tie. Zero-achievement members still appear, at the bottom — on a
+/// real roster the interesting question is who has *not* started.
+async fn achievements_all(deps: &DiscordDeps) -> CreateEmbed {
+  let all = match deps.accolades.for_all().await {
+    Ok(all) => all,
+    Err(e) => return embeds::error(&format!("Error loading achievements: {e}")),
+  };
+
+  let rows: Vec<embeds::AccoladesRow> = all
+    .iter()
+    .map(|a| embeds::AccoladesRow {
+      name: a.name.clone(),
+      title: a.title.clone(),
+      earned: usize::try_from(a.earned_count).unwrap_or(usize::MAX),
+      total: usize::try_from(a.total_count).unwrap_or(usize::MAX),
+    })
+    .collect();
+
+  embeds::achievements_leaderboard(&rows, &format!("{} members by the badges they hold", rows.len()))
 }
 
 /// Prefix on every catalogue button's `custom_id`. Namespaced so the bot only ever answers
@@ -644,7 +696,7 @@ async fn catalogue_page(page: usize, viewer: Option<Uuid>, deps: &DiscordDeps) -
         name: if secret { "Secret".to_string() } else { a.name.clone() },
         how: if secret { "Hidden until you earn it.".to_string() } else { a.how.clone() },
         rarity: format!(
-          "{} \u{b7} {:.0}% of the team ({} of {})",
+          "{} \u{b7} {:.0}% of active members ({} of {})",
           a.rarity_label(),
           a.rarity_pct,
           a.holders,
@@ -725,5 +777,17 @@ mod tests {
     // drawing a reply it would never normally get.
     assert!(!is_known_command("banana"));
     assert!(!is_known_command(""));
+  }
+
+  #[test]
+  fn achievements_command_defaults_to_the_callers_collection() {
+    // An empty invocation is the everyday one, so anything that is not a subcommand must land
+    // on the caller's own achievements rather than an error.
+    assert_eq!(achievements_command(""), AchievementsCommand::Mine);
+    assert_eq!(achievements_command("  "), AchievementsCommand::Mine);
+    assert_eq!(achievements_command("garbage"), AchievementsCommand::Mine);
+    assert_eq!(achievements_command("help"), AchievementsCommand::Help);
+    assert_eq!(achievements_command("all"), AchievementsCommand::All);
+    assert_eq!(achievements_command("ALL"), AchievementsCommand::All);
   }
 }

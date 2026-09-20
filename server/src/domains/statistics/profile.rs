@@ -459,8 +459,13 @@ mod tests {
     // `sessions_attended` drops. The lifetime figure must not.
     let session = session(9, 17);
     let one = attendance(&session, 10, Some(utc(16)));
-    let member_stats =
-      TeamMemberStats { team_member_id: Uuid::now_v7(), check_ins: 40, overtime_warnings: 3, updated_at: utc(12) };
+    let member_stats = TeamMemberStats {
+      team_member_id: Uuid::now_v7(),
+      check_ins: 40,
+      overtime_warnings: 3,
+      updated_at: utc(12),
+      joined_at: Some(utc(9)),
+    };
 
     let profile = build(&ProfileInput {
       member_type: "student".to_string(),

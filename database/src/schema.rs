@@ -164,6 +164,7 @@ diesel::table! {
         check_ins -> Int8,
         overtime_warnings -> Int8,
         updated_at -> Timestamptz,
+        joined_at -> Nullable<Timestamptz>,
     }
 }
 

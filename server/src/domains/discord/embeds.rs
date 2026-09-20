@@ -79,7 +79,7 @@ pub fn help_text() -> String {
    `!link Name` — Link your Discord account to a team member\n\
    `!checkout` — Check yourself out of the current session\n\
    `!mystats` — Your own attendance stats, title and leaderboard rank\n\
-   `!achievements` — The achievements you have unlocked, and what is left\n\
+   `!achievements` — Your unlocked achievements (`all` ranks every member)\n\
    `!badges` — Browse every achievement and how rare it is\n\
    `!help` — Show this message"
     .to_string()
@@ -351,6 +351,48 @@ pub fn achievements(name: &str, earned: &[AchievementLine], locked: &[Achievemen
   }
 
   base(&format!("Achievements for {name}"), BRAND_BLUE).description(truncate_description(&body))
+}
+
+/// The `!achievements` subcommand reference — a family of three ways in, modelled on the
+/// leaderboard's own help page.
+pub fn achievements_help() -> CreateEmbed {
+  base("Achievements", BRAND_BLUE)
+    .field("`!achievements`", "Your unlocked achievements, and what is left", true)
+    .field("`!achievements all`", "Every member, ranked by how many they hold", true)
+    .field("`!badges`", "Browse every achievement in the catalogue and how rare it is", true)
+}
+
+/// One row of the achievements leaderboard — the member's name and where they stand in the
+/// catalogue, ready for the same medal treatment the hours leaderboard gives its podium.
+pub struct AccoladesRow {
+  pub name: String,
+  /// Their derived title, for the flavour a bare count would not carry.
+  pub title: String,
+  /// (achievements held, achievements in the catalogue).
+  pub earned: usize,
+  pub total: usize,
+}
+
+/// Every member ranked by achievements held, most decorated first.
+///
+/// The same shape as `!leaderboard` — a description of one line per person, medals for the top
+/// three — because it is the same question: who is winning the collection.
+pub fn achievements_leaderboard(rows: &[AccoladesRow], subtitle: &str) -> CreateEmbed {
+  let body: Vec<String> = rows
+    .iter()
+    .enumerate()
+    .map(|(i, row)| {
+      let medal = match i {
+        0 => "\u{1f947} ",
+        1 => "\u{1f948} ",
+        2 => "\u{1f949} ",
+        _ => "",
+      };
+      format!("{medal}**{}.** {} — **{} of {}** badges \u{b7} *{}*", i + 1, row.name, row.earned, row.total, row.title)
+    })
+    .collect();
+
+  base("Achievements", BRAND_BLUE).description(format!("{subtitle}\n\n{}", body.join("\n")))
 }
 
 /// How many unearned achievements a listing previews before collapsing into a count.
