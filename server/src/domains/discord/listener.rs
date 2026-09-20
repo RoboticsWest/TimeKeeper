@@ -1,9 +1,9 @@
-use serenity::all::{Context, Message, Reaction, ReactionType, UserId};
+use serenity::all::{ComponentInteraction, Context, Message, Reaction, ReactionType, UserId};
 
 use crate::domains::session_rsvp;
 use crate::domains::team_member::TeamMember;
 
-use super::commands::handle_command;
+use super::commands::{handle_catalogue_button, handle_command};
 use super::deps::DiscordDeps;
 
 fn reaction_to_rsvp_status(emoji: &ReactionType) -> Option<&'static str> {
@@ -35,6 +35,14 @@ pub async fn on_message(ctx: &Context, msg: &Message, deps: &DiscordDeps, bot_us
   }
 
   handle_command(ctx, msg, deps).await;
+}
+
+/// Handles a click on one of the bot's message components.
+///
+/// Only components this bot created are answered; anything else is ignored rather than
+/// acknowledged, so a button belonging to another bot in the same guild is left alone.
+pub async fn on_component(ctx: &Context, interaction: &ComponentInteraction, deps: &DiscordDeps) {
+  handle_catalogue_button(ctx, interaction, deps).await;
 }
 
 /// Handles a member adding an RSVP-emoji reaction to a tracked session announcement.

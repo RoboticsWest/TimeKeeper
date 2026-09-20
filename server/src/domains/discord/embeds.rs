@@ -80,6 +80,7 @@ pub fn help_text() -> String {
    `!checkout` — Check yourself out of the current session\n\
    `!mystats` — Your own attendance stats, title and leaderboard rank\n\
    `!achievements` — The achievements you have unlocked, and what is left\n\
+   `!badges` — Browse every achievement and how rare it is\n\
    `!help` — Show this message"
     .to_string()
 }
@@ -364,6 +365,58 @@ fn truncate_description(body: &str) -> String {
   body.chars().take(LIMIT).collect::<String>() + "\n\u{2026}"
 }
 
+/// One catalogue entry on a browsable page.
+pub struct CataloguePage {
+  /// Zero-based index of the page being shown.
+  pub page: usize,
+  pub total_pages: usize,
+  pub total_achievements: usize,
+  pub entries: Vec<CatalogueEntry>,
+}
+
+pub struct CatalogueEntry {
+  pub emoji: String,
+  pub name: String,
+  pub how: String,
+  /// "Rare · 17%" — the band plus the figure, since neither alone is much use.
+  pub rarity: String,
+  /// Whether the member browsing already holds it, when a member is known.
+  pub earned: Option<bool>,
+}
+
+/// How many achievements one page of `!badges` shows.
+///
+/// Sixty-seven of them in a single embed is both unreadable and close enough to Discord's 4096
+/// character description limit to be a real risk, which is what pagination is here to solve.
+/// Eight keeps a page short enough to take in at a glance on a phone.
+pub const CATALOGUE_PAGE_SIZE: usize = 8;
+
+/// One page of the achievement catalogue: emoji on the left, description on the right.
+///
+/// Rendered as a description rather than fields. Inline fields would put the text in narrow
+/// columns that wrap mid-sentence, and a two-column field layout cannot keep the emoji hard
+/// against the left edge of each row.
+pub fn catalogue_page(page: &CataloguePage) -> CreateEmbed {
+  let mut body = String::new();
+
+  for entry in &page.entries {
+    // Ticked only for a viewer who holds it. An unlinked viewer gets no ticks at all rather
+    // than a page of crosses implying they have failed to earn any of them.
+    let tick = if entry.earned == Some(true) { " \u{2705}" } else { "" };
+    let _ = writeln!(body, "{} **{}**{}", entry.emoji, entry.name, tick);
+    let _ = writeln!(body, "\u{2003}{}", entry.how);
+    let _ = writeln!(body, "\u{2003}-# {}\n", entry.rarity);
+  }
+
+  if body.is_empty() {
+    body.push_str("Nothing to show.");
+  }
+
+  base(&format!("Achievements \u{2014} page {} of {}", page.page + 1, page.total_pages.max(1)), BRAND_BLUE)
+    .description(truncate_description(&body))
+    .footer(CreateEmbedFooter::new(format!("TimeKeeper \u{2022} {} achievements to collect", page.total_achievements)))
+}
+
 /// The facts behind a session notification, shown next to the operator's own
 /// message text rather than instead of it.
 ///
@@ -510,6 +563,67 @@ mod tests {
   fn short_name_lists_are_not_truncated() {
     let v = json(locations(&["Workshop".to_string(), "Shop".to_string()]));
     assert_eq!(v["fields"].as_array().expect("fields").len(), 2);
+  }
+
+  fn entry(name: &str, earned: Option<bool>) -> CatalogueEntry {
+    CatalogueEntry {
+      emoji: "\u{2b50}".to_string(),
+      name: name.to_string(),
+      how: "Do the thing".to_string(),
+      rarity: "Rare \u{b7} 17% of the team (2 of 12)".to_string(),
+      earned,
+    }
+  }
+
+  #[test]
+  fn a_catalogue_page_numbers_itself_from_one() {
+    // The page index is zero-based internally because it indexes a slice; a reader counts from
+    // one. Getting this wrong shows up as "page 0 of 9" in front of the whole guild.
+    let v = json(catalogue_page(&CataloguePage {
+      page: 0,
+      total_pages: 9,
+      total_achievements: 67,
+      entries: vec![entry("First Steps", Some(true))],
+    }));
+
+    assert_eq!(v["title"], "Achievements \u{2014} page 1 of 9");
+    assert_eq!(v["footer"]["text"], "TimeKeeper \u{2022} 67 achievements to collect");
+  }
+
+  #[test]
+  fn a_catalogue_page_shows_emoji_then_name_then_rarity() {
+    let v = json(catalogue_page(&CataloguePage {
+      page: 2,
+      total_pages: 9,
+      total_achievements: 67,
+      entries: vec![entry("Night Owl", Some(false))],
+    }));
+
+    let body = v["description"].as_str().expect("description");
+    assert!(body.starts_with("\u{2b50} **Night Owl**"), "emoji leads the row, then the name: {body}");
+    assert!(body.contains("Do the thing"), "the description follows");
+    assert!(body.contains("Rare \u{b7} 17% of the team (2 of 12)"), "and how rare it is");
+  }
+
+  #[test]
+  fn only_a_holder_gets_a_tick() {
+    let held = json(catalogue_page(&CataloguePage {
+      page: 0,
+      total_pages: 1,
+      total_achievements: 1,
+      entries: vec![entry("First Steps", Some(true))],
+    }));
+    assert!(held["description"].as_str().expect("description").contains('\u{2705}'));
+
+    // An unlinked viewer knows nothing about what they hold, so nothing is ticked - a page of
+    // unticked rows reads as "not applicable", which is the truth.
+    let unlinked = json(catalogue_page(&CataloguePage {
+      page: 0,
+      total_pages: 1,
+      total_achievements: 1,
+      entries: vec![entry("First Steps", None)],
+    }));
+    assert!(!unlinked["description"].as_str().expect("description").contains('\u{2705}'));
   }
 
   #[test]

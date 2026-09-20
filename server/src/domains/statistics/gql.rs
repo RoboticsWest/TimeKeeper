@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
 
-use super::accolades::{AccoladesLogic, AchievementView, MemberAccolades, catalogue};
+use super::accolades::{AccoladesLogic, AchievementView, MemberAccolades};
 use super::logic::{LeaderboardEntry, MemberStatsLogic, StatisticsLogic};
 use super::model::{AttendanceStats, TeamMemberStats};
 
@@ -36,12 +36,14 @@ impl StatisticsQuery {
     Ok(logic.get_member(team_member_id).await?)
   }
 
-  /// Every achievement there is to collect, with nothing marked earned.
+  /// Every achievement there is to collect, rated for rarity against the real team.
   ///
-  /// Ungated: the catalogue is a fixed list of names and descriptions, the same for everybody,
-  /// and says nothing about any member.
-  async fn achievement_catalogue(&self) -> Vec<AchievementView> {
-    catalogue()
+  /// Gated despite being the same list for everybody: the rarity figures are aggregates over
+  /// the roster, and the team's size is not public information.
+  async fn achievement_catalogue(&self, ctx: &Context<'_>) -> Result<Vec<AchievementView>> {
+    require_permission(ctx, "team_members", PermissionLevel::Read)?;
+    let logic = ctx.data::<Arc<dyn AccoladesLogic>>()?.clone();
+    Ok(logic.catalogue().await?)
   }
 
   /// Every member's title and collection, most decorated first.

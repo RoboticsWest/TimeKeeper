@@ -50,6 +50,36 @@ pub struct AchievementView {
   /// Hidden ones should be rendered as a locked secret until `earned` is true.
   pub hidden: bool,
   pub earned: bool,
+  /// How many team members currently hold this one.
+  pub holders: i32,
+  /// How many members there are to hold it — the denominator behind [`rarity_pct`].
+  pub total_members: i32,
+  /// Share of the team holding this, 0-100. The whole point of a collection is that some of it
+  /// is hard to get; without this every badge looks equally ordinary.
+  ///
+  /// Zero when there are no members at all, rather than undefined.
+  pub rarity_pct: f64,
+}
+
+impl AchievementView {
+  /// A one-word description of how hard this is to hold, from the share of the team that does.
+  ///
+  /// Bands rather than a bare percentage because "12%" means nothing without knowing the team
+  /// size, and on a roster of twelve every figure is a multiple of eight.
+  #[must_use]
+  pub fn rarity_label(&self) -> &'static str {
+    if self.total_members == 0 {
+      return "Unrated";
+    }
+    match self.rarity_pct {
+      p if p <= 0.0 => "Unclaimed",
+      p if p < 10.0 => "Legendary",
+      p if p < 25.0 => "Rare",
+      p if p < 50.0 => "Uncommon",
+      p if p < 90.0 => "Common",
+      _ => "Everyone",
+    }
+  }
 }
 
 /// A member's title and their whole collection.
@@ -78,6 +108,10 @@ pub trait AccoladesLogic: Send + Sync {
   async fn for_all(&self) -> anyhow::Result<Vec<MemberAccolades>>;
 
   async fn for_member(&self, team_member_id: Uuid) -> anyhow::Result<Option<MemberAccolades>>;
+
+  /// The whole catalogue with nothing marked earned, but rated for rarity against the real team.
+  /// What there is to collect, and how many people already have it.
+  async fn catalogue(&self) -> anyhow::Result<Vec<AchievementView>>;
 }
 
 pub struct DefaultAccoladesLogic {
@@ -177,20 +211,30 @@ impl DefaultAccoladesLogic {
   }
 }
 
+/// How many members hold each achievement, keyed on achievement key.
+fn count_holders(profiles: &[&MemberProfile]) -> HashMap<&'static str, i32> {
+  let mut holders: HashMap<&'static str, i32> = ACHIEVEMENTS.iter().map(|a| (a.key, 0)).collect();
+  for profile in profiles {
+    for achievement in ACHIEVEMENTS {
+      if (achievement.check)(profile) {
+        *holders.entry(achievement.key).or_default() += 1;
+      }
+    }
+  }
+  holders
+}
+
 /// Renders the whole catalogue against one profile.
-fn accolades_for(team_member_id: Uuid, name: String, profile: &MemberProfile) -> MemberAccolades {
+fn accolades_for(
+  team_member_id: Uuid,
+  name: String,
+  profile: &MemberProfile,
+  holders: &HashMap<&'static str, i32>,
+  total_members: i32,
+) -> MemberAccolades {
   let title = achievements::title_for(profile);
-  let achievements: Vec<AchievementView> = ACHIEVEMENTS
-    .iter()
-    .map(|a| AchievementView {
-      key: a.key.to_string(),
-      emoji: a.emoji.to_string(),
-      name: a.name.to_string(),
-      how: a.how.to_string(),
-      hidden: a.hidden,
-      earned: (a.check)(profile),
-    })
-    .collect();
+  let achievements: Vec<AchievementView> =
+    ACHIEVEMENTS.iter().map(|a| view_for(a, (a.check)(profile), holders, total_members)).collect();
 
   let earned_count = i32::try_from(achievements.iter().filter(|a| a.earned).count()).unwrap_or(i32::MAX);
   let total_count = i32::try_from(achievements.len()).unwrap_or(i32::MAX);
@@ -217,12 +261,19 @@ impl AccoladesLogic for DefaultAccoladesLogic {
     let snapshots = self.snapshot_all().await?;
     let members = self.team_members.get_all().await?;
 
+    // Rarity is measured against everyone with a profile, which is every member — including the
+    // ones holding nothing. Counting only members who hold *something* would quietly inflate
+    // every percentage and make a common badge look special.
+    let profiles: Vec<&MemberProfile> = snapshots.values().map(|s| &s.profile).collect();
+    let total_members = i32::try_from(profiles.len()).unwrap_or(i32::MAX);
+    let holders = count_holders(&profiles);
+
     let mut all: Vec<MemberAccolades> = members
       .into_iter()
       .filter_map(|member| {
         let snapshot = snapshots.get(&member.id)?;
         let name = member.display_name.clone().unwrap_or_else(|| format!("{} {}", member.first_name, member.last_name));
-        Some(accolades_for(member.id, name, &snapshot.profile))
+        Some(accolades_for(member.id, name, &snapshot.profile, &holders, total_members))
       })
       .collect();
 
@@ -237,21 +288,38 @@ impl AccoladesLogic for DefaultAccoladesLogic {
   async fn for_member(&self, team_member_id: Uuid) -> anyhow::Result<Option<MemberAccolades>> {
     Ok(self.for_all().await?.into_iter().find(|a| a.team_member_id == team_member_id))
   }
+
+  async fn catalogue(&self) -> anyhow::Result<Vec<AchievementView>> {
+    let snapshots = self.snapshot_all().await?;
+    let profiles: Vec<&MemberProfile> = snapshots.values().map(|s| &s.profile).collect();
+    let total_members = i32::try_from(profiles.len()).unwrap_or(i32::MAX);
+    let holders = count_holders(&profiles);
+
+    Ok(ACHIEVEMENTS.iter().map(|a| view_for(a, false, &holders, total_members)).collect())
+  }
 }
 
-/// The catalogue with nothing earned — what there is to collect, for a client that wants to show
-/// the board before anybody is selected.
-#[must_use]
-pub fn catalogue() -> Vec<AchievementView> {
-  ACHIEVEMENTS
-    .iter()
-    .map(|a| AchievementView {
-      key: a.key.to_string(),
-      emoji: a.emoji.to_string(),
-      name: a.name.to_string(),
-      how: a.how.to_string(),
-      hidden: a.hidden,
-      earned: false,
-    })
-    .collect()
+/// One catalogue entry rendered for a viewer, carrying both whether they hold it and how many
+/// others do. Single place that turns an [`achievements::Achievement`] into a view, so the
+/// Discord embeds and the app can never disagree about what a badge is called or how rare it is.
+fn view_for(
+  achievement: &'static achievements::Achievement,
+  earned: bool,
+  holders: &HashMap<&'static str, i32>,
+  total_members: i32,
+) -> AchievementView {
+  let held = holders.get(achievement.key).copied().unwrap_or(0);
+  let rarity_pct = if total_members > 0 { f64::from(held) * 100.0 / f64::from(total_members) } else { 0.0 };
+
+  AchievementView {
+    key: achievement.key.to_string(),
+    emoji: achievement.emoji.to_string(),
+    name: achievement.name.to_string(),
+    how: achievement.how.to_string(),
+    hidden: achievement.hidden,
+    earned,
+    holders: held,
+    total_members,
+    rarity_pct,
+  }
 }

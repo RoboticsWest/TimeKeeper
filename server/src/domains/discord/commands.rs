@@ -1,5 +1,10 @@
 use chrono::Utc;
-use serenity::all::{Context, CreateEmbed, CreateMessage, Message};
+use serenity::all::{
+  ButtonStyle, ComponentInteraction, Context, CreateActionRow, CreateButton, CreateEmbed, CreateInteractionResponse,
+  CreateInteractionResponseMessage, CreateMessage, Message,
+};
+
+use uuid::Uuid;
 
 use crate::domains::settings::DEFAULT_MAINTENANCE_MESSAGE;
 use crate::domains::statistics::SOURCE_DISCORD;
@@ -18,6 +23,8 @@ const PREFIX: &str = "!";
 enum Reply {
   Embed(Box<CreateEmbed>),
   Content(String),
+  /// An embed with message components beneath it — the browsable catalogue and its page buttons.
+  Interactive(Box<CreateEmbed>, Vec<CreateActionRow>),
 }
 
 impl From<CreateEmbed> for Reply {
@@ -83,6 +90,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
     "checkout" => Some(checkout(msg, deps).await.into()),
     "mystats" => Some(mystats(msg, deps).await.into()),
     "achievements" => Some(achievements(msg, deps).await.into()),
+    "badges" => Some(badges(msg, deps).await),
     _ => None,
   };
 
@@ -93,8 +101,19 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
 
 /// Commands the bot recognises. Kept next to the dispatch `match` — a command added there and
 /// forgotten here still works, it just answers normally during maintenance.
-const COMMANDS: &[&str] =
-  &["ping", "help", "leaderboard", "sessions", "checkedin", "locations", "link", "checkout", "mystats", "achievements"];
+const COMMANDS: &[&str] = &[
+  "ping",
+  "help",
+  "leaderboard",
+  "sessions",
+  "checkedin",
+  "locations",
+  "link",
+  "checkout",
+  "mystats",
+  "achievements",
+  "badges",
+];
 
 fn is_known_command(cmd: &str) -> bool {
   COMMANDS.contains(&cmd)
@@ -124,6 +143,7 @@ async fn send(ctx: &Context, msg: &Message, reply: Reply) {
   let message = match reply {
     Reply::Embed(embed) => CreateMessage::new().embed(*embed),
     Reply::Content(text) => CreateMessage::new().content(text),
+    Reply::Interactive(embed, rows) => CreateMessage::new().embed(*embed).components(rows),
   };
   if let Err(e) = msg.channel_id.send_message(&ctx.http, message).await {
     log::error!("Failed to send Discord message: {e}");
@@ -566,6 +586,115 @@ async fn achievements(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   let locked: Vec<embeds::AchievementLine> = achievements::locked(&loaded.profile).into_iter().map(line).collect();
 
   embeds::achievements(&loaded.name, &earned, &locked, achievements::ACHIEVEMENTS.len())
+}
+
+/// Prefix on every catalogue button's `custom_id`. Namespaced so the bot only ever answers
+/// components it created, and the page index rides along in the id itself.
+const CATALOGUE_ID: &str = "tk_badges";
+
+/// The catalogue page buttons. Stateless: the page number lives in the `custom_id`, so a button
+/// still works after a restart rather than pointing at a session that no longer exists.
+fn catalogue_buttons(page: usize, total_pages: usize) -> Vec<CreateActionRow> {
+  let previous = CreateButton::new(format!("{CATALOGUE_ID}:{}", page.saturating_sub(1)))
+    .label("Previous")
+    .style(ButtonStyle::Secondary)
+    .disabled(page == 0);
+  let next = CreateButton::new(format!("{CATALOGUE_ID}:{}", page + 1))
+    .label("Next")
+    .style(ButtonStyle::Secondary)
+    .disabled(page + 1 >= total_pages);
+
+  vec![CreateActionRow::Buttons(vec![previous, next])]
+}
+
+/// Builds one page of the catalogue, rated for rarity and — when `viewer` is a linked member —
+/// ticked with what they already hold.
+///
+/// Everything comes from the shared accolades logic, the same source the app's achievements view
+/// and `!mystats` read. There is no second copy of the catalogue here to fall out of step.
+async fn catalogue_page(page: usize, viewer: Option<Uuid>, deps: &DiscordDeps) -> Reply {
+  let entries = match deps.accolades.catalogue().await {
+    Ok(entries) => entries,
+    Err(e) => return embeds::error(&format!("Error loading achievements: {e}")).into(),
+  };
+
+  // What the viewer holds, so a browsing member can see their own progress in the same list.
+  // A viewer who is not linked simply gets no ticks rather than an error.
+  let held: Vec<String> = match viewer {
+    Some(member_id) => match deps.accolades.for_member(member_id).await {
+      Ok(Some(accolades)) => accolades.achievements.iter().filter(|a| a.earned).map(|a| a.key.clone()).collect(),
+      _ => Vec::new(),
+    },
+    None => Vec::new(),
+  };
+
+  let total_pages = entries.len().div_ceil(embeds::CATALOGUE_PAGE_SIZE).max(1);
+  let page = page.min(total_pages - 1);
+
+  let lines: Vec<embeds::CatalogueEntry> = entries
+    .iter()
+    .skip(page * embeds::CATALOGUE_PAGE_SIZE)
+    .take(embeds::CATALOGUE_PAGE_SIZE)
+    .map(|a| {
+      let earned = viewer.map(|_| held.iter().any(|key| key == &a.key));
+      // A secret nobody has earned still must not give itself away, even in a catalogue.
+      let secret = a.hidden && earned != Some(true);
+      embeds::CatalogueEntry {
+        emoji: if secret { "\u{2753}".to_string() } else { a.emoji.clone() },
+        name: if secret { "Secret".to_string() } else { a.name.clone() },
+        how: if secret { "Hidden until you earn it.".to_string() } else { a.how.clone() },
+        rarity: format!(
+          "{} \u{b7} {:.0}% of the team ({} of {})",
+          a.rarity_label(),
+          a.rarity_pct,
+          a.holders,
+          a.total_members
+        ),
+        earned,
+      }
+    })
+    .collect();
+
+  let embed = embeds::catalogue_page(&embeds::CataloguePage {
+    page,
+    total_pages,
+    total_achievements: entries.len(),
+    entries: lines,
+  });
+
+  Reply::Interactive(Box::new(embed), catalogue_buttons(page, total_pages))
+}
+
+/// `!badges` — browse the whole catalogue, eight at a time.
+async fn badges(msg: &Message, deps: &DiscordDeps) -> Reply {
+  let viewer = deps.team_members.get_by_discord_id(&msg.author.id.to_string()).await.ok().flatten().map(|m| m.id);
+  catalogue_page(0, viewer, deps).await
+}
+
+/// Handles a click on a catalogue page button.
+///
+/// Returns `None` for any component this bot did not create, so an unrelated button elsewhere in
+/// the guild is left alone. The reply *edits the original message* rather than posting a new one,
+/// which is the whole point: browsing sixty-seven achievements costs one message, not nine.
+pub async fn handle_catalogue_button(
+  ctx: &Context,
+  interaction: &ComponentInteraction,
+  deps: &DiscordDeps,
+) -> Option<()> {
+  let page: usize = interaction.data.custom_id.strip_prefix(&format!("{CATALOGUE_ID}:"))?.parse().ok()?;
+
+  let viewer = deps.team_members.get_by_discord_id(&interaction.user.id.to_string()).await.ok().flatten().map(|m| m.id);
+
+  let response = match catalogue_page(page, viewer, deps).await {
+    Reply::Interactive(embed, rows) => CreateInteractionResponseMessage::new().embed(*embed).components(rows),
+    Reply::Embed(embed) => CreateInteractionResponseMessage::new().embed(*embed),
+    Reply::Content(text) => CreateInteractionResponseMessage::new().content(text),
+  };
+
+  if let Err(e) = interaction.create_response(&ctx.http, CreateInteractionResponse::UpdateMessage(response)).await {
+    log::error!("Failed to update achievements page: {e}");
+  }
+  Some(())
 }
 
 #[cfg(test)]

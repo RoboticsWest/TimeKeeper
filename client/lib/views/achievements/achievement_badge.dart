@@ -31,7 +31,9 @@ class AchievementBadge extends StatelessWidget {
     final emoji = secret ? '❓' : achievement.emoji;
     final tooltip = secret
         ? 'A hidden achievement. Keep going.'
-        : '${achievement.name}\n${achievement.how}${earned ? '' : '\n\nNot yet earned'}';
+        : '${achievement.name}\n${achievement.how}'
+              '\n\n${achievement.rarityText} (${achievement.holders} of ${achievement.totalMembers})'
+              '${earned ? '' : '\n\nNot yet earned'}';
 
     final ground = earned
         ? color.withValues(alpha: isDark ? 0.18 : 0.12)
@@ -61,15 +63,34 @@ class AchievementBadge extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: earned ? FontWeight.w600 : FontWeight.w400,
-                  color: earned ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                  fontStyle: secret ? FontStyle.italic : FontStyle.normal,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: earned ? FontWeight.w600 : FontWeight.w400,
+                      color: earned ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                      fontStyle: secret ? FontStyle.italic : FontStyle.normal,
+                    ),
+                  ),
+                  // Rarity on the tile, not only in the tooltip: a badge two people in the club
+                  // hold should look different from one everybody has without having to hover.
+                  if (!secret)
+                    Text(
+                      achievement.rarityLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        color: earned ? color : theme.colorScheme.onSurface.withValues(alpha: 0.40),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

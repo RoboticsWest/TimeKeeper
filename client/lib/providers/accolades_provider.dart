@@ -18,7 +18,7 @@ const _accoladesQuery = r'''
       titleReason
       earnedCount
       totalCount
-      achievements { key emoji name how hidden earned }
+      achievements { key emoji name how hidden earned holders totalMembers rarityPct }
     }
   }
 ''';

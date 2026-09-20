@@ -22,6 +22,13 @@ class Achievement {
   final bool hidden;
   final bool earned;
 
+  /// How many team members hold this one, and out of how many.
+  final int holders;
+  final int totalMembers;
+
+  /// Share of the team holding this, 0-100.
+  final double rarityPct;
+
   Achievement({
     required this.key,
     required this.emoji,
@@ -29,10 +36,31 @@ class Achievement {
     required this.how,
     required this.hidden,
     required this.earned,
+    required this.holders,
+    required this.totalMembers,
+    required this.rarityPct,
   });
 
   /// Whether this one should still be kept secret from the viewer.
   bool get isSecret => hidden && !earned;
+
+  /// A one-word band for how hard this is to hold.
+  ///
+  /// Bands rather than a bare percentage because a percentage means little without the team
+  /// size — on a roster of twelve every figure is a multiple of eight. Mirrors `rarity_label`
+  /// on the server so Discord and the app never describe the same badge differently.
+  String get rarityLabel {
+    if (totalMembers == 0) return 'Unrated';
+    if (rarityPct <= 0) return 'Unclaimed';
+    if (rarityPct < 10) return 'Legendary';
+    if (rarityPct < 25) return 'Rare';
+    if (rarityPct < 50) return 'Uncommon';
+    if (rarityPct < 90) return 'Common';
+    return 'Everyone';
+  }
+
+  /// "Rare \u00b7 17% of the team" — the band alone is vague, the figure alone is meaningless.
+  String get rarityText => totalMembers == 0 ? rarityLabel : '$rarityLabel \u00b7 ${rarityPct.round()}% of the team';
 
   factory Achievement.fromJson(Map<String, dynamic> json) {
     return Achievement(
@@ -42,6 +70,9 @@ class Achievement {
       how: json['how'] as String,
       hidden: json['hidden'] as bool,
       earned: json['earned'] as bool,
+      holders: (json['holders'] as num).toInt(),
+      totalMembers: (json['totalMembers'] as num).toInt(),
+      rarityPct: (json['rarityPct'] as num).toDouble(),
     );
   }
 }

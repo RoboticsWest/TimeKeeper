@@ -5,7 +5,7 @@
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use serenity::all::{Client, Context, EventHandler, GatewayIntents, Message, Reaction, Ready, UserId};
+use serenity::all::{Client, Context, EventHandler, GatewayIntents, Interaction, Message, Reaction, Ready, UserId};
 use serenity::async_trait;
 use tokio_util::sync::CancellationToken;
 
@@ -23,6 +23,14 @@ struct Handler {
 impl EventHandler for Handler {
   async fn message(&self, ctx: Context, msg: Message) {
     listener::on_message(&ctx, &msg, &self.deps, self.bot_user_id.get().copied()).await;
+  }
+
+  /// Button clicks. No extra gateway intent is needed for components — Discord delivers an
+  /// interaction to the application it belongs to regardless of what the bot subscribes to.
+  async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+    if let Interaction::Component(component) = interaction {
+      listener::on_component(&ctx, &component, &self.deps).await;
+    }
   }
 
   async fn reaction_add(&self, _ctx: Context, reaction: Reaction) {

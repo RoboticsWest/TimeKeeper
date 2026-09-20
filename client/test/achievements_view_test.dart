@@ -18,8 +18,20 @@ void main() {
     bool hidden = false,
     bool earned = false,
     String how = 'Do the thing',
+    int holders = 3,
+    int totalMembers = 12,
   }) {
-    return Achievement(key: key, emoji: '⭐', name: name, how: how, hidden: hidden, earned: earned);
+    return Achievement(
+      key: key,
+      emoji: '⭐',
+      name: name,
+      how: how,
+      hidden: hidden,
+      earned: earned,
+      holders: holders,
+      totalMembers: totalMembers,
+      rarityPct: totalMembers == 0 ? 0 : holders * 100 / totalMembers,
+    );
   }
 
   MemberAccolades member({
@@ -79,6 +91,51 @@ void main() {
     expect(find.text('First Steps'), findsOneWidget);
     expect(find.text('Centurion'), findsOneWidget);
     expect(find.text('1 of 2 unlocked'), findsOneWidget);
+  });
+
+  test('rarity bands follow the share of the team holding a badge', () {
+    // Mirrors `rarity_label` on the server. If these two ever disagree, the same badge is
+    // "Rare" in the app and "Uncommon" in Discord, which is worse than showing neither.
+    expect(achievement(key: 'a', name: 'a', holders: 0, totalMembers: 12).rarityLabel, 'Unclaimed');
+    expect(achievement(key: 'a', name: 'a', holders: 1, totalMembers: 12).rarityLabel, 'Legendary');
+    expect(achievement(key: 'a', name: 'a', holders: 2, totalMembers: 12).rarityLabel, 'Rare');
+    expect(achievement(key: 'a', name: 'a', holders: 5, totalMembers: 12).rarityLabel, 'Uncommon');
+    expect(achievement(key: 'a', name: 'a', holders: 9, totalMembers: 12).rarityLabel, 'Common');
+    expect(achievement(key: 'a', name: 'a', holders: 12, totalMembers: 12).rarityLabel, 'Everyone');
+    // No team means no denominator — rating it would be inventing a number.
+    expect(achievement(key: 'a', name: 'a', holders: 0, totalMembers: 0).rarityLabel, 'Unrated');
+  });
+
+  testWidgets('a badge shows how rare it is', (tester) async {
+    await useDesktopSurface(tester);
+    await tester.pumpWidget(
+      harness([
+        member(
+          achievements: [achievement(key: 'a', name: 'First Steps', earned: true, holders: 1, totalMembers: 12)],
+        ),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Legendary'), findsOneWidget);
+  });
+
+  testWidgets('a secret badge does not leak its rarity either', (tester) async {
+    await useDesktopSurface(tester);
+    await tester.pumpWidget(
+      harness([
+        member(
+          achievements: [
+            achievement(key: 'a', name: 'First Steps', earned: true),
+            achievement(key: 's', name: 'Secret Thing', hidden: true, holders: 1, totalMembers: 12),
+          ],
+        ),
+      ]),
+    );
+    await tester.pumpAndSettle();
+
+    // "one person has this" is itself a hint about what it takes.
+    expect(find.text('Legendary'), findsNothing);
   });
 
   testWidgets('an unearned hidden achievement reveals neither its name nor its condition', (tester) async {
