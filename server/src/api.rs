@@ -23,7 +23,7 @@ use crate::domains::schedule::ScheduleLogic;
 use crate::domains::session::SessionLogic;
 use crate::domains::session_rsvp::SessionRsvpLogic;
 use crate::domains::settings::SettingsLogic;
-use crate::domains::statistics::StatisticsLogic;
+use crate::domains::statistics::{AccoladesLogic, MemberStatsLogic, StatisticsLogic};
 use crate::domains::team_member::TeamMemberLogic;
 use crate::domains::team_member_session::TeamMemberSessionLogic;
 use crate::domains::user::UserLogic;
@@ -43,6 +43,8 @@ pub fn build_schema(
   session_logic: Arc<dyn SessionLogic>,
   session_rsvp_logic: Arc<dyn SessionRsvpLogic>,
   statistics_logic: Arc<dyn StatisticsLogic>,
+  member_stats_logic: Arc<dyn MemberStatsLogic>,
+  accolades_logic: Arc<dyn AccoladesLogic>,
   schedule_logic: Arc<dyn ScheduleLogic>,
   settings_logic: Arc<dyn SettingsLogic>,
   permissions_repo: Arc<dyn PermissionsRepository>,
@@ -57,6 +59,8 @@ pub fn build_schema(
     .data(session_logic)
     .data(session_rsvp_logic)
     .data(statistics_logic)
+    .data(member_stats_logic)
+    .data(accolades_logic)
     .data(schedule_logic)
     .data(settings_logic)
     .data(permissions_repo)

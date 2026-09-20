@@ -2,9 +2,9 @@ use chrono::Utc;
 use serenity::all::{Context, CreateEmbed, CreateMessage, Message};
 
 use crate::domains::settings::DEFAULT_MAINTENANCE_MESSAGE;
+use crate::domains::statistics::SOURCE_DISCORD;
 use crate::domains::statistics::achievements;
-use crate::domains::statistics::logic::LeaderboardEntry;
-use crate::domains::statistics::profile::{self, MemberProfile, ProfileInput};
+use crate::domains::statistics::profile::MemberProfile;
 use crate::domains::team_member::TeamMember;
 use crate::time::{format_datetime, format_full_date, parse_tz};
 
@@ -424,6 +424,12 @@ async fn checkout(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
     return embeds::error(&format!("Error checking out: {e}"));
   }
 
+  // This is the checkout that used to be indistinguishable from forgetting: run after the
+  // session has ended, it records `session.end_time` verbatim — byte-identical to what the
+  // auto-checkout writes. Recording that a person did it, deliberately, by this route, is the
+  // only thing that tells the two apart.
+  deps.member_stats.record_manual_checkout(ms.id, SOURCE_DISCORD, late).await;
+
   if late {
     embeds::success(
       "Checked out",
@@ -453,11 +459,9 @@ struct LoadedProfile {
 /// Loads everything the caller's stat card and achievement list are derived from, or the embed
 /// explaining why it could not be.
 ///
-/// Both ranks come from the same leaderboard computation `!leaderboard` shows, but run over
-/// every member type unfiltered — so the configured `leaderboard_member_types` default can
-/// never hide the caller. The relative rank is the caller's position within their own member
-/// type (exactly `!leaderboard students` / `!leaderboard mentors`), the global one their
-/// position against everyone.
+/// The figures themselves come from the shared accolades logic, which is also what the app's
+/// achievements view reads — so a title or a badge means exactly the same thing in Discord as it
+/// does on screen, rather than being computed twice and drifting.
 async fn load_profile(msg: &Message, deps: &DiscordDeps) -> Result<LoadedProfile, Box<CreateEmbed>> {
   let discord_id = msg.author.id.to_string();
 
@@ -476,58 +480,22 @@ async fn load_profile(msg: &Message, deps: &DiscordDeps) -> Result<LoadedProfile
     Err(e) => return Err(Box::new(embeds::error(&format!("Error loading team members: {e}")))),
   };
 
-  let settings = match deps.settings.get().await {
-    Ok(s) => s,
+  let tz = match deps.settings.get().await {
+    Ok(s) => parse_tz(&s.timezone),
     Err(e) => return Err(Box::new(embeds::error(&format!("Error loading settings: {e}")))),
   };
-  let tz = parse_tz(&settings.timezone);
 
-  // Everyone, unfiltered: the caller must always be found, whatever the board default is.
-  let entries = match deps.statistics.get_leaderboard(Some(Vec::new())).await {
-    Ok(e) => e,
-    Err(e) => return Err(Box::new(embeds::error(&format!("Error computing leaderboard: {e}")))),
+  let snapshot = match deps.accolades.profile_for(member.id).await {
+    Ok(Some(snapshot)) => snapshot,
+    Ok(None) => return Err(Box::new(embeds::error("Your team member record could not be found."))),
+    Err(e) => return Err(Box::new(embeds::error(&format!("Error computing your statistics: {e}")))),
   };
-
-  let global_position = entries.iter().position(|e| e.team_member_id == member.id);
-  let entry = global_position.map(|i| &entries[i]);
-
-  // The relative board is `!leaderboard <member type>` exactly: the same member-type entries
-  // that override produces, ordered the same way.
-  let group: Vec<&LeaderboardEntry> =
-    entries.iter().filter(|e| e.team_member.member_type == member.member_type).collect();
-  let group_position = group.iter().position(|e| e.team_member_id == member.id);
-
-  let sessions = match deps.sessions.get_all().await {
-    Ok(s) => s,
-    Err(e) => return Err(Box::new(embeds::error(&format!("Error loading sessions: {e}")))),
-  };
-
-  let member_sessions = match deps.team_member_sessions.get_by_member_id(member.id).await {
-    Ok(ms) => ms,
-    Err(e) => return Err(Box::new(embeds::error(&format!("Error loading attendance: {e}")))),
-  };
-
-  let member_since =
-    member_sessions.iter().map(|ms| ms.check_in_time).min().map(|first| format_full_date(first.timestamp(), tz));
-
-  let profile = profile::build(&ProfileInput {
-    member_type: member.member_type.clone(),
-    member_sessions: &member_sessions,
-    sessions: &sessions,
-    tz,
-    now: Utc::now(),
-    total_secs: entry.map_or(0.0, |e| e.total_secs),
-    this_week_secs: entry.map_or(0.0, |e| e.this_week.regular_secs + e.this_week.overtime_secs),
-    active_secs: entry.map_or(0.0, |e| e.active_session.regular_secs + e.active_session.overtime_secs),
-    global_rank: global_position.map(|i| (i + 1, entries.len())),
-    group_rank: group_position.map(|i| (i + 1, group.len())),
-  });
 
   Ok(LoadedProfile {
     name: member_name(&member).to_string(),
     member_type: capitalize(&member.member_type),
-    profile,
-    member_since,
+    member_since: snapshot.first_check_in.map(|first| format_full_date(first.timestamp(), tz)),
+    profile: snapshot.profile,
   })
 }
 

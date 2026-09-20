@@ -8,6 +8,8 @@ use uuid::Uuid;
 
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
+use crate::domains::session::SessionLogic;
+use crate::domains::statistics::{MemberStatsLogic, SOURCE_ADMIN};
 use crate::events::{ChangeOperation, EVENT_BUS};
 use crate::gql_common::{Change, Page, page_bounds};
 
@@ -17,6 +19,11 @@ use super::repository::AttendanceFilter;
 
 const RESOURCE: &str = "team_member_sessions";
 const TABLE: &str = "team_member_sessions";
+
+/// The session an attendance belongs to — needed to tell a late checkout from a punctual one.
+fn sessions(ctx: &Context<'_>) -> Result<Arc<dyn SessionLogic>> {
+  Ok(ctx.data::<Arc<dyn SessionLogic>>()?.clone())
+}
 
 fn logic(ctx: &Context<'_>) -> Result<Arc<dyn TeamMemberSessionLogic>> {
   Ok(ctx.data::<Arc<dyn TeamMemberSessionLogic>>()?.clone())
@@ -104,7 +111,22 @@ impl TeamMemberSessionMutation {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     let logic = logic(ctx)?;
     let existing = logic.get(id).await?.ok_or_else(|| Error::new("Team member session not found"))?;
-    Ok(logic.update(id, existing.team_member_id, existing.session_id, check_in_time, check_out_time).await?)
+    let updated = logic.update(id, existing.team_member_id, existing.session_id, check_in_time, check_out_time).await?;
+
+    // An admin filling in a checkout by hand is a real checkout, made by a real route, and is
+    // recorded as such. Without this the row would keep whatever the check-in opened it with and
+    // read as still open forever.
+    let stats = ctx.data::<Arc<dyn MemberStatsLogic>>()?;
+    match check_out_time {
+      Some(at) => {
+        let late = sessions(ctx)?.get(existing.session_id).await?.is_some_and(|session| at > session.end_time);
+        stats.record_manual_checkout(id, SOURCE_ADMIN, late).await;
+      }
+      // The edit reopened the attendance, so the recorded checkout no longer describes anything.
+      None => stats.record_reopened(id).await,
+    }
+
+    Ok(updated)
   }
 
   async fn delete_team_member_session(&self, ctx: &Context<'_>, id: Uuid) -> Result<bool> {

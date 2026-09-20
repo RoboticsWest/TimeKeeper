@@ -11,6 +11,9 @@ use crate::domains::settings::SettingsRepository;
 use crate::domains::team_member::{TeamMember, TeamMemberRepository};
 use crate::domains::team_member_session::{TeamMemberSession, TeamMemberSessionRepository};
 
+use super::model::{AttendanceStats, CHECKOUT_AUTO, CHECKOUT_MANUAL, SOURCE_AUTO, TeamMemberStats};
+use super::repository::MemberStatsRepository;
+
 #[derive(SimpleObject)]
 pub struct HoursBucket {
   pub regular_secs: f64,
@@ -196,5 +199,78 @@ impl StatisticsLogic for DefaultStatisticsLogic {
     entries.sort_by(|a, b| b.total_secs.partial_cmp(&a.total_secs).unwrap_or(std::cmp::Ordering::Equal));
 
     Ok(entries)
+  }
+}
+
+/// Recording of the statistics that cannot be derived from attendance rows.
+///
+/// Every method returns `()` rather than a `Result` on purpose. These writes hang off business
+/// operations — checking in, checking out, sending a DM — and a statistic is never worth failing
+/// one of those over. A failure is logged and swallowed here, so no call site has to remember to
+/// do that, and nobody is ever refused a check-in because a counter could not be bumped.
+#[async_trait]
+pub trait MemberStatsLogic: Send + Sync {
+  /// Records a member ending their own attendance, and by which route.
+  async fn record_manual_checkout(&self, team_member_session_id: Uuid, source: &str, late: bool);
+
+  /// Records the auto-checkout ending an attendance — the member forgot to sign out.
+  async fn record_auto_checkout(&self, team_member_session_id: Uuid);
+
+  /// Returns an attendance to "still checked in" after an edit removed its checkout.
+  async fn record_reopened(&self, team_member_session_id: Uuid);
+
+  async fn record_overtime_warning(&self, team_member_id: Uuid);
+
+  /// Recorded facts for one member's attendances. Errors surface here, because a stat card that
+  /// silently showed zeros would be worse than one that says it could not load.
+  async fn get_attendance_for_member(&self, team_member_id: Uuid) -> anyhow::Result<Vec<AttendanceStats>>;
+
+  async fn get_member(&self, team_member_id: Uuid) -> anyhow::Result<TeamMemberStats>;
+}
+
+pub struct DefaultMemberStatsLogic<R: MemberStatsRepository> {
+  repo: R,
+}
+
+impl<R: MemberStatsRepository> DefaultMemberStatsLogic<R> {
+  pub fn new(repo: R) -> Self {
+    Self { repo }
+  }
+}
+
+#[async_trait]
+impl<R: MemberStatsRepository> MemberStatsLogic for DefaultMemberStatsLogic<R> {
+  async fn record_manual_checkout(&self, team_member_session_id: Uuid, source: &str, late: bool) {
+    if let Err(e) = self.repo.record_checkout(team_member_session_id, CHECKOUT_MANUAL, source, late).await {
+      log::error!("[MemberStats] Failed to record {source} checkout for attendance {team_member_session_id}: {e}");
+    }
+  }
+
+  async fn record_auto_checkout(&self, team_member_session_id: Uuid) {
+    // Never "late": the auto-checkout records the checkout *as* the scheduled end, so by
+    // definition it did not run past it. Late is what a member does deliberately.
+    if let Err(e) = self.repo.record_checkout(team_member_session_id, CHECKOUT_AUTO, SOURCE_AUTO, false).await {
+      log::error!("[MemberStats] Failed to record auto-checkout for attendance {team_member_session_id}: {e}");
+    }
+  }
+
+  async fn record_reopened(&self, team_member_session_id: Uuid) {
+    if let Err(e) = self.repo.reopen(team_member_session_id).await {
+      log::error!("[MemberStats] Failed to reopen attendance {team_member_session_id}: {e}");
+    }
+  }
+
+  async fn record_overtime_warning(&self, team_member_id: Uuid) {
+    if let Err(e) = self.repo.record_overtime_warning(team_member_id).await {
+      log::error!("[MemberStats] Failed to record overtime warning for member {team_member_id}: {e}");
+    }
+  }
+
+  async fn get_attendance_for_member(&self, team_member_id: Uuid) -> anyhow::Result<Vec<AttendanceStats>> {
+    self.repo.get_attendance_for_member(team_member_id).await
+  }
+
+  async fn get_member(&self, team_member_id: Uuid) -> anyhow::Result<TeamMemberStats> {
+    self.repo.get_member(team_member_id).await
   }
 }

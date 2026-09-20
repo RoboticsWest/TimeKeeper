@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/leaderboard.dart';
-import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/statistics_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
+import 'package:time_keeper/views/team/member_type_chip.dart';
 import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
 import 'package:time_keeper/colors.dart';
@@ -123,7 +123,6 @@ class _LeaderboardRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final member = entry.teamMember;
     final name = member.displayName ?? '${member.firstName} ${member.lastName}';
-    final memberType = member.memberType == TeamMemberType.student ? 'Student' : 'Mentor';
 
     return Row(
       children: [
@@ -140,7 +139,10 @@ class _LeaderboardRow extends StatelessWidget {
           ),
         ),
         Expanded(flex: 3, child: Center(child: Text(name))),
-        Expanded(flex: 2, child: Center(child: Text(memberType))),
+        Expanded(
+          flex: 2,
+          child: Center(child: MemberTypeChip(memberType: member.memberType)),
+        ),
         Expanded(flex: 2, child: _HoursCell(bucket: entry.activeSession)),
         Expanded(flex: 2, child: _HoursCell(bucket: entry.thisWeek)),
         Expanded(

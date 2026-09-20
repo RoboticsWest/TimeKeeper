@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/models/location.dart';
 import 'package:time_keeper/models/team_member.dart';
+import 'package:time_keeper/views/team/member_type_chip.dart';
 
 class TeamMemberRow extends StatelessWidget {
   final TeamMember teamMember;
@@ -17,7 +18,9 @@ class TeamMemberRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: Center(child: Text(name))),
-        Expanded(child: Center(child: Text(teamMember.memberType.name))),
+        Expanded(
+          child: Center(child: MemberTypeChip(memberType: teamMember.memberType)),
+        ),
         Expanded(child: Center(child: Text(location.location))),
         Expanded(child: Center(child: Text(timeStr))),
       ],

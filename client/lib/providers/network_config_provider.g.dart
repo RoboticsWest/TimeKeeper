@@ -148,6 +148,16 @@ abstract class _$Tls extends $Notifier<bool> {
 ///
 /// Native builds (desktop, Android) genuinely do have to be pointed at a
 /// server, so there the configured host, port and TLS toggle apply.
+///
+/// The one exception is a *debug* web build. `flutter run -d chrome` serves the
+/// app from the Flutter tool's own dev server on a random port, and that server
+/// knows nothing about `/graphql`: the origin is the dev server, not the API.
+/// Same-origin requests there hit a 404 whose empty body surfaces as
+/// `OperationException(SyntaxError: Unexpected end of JSON input)` with no
+/// `graphQLErrors`, plus a `WebSocketException: Failed to connect WebSocket`
+/// from the subscription link. So debug web falls back to the configured host
+/// and port, exactly like a native build. Release web is unchanged and still
+/// always same-origin.
 
 @ProviderFor(ServerBaseUri)
 final serverBaseUriProvider = ServerBaseUriProvider._();
@@ -168,6 +178,16 @@ final serverBaseUriProvider = ServerBaseUriProvider._();
 ///
 /// Native builds (desktop, Android) genuinely do have to be pointed at a
 /// server, so there the configured host, port and TLS toggle apply.
+///
+/// The one exception is a *debug* web build. `flutter run -d chrome` serves the
+/// app from the Flutter tool's own dev server on a random port, and that server
+/// knows nothing about `/graphql`: the origin is the dev server, not the API.
+/// Same-origin requests there hit a 404 whose empty body surfaces as
+/// `OperationException(SyntaxError: Unexpected end of JSON input)` with no
+/// `graphQLErrors`, plus a `WebSocketException: Failed to connect WebSocket`
+/// from the subscription link. So debug web falls back to the configured host
+/// and port, exactly like a native build. Release web is unchanged and still
+/// always same-origin.
 final class ServerBaseUriProvider extends $NotifierProvider<ServerBaseUri, Uri> {
   /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
   /// probe).
@@ -185,6 +205,16 @@ final class ServerBaseUriProvider extends $NotifierProvider<ServerBaseUri, Uri> 
   ///
   /// Native builds (desktop, Android) genuinely do have to be pointed at a
   /// server, so there the configured host, port and TLS toggle apply.
+  ///
+  /// The one exception is a *debug* web build. `flutter run -d chrome` serves the
+  /// app from the Flutter tool's own dev server on a random port, and that server
+  /// knows nothing about `/graphql`: the origin is the dev server, not the API.
+  /// Same-origin requests there hit a 404 whose empty body surfaces as
+  /// `OperationException(SyntaxError: Unexpected end of JSON input)` with no
+  /// `graphQLErrors`, plus a `WebSocketException: Failed to connect WebSocket`
+  /// from the subscription link. So debug web falls back to the configured host
+  /// and port, exactly like a native build. Release web is unchanged and still
+  /// always same-origin.
   ServerBaseUriProvider._()
     : super(
         from: null,
@@ -209,7 +239,7 @@ final class ServerBaseUriProvider extends $NotifierProvider<ServerBaseUri, Uri> 
   }
 }
 
-String _$serverBaseUriHash() => r'635dfeb72dc9e65a783ee09acc49e7771901ffa9';
+String _$serverBaseUriHash() => r'e3731fa78ce4ab584f881cea4a55dcebeca85827';
 
 /// Base URI used for API connections (GraphQL over HTTP/WS plus the `/health`
 /// probe).
@@ -227,6 +257,16 @@ String _$serverBaseUriHash() => r'635dfeb72dc9e65a783ee09acc49e7771901ffa9';
 ///
 /// Native builds (desktop, Android) genuinely do have to be pointed at a
 /// server, so there the configured host, port and TLS toggle apply.
+///
+/// The one exception is a *debug* web build. `flutter run -d chrome` serves the
+/// app from the Flutter tool's own dev server on a random port, and that server
+/// knows nothing about `/graphql`: the origin is the dev server, not the API.
+/// Same-origin requests there hit a 404 whose empty body surfaces as
+/// `OperationException(SyntaxError: Unexpected end of JSON input)` with no
+/// `graphQLErrors`, plus a `WebSocketException: Failed to connect WebSocket`
+/// from the subscription link. So debug web falls back to the configured host
+/// and port, exactly like a native build. Release web is unchanged and still
+/// always same-origin.
 
 abstract class _$ServerBaseUri extends $Notifier<Uri> {
   Uri build();

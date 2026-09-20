@@ -19,6 +19,7 @@ import 'package:time_keeper/views/notifications/notifications_view.dart' deferre
 import 'package:time_keeper/views/users/users_view.dart' deferred as users;
 import 'package:time_keeper/views/leaderboard/leaderboard_view.dart' deferred as leaderboard;
 import 'package:time_keeper/views/attendance/attendance_view.dart' deferred as attendance;
+import 'package:time_keeper/views/achievements/achievements_view.dart' deferred as achievements;
 import 'package:time_keeper/views/statistics/statistics_view.dart' deferred as statistics;
 import 'package:time_keeper/views/calendar/calendar_view.dart' deferred as calendar;
 
@@ -250,6 +251,18 @@ GoRouter router(Ref ref) {
                         libraryKey: AppRoute.attendance.path,
                         libraryLoader: attendance.loadLibrary,
                         builder: (context) => attendance.AttendanceView(),
+                      ),
+                    ),
+                  ),
+                  GoRoute(
+                    name: AppRoute.achievements.name,
+                    path: AppRoute.achievements.path,
+                    pageBuilder: (context, state) => _buildTransitionPage(
+                      key: state.pageKey,
+                      child: DeferredWidget(
+                        libraryKey: AppRoute.achievements.path,
+                        libraryLoader: achievements.loadLibrary,
+                        builder: (context) => achievements.AchievementsView(),
                       ),
                     ),
                   ),

@@ -15,6 +15,7 @@ use crate::domains::settings::{
   DEFAULT_AUTO_CHECKOUT_DM_MESSAGE, DEFAULT_END_REMINDER_MESSAGE, DEFAULT_OVERTIME_DM_MESSAGE,
   DEFAULT_START_REMINDER_MESSAGE, Settings, SettingsLogic,
 };
+use crate::domains::statistics::MemberStatsLogic;
 use crate::domains::team_member::{TeamMember, TeamMemberLogic};
 use crate::scheduler::{Schedule, Service};
 use crate::time::{format_date, format_relative_day, format_time, format_weekday, parse_tz};
@@ -34,6 +35,7 @@ pub struct DiscordNotificationService {
   notifications: Arc<dyn NotificationLogic>,
   team_members: Arc<dyn TeamMemberLogic>,
   session_rsvp_messages: Arc<dyn SessionRsvpMessageLogic>,
+  member_stats: Arc<dyn MemberStatsLogic>,
 }
 
 /// Everything the send loop needs to render one notification.
@@ -63,8 +65,9 @@ impl DiscordNotificationService {
     notifications: Arc<dyn NotificationLogic>,
     team_members: Arc<dyn TeamMemberLogic>,
     session_rsvp_messages: Arc<dyn SessionRsvpMessageLogic>,
+    member_stats: Arc<dyn MemberStatsLogic>,
   ) -> Self {
-    Self { settings, sessions, locations, notifications, team_members, session_rsvp_messages }
+    Self { settings, sessions, locations, notifications, team_members, session_rsvp_messages, member_stats }
   }
 
   /// Substitutes the `{...}` tokens an operator can use in a message template.
@@ -434,6 +437,16 @@ impl Service for DiscordNotificationService {
         Ok(Some(message_id)) => {
           if let Err(e) = self.notifications.mark_sent(notification.id, Some(&message_id)).await {
             log::error!("[DiscordNotificationService] Failed to mark notification {} sent: {e}", notification.id);
+          }
+
+          // Counted here rather than where the notification is scheduled: this is the point at
+          // which the member was actually told. A notification that stayed pending because the
+          // feature was switched off, or failed because nobody linked a Discord account, is not
+          // a warning anybody received. Status only ever leaves `pending` once, so it counts once.
+          if notification.notification_type == TYPE_OVERTIME
+            && let Some(member_id) = notification.team_member_id
+          {
+            self.member_stats.record_overtime_warning(member_id).await;
           }
         }
         // Nothing sent, but nothing wrong either - the feature is switched off. Leave pending.

@@ -15,6 +15,7 @@ use crate::gql_common::{Change, Page, page_bounds};
 
 use crate::domains::notification::{LateReminderPolicy, plan_session_reminders};
 use crate::domains::settings::SettingsLogic;
+use crate::domains::statistics::{SOURCE_KIOSK, SOURCE_RFID};
 use crate::domains::team_member::TeamMemberLogic;
 
 use super::logic::SessionLogic;
@@ -234,7 +235,7 @@ impl SessionMutation {
   /// Kiosk check-in/out by RFID scan - creates or closes a `team_member_sessions` row.
   async fn check_in_out(&self, ctx: &Context<'_>, team_member_id: Uuid, location_id: Uuid) -> Result<bool> {
     require_permission(ctx, "team_member_sessions", PermissionLevel::Write)?;
-    Ok(logic(ctx)?.check_in_out(team_member_id, location_id).await?)
+    Ok(logic(ctx)?.check_in_out(team_member_id, location_id, SOURCE_RFID).await?)
   }
 
   /// Kiosk check-in/out by quick PIN. Returns true for checked in, false for checked out.
@@ -262,7 +263,7 @@ impl SessionMutation {
       return Err(Error::new("PIN not recognised."));
     };
 
-    let checked_in = logic(ctx)?.check_in_out(member.id, location_id).await?;
+    let checked_in = logic(ctx)?.check_in_out(member.id, location_id, SOURCE_KIOSK).await?;
     Ok(PinCheckInOut { checked_in, team_member_id: member.id })
   }
 }

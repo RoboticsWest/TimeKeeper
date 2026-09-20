@@ -525,6 +525,85 @@ pub const ACHIEVEMENTS: &[Achievement] = &[
     hidden: false,
     check: |p| p.days_since_first.is_some_and(|days| days >= 730),
   },
+  // -- Recorded events ---------------------------------------------------------------------------
+  //
+  // These read facts recorded when they happened (migration 0013) rather than anything inferred
+  // from an attendance row. They are the ones that could not exist before: nothing in the schema
+  // remembered how a checkout was made, or that a member was ever warned.
+  Achievement {
+    key: "remote_control",
+    emoji: "\u{1f4f1}",
+    name: "Remote Control",
+    how: "Sign out with `!checkout` from Discord 5 times",
+    hidden: false,
+    check: |p| p.discord_checkouts >= 5,
+  },
+  Achievement {
+    key: "never_walks_back",
+    emoji: "\u{1f6cb}",
+    name: "Never Walks Back to the Kiosk",
+    how: "Sign out from Discord 20 times",
+    hidden: false,
+    check: |p| p.discord_checkouts >= 20,
+  },
+  Achievement {
+    key: "closing_time",
+    emoji: "\u{1f6ac}",
+    name: "Closing Time",
+    how: "Sign yourself out after the session has already ended, 5 times",
+    hidden: false,
+    check: |p| p.late_stays >= 5,
+  },
+  Achievement {
+    key: "last_one_out",
+    emoji: "\u{1f511}",
+    name: "Last One Out",
+    how: "Sign yourself out after the session has already ended, 20 times",
+    hidden: false,
+    check: |p| p.late_stays >= 20,
+  },
+  Achievement {
+    key: "told_off",
+    emoji: "\u{1f4e3}",
+    name: "Told Off",
+    how: "Get an overtime warning",
+    hidden: false,
+    check: |p| p.overtime_warnings >= 1,
+  },
+  Achievement {
+    key: "repeat_offender",
+    emoji: "\u{1f6a8}",
+    name: "Repeat Offender",
+    how: "Collect 5 overtime warnings",
+    hidden: false,
+    check: |p| p.overtime_warnings >= 5,
+  },
+  Achievement {
+    key: "unrepentant",
+    emoji: "\u{1f648}",
+    name: "Unrepentant",
+    how: "Collect 20 overtime warnings and keep going",
+    hidden: true,
+    check: |p| p.overtime_warnings >= 20,
+  },
+  Achievement {
+    key: "lost_to_history",
+    emoji: "\u{1f4dc}",
+    name: "Lost to History",
+    how: "Have a check-in on your lifetime record whose session no longer exists",
+    hidden: true,
+    // The lifetime counter never goes down; the attendance rows do, when a session is deleted.
+    // A gap between the two means part of this member's history has been tidied away.
+    check: |p| p.lifetime_check_ins > p.sessions_attended,
+  },
+  Achievement {
+    key: "check_ins_250",
+    emoji: "\u{1f5c3}",
+    name: "The Long Record",
+    how: "Reach 250 check-ins across your whole time here",
+    hidden: false,
+    check: |p| p.lifetime_check_ins >= 250,
+  },
 ];
 
 /// Every achievement the profile currently satisfies, in catalogue order.
@@ -627,6 +706,24 @@ pub const TITLES: &[Title] = &[
     check: |p| p.sessions_attended >= 3 && p.overtime_pct() >= 50,
   },
   Title {
+    key: "unrepentant",
+    name: "The Unrepentant",
+    reason: "Twenty overtime warnings, and not one of them landed.",
+    check: |p| p.overtime_warnings >= 20,
+  },
+  Title {
+    key: "repeat_offender",
+    name: "The Repeat Offender",
+    reason: "You have been warned about overtime more times than most people have overtime.",
+    check: |p| p.overtime_warnings >= 5,
+  },
+  Title {
+    key: "remote_worker",
+    name: "The Remote Worker",
+    reason: "You sign out from Discord rather than walking back to the kiosk.",
+    check: |p| p.discord_checkouts >= 10,
+  },
+  Title {
     key: "clockwork",
     name: "The Clockwork",
     reason: "Ten sessions, and you have checked in within the same quarter hour every time.",
@@ -685,6 +782,16 @@ pub const TITLES: &[Title] = &[
     name: "The Veteran",
     reason: "You have been on the books for over a year.",
     check: |p| p.days_since_first.is_some_and(|days| days >= 365),
+  },
+  Title {
+    key: "closer",
+    name: "The Closer",
+    reason: "Twenty-five times you were still signing out after everyone else had gone home.",
+    // Signing out after the scheduled end is ordinary behaviour, not a distinguishing trait -
+    // on real attendance data roughly half of all checkouts are late. At the original threshold
+    // of ten this title was claiming two thirds of the team and crowding out every rarer one
+    // below it, so it needs both a much higher bar and a place lower down the list.
+    check: |p| p.late_stays >= 25,
   },
   Title {
     key: "sprinter",
@@ -747,7 +854,7 @@ pub fn title_for(profile: &MemberProfile) -> &'static Title {
 
 #[cfg(test)]
 mod tests {
-  use std::collections::HashSet;
+  use std::collections::{HashMap, HashSet};
 
   use super::*;
 
@@ -871,6 +978,153 @@ mod tests {
   #[test]
   fn hidden_achievements_still_count_towards_the_total() {
     assert_eq!(progress(&blank()).1, ACHIEVEMENTS.len());
+  }
+
+  /// A broad sweep of synthetic members, used by the reachability and dominance tests below.
+  ///
+  /// Not a model of the real team - it is a deliberately uniform grid over the dimensions the
+  /// catalogue actually reads. That is the point: it answers "can this rule ever fire" and "how
+  /// wide is this rule" without either question depending on whoever happens to be on the roster
+  /// this season.
+  fn sweep() -> Vec<MemberProfile> {
+    let mut profiles = Vec::new();
+    for sessions in [0usize, 3, 8, 12, 30, 60, 120] {
+      for overtime_pct in [0.0f64, 0.1, 0.3, 0.6, 0.8, 1.0] {
+        for forgot in [0usize, 3, 6, 16] {
+          for late in [0usize, 6, 12, 30] {
+            for rank in [None, Some((1usize, 12usize)), Some((3, 12)), Some((9, 12)), Some((40, 60))] {
+              for days in [0i64, 40, 200, 400, 800] {
+                // Both a member who turns up to everything and one who turns up to half, so
+                // attendance-ratio rules can fire and their absence-based counterparts still can.
+                for possible in [sessions.max(1), sessions.max(1) * 2] {
+                  // Hours are varied independently of session count: tying them together would
+                  // mean every high-hours profile was also a high-session one, quietly masking
+                  // every hours-based rule behind a sessions-based rule above it.
+                  for hours_each in [1.0f64, 5.0] {
+                    #[allow(clippy::cast_precision_loss)]
+                    let total_secs = sessions as f64 * hours_each * 3600.0;
+                    profiles.push(MemberProfile {
+                      member_type: "student".to_string(),
+                      sessions_attended: sessions,
+                      sessions_possible: possible,
+                      total_secs,
+                      overtime_secs: total_secs * overtime_pct,
+                      this_week_secs: total_secs / 4.0,
+                      forgot_checkout: forgot.min(sessions),
+                      late_stays: late,
+                      global_rank: rank,
+                      group_rank: rank,
+                      days_since_first: Some(days),
+                      ..MemberProfile::default()
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // The dimensions the grid above holds flat, varied over a second, smaller pass so that every
+    // rule reading them is still reachable. Kept separate to stop the cross product exploding.
+    let extras: Vec<MemberProfile> = [
+      MemberProfile { sessions_attended: 20, attendance_streak: 25, ..Default::default() },
+      MemberProfile { sessions_attended: 20, forgot_checkout: 10, forgot_checkout_streak: 5, ..Default::default() },
+      MemberProfile { sessions_attended: 20, sessions_possible: 20, ..Default::default() },
+      MemberProfile { sessions_attended: 20, sessions_possible: 21, ..Default::default() },
+      MemberProfile { sessions_attended: 20, early_arrivals: 20, ..Default::default() },
+      MemberProfile { sessions_attended: 20, check_in_spread_minutes: Some(5), ..Default::default() },
+      MemberProfile { sessions_attended: 20, check_in_spread_minutes: Some(500), ..Default::default() },
+      MemberProfile { sessions_attended: 20, latest_check_out_minutes: Some(23 * 60), ..Default::default() },
+      MemberProfile { sessions_attended: 20, after_midnight_checkouts: 5, ..Default::default() },
+      MemberProfile { sessions_attended: 20, longest_stint_secs: Some(13 * 3600), ..Default::default() },
+      MemberProfile { sessions_attended: 20, shortest_stint_secs: Some(60), ..Default::default() },
+      MemberProfile { sessions_attended: 20, weekend_sessions: 15, ..Default::default() },
+      MemberProfile { sessions_attended: 20, distinct_locations: 5, ..Default::default() },
+      MemberProfile { sessions_attended: 20, discord_checkouts: 25, ..Default::default() },
+      MemberProfile { sessions_attended: 20, overtime_warnings: 25, ..Default::default() },
+      // The middle rung of each tiered pair, so the lower tier is not permanently masked by the
+      // higher one being the only value the sweep ever tries.
+      MemberProfile { sessions_attended: 20, overtime_warnings: 8, ..Default::default() },
+      MemberProfile { sessions_attended: 20, discord_checkouts: 12, ..Default::default() },
+      MemberProfile { sessions_attended: 20, after_midnight_checkouts: 1, ..Default::default() },
+      MemberProfile { sessions_attended: 20, longest_stint_secs: Some(9 * 3600), ..Default::default() },
+      MemberProfile { sessions_attended: 20, longest_stint_secs: Some(5 * 3600), ..Default::default() },
+      MemberProfile { sessions_attended: 20, lifetime_check_ins: 300, ..Default::default() },
+      MemberProfile { sessions_attended: 5, lifetime_check_ins: 40, ..Default::default() },
+      MemberProfile { sessions_attended: 8, global_rank: Some((4, 30)), ..Default::default() },
+      MemberProfile { sessions_attended: 300, total_secs: 2_000_000.0, ..Default::default() },
+      MemberProfile { sessions_attended: 20, this_week_secs: 25.0 * 3600.0, ..Default::default() },
+    ]
+    .into_iter()
+    .map(|p| MemberProfile { member_type: "student".to_string(), ..p })
+    .collect();
+
+    profiles.extend(extras);
+    profiles
+  }
+
+  #[test]
+  fn every_achievement_is_reachable() {
+    // Guards against a rule nobody can ever satisfy - a threshold in the wrong unit, or a
+    // condition contradicting itself. An unreachable achievement is invisible: it just quietly
+    // inflates the denominator on everybody's stat card forever.
+    let profiles = sweep();
+    for achievement in ACHIEVEMENTS {
+      assert!(
+        profiles.iter().any(|p| (achievement.check)(p)),
+        "no profile in the sweep can earn '{}' - is it reachable at all?",
+        achievement.key
+      );
+    }
+  }
+
+  #[test]
+  fn every_title_is_reachable() {
+    // The ordering guard. TITLES is first-match-wins, so a title placed below a broader one is
+    // dead code that no member can ever be given - and nothing about the entry itself looks
+    // wrong when you read it. This is the test that catches that.
+    let profiles = sweep();
+    let mut awarded: HashSet<&str> = HashSet::new();
+    for profile in &profiles {
+      awarded.insert(title_for(profile).key);
+    }
+
+    for title in TITLES {
+      assert!(
+        awarded.contains(title.key),
+        "'{}' is never awarded to any profile in the sweep - it is shadowed by a broader title \
+         above it in TITLES, or its condition is unreachable",
+        title.key
+      );
+    }
+  }
+
+  #[test]
+  fn no_single_title_dominates() {
+    // A title two thirds of the team shares is not a title. The real failure this catches is
+    // ordering: put a commonplace condition high in TITLES and it eats every rarer, more
+    // characterful one below it. The catch-all is exempt - claiming whoever is left is its job.
+    let profiles = sweep();
+    let catch_all = TITLES.last().expect("TITLES is not empty").key;
+
+    let mut counts: HashMap<&str, usize> = HashMap::new();
+    for profile in &profiles {
+      *counts.entry(title_for(profile).key).or_default() += 1;
+    }
+
+    let limit = profiles.len() / 3;
+    for (key, count) in counts {
+      if key == catch_all {
+        continue;
+      }
+      assert!(
+        count <= limit,
+        "'{key}' claims {count} of {} profiles - too broad for the position it holds in TITLES",
+        profiles.len()
+      );
+    }
   }
 
   #[test]

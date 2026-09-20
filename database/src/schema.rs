@@ -7,6 +7,16 @@ pub mod sql_types {
 }
 
 diesel::table! {
+    attendance_stats (team_member_session_id) {
+        team_member_session_id -> Uuid,
+        checkout_kind -> Text,
+        checkout_source -> Text,
+        checked_out_late -> Bool,
+        recorded_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     locations (id) {
         id -> Uuid,
         location -> Text,
@@ -149,6 +159,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    team_member_stats (team_member_id) {
+        team_member_id -> Uuid,
+        check_ins -> Int8,
+        overtime_warnings -> Int8,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     team_members (id) {
         id -> Uuid,
         first_name -> Text,
@@ -177,6 +196,7 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(attendance_stats -> team_member_sessions (team_member_session_id));
 diesel::joinable!(notifications -> sessions (session_id));
 diesel::joinable!(notifications -> team_members (team_member_id));
 diesel::joinable!(rfid_tags -> team_members (team_member_id));
@@ -188,10 +208,12 @@ diesel::joinable!(session_rsvps -> team_members (team_member_id));
 diesel::joinable!(sessions -> locations (location_id));
 diesel::joinable!(team_member_sessions -> sessions (session_id));
 diesel::joinable!(team_member_sessions -> team_members (team_member_id));
+diesel::joinable!(team_member_stats -> team_members (team_member_id));
 diesel::joinable!(user_roles -> roles (role_id));
 diesel::joinable!(user_roles -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+  attendance_stats,
   locations,
   logos,
   notifications,
@@ -205,6 +227,7 @@ diesel::allow_tables_to_appear_in_same_query!(
   sessions,
   settings,
   team_member_sessions,
+  team_member_stats,
   team_members,
   user_roles,
   users,

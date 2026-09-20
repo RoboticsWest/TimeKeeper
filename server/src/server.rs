@@ -28,7 +28,10 @@ use crate::{
       SessionRsvpLogic, SessionRsvpMessageLogic, SessionRsvpMessageRepository, SessionRsvpRepository,
     },
     settings::{DefaultSettingsLogic, PgLogoRepository, PgSettingsRepository, SettingsLogic, SettingsRepository},
-    statistics::{DefaultStatisticsLogic, StatisticsLogic},
+    statistics::{
+      AccoladesLogic, DefaultAccoladesLogic, DefaultMemberStatsLogic, DefaultStatisticsLogic, MemberStatsLogic,
+      PgMemberStatsRepository, StatisticsLogic,
+    },
     team_member::{DefaultTeamMemberLogic, PgTeamMemberRepository, TeamMemberLogic, TeamMemberRepository},
     team_member_session::{
       DefaultTeamMemberSessionLogic, PgTeamMemberSessionRepository, TeamMemberSessionLogic, TeamMemberSessionRepository,
@@ -122,11 +125,16 @@ impl Server {
       session_repo.clone(),
       location_repo.clone(),
     ));
+    // Recorded statistics. Constructed before the session logic because check-in, checkout and
+    // auto-checkout all write through it.
+    let member_stats_logic: Arc<dyn MemberStatsLogic> =
+      Arc::new(DefaultMemberStatsLogic::new(PgMemberStatsRepository::new(pool.clone())));
     let session_logic: Arc<dyn SessionLogic> = Arc::new(DefaultSessionLogic::new(
       PgSessionRepository::new(pool.clone()),
       team_member_session_repo.clone(),
       notification_repo.clone(),
       settings_repo.clone(),
+      member_stats_logic.clone(),
     ));
     let session_rsvp_logic: Arc<dyn SessionRsvpLogic> =
       Arc::new(DefaultSessionRsvpLogic::new(PgSessionRsvpRepository::new(pool.clone())));
@@ -137,6 +145,14 @@ impl Server {
       team_member_repo.clone(),
       team_member_session_repo.clone(),
       settings_repo.clone(),
+    ));
+    let accolades_logic: Arc<dyn AccoladesLogic> = Arc::new(DefaultAccoladesLogic::new(
+      session_repo.clone(),
+      team_member_repo.clone(),
+      team_member_session_repo.clone(),
+      settings_repo.clone(),
+      Arc::new(PgMemberStatsRepository::new(pool.clone())),
+      statistics_logic.clone(),
     ));
     let schedule_logic: Arc<dyn ScheduleLogic> =
       Arc::new(DefaultScheduleLogic::new(location_repo.clone(), session_repo.clone()));
@@ -178,6 +194,7 @@ impl Server {
         notification_logic.clone(),
         team_member_logic.clone(),
         session_rsvp_message_logic.clone(),
+        member_stats_logic.clone(),
       ),
       cancel.clone(),
     );
@@ -190,6 +207,8 @@ impl Server {
       locations: location_logic.clone(),
       settings: settings_logic.clone(),
       statistics: statistics_logic.clone(),
+      member_stats: member_stats_logic.clone(),
+      accolades: accolades_logic.clone(),
       session_rsvps: session_rsvp_logic.clone(),
       session_rsvp_messages: session_rsvp_message_logic.clone(),
     };
@@ -207,6 +226,8 @@ impl Server {
       session_logic.clone(),
       session_rsvp_logic,
       statistics_logic,
+      member_stats_logic,
+      accolades_logic,
       schedule_logic,
       settings_logic,
       permissions_repo,

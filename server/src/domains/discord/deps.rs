@@ -4,7 +4,7 @@ use crate::domains::location::LocationLogic;
 use crate::domains::session::SessionLogic;
 use crate::domains::session_rsvp::{SessionRsvpLogic, SessionRsvpMessageLogic};
 use crate::domains::settings::SettingsLogic;
-use crate::domains::statistics::StatisticsLogic;
+use crate::domains::statistics::{AccoladesLogic, MemberStatsLogic, StatisticsLogic};
 use crate::domains::team_member::TeamMemberLogic;
 use crate::domains::team_member_session::TeamMemberSessionLogic;
 
@@ -18,6 +18,8 @@ pub struct DiscordDeps {
   pub locations: Arc<dyn LocationLogic>,
   pub settings: Arc<dyn SettingsLogic>,
   pub statistics: Arc<dyn StatisticsLogic>,
+  pub member_stats: Arc<dyn MemberStatsLogic>,
+  pub accolades: Arc<dyn AccoladesLogic>,
   pub session_rsvps: Arc<dyn SessionRsvpLogic>,
   pub session_rsvp_messages: Arc<dyn SessionRsvpMessageLogic>,
 }

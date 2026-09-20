@@ -102,10 +102,21 @@ enum AppRoute {
     colorSlot: 5,
     group: RailGroup.operations,
   ),
+  achievements(
+    path: '/achievements',
+    name: 'achievements',
+    railIndex: 7,
+    icon: Icons.workspace_premium,
+    label: 'Achievements',
+    // Amber: the one rail item that is not an operational tool, and the colour
+    // reads as a medal rather than as another category of work.
+    colorSlot: 3,
+    group: RailGroup.operations,
+  ),
   statistics(
     path: '/statistics',
     name: 'statistics',
-    railIndex: 7,
+    railIndex: 8,
     icon: Icons.analytics,
     label: 'Statistics',
     // Eight rail items against seven non-blue categorical slots means exactly

@@ -9,6 +9,7 @@ use crate::domains::notification::{
   TYPE_SESSION_END_REMINDER, TYPE_SESSION_START_REMINDER, ensure_session_reminders,
 };
 use crate::domains::settings::{DEFAULT_AUTO_CHECKOUT_AFTER_SECS, DEFAULT_CHECK_IN_WINDOW_SECS, SettingsRepository};
+use crate::domains::statistics::MemberStatsLogic;
 use crate::domains::team_member_session::{TeamMemberSession, TeamMemberSessionRepository};
 
 use super::model::Session;
@@ -58,7 +59,10 @@ pub trait SessionLogic: Send + Sync {
   /// Checks a team member in to the eligible session at `location_id`, or checks them out if
   /// they're already checked in to any session. Returns `true` if now checked in, `false` if
   /// checked out.
-  async fn check_in_out(&self, team_member_id: Uuid, location_id: Uuid) -> anyhow::Result<bool>;
+  /// Checks a member in, or out if they already are. `source` records *how* the checkout was
+  /// made (one of the `SOURCE_*` constants) — not recoverable from the attendance row afterwards,
+  /// and the thing that tells a deliberate late sign-out apart from a forgotten one.
+  async fn check_in_out(&self, team_member_id: Uuid, location_id: Uuid, source: &str) -> anyhow::Result<bool>;
   /// Finishes sessions past their end time: marks them finished once every member has checked
   /// out, or force-checks-out lingering members (enqueuing auto-checkout notifications) once
   /// either the configured grace period has elapsed or the next session at that location has
@@ -77,6 +81,7 @@ pub struct DefaultSessionLogic<R: SessionRepository> {
   team_member_sessions: Arc<dyn TeamMemberSessionRepository>,
   notifications: Arc<dyn NotificationRepository>,
   settings: Arc<dyn SettingsRepository>,
+  member_stats: Arc<dyn MemberStatsLogic>,
 }
 
 impl<R: SessionRepository> DefaultSessionLogic<R> {
@@ -85,8 +90,9 @@ impl<R: SessionRepository> DefaultSessionLogic<R> {
     team_member_sessions: Arc<dyn TeamMemberSessionRepository>,
     notifications: Arc<dyn NotificationRepository>,
     settings: Arc<dyn SettingsRepository>,
+    member_stats: Arc<dyn MemberStatsLogic>,
   ) -> Self {
-    Self { repo, team_member_sessions, notifications, settings }
+    Self { repo, team_member_sessions, notifications, settings, member_stats }
   }
 
   /// How far either side of a session a kiosk scan still counts as checking in to it.
@@ -226,7 +232,7 @@ impl<R: SessionRepository> SessionLogic for DefaultSessionLogic<R> {
     self.repo.remove(id).await
   }
 
-  async fn check_in_out(&self, team_member_id: Uuid, location_id: Uuid) -> anyhow::Result<bool> {
+  async fn check_in_out(&self, team_member_id: Uuid, location_id: Uuid, source: &str) -> anyhow::Result<bool> {
     let now = Utc::now();
 
     let member_sessions = self.team_member_sessions.get_by_member_id(team_member_id).await?;
@@ -237,6 +243,13 @@ impl<R: SessionRepository> SessionLogic for DefaultSessionLogic<R> {
           .update(ms.id, ms.team_member_id, ms.session_id, ms.check_in_time, Some(now))
           .await?
           .ok_or_else(|| anyhow::anyhow!("Team member session not found"))?;
+
+        // Recorded now, while it is still known who ended it and by which route. `late` is
+        // resolved against the session's end as it stands at this moment, so a later edit to
+        // the session cannot retroactively turn a punctual sign-out into a late one.
+        let late = self.repo.get(ms.session_id).await?.is_some_and(|session| now > session.end_time);
+        self.member_stats.record_manual_checkout(ms.id, source, late).await;
+
         // This may have been the last member out, which is what actually ends the session.
         self.repo.refresh_actual_times(ms.session_id).await?;
         return Ok(false);
@@ -276,7 +289,11 @@ impl<R: SessionRepository> SessionLogic for DefaultSessionLogic<R> {
       return Err(anyhow::anyhow!("No active session at this location"));
     };
 
+    // The stats row and the lifetime check-in counter are opened by a database trigger
+    // (migration 0013), not here: a CSV import of a past season creates attendance rows without
+    // ever passing through this function, and those check-ins count too.
     self.team_member_sessions.add(team_member_id, session.id, now, None).await?;
+
     // First person in sets the session's real start; a later arrival leaves it unchanged.
     self.repo.refresh_actual_times(session.id).await?;
 
@@ -320,6 +337,11 @@ impl<R: SessionRepository> SessionLogic for DefaultSessionLogic<R> {
             .update(ms.id, ms.team_member_id, ms.session_id, ms.check_in_time, Some(session.end_time))
             .await?
             .ok_or_else(|| anyhow::anyhow!("Team member session not found"))?;
+
+          // The one fact the attendance row cannot express: nobody signed this member out, the
+          // grace period did. Without it, this row is byte-identical to a deliberate `!checkout`
+          // run after the session ended.
+          self.member_stats.record_auto_checkout(ms.id).await;
 
           if let Err(e) = self
             .notifications

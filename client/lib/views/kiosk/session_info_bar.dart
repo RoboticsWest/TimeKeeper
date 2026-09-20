@@ -48,10 +48,7 @@ class SessionInfoBar extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: color.withValues(alpha: 0.7),
-            fontWeight: FontWeight.w600,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.7), fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -182,10 +179,8 @@ class SessionInfoBar extends StatelessWidget {
                       Icons.people,
                       expected > 0 ? '$checkedInCount / $expected' : '$checkedInCount',
                     ),
-                    if (hasRsvps)
-                      _statIcon(theme, color, Icons.event_available, '$rsvpGoingCount'),
-                    if (rsvpNotGoingCount > 0)
-                      _statIcon(theme, color, Icons.event_busy, '$rsvpNotGoingCount'),
+                    if (hasRsvps) _statIcon(theme, color, Icons.event_available, '$rsvpGoingCount'),
+                    if (rsvpNotGoingCount > 0) _statIcon(theme, color, Icons.event_busy, '$rsvpNotGoingCount'),
                   ],
                 ),
               ),
