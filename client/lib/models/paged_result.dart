@@ -24,10 +24,7 @@ class PagedResult<T> {
     required this.hasMore,
   });
 
-  factory PagedResult.fromJson(
-    Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
+  factory PagedResult.fromJson(Map<String, dynamic> json, T Function(Map<String, dynamic>) fromJson) {
     final rows = (json['items'] as List<dynamic>? ?? const []);
     return PagedResult(
       items: rows.whereType<Map<String, dynamic>>().map(fromJson).toList(),

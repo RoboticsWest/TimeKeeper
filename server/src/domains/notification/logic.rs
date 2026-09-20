@@ -3,10 +3,18 @@ use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 use super::model::Notification;
-use super::repository::{NewNotification, NotificationRepository};
+use super::repository::{NewNotification, NotificationFilter, NotificationRepository};
 
 #[async_trait]
 pub trait NotificationLogic: Send + Sync {
+  /// One page of notifications matching `filter`, newest-scheduled first, with the total match
+  /// count.
+  async fn query_page(
+    &self,
+    filter: &NotificationFilter,
+    offset: i64,
+    limit: i64,
+  ) -> anyhow::Result<(Vec<Notification>, i64)>;
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Notification>>;
   async fn get_all(&self) -> anyhow::Result<Vec<Notification>>;
   async fn schedule(&self, new: NewNotification<'_>) -> anyhow::Result<Notification>;
@@ -42,6 +50,15 @@ impl<R: NotificationRepository> DefaultNotificationLogic<R> {
 
 #[async_trait]
 impl<R: NotificationRepository> NotificationLogic for DefaultNotificationLogic<R> {
+  async fn query_page(
+    &self,
+    filter: &NotificationFilter,
+    offset: i64,
+    limit: i64,
+  ) -> anyhow::Result<(Vec<Notification>, i64)> {
+    self.repo.query_page(filter, offset, limit).await
+  }
+
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Notification>> {
     self.repo.get(id).await
   }

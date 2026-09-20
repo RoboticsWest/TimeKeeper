@@ -23,9 +23,9 @@ class CalendarTable extends ConsumerWidget {
       headers: [
         BaseTableCell(child: TableHeaderText('Date'), flex: 2),
         BaseTableCell(child: TableHeaderText('Time'), flex: 2),
-        BaseTableCell(child: TableHeaderText('Duration')),
-        BaseTableCell(child: TableHeaderText('Location')),
-        BaseTableCell(child: TableHeaderText('Status')),
+        BaseTableCell(child: TableHeaderText('Duration'), flex: 1),
+        BaseTableCell(child: TableHeaderText('Location'), flex: 2),
+        BaseTableCell(child: TableHeaderText('Status'), flex: 1),
       ],
       rows: sessions.map((entry) {
         final session = entry.value;
@@ -39,9 +39,9 @@ class CalendarTable extends ConsumerWidget {
           cells: [
             BaseTableCell(child: Text(formatDate(start)), flex: 2),
             BaseTableCell(child: Text('${formatTime(start)} - ${formatTime(end)}'), flex: 2),
-            BaseTableCell(child: Text(formatDuration(duration))),
-            BaseTableCell(child: Text(locationName)),
-            BaseTableCell(child: SessionStatusChip(status: status)),
+            BaseTableCell(child: Text(formatDuration(duration)), flex: 1),
+            BaseTableCell(child: Text(locationName), flex: 2),
+            BaseTableCell(child: SessionStatusChip(status: status), flex: 1),
           ],
         );
       }).toList(),

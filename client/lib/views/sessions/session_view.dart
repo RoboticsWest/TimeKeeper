@@ -19,11 +19,7 @@ import 'package:time_keeper/widgets/tables/table_filter.dart';
 class SessionView extends HookConsumerWidget {
   const SessionView({super.key});
 
-  void _showClearDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> sessions,
-  ) {
+  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> sessions) {
     final ids = sessions.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No sessions to delete').show(context);
@@ -78,9 +74,7 @@ class SessionView extends HookConsumerWidget {
       notifier.setFilter(
         SessionFilterState(
           locationId: selectedLocationId.value,
-          finished: finishedFilter.value == 'all'
-              ? null
-              : finishedFilter.value == 'finished',
+          finished: finishedFilter.value == 'all' ? null : finishedFilter.value == 'finished',
           day: dayFilter.value,
         ),
       );
@@ -93,9 +87,7 @@ class SessionView extends HookConsumerWidget {
         ? sorted.where((entry) {
             final dt = entry.value.startTime;
             final sel = selectedDate.value!;
-            return dt.year == sel.year &&
-                dt.month == sel.month &&
-                dt.day == sel.day;
+            return dt.year == sel.year && dt.month == sel.month && dt.day == sel.day;
           }).toList()
         : sorted;
 
@@ -113,19 +105,11 @@ class SessionView extends HookConsumerWidget {
     }).toList();
 
     final locationItems = locations.entries.toList()
-      ..sort(
-        (a, b) => a.value.location.toLowerCase().compareTo(
-          b.value.location.toLowerCase(),
-        ),
-      );
-    final locationDropdownItems = locationItems
-        .map((entry) => (key: entry.key, label: entry.value.location))
-        .toList();
+      ..sort((a, b) => a.value.location.toLowerCase().compareTo(b.value.location.toLowerCase()));
+    final locationDropdownItems = locationItems.map((entry) => (key: entry.key, label: entry.value.location)).toList();
 
     final hasTableFilters =
-        selectedLocationId.value != null ||
-        finishedFilter.value != 'all' ||
-        dayFilter.value != null;
+        selectedLocationId.value != null || finishedFilter.value != 'all' || dayFilter.value != null;
 
     Future<void> pickDay() async {
       final now = DateTime.now();
@@ -150,32 +134,15 @@ class SessionView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref, sessions),
-                icon: Icon(
-                  Icons.delete_sweep,
-                  size: 18,
-                  color: theme.colorScheme.error,
-                ),
-                label: Text(
-                  'Clear All',
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
+                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
               const SizedBox(width: 12),
               SegmentedButton<bool>(
                 segments: const [
-                  ButtonSegment(
-                    value: true,
-                    icon: Icon(Icons.calendar_month),
-                    label: Text('Calendar'),
-                  ),
-                  ButtonSegment(
-                    value: false,
-                    icon: Icon(Icons.table_rows),
-                    label: Text('Table'),
-                  ),
+                  ButtonSegment(value: true, icon: Icon(Icons.calendar_month), label: Text('Calendar')),
+                  ButtonSegment(value: false, icon: Icon(Icons.table_rows), label: Text('Table')),
                 ],
                 selected: {showCalendar.value},
                 onSelectionChanged: (value) {
@@ -205,10 +172,7 @@ class SessionView extends HookConsumerWidget {
                 padding: const EdgeInsets.only(top: 12, bottom: 4),
                 child: Row(
                   children: [
-                    Text(
-                      'Showing: ${formatDate(selectedDate.value!)}',
-                      style: theme.textTheme.titleSmall,
-                    ),
+                    Text('Showing: ${formatDate(selectedDate.value!)}', style: theme.textTheme.titleSmall),
                     const SizedBox(width: 8),
                     TextButton.icon(
                       onPressed: () => selectedDate.value = null,
@@ -222,10 +186,7 @@ class SessionView extends HookConsumerWidget {
           ],
 
           // Stats
-          SessionStats(
-            sessions: sessions,
-            teamMemberSessions: teamMemberSessions,
-          ),
+          SessionStats(sessions: sessions, teamMemberSessions: teamMemberSessions),
           const SizedBox(height: 16),
 
           // Table-mode filters
@@ -242,9 +203,7 @@ class SessionView extends HookConsumerWidget {
                     items: locationDropdownItems,
                     selectedKey: selectedLocationId.value,
                     onSelected: (key) {
-                      selectedLocationId.value = key == selectedLocationId.value
-                          ? null
-                          : key;
+                      selectedLocationId.value = key == selectedLocationId.value ? null : key;
                     },
                   ),
                 ),
@@ -255,17 +214,12 @@ class SessionView extends HookConsumerWidget {
                     ButtonSegment(value: 'finished', label: Text('Finished')),
                   ],
                   selected: {finishedFilter.value},
-                  onSelectionChanged: (value) =>
-                      finishedFilter.value = value.first,
+                  onSelectionChanged: (value) => finishedFilter.value = value.first,
                 ),
                 OutlinedButton.icon(
                   onPressed: pickDay,
                   icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(
-                    dayFilter.value == null
-                        ? 'Pick a day'
-                        : formatDate(dayFilter.value!),
-                  ),
+                  label: Text(dayFilter.value == null ? 'Pick a day' : formatDate(dayFilter.value!)),
                 ),
                 if (hasTableFilters)
                   IconButton(
@@ -283,10 +237,7 @@ class SessionView extends HookConsumerWidget {
           ],
 
           // Filter (calendar mode is client-side over the full set)
-          if (showCalendar.value) ...[
-            TableFilter(controller: filterController),
-            const SizedBox(height: 12),
-          ],
+          if (showCalendar.value) ...[TableFilter(controller: filterController), const SizedBox(height: 12)],
 
           // Table
           Expanded(
@@ -294,11 +245,7 @@ class SessionView extends HookConsumerWidget {
                 ? SessionTable(sessions: filtered)
                 : currentPage == null
                 ? _LoadingOrError(page: page, onRetry: notifier.refresh)
-                : SessionTable(
-                    sessions: currentPage.items
-                        .map((session) => MapEntry(session.id, session))
-                        .toList(),
-                  ),
+                : SessionTable(sessions: currentPage.items.map((session) => MapEntry(session.id, session)).toList()),
           ),
           if (!showCalendar.value && currentPage != null)
             PaginationBar(
@@ -330,10 +277,7 @@ class _LoadingOrError<T> extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Could not load sessions',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Could not load sessions', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
           ],

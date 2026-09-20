@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use super::model::Location;
-use super::repository::LocationRepository;
+use super::repository::{LocationFilter, LocationRepository};
 
 #[async_trait]
 pub trait LocationLogic: Send + Sync {
@@ -12,6 +12,8 @@ pub trait LocationLogic: Send + Sync {
   async fn update(&self, id: Uuid, location: &str) -> anyhow::Result<Option<Location>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
   async fn clear(&self) -> anyhow::Result<()>;
+  /// One page of locations matching `filter`, ordered by name, with the total match count.
+  async fn query_page(&self, filter: &LocationFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Location>, i64)>;
 }
 
 pub struct DefaultLocationLogic<R: LocationRepository> {
@@ -48,5 +50,9 @@ impl<R: LocationRepository> LocationLogic for DefaultLocationLogic<R> {
 
   async fn clear(&self) -> anyhow::Result<()> {
     self.repo.clear().await
+  }
+
+  async fn query_page(&self, filter: &LocationFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Location>, i64)> {
+    self.repo.query_page(filter, offset, limit).await
   }
 }

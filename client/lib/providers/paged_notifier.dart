@@ -43,7 +43,28 @@ mixin PagedAsyncNotifier<T> {
     final request = ++_request;
     if (clear || !state.hasValue) state = const AsyncLoading();
     final next = await AsyncValue.guard(() => fetch(_offset, _pageSize));
-    if (request == _request) state = next;
+    if (request != _request) return;
+
+    // The page can fall off the end of the collection without the user touching the pager:
+    // rows get deleted, or a realtime delta arrives and `loadDebounced` refetches at an offset
+    // that no longer exists. The server answers honestly with an empty page, which would leave
+    // a blank table under a "0-150 of 150" label. Re-fetch at the last real page instead.
+    // `ClientPaginationState` clamps for the same reason; this is the server-paged equivalent.
+    final page = next.value;
+    if (page != null && page.items.isEmpty && page.totalCount > 0) {
+      final lastOffset = ((page.totalCount - 1) ~/ _pageSize) * _pageSize;
+      if (_offset > lastOffset) {
+        _offset = lastOffset;
+        // Guarded by the request token rather than a retry counter: `_offset` strictly decreases
+        // here and the retry only happens on an empty page, so it cannot loop.
+        final retry = ++_request;
+        final clamped = await AsyncValue.guard(() => fetch(_offset, _pageSize));
+        if (retry == _request) state = clamped;
+        return;
+      }
+    }
+
+    state = next;
   }
 
   /// Re-pulls the current page now. Manual refresh and filter changes use this.

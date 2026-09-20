@@ -7,6 +7,35 @@ use database::{DbPool, schema::locations};
 
 use super::model::Location;
 
+/// Narrowing for `query_page`. Every field is optional; the semantics mirror the other paged
+/// resources: an absent constraint means "everything" rather than "nothing".
+///
+/// All filtering happens in SQL so the cost tracks the page, not the table.
+#[derive(Debug, Clone, Default)]
+pub struct LocationFilter {
+  /// Case-insensitive substring match on the location name.
+  pub search: Option<String>,
+}
+
+/// Builds the filtered locations query.
+///
+/// A macro rather than a function for the same reason as `filtered_attendance!`: the boxed query
+/// type is named differently in the `select` and `count` positions, and a
+/// `BoxedSelectStatement` is not `Clone`, so the query is rebuilt rather than reused.
+macro_rules! filtered_locations {
+  ($filter:expr) => {{
+    let mut query = locations::table.into_boxed();
+
+    if let Some(search) = $filter.search.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+      // ILIKE rather than lowercasing both sides: it keeps the comparison in the database and
+      // reads the same way the admin typed it.
+      query = query.filter(locations::location.ilike(format!("%{search}%")));
+    }
+
+    query
+  }};
+}
+
 #[async_trait]
 pub trait LocationRepository: Send + Sync {
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Location>>;
@@ -17,6 +46,8 @@ pub trait LocationRepository: Send + Sync {
   async fn update(&self, id: Uuid, location: &str) -> anyhow::Result<Option<Location>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
   async fn clear(&self) -> anyhow::Result<()>;
+  /// One page of locations matching `filter`, ordered by name, with the total match count.
+  async fn query_page(&self, filter: &LocationFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Location>, i64)>;
 }
 
 pub struct PgLocationRepository {
@@ -80,5 +111,24 @@ impl LocationRepository for PgLocationRepository {
     let mut conn = self.pool.get().await?;
     diesel::delete(locations::table).execute(&mut conn).await?;
     Ok(())
+  }
+
+  async fn query_page(&self, filter: &LocationFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Location>, i64)> {
+    let mut conn = self.pool.get().await?;
+
+    // Counted with the same narrowing as the page but without the page bounds, so the pager
+    // reports how many rows it is paging through rather than how many it received.
+    let total: i64 = filtered_locations!(filter).count().get_result(&mut conn).await?;
+
+    let items = filtered_locations!(filter)
+      // `id` breaks ties so a duplicate name cannot make a row appear on two pages or none.
+      .order((locations::location.asc(), locations::id.asc()))
+      .limit(limit)
+      .offset(offset)
+      .select(Location::as_select())
+      .load(&mut conn)
+      .await?;
+
+    Ok((items, total))
   }
 }

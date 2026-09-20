@@ -23,5 +23,5 @@ target/
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
-HANDOFF.md
+# HANDOFF.md
 handoff2.md

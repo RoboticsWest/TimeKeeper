@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use async_graphql::{Context, Error, ID, Object, Result, Subscription};
+use async_graphql::{Context, Error, ID, InputObject, Object, Result, Subscription};
 use futures_util::{Stream, StreamExt};
 use tokio_stream::wrappers::BroadcastStream;
 use uuid::Uuid;
@@ -8,12 +8,26 @@ use uuid::Uuid;
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
 use crate::events::{ChangeOperation, EVENT_BUS};
-use crate::gql_common::Change;
+use crate::gql_common::{Change, Page, page_bounds};
 
 use super::logic::LocationLogic;
 use super::model::Location;
+use super::repository::LocationFilter;
 
 const RESOURCE: &str = "locations";
+
+/// Narrowing for `locationPage`. An empty input (or no input at all) means "every location".
+#[derive(InputObject, Default)]
+pub struct LocationFilterInput {
+  /// Case-insensitive substring match on the location name.
+  pub search: Option<String>,
+}
+
+impl From<LocationFilterInput> for LocationFilter {
+  fn from(input: LocationFilterInput) -> Self {
+    Self { search: input.search }
+  }
+}
 const TABLE: &str = "locations";
 
 fn logic(ctx: &Context<'_>) -> Result<Arc<dyn LocationLogic>> {
@@ -25,8 +39,31 @@ pub struct LocationQuery;
 
 #[Object]
 impl LocationQuery {
+  /// Every location.
+  ///
+  /// Deliberately unauthenticated, matching `sessions` and `teamMemberSessions`: the kiosk and
+  /// the calendar are public routes and both need the location list to render. `locationsPage`
+  /// is the guarded, paged entry point for the management view.
   async fn locations(&self, ctx: &Context<'_>) -> Result<Vec<Location>> {
     Ok(logic(ctx)?.get_all().await?)
+  }
+
+  /// One page of locations matching `filter`, ordered by name, with the total match count.
+  ///
+  /// Filtering happens in SQL, so the cost tracks the page rather than the table. Used by the
+  /// locations management view, which renders hundreds of rows from CSV imports.
+  async fn locations_page(
+    &self,
+    ctx: &Context<'_>,
+    filter: Option<LocationFilterInput>,
+    offset: Option<i32>,
+    limit: Option<i32>,
+  ) -> Result<Page<Location>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    let filter: LocationFilter = filter.unwrap_or_default().into();
+    let (limit, offset) = page_bounds(offset, limit);
+    let (items, total) = logic(ctx)?.query_page(&filter, offset, limit).await?;
+    Ok(Page::new(items, total, offset, limit))
   }
 }
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use async_graphql::{Context, Error, ID, Object, Result, Subscription};
+use async_graphql::{Context, Error, ID, InputObject, Object, Result, Subscription};
 use chrono::{DateTime, Utc};
 use futures_util::{Stream, StreamExt};
 use tokio_stream::wrappers::BroadcastStream;
@@ -9,11 +9,11 @@ use uuid::Uuid;
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
 use crate::events::{ChangeOperation, EVENT_BUS};
-use crate::gql_common::Change;
+use crate::gql_common::{Change, Page, page_bounds};
 
 use super::logic::NotificationLogic;
 use super::model::{Notification, STATUS_CANCELLED, STATUS_PENDING, VALID_STATUSES, VALID_TYPES};
-use super::repository::NewNotification;
+use super::repository::{NewNotification, NotificationFilter};
 
 const RESOURCE: &str = "notifications";
 const TABLE: &str = "notifications";
@@ -38,6 +38,41 @@ fn logic(ctx: &Context<'_>) -> Result<Arc<dyn NotificationLogic>> {
   Ok(ctx.data::<Arc<dyn NotificationLogic>>()?.clone())
 }
 
+/// Narrows `notificationsPage`. Every field is optional and an empty list means "no constraint",
+/// matching a filter UI with nothing selected.
+#[derive(InputObject, Default)]
+pub struct NotificationFilterInput {
+  /// Only notifications belonging to this session.
+  pub session_id: Option<Uuid>,
+  /// Only the per-member kinds aimed at this member.
+  pub team_member_id: Option<Uuid>,
+  /// `session_start_reminder` / `session_end_reminder` / `overtime` / `auto_checkout`.
+  pub notification_types: Option<Vec<String>>,
+  /// `pending` / `sent` / `skipped` / `cancelled` / `failed`.
+  pub statuses: Option<Vec<String>>,
+  /// Scheduled at or after this instant.
+  pub from: Option<DateTime<Utc>>,
+  /// Scheduled strictly before this instant.
+  pub to: Option<DateTime<Utc>>,
+  /// Case-insensitive substring over the location name, the member's first, last and display
+  /// name, and the raw type and status values.
+  pub search: Option<String>,
+}
+
+impl From<NotificationFilterInput> for NotificationFilter {
+  fn from(input: NotificationFilterInput) -> Self {
+    Self {
+      session_id: input.session_id,
+      team_member_id: input.team_member_id,
+      notification_types: input.notification_types.unwrap_or_default(),
+      statuses: input.statuses.unwrap_or_default(),
+      from: input.from,
+      to: input.to,
+      search: input.search,
+    }
+  }
+}
+
 #[derive(Default)]
 pub struct NotificationQuery;
 
@@ -45,6 +80,24 @@ pub struct NotificationQuery;
 impl NotificationQuery {
   async fn notifications(&self, ctx: &Context<'_>) -> Result<Vec<Notification>> {
     Ok(logic(ctx)?.get_all().await?)
+  }
+
+  /// One page of notifications matching `filter`, newest-scheduled first, with the total match
+  /// count.
+  ///
+  /// Filtering and paging both happen in SQL, so the cost tracks the page rather than the table.
+  async fn notifications_page(
+    &self,
+    ctx: &Context<'_>,
+    filter: Option<NotificationFilterInput>,
+    offset: Option<i32>,
+    limit: Option<i32>,
+  ) -> Result<Page<Notification>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    let (limit, offset) = page_bounds(offset, limit);
+    let filter: NotificationFilter = filter.unwrap_or_default().into();
+    let (items, total) = logic(ctx)?.query_page(&filter, offset, limit).await?;
+    Ok(Page::new(items, total, offset, limit))
   }
 
   /// Notifications scheduled for one session. The Sessions UI uses this to show what will be

@@ -26,10 +26,7 @@ class DeferredWidget extends HookConsumerWidget {
     final libraryFuture = useMemoized(() async {
       if (!_loadedLibraries.contains(libraryKey)) {
         // First load: wait for both library AND minimum duration
-        await Future.wait([
-          libraryLoader(),
-          Future<void>.delayed(minimumLoadDuration),
-        ]);
+        await Future.wait([libraryLoader(), Future<void>.delayed(minimumLoadDuration)]);
         _loadedLibraries.add(libraryKey);
       } else {
         // Already loaded: instant

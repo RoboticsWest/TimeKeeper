@@ -9,8 +9,7 @@ import 'package:time_keeper/utils/time_utils.dart';
 
 part 'attendance_page_provider.g.dart';
 
-const _teamMemberSessionFields =
-    'id teamMemberId sessionId checkInTime checkOutTime';
+const _teamMemberSessionFields = 'id teamMemberId sessionId checkInTime checkOutTime';
 
 const _attendancePageQuery =
     '''
@@ -76,27 +75,11 @@ class AttendanceFilterState {
       AttendanceDateRange.allTime => (null, null),
       AttendanceDateRange.today => _dayRange(now),
       AttendanceDateRange.last7Days => (
-        now
-            .subtract(const Duration(days: 6))
-            .copyWith(
-              hour: 0,
-              minute: 0,
-              second: 0,
-              millisecond: 0,
-              microsecond: 0,
-            ),
+        now.subtract(const Duration(days: 6)).copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0),
         null,
       ),
       AttendanceDateRange.last30Days => (
-        now
-            .subtract(const Duration(days: 29))
-            .copyWith(
-              hour: 0,
-              minute: 0,
-              second: 0,
-              millisecond: 0,
-              microsecond: 0,
-            ),
+        now.subtract(const Duration(days: 29)).copyWith(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0),
         null,
       ),
     };
@@ -126,8 +109,7 @@ class AttendanceFilterState {
 /// table in memory at once. Realtime deltas re-pull the current page so the list stays honest
 /// without being fetched wholesale.
 @Riverpod(keepAlive: true)
-class AttendancePage extends _$AttendancePage
-    with PagedAsyncNotifier<TeamMemberSession> {
+class AttendancePage extends _$AttendancePage with PagedAsyncNotifier<TeamMemberSession> {
   AttendanceFilterState _filter = const AttendanceFilterState();
 
   @override
@@ -147,22 +129,12 @@ class AttendancePage extends _$AttendancePage
       ref: ref,
       document: _attendancePageQuery,
       rootField: 'attendance',
-      variables: {
-        'filter': _filter.toServerFilter(),
-        'offset': offset,
-        'limit': pageSize,
-      },
+      variables: {'filter': _filter.toServerFilter(), 'offset': offset, 'limit': pageSize},
       fromJson: TeamMemberSession.fromJson,
     ).then(
       (result) =>
           result ??
-          const PagedResult<TeamMemberSession>(
-            items: [],
-            totalCount: 0,
-            offset: 0,
-            limit: 50,
-            hasMore: false,
-          ),
+          const PagedResult<TeamMemberSession>(items: [], totalCount: 0, offset: 0, limit: 50, hasMore: false),
     );
   }
 

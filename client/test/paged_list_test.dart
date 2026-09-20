@@ -30,9 +30,7 @@ void main() {
       final items = List.generate(60, (i) => i);
       final clipped = state(offset: 100).clampedOffset(items.length);
       expect(clipped, 50);
-      expect(state(offset: 100).slice(items), [
-        for (var i = 50; i < 60; i++) i,
-      ]);
+      expect(state(offset: 100).slice(items), [for (var i = 50; i < 60; i++) i]);
     });
 
     test('an empty list clamps to zero without crashing', () {
@@ -48,16 +46,11 @@ void main() {
     });
 
     test('a search term is passed through trimmed', () {
-      expect(const AttendanceFilterState(search: '  ada  ').toServerFilter(), {
-        'search': 'ada',
-      });
+      expect(const AttendanceFilterState(search: '  ada  ').toServerFilter(), {'search': 'ada'});
     });
 
     test('a single session and location narrow accordingly', () {
-      final filter = const AttendanceFilterState(
-        sessionId: 's1',
-        locationId: 'l2',
-      ).toServerFilter();
+      final filter = const AttendanceFilterState(sessionId: 's1', locationId: 'l2').toServerFilter();
       expect(filter, isNotNull);
       expect(filter!['sessionIds'], ['s1']);
       expect(filter['locationIds'], ['l2']);
@@ -73,9 +66,7 @@ void main() {
     });
 
     test('completed maps checkedInOnly to false', () {
-      final filter = const AttendanceFilterState(
-        status: AttendanceStatusFilter.completed,
-      ).toServerFilter();
+      final filter = const AttendanceFilterState(status: AttendanceStatusFilter.completed).toServerFilter();
       expect(filter!['checkedInOnly'], isFalse);
     });
   });
@@ -86,10 +77,7 @@ void main() {
     });
 
     test('location and finished narrow accordingly', () {
-      final filter = const SessionFilterState(
-        locationId: 'loc1',
-        finished: true,
-      ).toServerFilter();
+      final filter = const SessionFilterState(locationId: 'loc1', finished: true).toServerFilter();
       expect(filter!['locationIds'], ['loc1']);
       expect(filter['finished'], isTrue);
     });
@@ -108,27 +96,14 @@ void main() {
     });
 
     test('search and member types map through', () {
-      final filter = const TeamMemberFilterState(
-        search: 'grace',
-        memberTypes: ['student'],
-      ).toServerFilter();
+      final filter = const TeamMemberFilterState(search: 'grace', memberTypes: ['student']).toServerFilter();
       expect(filter!['search'], 'grace');
       expect(filter['memberTypes'], ['student']);
     });
 
     test('discord link state maps to hasDiscord', () {
-      expect(
-        const TeamMemberFilterState(
-          discord: DiscordLinkFilter.linked,
-        ).toServerFilter()!['hasDiscord'],
-        isTrue,
-      );
-      expect(
-        const TeamMemberFilterState(
-          discord: DiscordLinkFilter.unlinked,
-        ).toServerFilter()!['hasDiscord'],
-        isFalse,
-      );
+      expect(const TeamMemberFilterState(discord: DiscordLinkFilter.linked).toServerFilter()!['hasDiscord'], isTrue);
+      expect(const TeamMemberFilterState(discord: DiscordLinkFilter.unlinked).toServerFilter()!['hasDiscord'], isFalse);
     });
   });
 }

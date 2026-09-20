@@ -22,11 +22,7 @@ Future<PagedResult<T>?> fetchPagedPage<T>({
 }) async {
   final client = ref.read(timeKeeperGraphQLClientProvider);
   final result = await client.query(
-    QueryOptions(
-      document: gql(document),
-      variables: variables,
-      fetchPolicy: FetchPolicy.noCache,
-    ),
+    QueryOptions(document: gql(document), variables: variables, fetchPolicy: FetchPolicy.noCache),
   );
 
   if (result.hasException || result.data == null) {

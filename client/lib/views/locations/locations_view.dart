@@ -1,25 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/providers/location_page_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/views/locations/location_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
-import 'package:time_keeper/widgets/tables/client_pagination.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/header_text.dart';
 import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
-import 'package:time_keeper/widgets/tables/header_text.dart';
 
 class LocationsView extends HookConsumerWidget {
   const LocationsView({super.key});
 
-  void _showClearDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> locations,
-  ) {
+  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> locations) {
     final ids = locations.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No locations to delete').show(context);
@@ -46,23 +44,33 @@ class LocationsView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The unpaged map still backs "Clear All", which deletes every location rather than the
+    // page on screen.
     ref.watch(locationsSyncProvider);
     final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
 
+    // The table itself is paged server-side.
+    final page = ref.watch(locationPageProvider);
+    final notifier = ref.read(locationPageProvider.notifier);
+    final currentPage = page.value;
+
     final filterController = useTextEditingController();
-    final filterText = useValueListenable(filterController).text.toLowerCase();
+    final searchText = useState('');
 
-    final sorted = locations.entries.toList()
-      ..sort((a, b) => a.value.location.compareTo(b.value.location));
+    // Debounce the search term before it hits the server query.
+    useEffect(() {
+      final timer = Timer(const Duration(milliseconds: 350), () {
+        searchText.value = filterController.text;
+      });
+      return timer.cancel;
+    }, [filterController.text]);
 
-    final filtered = sorted.where((entry) {
-      if (filterText.isEmpty) return true;
-      return entry.value.location.toLowerCase().contains(filterText);
-    }).toList();
-
-    final pager = useClientPagination(filtered.length);
-    final pageItems = pager.slice(filtered);
+    // Push the filter to the paged provider, restarting at page one.
+    useEffect(() {
+      notifier.setFilter(LocationFilterState(search: searchText.value));
+      return null;
+    }, [searchText.value]);
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -75,18 +83,9 @@ class LocationsView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref, locations),
-                icon: Icon(
-                  Icons.delete_sweep,
-                  size: 18,
-                  color: theme.colorScheme.error,
-                ),
-                label: Text(
-                  'Clear All',
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
+                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
             ],
           ),
@@ -94,49 +93,61 @@ class LocationsView extends HookConsumerWidget {
           TableFilter(controller: filterController),
           const SizedBox(height: 12),
           Expanded(
-            child: EditTable(
-              alternatingRows: true,
-              headers: [
-                BaseTableCell(child: TableHeaderText('Location Name'), flex: 3),
-              ],
-              headerDecoration: tableHeaderDecoration(context),
-              editRows: pageItems.map((entry) {
-                final id = entry.key;
-                final location = entry.value;
-                return EditTableRow(
-                  key: ValueKey(id),
-                  onEdit: () => showLocationDialog(
-                    context,
-                    ref,
-                    id: id,
-                    existingName: location.location,
+            child: currentPage == null
+                ? _LoadingOrError(page: page, onRetry: notifier.refresh)
+                : EditTable(
+                    alternatingRows: true,
+                    headers: [BaseTableCell(child: TableHeaderText('Location Name'), flex: 3)],
+                    headerDecoration: tableHeaderDecoration(context),
+                    editRows: currentPage.items.map((location) {
+                      final id = location.id;
+                      return EditTableRow(
+                        key: ValueKey(id),
+                        onEdit: () => showLocationDialog(context, ref, id: id, existingName: location.location),
+                        onDelete: () => showDeleteLocationDialog(context, ref, id: id, name: location.location),
+                        cells: [BaseTableCell(child: Text(location.location), flex: 3)],
+                      );
+                    }).toList(),
+                    onAdd: () => showLocationDialog(context, ref),
                   ),
-                  onDelete: () => showDeleteLocationDialog(
-                    context,
-                    ref,
-                    id: id,
-                    name: location.location,
-                  ),
-                  cells: [
-                    BaseTableCell(child: Text(location.location), flex: 3),
-                  ],
-                );
-              }).toList(),
-              onAdd: () => showLocationDialog(context, ref),
-            ),
           ),
-          if (filtered.isNotEmpty)
+          if (currentPage != null)
             PaginationBar(
-              totalCount: filtered.length,
-              offset: pager.clampedOffset(filtered.length),
-              pageSize: pager.pageSize,
-              hasMore: pager.offset + pager.pageSize < filtered.length,
-              onPageSizeChanged: pager.setPageSize,
-              onPrevious: pager.previousPage,
-              onNext: pager.nextPage,
+              totalCount: currentPage.totalCount,
+              offset: currentPage.offset,
+              pageSize: notifier.currentPageSize,
+              hasMore: currentPage.hasMore,
+              onPageSizeChanged: notifier.setPageSize,
+              onPrevious: notifier.previousPage,
+              onNext: notifier.nextPage,
             ),
         ],
       ),
     );
+  }
+}
+
+/// Replaces the table area while a fresh page is loading or has failed.
+class _LoadingOrError<T> extends StatelessWidget {
+  final AsyncValue<T> page;
+  final Future<void> Function() onRetry;
+
+  const _LoadingOrError({required this.page, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    if (page.hasError) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Could not load locations', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+    return const Center(child: CircularProgressIndicator());
   }
 }

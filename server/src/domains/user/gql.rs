@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use async_graphql::{Context, Error, ID, Object, Result, SimpleObject, Subscription};
+use async_graphql::{Context, Error, ID, InputObject, Object, Result, SimpleObject, Subscription};
 use futures_util::{Stream, StreamExt};
 use tokio_stream::wrappers::BroadcastStream;
 use uuid::Uuid;
@@ -10,10 +10,11 @@ use crate::auth::jwt::Auth;
 use crate::auth::permissions::{PermissionLevel, Role, to_claim_strings};
 use crate::auth::permissions_repository::PermissionsRepository;
 use crate::events::{ChangeOperation, EVENT_BUS};
-use crate::gql_common::Change;
+use crate::gql_common::{Change, Page, page_bounds};
 
 use super::logic::{DEFAULT_ADMIN_USERNAME, UserLogic};
 use super::model::User;
+use super::repository::UserFilter;
 
 const RESOURCE: &str = "users";
 const TABLE: &str = "users";
@@ -29,6 +30,19 @@ fn logic(ctx: &Context<'_>) -> Result<Arc<dyn UserLogic>> {
 
 fn permissions_repo(ctx: &Context<'_>) -> Result<Arc<dyn PermissionsRepository>> {
   Ok(ctx.data::<Arc<dyn PermissionsRepository>>()?.clone())
+}
+
+/// Narrows `usersPage`. An empty input (or none at all) means "every user".
+#[derive(InputObject, Default)]
+pub struct UserFilterInput {
+  /// Case-insensitive substring match on the username.
+  pub search: Option<String>,
+}
+
+impl From<UserFilterInput> for UserFilter {
+  fn from(input: UserFilterInput) -> Self {
+    Self { search: input.search }
+  }
 }
 
 #[derive(Default)]
@@ -50,6 +64,24 @@ impl UserQuery {
   async fn users(&self, ctx: &Context<'_>) -> Result<Vec<User>> {
     require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
     Ok(logic(ctx)?.get_all().await?.into_iter().filter(|u| u.username != DEFAULT_ADMIN_USERNAME).collect())
+  }
+
+  /// One page of users matching `filter`, ordered by username, with the total match count.
+  ///
+  /// Both the filtering and the exclusion of the built-in admin happen in SQL, so the page and
+  /// the count always agree — see `filtered_users!`.
+  async fn users_page(
+    &self,
+    ctx: &Context<'_>,
+    filter: Option<UserFilterInput>,
+    offset: Option<i32>,
+    limit: Option<i32>,
+  ) -> Result<Page<User>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    let (limit, offset) = page_bounds(offset, limit);
+    let filter: UserFilter = filter.unwrap_or_default().into();
+    let (items, total) = logic(ctx)?.query_page(&filter, offset, limit).await?;
+    Ok(Page::new(items, total, offset, limit))
   }
 
   /// Every assignable role, for populating the role picker.

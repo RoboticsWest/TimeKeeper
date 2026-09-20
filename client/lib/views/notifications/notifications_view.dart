@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:time_keeper/models/notification.dart';
 import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/providers/notification_page_provider.dart';
 import 'package:time_keeper/providers/notification_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
@@ -14,7 +17,6 @@ import 'package:time_keeper/views/notifications/notification_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
-import 'package:time_keeper/widgets/tables/client_pagination.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
@@ -49,11 +51,7 @@ String _scheduleLabel(Notification n) {
 class NotificationsView extends HookConsumerWidget {
   const NotificationsView({super.key});
 
-  void _showClearDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, Notification> notifications,
-  ) {
+  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, Notification> notifications) {
     final ids = notifications.keys.toList();
     if (ids.isEmpty) {
       SnackBarDialog.info(message: 'No notifications to delete').show(context);
@@ -78,11 +76,7 @@ class NotificationsView extends HookConsumerWidget {
     ).show(context);
   }
 
-  String _formatSessionLabel(
-    Map<String, Session> sessions,
-    Map<String, Location> locations,
-    String sessionId,
-  ) {
+  String _formatSessionLabel(Map<String, Session> sessions, Map<String, Location> locations, String sessionId) {
     final session = sessions[sessionId];
     if (session == null) return sessionId;
     final start = session.startTime;
@@ -94,10 +88,7 @@ class NotificationsView extends HookConsumerWidget {
     return '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)}';
   }
 
-  String _formatMemberName(
-    Map<String, TeamMember> teamMembers,
-    String? memberId,
-  ) {
+  String _formatMemberName(Map<String, TeamMember> teamMembers, String? memberId) {
     if (memberId == null || memberId.isEmpty) return '-';
     final member = teamMembers[memberId];
     if (member == null) return memberId;
@@ -119,42 +110,27 @@ class NotificationsView extends HookConsumerWidget {
     final teamMembers = ref.watch(teamMembersProvider);
     final theme = Theme.of(context);
 
+    // The list itself is paged server-side; the maps above only resolve ids to display names.
+    final page = ref.watch(notificationPageProvider);
+    final notifier = ref.read(notificationPageProvider.notifier);
+    final currentPage = page.value;
+
     final filterController = useTextEditingController();
-    final filterText = useValueListenable(filterController).text.toLowerCase();
+    final searchText = useState('');
 
-    final sorted = notifications.entries.toList()
-      ..sort((a, b) {
-        // Sort by session start time descending, then by type
-        final sessionA = sessions[a.value.sessionId];
-        final sessionB = sessions[b.value.sessionId];
-        final startA =
-            sessionA?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final startB =
-            sessionB?.startTime ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final cmp = startB.compareTo(startA);
-        if (cmp != 0) return cmp;
-        return a.value.notificationType.compareTo(b.value.notificationType);
+    // Debounce the search term before it hits the server query.
+    useEffect(() {
+      final timer = Timer(const Duration(milliseconds: 350), () {
+        searchText.value = filterController.text;
       });
+      return timer.cancel;
+    }, [filterController.text]);
 
-    final filtered = sorted.where((entry) {
-      if (filterText.isEmpty) return true;
-      final n = entry.value;
-      final typeLabel = notificationTypeLabel(n.notificationType);
-      final sessionLabel = _formatSessionLabel(
-        sessions,
-        locations,
-        n.sessionId,
-      );
-      final memberLabel = _formatMemberName(teamMembers, n.teamMemberId);
-      final statusLabel = NotificationStatus.label(n.status).toLowerCase();
-      return typeLabel.toLowerCase().contains(filterText) ||
-          sessionLabel.toLowerCase().contains(filterText) ||
-          memberLabel.toLowerCase().contains(filterText) ||
-          statusLabel.contains(filterText);
-    }).toList();
-
-    final pager = useClientPagination(filtered.length);
-    final pageItems = pager.slice(filtered);
+    // Push the filter to the paged provider, restarting at page one.
+    useEffect(() {
+      notifier.setFilter(NotificationFilterState(search: searchText.value));
+      return null;
+    }, [searchText.value]);
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -167,18 +143,9 @@ class NotificationsView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref, notifications),
-                icon: Icon(
-                  Icons.delete_sweep,
-                  size: 18,
-                  color: theme.colorScheme.error,
-                ),
-                label: Text(
-                  'Clear All',
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
+                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
             ],
           ),
@@ -186,77 +153,79 @@ class NotificationsView extends HookConsumerWidget {
           TableFilter(controller: filterController),
           const SizedBox(height: 12),
           Expanded(
-            child: EditTable(
-              alternatingRows: true,
-              headers: [
-                BaseTableCell(child: TableHeaderText('Type'), flex: 3),
-                BaseTableCell(child: TableHeaderText('Session'), flex: 4),
-                BaseTableCell(child: TableHeaderText('Member'), flex: 2),
-                BaseTableCell(child: TableHeaderText('Status'), flex: 1),
-                BaseTableCell(child: TableHeaderText('When'), flex: 2),
-              ],
-              headerDecoration: tableHeaderDecoration(context),
-              editRows: pageItems.map((entry) {
-                final id = entry.key;
-                final n = entry.value;
-                return EditTableRow(
-                  key: ValueKey(id),
-                  onEdit: () =>
-                      showNotificationDialog(context, ref, id: id, existing: n),
-                  onDelete: () =>
-                      showDeleteNotificationDialog(context, ref, id: id),
-                  cells: [
-                    BaseTableCell(
-                      child: Text(notificationTypeLabel(n.notificationType)),
-                      flex: 3,
-                    ),
-                    BaseTableCell(
-                      child: Text(
-                        _formatSessionLabel(sessions, locations, n.sessionId),
-                      ),
-                      flex: 4,
-                    ),
-                    BaseTableCell(
-                      child: Text(
-                        _formatMemberName(teamMembers, n.teamMemberId),
-                      ),
-                      flex: 2,
-                    ),
-                    BaseTableCell(
-                      child: Text(
-                        NotificationStatus.label(n.status),
-                        style: TextStyle(
-                          color: _statusColor(n.status),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      flex: 1,
-                    ),
-                    BaseTableCell(
-                      child: Text(
-                        _scheduleLabel(n),
-                        style: theme.textTheme.bodySmall,
-                      ),
-                      flex: 2,
-                    ),
-                  ],
-                );
-              }).toList(),
-              onAdd: () => showNotificationDialog(context, ref),
-            ),
+            child: currentPage == null
+                ? _LoadingOrError(page: page, onRetry: notifier.refresh)
+                : EditTable(
+                    alternatingRows: true,
+                    headers: [
+                      BaseTableCell(child: TableHeaderText('Type'), flex: 3),
+                      BaseTableCell(child: TableHeaderText('Session'), flex: 4),
+                      BaseTableCell(child: TableHeaderText('Member'), flex: 2),
+                      BaseTableCell(child: TableHeaderText('Status'), flex: 1),
+                      BaseTableCell(child: TableHeaderText('When'), flex: 2),
+                    ],
+                    headerDecoration: tableHeaderDecoration(context),
+                    editRows: currentPage.items.map((n) {
+                      final id = n.id;
+                      return EditTableRow(
+                        key: ValueKey(id),
+                        onEdit: () => showNotificationDialog(context, ref, id: id, existing: n),
+                        onDelete: () => showDeleteNotificationDialog(context, ref, id: id),
+                        cells: [
+                          BaseTableCell(child: Text(notificationTypeLabel(n.notificationType)), flex: 3),
+                          BaseTableCell(child: Text(_formatSessionLabel(sessions, locations, n.sessionId)), flex: 4),
+                          BaseTableCell(child: Text(_formatMemberName(teamMembers, n.teamMemberId)), flex: 2),
+                          BaseTableCell(
+                            child: Text(
+                              NotificationStatus.label(n.status),
+                              style: TextStyle(color: _statusColor(n.status), fontWeight: FontWeight.w500),
+                            ),
+                            flex: 1,
+                          ),
+                          BaseTableCell(child: Text(_scheduleLabel(n), style: theme.textTheme.bodySmall), flex: 2),
+                        ],
+                      );
+                    }).toList(),
+                    onAdd: () => showNotificationDialog(context, ref),
+                  ),
           ),
-          if (filtered.isNotEmpty)
+          if (currentPage != null)
             PaginationBar(
-              totalCount: filtered.length,
-              offset: pager.clampedOffset(filtered.length),
-              pageSize: pager.pageSize,
-              hasMore: pager.offset + pager.pageSize < filtered.length,
-              onPageSizeChanged: pager.setPageSize,
-              onPrevious: pager.previousPage,
-              onNext: pager.nextPage,
+              totalCount: currentPage.totalCount,
+              offset: currentPage.offset,
+              pageSize: notifier.currentPageSize,
+              hasMore: currentPage.hasMore,
+              onPageSizeChanged: notifier.setPageSize,
+              onPrevious: notifier.previousPage,
+              onNext: notifier.nextPage,
             ),
         ],
       ),
     );
+  }
+}
+
+/// Replaces the table area while a fresh page is loading or has failed.
+class _LoadingOrError<T> extends StatelessWidget {
+  final AsyncValue<T> page;
+  final Future<void> Function() onRetry;
+
+  const _LoadingOrError({required this.page, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    if (page.hasError) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Could not load notifications', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+    return const Center(child: CircularProgressIndicator());
   }
 }

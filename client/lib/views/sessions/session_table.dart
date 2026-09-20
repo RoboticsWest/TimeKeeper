@@ -35,12 +35,12 @@ class SessionTable extends ConsumerWidget {
       headers: [
         BaseTableCell(child: TableHeaderText('Date'), flex: 2),
         BaseTableCell(child: TableHeaderText('Time'), flex: 2),
-        BaseTableCell(child: TableHeaderText('Duration')),
-        BaseTableCell(child: TableHeaderText('Location')),
-        BaseTableCell(child: TableHeaderText('Members')),
-        BaseTableCell(child: TableHeaderText('RSVPs')),
-        BaseTableCell(child: TableHeaderText('Status')),
-        BaseTableCell(child: TableHeaderText('')),
+        BaseTableCell(child: TableHeaderText('Duration'), flex: 1),
+        BaseTableCell(child: TableHeaderText('Location'), flex: 2),
+        BaseTableCell(child: TableHeaderText('Members'), flex: 1),
+        BaseTableCell(child: TableHeaderText('RSVPs'), flex: 1),
+        BaseTableCell(child: TableHeaderText('Status'), flex: 1),
+        BaseTableCell(child: TableHeaderText(''), width: 56),
       ],
       headerDecoration: tableHeaderDecoration(context),
       editRows: sessions.map((entry) {
@@ -61,16 +61,19 @@ class SessionTable extends ConsumerWidget {
           cells: [
             BaseTableCell(child: Text(formatDate(start)), flex: 2),
             BaseTableCell(child: Text('${formatTime(start)} - ${formatTime(end)}'), flex: 2),
-            BaseTableCell(child: Text(formatDuration(duration))),
-            BaseTableCell(child: Text(locationName)),
+            BaseTableCell(child: Text(formatDuration(duration)), flex: 1),
+            BaseTableCell(child: Text(locationName), flex: 2),
             BaseTableCell(
               child: MemberCount(total: memberCount, status: status, sessionMemberSessions: sessionMemberSessions),
+              flex: 1,
             ),
             BaseTableCell(
               child: _RsvpCount(sessionId: id, sessionRsvps: sessionRsvps),
+              flex: 1,
             ),
-            BaseTableCell(child: SessionStatusChip(status: status)),
+            BaseTableCell(child: SessionStatusChip(status: status), flex: 1),
             BaseTableCell(
+              width: 56,
               child: IconButton(
                 icon: Icon(Icons.visibility, color: theme.colorScheme.primary, size: 20),
                 tooltip: 'View details',

@@ -90,9 +90,7 @@ class TeamView extends HookConsumerWidget {
       notifier.setFilter(
         TeamMemberFilterState(
           search: searchText.value,
-          memberTypes: memberType.value == 'all'
-              ? const []
-              : [memberType.value],
+          memberTypes: memberType.value == 'all' ? const [] : [memberType.value],
           discord: discord.value,
         ),
       );
@@ -107,9 +105,7 @@ class TeamView extends HookConsumerWidget {
     }
 
     final hasActiveFilters =
-        searchText.value.trim().isNotEmpty ||
-        memberType.value != 'all' ||
-        discord.value != DiscordLinkFilter.all;
+        searchText.value.trim().isNotEmpty || memberType.value != 'all' || discord.value != DiscordLinkFilter.all;
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -136,9 +132,7 @@ class TeamView extends HookConsumerWidget {
                       title: 'Clear Students',
                       description: 'all students',
                       ids: teamMembers.entries
-                          .where(
-                            (e) => e.value.memberType == TeamMemberType.student,
-                          )
+                          .where((e) => e.value.memberType == TeamMemberType.student)
                           .map((e) => e.key)
                           .toList(),
                     ),
@@ -154,9 +148,7 @@ class TeamView extends HookConsumerWidget {
                       title: 'Clear Mentors',
                       description: 'all mentors',
                       ids: teamMembers.entries
-                          .where(
-                            (e) => e.value.memberType == TeamMemberType.mentor,
-                          )
+                          .where((e) => e.value.memberType == TeamMemberType.mentor)
                           .map((e) => e.key)
                           .toList(),
                     ),
@@ -179,11 +171,7 @@ class TeamView extends HookConsumerWidget {
                     tooltip: 'Refresh team members',
                     onPressed: refreshing.value ? null : refreshMembers,
                     icon: refreshing.value
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.refresh),
                   ),
                 ],
@@ -207,18 +195,9 @@ class TeamView extends HookConsumerWidget {
               ),
               SegmentedButton<DiscordLinkFilter>(
                 segments: const [
-                  ButtonSegment(
-                    value: DiscordLinkFilter.all,
-                    label: Text('All links'),
-                  ),
-                  ButtonSegment(
-                    value: DiscordLinkFilter.linked,
-                    label: Text('Linked'),
-                  ),
-                  ButtonSegment(
-                    value: DiscordLinkFilter.unlinked,
-                    label: Text('Unlinked'),
-                  ),
+                  ButtonSegment(value: DiscordLinkFilter.all, label: Text('All links')),
+                  ButtonSegment(value: DiscordLinkFilter.linked, label: Text('Linked')),
+                  ButtonSegment(value: DiscordLinkFilter.unlinked, label: Text('Unlinked')),
                 ],
                 selected: {discord.value},
                 onSelectionChanged: (value) => discord.value = value.first,
@@ -244,28 +223,21 @@ class TeamView extends HookConsumerWidget {
                 : EditTable(
                     alternatingRows: true,
                     headers: [
-                      BaseTableCell(child: TableHeaderText('First Name')),
-                      BaseTableCell(child: TableHeaderText('Last Name')),
-                      BaseTableCell(child: TableHeaderText('Type')),
-                      BaseTableCell(child: TableHeaderText('Display Name')),
-                      BaseTableCell(child: TableHeaderText('RFID Tags')),
-                      BaseTableCell(child: TableHeaderText('Discord')),
-                      BaseTableCell(child: TableHeaderText('PIN')),
-                      BaseTableCell(child: TableHeaderText('Status')),
+                      BaseTableCell(child: TableHeaderText('First Name'), flex: 2),
+                      BaseTableCell(child: TableHeaderText('Last Name'), flex: 2),
+                      BaseTableCell(child: TableHeaderText('Type'), flex: 1),
+                      BaseTableCell(child: TableHeaderText('Display Name'), flex: 3),
+                      BaseTableCell(child: TableHeaderText('RFID Tags'), flex: 1),
+                      BaseTableCell(child: TableHeaderText('Discord'), flex: 2),
+                      BaseTableCell(child: TableHeaderText('PIN'), flex: 1),
+                      BaseTableCell(child: TableHeaderText('Status'), flex: 1),
                     ],
                     headerDecoration: tableHeaderDecoration(context),
                     editRows: currentPage.items.map((member) {
                       final id = member.id;
-                      final checkedIn = isMemberCheckedIn(
-                        id,
-                        teamMemberSessions.values,
-                      );
-                      final memberTags = ref.watch(
-                        rfidTagsByMemberProvider(id),
-                      );
-                      final tagDisplay = memberTags.isEmpty
-                          ? '—'
-                          : memberTags.values.map((t) => t.tag).join(', ');
+                      final checkedIn = isMemberCheckedIn(id, teamMemberSessions.values);
+                      final memberTags = ref.watch(rfidTagsByMemberProvider(id));
+                      final tagDisplay = memberTags.isEmpty ? '—' : memberTags.values.map((t) => t.tag).join(', ');
 
                       return EditTableRow(
                         key: ValueKey(id),
@@ -284,22 +256,16 @@ class TeamView extends HookConsumerWidget {
                           context,
                           ref,
                           id: id,
-                          name:
-                              member.displayName ??
-                              '${member.firstName} ${member.lastName}',
+                          name: member.displayName ?? '${member.firstName} ${member.lastName}',
                         ),
                         cells: [
-                          BaseTableCell(child: Text(member.firstName)),
-                          BaseTableCell(child: Text(member.lastName)),
-                          BaseTableCell(
-                            child: MemberTypeChip(
-                              memberType: member.memberType,
-                            ),
-                          ),
-                          BaseTableCell(child: Text(member.displayName ?? '—')),
-                          BaseTableCell(child: Text(tagDisplay)),
-                          BaseTableCell(child: Text(member.discordId ?? '—')),
-                          BaseTableCell(child: Text(member.quickPin ?? '—')),
+                          BaseTableCell(child: Text(member.firstName), flex: 2),
+                          BaseTableCell(child: Text(member.lastName), flex: 2),
+                          BaseTableCell(child: MemberTypeChip(memberType: member.memberType), flex: 1),
+                          BaseTableCell(child: Text(member.displayName ?? '—'), flex: 3),
+                          BaseTableCell(child: Text(tagDisplay), flex: 1),
+                          BaseTableCell(child: Text(member.discordId ?? '—'), flex: 2),
+                          BaseTableCell(child: Text(member.quickPin ?? '—'), flex: 1),
                           BaseTableCell(
                             child: CheckInOutButton(
                               checkedIn: checkedIn,
@@ -310,17 +276,14 @@ class TeamView extends HookConsumerWidget {
                                 if (context.mounted) {
                                   switch (result) {
                                     case ApiSuccess():
-                                      SnackBarDialog.success(
-                                        message: 'Success',
-                                      ).show(context);
+                                      SnackBarDialog.success(message: 'Success').show(context);
                                     case ApiFailure(userMessage: final msg):
-                                      SnackBarDialog.error(
-                                        message: msg,
-                                      ).show(context);
+                                      SnackBarDialog.error(message: msg).show(context);
                                   }
                                 }
                               },
                             ),
+                            flex: 1,
                           ),
                         ],
                       );
@@ -358,10 +321,7 @@ class _LoadingOrError<T> extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Could not load team members',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Could not load team members', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
           ],
@@ -378,12 +338,7 @@ class _ClearButton extends StatelessWidget {
   final Color color;
   final VoidCallback onPressed;
 
-  const _ClearButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
+  const _ClearButton({required this.label, required this.icon, required this.color, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {

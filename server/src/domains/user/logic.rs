@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use super::model::User;
-use super::repository::UserRepository;
+use super::repository::{UserFilter, UserRepository};
 
 /// Reserved username for the built-in admin account. Never returned by user listing/streaming and
 /// never modifiable/deletable through the CRUD RPCs - mirrors the old sled-era behavior.
@@ -10,6 +10,10 @@ pub const DEFAULT_ADMIN_USERNAME: &str = "admin";
 
 #[async_trait]
 pub trait UserLogic: Send + Sync {
+  /// One page of users matching `filter`, ordered by username, with the total match count.
+  ///
+  /// Never includes the built-in admin account, matching the unpaged `get_all` listing.
+  async fn query_page(&self, filter: &UserFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<User>, i64)>;
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<User>>;
   async fn get_all(&self) -> anyhow::Result<Vec<User>>;
   async fn get_by_username(&self, username: &str) -> anyhow::Result<Option<User>>;
@@ -34,6 +38,10 @@ impl<R: UserRepository> DefaultUserLogic<R> {
 
 #[async_trait]
 impl<R: UserRepository> UserLogic for DefaultUserLogic<R> {
+  async fn query_page(&self, filter: &UserFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<User>, i64)> {
+    self.repo.query_page(filter, offset, limit).await
+  }
+
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<User>> {
     self.repo.get(id).await
   }

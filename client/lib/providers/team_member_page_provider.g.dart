@@ -20,8 +20,7 @@ final teamMemberPageProvider = TeamMemberPageProvider._();
 ///
 /// The roster can run to thousands after CSV imports; filtering and paging happen in SQL so the
 /// cost tracks the page rather than the table.
-final class TeamMemberPageProvider
-    extends $AsyncNotifierProvider<TeamMemberPage, PagedResult<TeamMember>> {
+final class TeamMemberPageProvider extends $AsyncNotifierProvider<TeamMemberPage, PagedResult<TeamMember>> {
   /// A paged, filtered slice of the roster, ordered by name.
   ///
   /// The roster can run to thousands after CSV imports; filtering and paging happen in SQL so the
@@ -52,25 +51,16 @@ String _$teamMemberPageHash() => r'8f241fd1c8959ca3c5ab163bdd8425f809ed419b';
 /// The roster can run to thousands after CSV imports; filtering and paging happen in SQL so the
 /// cost tracks the page rather than the table.
 
-abstract class _$TeamMemberPage
-    extends $AsyncNotifier<PagedResult<TeamMember>> {
+abstract class _$TeamMemberPage extends $AsyncNotifier<PagedResult<TeamMember>> {
   FutureOr<PagedResult<TeamMember>> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref
-            as $Ref<
-              AsyncValue<PagedResult<TeamMember>>,
-              PagedResult<TeamMember>
-            >;
+    final ref = this.ref as $Ref<AsyncValue<PagedResult<TeamMember>>, PagedResult<TeamMember>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<PagedResult<TeamMember>>,
-                PagedResult<TeamMember>
-              >,
+              AnyNotifier<AsyncValue<PagedResult<TeamMember>>, PagedResult<TeamMember>>,
               AsyncValue<PagedResult<TeamMember>>,
               Object?,
               Object?

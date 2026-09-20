@@ -9,8 +9,7 @@ import 'package:time_keeper/utils/time_utils.dart';
 
 part 'session_page_provider.g.dart';
 
-const _sessionFields =
-    'id startTime endTime locationId finished actualStartTime actualEndTime';
+const _sessionFields = 'id startTime endTime locationId finished actualStartTime actualEndTime';
 
 const _sessionPageQuery =
     '''
@@ -44,11 +43,7 @@ class SessionFilterState {
         ? (null, null)
         : (
             DateTime(day!.year, day!.month, day!.day),
-            DateTime(
-              day!.year,
-              day!.month,
-              day!.day,
-            ).add(const Duration(days: 1)),
+            DateTime(day!.year, day!.month, day!.day).add(const Duration(days: 1)),
           );
 
     final filter = <String, dynamic>{
@@ -82,22 +77,10 @@ class SessionPage extends _$SessionPage with PagedAsyncNotifier<Session> {
       ref: ref,
       document: _sessionPageQuery,
       rootField: 'sessionPage',
-      variables: {
-        'filter': _filter.toServerFilter(),
-        'offset': offset,
-        'limit': pageSize,
-      },
+      variables: {'filter': _filter.toServerFilter(), 'offset': offset, 'limit': pageSize},
       fromJson: Session.fromJson,
     ).then(
-      (result) =>
-          result ??
-          const PagedResult<Session>(
-            items: [],
-            totalCount: 0,
-            offset: 0,
-            limit: 50,
-            hasMore: false,
-          ),
+      (result) => result ?? const PagedResult<Session>(items: [], totalCount: 0, offset: 0, limit: 50, hasMore: false),
     );
   }
 

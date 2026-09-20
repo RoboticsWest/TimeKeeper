@@ -12,16 +12,9 @@ import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 
-const _notificationTypeLabels = {
-  NotificationType.sessionStartReminder: 'Session Start Reminder',
-  NotificationType.sessionEndReminder: 'Session End Reminder',
-  NotificationType.overtime: 'Overtime',
-  NotificationType.autoCheckout: 'Auto Checkout',
-};
-
-String notificationTypeLabel(String type) {
-  return _notificationTypeLabels[type] ?? 'Unknown';
-}
+/// Kept as a free function because it is used as a tear-off in several dropdowns; the mapping
+/// itself lives on [NotificationType] so the provider can reuse it without importing a view.
+String notificationTypeLabel(String type) => NotificationType.label(type);
 
 void showNotificationDialog(BuildContext context, WidgetRef ref, {String? id, Notification? existing}) {
   final isEdit = id != null;
@@ -83,8 +76,8 @@ class _NotificationForm extends HookConsumerWidget {
           DropdownButtonFormField<String>(
             initialValue: selectedType.value,
             decoration: const InputDecoration(labelText: 'Type', border: OutlineInputBorder()),
-            items: _notificationTypeLabels.entries
-                .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
+            items: NotificationType.all
+                .map((type) => DropdownMenuItem(value: type, child: Text(NotificationType.label(type))))
                 .toList(),
             onChanged: (value) {
               if (value != null) selectedType.value = value;

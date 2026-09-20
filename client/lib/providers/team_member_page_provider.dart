@@ -8,8 +8,7 @@ import 'package:time_keeper/providers/team_member_provider.dart';
 
 part 'team_member_page_provider.g.dart';
 
-const _teamMemberFields =
-    'id firstName lastName memberType displayName mobileNumber discordId quickPin';
+const _teamMemberFields = 'id firstName lastName memberType displayName mobileNumber discordId quickPin';
 
 const _teamMemberPageQuery =
     '''
@@ -37,16 +36,9 @@ class TeamMemberFilterState {
 
   final DiscordLinkFilter discord;
 
-  const TeamMemberFilterState({
-    this.search = '',
-    this.memberTypes = const [],
-    this.discord = DiscordLinkFilter.all,
-  });
+  const TeamMemberFilterState({this.search = '', this.memberTypes = const [], this.discord = DiscordLinkFilter.all});
 
-  bool get isEmpty =>
-      search.trim().isEmpty &&
-      memberTypes.isEmpty &&
-      discord == DiscordLinkFilter.all;
+  bool get isEmpty => search.trim().isEmpty && memberTypes.isEmpty && discord == DiscordLinkFilter.all;
 
   Map<String, dynamic>? toServerFilter() {
     final filter = <String, dynamic>{
@@ -64,8 +56,7 @@ class TeamMemberFilterState {
 /// The roster can run to thousands after CSV imports; filtering and paging happen in SQL so the
 /// cost tracks the page rather than the table.
 @Riverpod(keepAlive: true)
-class TeamMemberPage extends _$TeamMemberPage
-    with PagedAsyncNotifier<TeamMember> {
+class TeamMemberPage extends _$TeamMemberPage with PagedAsyncNotifier<TeamMember> {
   TeamMemberFilterState _filter = const TeamMemberFilterState();
 
   @override
@@ -83,22 +74,11 @@ class TeamMemberPage extends _$TeamMemberPage
       ref: ref,
       document: _teamMemberPageQuery,
       rootField: 'teamMemberPage',
-      variables: {
-        'filter': _filter.toServerFilter(),
-        'offset': offset,
-        'limit': pageSize,
-      },
+      variables: {'filter': _filter.toServerFilter(), 'offset': offset, 'limit': pageSize},
       fromJson: TeamMember.fromJson,
     ).then(
       (result) =>
-          result ??
-          const PagedResult<TeamMember>(
-            items: [],
-            totalCount: 0,
-            offset: 0,
-            limit: 50,
-            hasMore: false,
-          ),
+          result ?? const PagedResult<TeamMember>(items: [], totalCount: 0, offset: 0, limit: 50, hasMore: false),
     );
   }
 

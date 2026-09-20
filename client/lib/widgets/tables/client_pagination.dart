@@ -26,8 +26,7 @@ class ClientPaginationState {
   }
 
   /// The offset, clamped back inside the range once the list shrinks.
-  int clampedOffset(int total) =>
-      offset > _lastOffset(total) ? _lastOffset(total) : offset;
+  int clampedOffset(int total) => offset > _lastOffset(total) ? _lastOffset(total) : offset;
 
   /// The rows the table should render for the current page.
   List<T> slice<T>(List<T> items) {
@@ -59,17 +58,11 @@ ClientPaginationState useClientPagination(int totalCount) {
   }
 
   void nextPage() {
-    offset.value = (offset.value + pageSize.value).clamp(
-      0,
-      totalCount > 0 ? totalCount - 1 : 0,
-    );
+    offset.value = (offset.value + pageSize.value).clamp(0, totalCount > 0 ? totalCount - 1 : 0);
   }
 
   void previousPage() {
-    offset.value = (offset.value - pageSize.value).clamp(
-      0,
-      totalCount > 0 ? totalCount - 1 : 0,
-    );
+    offset.value = (offset.value - pageSize.value).clamp(0, totalCount > 0 ? totalCount - 1 : 0);
   }
 
   return ClientPaginationState(

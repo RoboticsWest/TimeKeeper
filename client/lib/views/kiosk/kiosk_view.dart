@@ -125,7 +125,9 @@ class HomeView extends HookConsumerWidget {
 
     return Column(
       children: [
-        if (hasKiosk || quickPinEnabled)
+        // Both actions need kiosk permission: `checkInOut` and `checkInOutByPin` each require
+        // write on `team_member_sessions`, so on an unauthenticated display they only ever fail.
+        if (hasKiosk)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 25),
             child: Align(
@@ -135,16 +137,15 @@ class HomeView extends HookConsumerWidget {
                 runSpacing: 12,
                 alignment: WrapAlignment.center,
                 children: [
-                  if (hasKiosk)
-                    FilledButton.icon(
-                      icon: const Icon(Icons.how_to_reg, color: Colors.white),
-                      label: const Text('Kiosk Check In / Out', style: TextStyle(color: Colors.white)),
-                      onPressed: () {
-                        KioskDialog(sessions: unfinishedSessions).show(context);
-                      },
-                    ),
-                  // Deliberately not gated on permissions: letting a member
-                  // without a card sign themselves in is the whole point.
+                  FilledButton.icon(
+                    icon: const Icon(Icons.how_to_reg, color: Colors.white),
+                    label: const Text('Kiosk Check In / Out', style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      KioskDialog(sessions: unfinishedSessions).show(context);
+                    },
+                  ),
+                  // Still also gated on the setting: PIN sign-in is the opt-in path for members
+                  // without a card.
                   if (quickPinEnabled)
                     OutlinedButton.icon(
                       icon: const Icon(Icons.dialpad),

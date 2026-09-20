@@ -54,6 +54,9 @@ pub fn page_bounds(offset: Option<i32>, limit: Option<i32>) -> (i64, i64) {
 #[graphql(concrete(name = "SessionPage", params(Session)))]
 #[graphql(concrete(name = "TeamMemberPage", params(TeamMember)))]
 #[graphql(concrete(name = "AttendancePage", params(TeamMemberSession)))]
+#[graphql(concrete(name = "LocationPage", params(Location)))]
+#[graphql(concrete(name = "UserPage", params(User)))]
+#[graphql(concrete(name = "NotificationPage", params(Notification)))]
 pub struct Page<T: OutputType> {
   pub items: Vec<T>,
   /// Rows matching the filter across every page.

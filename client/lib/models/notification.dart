@@ -63,6 +63,17 @@ class NotificationType {
   static const sessionEndReminder = 'session_end_reminder';
   static const overtime = 'overtime';
   static const autoCheckout = 'auto_checkout';
+
+  static const all = [sessionStartReminder, sessionEndReminder, overtime, autoCheckout];
+
+  static const _labels = {
+    sessionStartReminder: 'Session Start Reminder',
+    sessionEndReminder: 'Session End Reminder',
+    overtime: 'Overtime',
+    autoCheckout: 'Auto Checkout',
+  };
+
+  static String label(String type) => _labels[type] ?? 'Unknown';
 }
 
 /// Matches the `notifications_status_check` constraint on the server.

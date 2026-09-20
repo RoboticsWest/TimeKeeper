@@ -65,9 +65,7 @@ class AttendanceView extends HookConsumerWidget {
             sessionId: selectedSessionId.value,
             locationId: selectedLocationId.value,
             dateRange: dateRange.value,
-            memberTypes: memberType.value == 'all'
-                ? const []
-                : [memberType.value],
+            memberTypes: memberType.value == 'all' ? const [] : [memberType.value],
             status: status.value,
           ),
         );
@@ -91,21 +89,12 @@ class AttendanceView extends HookConsumerWidget {
       final locationName = location?.location ?? 'Unknown';
       final dateStr = formatDate(session.startTime);
       final statusLabelText = statusLabel(getSessionStatus(session));
-      return (
-        key: entry.key,
-        label: '$dateStr @ $locationName ($statusLabelText)',
-      );
+      return (key: entry.key, label: '$dateStr @ $locationName ($statusLabelText)');
     }).toList();
 
     final locationItems = locations.entries.toList()
-      ..sort(
-        (a, b) => a.value.location.toLowerCase().compareTo(
-          b.value.location.toLowerCase(),
-        ),
-      );
-    final locationDropdownItems = locationItems
-        .map((entry) => (key: entry.key, label: entry.value.location))
-        .toList();
+      ..sort((a, b) => a.value.location.toLowerCase().compareTo(b.value.location.toLowerCase()));
+    final locationDropdownItems = locationItems.map((entry) => (key: entry.key, label: entry.value.location)).toList();
 
     final hasActiveFilters =
         selectedSessionId.value != null ||
@@ -126,18 +115,9 @@ class AttendanceView extends HookConsumerWidget {
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _showClearDialog(context, ref),
-                icon: Icon(
-                  Icons.delete_sweep,
-                  size: 18,
-                  color: theme.colorScheme.error,
-                ),
-                label: Text(
-                  'Clear All',
-                  style: TextStyle(color: theme.colorScheme.error),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: theme.colorScheme.error),
-                ),
+                icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
+                label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
+                style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
               ),
             ],
           ),
@@ -156,9 +136,7 @@ class AttendanceView extends HookConsumerWidget {
                   items: sessionDropdownItems,
                   selectedKey: selectedSessionId.value,
                   onSelected: (key) {
-                    selectedSessionId.value = key == selectedSessionId.value
-                        ? null
-                        : key;
+                    selectedSessionId.value = key == selectedSessionId.value ? null : key;
                   },
                 ),
               ),
@@ -169,9 +147,7 @@ class AttendanceView extends HookConsumerWidget {
                   items: locationDropdownItems,
                   selectedKey: selectedLocationId.value,
                   onSelected: (key) {
-                    selectedLocationId.value = key == selectedLocationId.value
-                        ? null
-                        : key;
+                    selectedLocationId.value = key == selectedLocationId.value ? null : key;
                   },
                 ),
               ),
@@ -179,27 +155,12 @@ class AttendanceView extends HookConsumerWidget {
                 width: 180,
                 child: DropdownButtonFormField<AttendanceDateRange>(
                   initialValue: dateRange.value,
-                  decoration: const InputDecoration(
-                    labelText: 'When',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'When', border: OutlineInputBorder()),
                   items: const [
-                    DropdownMenuItem(
-                      value: AttendanceDateRange.allTime,
-                      child: Text('Any time'),
-                    ),
-                    DropdownMenuItem(
-                      value: AttendanceDateRange.today,
-                      child: Text('Today'),
-                    ),
-                    DropdownMenuItem(
-                      value: AttendanceDateRange.last7Days,
-                      child: Text('Last 7 days'),
-                    ),
-                    DropdownMenuItem(
-                      value: AttendanceDateRange.last30Days,
-                      child: Text('Last 30 days'),
-                    ),
+                    DropdownMenuItem(value: AttendanceDateRange.allTime, child: Text('Any time')),
+                    DropdownMenuItem(value: AttendanceDateRange.today, child: Text('Today')),
+                    DropdownMenuItem(value: AttendanceDateRange.last7Days, child: Text('Last 7 days')),
+                    DropdownMenuItem(value: AttendanceDateRange.last30Days, child: Text('Last 30 days')),
                   ],
                   onChanged: (value) {
                     if (value != null) dateRange.value = value;
@@ -217,18 +178,9 @@ class AttendanceView extends HookConsumerWidget {
               ),
               SegmentedButton<AttendanceStatusFilter>(
                 segments: const [
-                  ButtonSegment(
-                    value: AttendanceStatusFilter.all,
-                    label: Text('All states'),
-                  ),
-                  ButtonSegment(
-                    value: AttendanceStatusFilter.checkedIn,
-                    label: Text('Checked in'),
-                  ),
-                  ButtonSegment(
-                    value: AttendanceStatusFilter.completed,
-                    label: Text('Completed'),
-                  ),
+                  ButtonSegment(value: AttendanceStatusFilter.all, label: Text('All states')),
+                  ButtonSegment(value: AttendanceStatusFilter.checkedIn, label: Text('Checked in')),
+                  ButtonSegment(value: AttendanceStatusFilter.completed, label: Text('Completed')),
                 ],
                 selected: {status.value},
                 onSelectionChanged: (value) => status.value = value.first,
@@ -251,10 +203,7 @@ class AttendanceView extends HookConsumerWidget {
           const SizedBox(height: 12),
 
           // Text search (debounced, applied in SQL)
-          TableFilter(
-            controller: filterController,
-            hintText: 'Search members...',
-          ),
+          TableFilter(controller: filterController, hintText: 'Search members...'),
           const SizedBox(height: 12),
 
           Expanded(
@@ -265,14 +214,8 @@ class AttendanceView extends HookConsumerWidget {
                     headers: [
                       BaseTableCell(child: TableHeaderText('Member'), flex: 2),
                       BaseTableCell(child: TableHeaderText('Session'), flex: 2),
-                      BaseTableCell(
-                        child: TableHeaderText('Check In'),
-                        flex: 2,
-                      ),
-                      BaseTableCell(
-                        child: TableHeaderText('Check Out'),
-                        flex: 2,
-                      ),
+                      BaseTableCell(child: TableHeaderText('Check In'), flex: 2),
+                      BaseTableCell(child: TableHeaderText('Check Out'), flex: 2),
                       BaseTableCell(child: TableHeaderText('Status')),
                     ],
                     headerDecoration: tableHeaderDecoration(context),
@@ -280,20 +223,15 @@ class AttendanceView extends HookConsumerWidget {
                       final member = teamMembers[ms.teamMemberId];
                       final memberName =
                           member?.displayName ??
-                          (member != null
-                              ? '${member.firstName} ${member.lastName}'
-                              : 'Unknown');
+                          (member != null ? '${member.firstName} ${member.lastName}' : 'Unknown');
 
                       final session = sessions[ms.sessionId];
-                      final location = session != null
-                          ? locations[session.locationId]
-                          : null;
+                      final location = session != null ? locations[session.locationId] : null;
                       final sessionLabel = session != null
                           ? '${formatDate(session.startTime)} @ ${location?.location ?? 'Unknown'}'
                           : 'Unknown session';
 
-                      final checkInStr =
-                          '${formatDate(ms.checkInTime)} ${formatTime(ms.checkInTime)}';
+                      final checkInStr = '${formatDate(ms.checkInTime)} ${formatTime(ms.checkInTime)}';
                       final checkOutStr = ms.checkOutTime != null
                           ? '${formatDate(ms.checkOutTime!)} ${formatTime(ms.checkOutTime!)}'
                           : '—';
@@ -309,12 +247,7 @@ class AttendanceView extends HookConsumerWidget {
                           memberName: memberName,
                           sessionLabel: sessionLabel,
                         ),
-                        onDelete: () => showDeleteAttendanceDialog(
-                          context,
-                          ref,
-                          id: ms.id,
-                          memberName: memberName,
-                        ),
+                        onDelete: () => showDeleteAttendanceDialog(context, ref, id: ms.id, memberName: memberName),
                         cells: [
                           BaseTableCell(child: Text(memberName), flex: 2),
                           BaseTableCell(child: Text(sessionLabel), flex: 2),
@@ -324,12 +257,8 @@ class AttendanceView extends HookConsumerWidget {
                             child: Text(
                               isCheckedIn ? 'Checked In' : 'Completed',
                               style: TextStyle(
-                                color: isCheckedIn
-                                    ? supportSuccessColor.shade700
-                                    : null,
-                                fontWeight: isCheckedIn
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
+                                color: isCheckedIn ? supportSuccessColor.shade700 : null,
+                                fontWeight: isCheckedIn ? FontWeight.w600 : FontWeight.normal,
                               ),
                             ),
                           ),
@@ -358,9 +287,7 @@ class AttendanceView extends HookConsumerWidget {
     final teamMemberSessions = ref.read(teamMemberSessionsProvider);
     final ids = teamMemberSessions.keys.toList();
     if (ids.isEmpty) {
-      SnackBarDialog.info(
-        message: 'No attendance records to delete',
-      ).show(context);
+      SnackBarDialog.info(message: 'No attendance records to delete').show(context);
       return;
     }
 
@@ -397,10 +324,7 @@ class _LoadingOrError<T> extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Could not load attendance',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text('Could not load attendance', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
           ],

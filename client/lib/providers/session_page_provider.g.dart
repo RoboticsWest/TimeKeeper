@@ -16,8 +16,7 @@ final sessionPageProvider = SessionPageProvider._();
 
 /// A paged, filtered slice of sessions for the table mode of the Sessions view. The calendar and
 /// stats still read the whole set from the collection providers.
-final class SessionPageProvider
-    extends $AsyncNotifierProvider<SessionPage, PagedResult<Session>> {
+final class SessionPageProvider extends $AsyncNotifierProvider<SessionPage, PagedResult<Session>> {
   /// A paged, filtered slice of sessions for the table mode of the Sessions view. The calendar and
   /// stats still read the whole set from the collection providers.
   SessionPageProvider._()
@@ -49,16 +48,11 @@ abstract class _$SessionPage extends $AsyncNotifier<PagedResult<Session>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref =
-        this.ref
-            as $Ref<AsyncValue<PagedResult<Session>>, PagedResult<Session>>;
+    final ref = this.ref as $Ref<AsyncValue<PagedResult<Session>>, PagedResult<Session>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<PagedResult<Session>>,
-                PagedResult<Session>
-              >,
+              AnyNotifier<AsyncValue<PagedResult<Session>>, PagedResult<Session>>,
               AsyncValue<PagedResult<Session>>,
               Object?,
               Object?

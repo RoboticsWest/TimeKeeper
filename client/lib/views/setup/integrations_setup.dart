@@ -260,11 +260,7 @@ class IntegrationsSetupTab extends HookConsumerWidget {
         const SizedBox(height: 24),
         TextFieldSetting(
           label: 'Start Reminder Message',
-          description:
-              'Custom message for the start reminder. {relative_day} renders as "today", "tomorrow" or a '
-              'weekday depending on when the reminder actually fires — prefer it over writing '
-              '"tomorrow", which is wrong whenever a session is created at short notice. '
-              'Supports {mins}, {location}, {relative_day}, {weekday}, {date}, {start_time}, {end_time}',
+          description: 'Supports {mins}, {location}, {relative_day}, {weekday}, {date}, {start_time}, {end_time}',
           controller: startReminderMessageController,
           hintText:
               '@here Session {relative_day} from {start_time} to {end_time} @ {location} \u2014 starting in ~{mins} minutes!',

@@ -38,27 +38,15 @@ class PaginationBar extends StatelessWidget {
         children: [
           Text(
             totalCount == 0 ? 'No records' : '$start\u2013$end of $totalCount',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
           const Spacer(),
-          Text(
-            'Rows per page',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text('Rows per page', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
           const SizedBox(width: 8),
           DropdownButtonHideUnderline(
             child: DropdownButton<int>(
-              value: pageSizeOptions.contains(pageSize)
-                  ? pageSize
-                  : pageSizeOptions.first,
-              items: [
-                for (final size in pageSizeOptions)
-                  DropdownMenuItem(value: size, child: Text('$size')),
-              ],
+              value: pageSizeOptions.contains(pageSize) ? pageSize : pageSizeOptions.first,
+              items: [for (final size in pageSizeOptions) DropdownMenuItem(value: size, child: Text('$size'))],
               onChanged: (size) {
                 if (size != null) onPageSizeChanged(size);
               },
@@ -70,11 +58,7 @@ class PaginationBar extends StatelessWidget {
             onPressed: start > 1 ? onPrevious : null,
             icon: const Icon(Icons.chevron_left),
           ),
-          IconButton(
-            tooltip: 'Next page',
-            onPressed: hasMore ? onNext : null,
-            icon: const Icon(Icons.chevron_right),
-          ),
+          IconButton(tooltip: 'Next page', onPressed: hasMore ? onNext : null, icon: const Icon(Icons.chevron_right)),
         ],
       ),
     );
