@@ -15,6 +15,9 @@ repos:
       # Whitespace and formatting
       - id: trailing-whitespace
       - id: check-yaml
+        # mkdocs.yml uses custom PyYAML tags (pymdownx.superfences fencing).
+        # The default safe loader rejects them; --unsafe resolves python/name tags.
+        args: [--unsafe]
       - id: end-of-file-fixer
       - id: mixed-line-ending
         args: ["--fix=lf"]
@@ -26,7 +29,6 @@ repos:
       - id: check-merge-conflict
 
       # Syntax validation
-      - id: check-yaml
       - id: check-json
       - id: check-toml
 

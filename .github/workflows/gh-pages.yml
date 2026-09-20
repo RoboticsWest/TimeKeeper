@@ -14,12 +14,12 @@ jobs:
       # Install dependencies
       - name: Install dependencies
         run: |
-          pip install mkdocs-material
+          pip install zensical
 
-      # Build documentation
+      # Build documentation (Zensical; outputs to '_build' via site_dir)
       - name: Build documentation
         run: |
-          mkdocs build -d _build
+          zensical build
 
       # Publish documentation
       - name: Publish documentation

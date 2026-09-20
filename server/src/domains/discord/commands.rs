@@ -89,8 +89,7 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
     "link" => Some(link_member(msg, args, deps).await.into()),
     "checkout" => Some(checkout(msg, deps).await.into()),
     "mystats" => Some(mystats(msg, deps).await.into()),
-    "achievements" => Some(achievements(msg, args, deps).await),
-    "badges" => Some(badges(msg, deps).await),
+    "awards" => Some(awards(msg, args, deps).await),
     _ => None,
   };
 
@@ -101,19 +100,8 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
 
 /// Commands the bot recognises. Kept next to the dispatch `match` — a command added there and
 /// forgotten here still works, it just answers normally during maintenance.
-const COMMANDS: &[&str] = &[
-  "ping",
-  "help",
-  "leaderboard",
-  "sessions",
-  "checkedin",
-  "locations",
-  "link",
-  "checkout",
-  "mystats",
-  "achievements",
-  "badges",
-];
+const COMMANDS: &[&str] =
+  &["ping", "help", "leaderboard", "sessions", "checkedin", "locations", "link", "checkout", "mystats", "awards"];
 
 fn is_known_command(cmd: &str) -> bool {
   COMMANDS.contains(&cmd)
@@ -566,31 +554,31 @@ async fn mystats(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   })
 }
 
-/// A `!achievements` subcommand, defaulting to the caller's own collection.
+/// A `!awards` subcommand, defaulting to the caller's own collection.
 #[derive(Debug, PartialEq, Eq)]
-enum AchievementsCommand {
+enum AwardsCommand {
   Mine,
   Help,
   All,
 }
 
-/// Parses the subcommand from whatever followed `!achievements`. Anything unrecognised is the
-/// caller's own collection — an empty invocation is the common one, so it must be the default.
-fn achievements_command(arg: &str) -> AchievementsCommand {
+/// Parses the subcommand from whatever followed `!awards`. Anything unrecognised is the caller's
+/// own collection — an empty invocation is the common one, so it must be the default.
+fn awards_command(arg: &str) -> AwardsCommand {
   match arg.trim().to_lowercase().as_str() {
-    "help" => AchievementsCommand::Help,
-    "all" => AchievementsCommand::All,
-    _ => AchievementsCommand::Mine,
+    "help" => AwardsCommand::Help,
+    "all" => AwardsCommand::All,
+    _ => AwardsCommand::Mine,
   }
 }
 
-/// `!achievements` — the caller's collection by default, with the same three-way split as the
-/// leaderboard family: `help` explains the commands, `all` ranks every member.
-async fn achievements(msg: &Message, args: &str, deps: &DiscordDeps) -> Reply {
-  match achievements_command(args) {
-    AchievementsCommand::Help => embeds::achievements_help().into(),
-    AchievementsCommand::All => achievements_all(deps).await.into(),
-    AchievementsCommand::Mine => my_achievements(msg, deps).await.into(),
+/// `!awards` — the caller's collection by default, with the same three-way split as the
+/// leaderboard family: `help` explains the commands, `all` browses the whole catalogue.
+async fn awards(msg: &Message, args: &str, deps: &DiscordDeps) -> Reply {
+  match awards_command(args) {
+    AwardsCommand::Help => embeds::awards_help().into(),
+    AwardsCommand::All => all_awards(msg, deps).await,
+    AwardsCommand::Mine => my_awards(msg, deps).await.into(),
   }
 }
 
@@ -598,7 +586,7 @@ async fn achievements(msg: &Message, args: &str, deps: &DiscordDeps) -> Reply {
 ///
 /// Nothing here is stored — an achievement is held for exactly as long as its condition is true
 /// of the caller's profile, so the list is recomputed on every call.
-async fn my_achievements(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
+async fn my_awards(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   let loaded = match load_profile(msg, deps).await {
     Ok(loaded) => loaded,
     Err(embed) => return *embed,
@@ -616,33 +604,9 @@ async fn my_achievements(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
   embeds::achievements(&loaded.name, &earned, &locked, achievements::ACHIEVEMENTS.len())
 }
 
-/// `!achievements all` — every member ranked by how much of the catalogue they hold.
-///
-/// Like `!leaderboard`, the ordering is the shared accolades logic's: most decorated first, a
-/// member's name breaking the tie. Zero-achievement members still appear, at the bottom — on a
-/// real roster the interesting question is who has *not* started.
-async fn achievements_all(deps: &DiscordDeps) -> CreateEmbed {
-  let all = match deps.accolades.for_all().await {
-    Ok(all) => all,
-    Err(e) => return embeds::error(&format!("Error loading achievements: {e}")),
-  };
-
-  let rows: Vec<embeds::AccoladesRow> = all
-    .iter()
-    .map(|a| embeds::AccoladesRow {
-      name: a.name.clone(),
-      title: a.title.clone(),
-      earned: usize::try_from(a.earned_count).unwrap_or(usize::MAX),
-      total: usize::try_from(a.total_count).unwrap_or(usize::MAX),
-    })
-    .collect();
-
-  embeds::achievements_leaderboard(&rows, &format!("{} members by the badges they hold", rows.len()))
-}
-
 /// Prefix on every catalogue button's `custom_id`. Namespaced so the bot only ever answers
 /// components it created, and the page index rides along in the id itself.
-const CATALOGUE_ID: &str = "tk_badges";
+const CATALOGUE_ID: &str = "tk_awards";
 
 /// The catalogue page buttons. Stateless: the page number lives in the `custom_id`, so a button
 /// still works after a restart rather than pointing at a session that no longer exists.
@@ -717,8 +681,8 @@ async fn catalogue_page(page: usize, viewer: Option<Uuid>, deps: &DiscordDeps) -
   Reply::Interactive(Box::new(embed), catalogue_buttons(page, total_pages))
 }
 
-/// `!badges` — browse the whole catalogue, eight at a time.
-async fn badges(msg: &Message, deps: &DiscordDeps) -> Reply {
+/// `!awards all` — browse the whole catalogue, eight at a time.
+async fn all_awards(msg: &Message, deps: &DiscordDeps) -> Reply {
   let viewer = deps.team_members.get_by_discord_id(&msg.author.id.to_string()).await.ok().flatten().map(|m| m.id);
   catalogue_page(0, viewer, deps).await
 }
@@ -780,14 +744,14 @@ mod tests {
   }
 
   #[test]
-  fn achievements_command_defaults_to_the_callers_collection() {
+  fn awards_command_defaults_to_the_callers_collection() {
     // An empty invocation is the everyday one, so anything that is not a subcommand must land
-    // on the caller's own achievements rather than an error.
-    assert_eq!(achievements_command(""), AchievementsCommand::Mine);
-    assert_eq!(achievements_command("  "), AchievementsCommand::Mine);
-    assert_eq!(achievements_command("garbage"), AchievementsCommand::Mine);
-    assert_eq!(achievements_command("help"), AchievementsCommand::Help);
-    assert_eq!(achievements_command("all"), AchievementsCommand::All);
-    assert_eq!(achievements_command("ALL"), AchievementsCommand::All);
+    // on the caller's own awards rather than an error.
+    assert_eq!(awards_command(""), AwardsCommand::Mine);
+    assert_eq!(awards_command("  "), AwardsCommand::Mine);
+    assert_eq!(awards_command("garbage"), AwardsCommand::Mine);
+    assert_eq!(awards_command("help"), AwardsCommand::Help);
+    assert_eq!(awards_command("all"), AwardsCommand::All);
+    assert_eq!(awards_command("ALL"), AwardsCommand::All);
   }
 }

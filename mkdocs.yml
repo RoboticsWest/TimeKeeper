@@ -1,138 +1,148 @@
 # Project information
-site_name: Time Keeper Documentation
+site_name: TimeKeeper
 site_url: https://curtinfrc.github.io/TimeKeeper/
-site_author: Connor (CJ) Buchel
+site_author: Curtin FRC
 site_description: >-
-  Time Keeper - Documentation for TK Management
+  TimeKeeper is a time-tracking and attendance system for FIRST Robotics
+  Competition teams: sessions, RFID-powered kiosk check-in, real-time
+  statistics, leaderboards, achievements and Discord integration.
+site_dir: _build
 
 # Repository information
 repo_name: CurtinFRC/TimeKeeper
 repo_url: https://github.com/CurtinFRC/TimeKeeper/
 edit_uri: edit/master/docs/
+copyright: "© 2025-2026 Curtin FRC — TimeKeeper"
 
-# Navigation structure - customize this based on your content
+# Navigation
 nav:
   - Home: index.md
-  - User Guide:
-      - Overview: guides/guides.md
+  - Getting Started:
+      - Quickstart: getting_started/quickstart.md
+      - Installation: getting_started/install.md
+      - Running the Server: getting_started/server_reference.md
+      - Configuration: getting_started/configuration.md
+      - Deployment: getting_started/deployment.md
+      - Architecture: getting_started/architecture.md
+  - Using the App:
+      - Overview: app/overview.md
+      - Sessions & Calendar: app/sessions.md
+      - Check-in & Attendance: app/attendance.md
+      - Team Members & Locations: app/team.md
+      - Leaderboard & Statistics: app/statistics.md
+      - Achievements & Badges: app/achievements.md
+      - Notifications & RSVP: app/notifications.md
+  - Kiosk & RFID:
+      - Kiosk Mode: kiosk/kiosk.md
+      - RFID Tags & Readers: kiosk/rfid.md
+      - Check-in Windows & Auto Checkout: kiosk/checkout.md
+  - Admin:
+      - Admin Quickstart: admin/quickstart.md
+      - Settings Reference: admin/settings.md
+      - Users, Roles & Permissions: admin/users.md
+      - Maintenance & Reset: admin/maintenance.md
+      - Import & Export: admin/import_export.md
+  - Discord Bot: discord/discord.md
   - Support:
       - Bug Reports: support/bug_reports.md
       - Change Requests: support/change_requests.md
       - Q&A: https://github.com/CurtinFRC/TimeKeeper/discussions
 
-# Site configuration
+# Theme (Zensical, modern variant)
 theme:
   name: material
+  variant: modern
   font:
     text: "Ubuntu"
     code: "Ubuntu Mono"
   logo: assets/logo.png
   favicon: assets/logo.png
-
-  # Color scheme with your primary color
   palette:
     # dark theme
     - scheme: slate
       toggle:
-        icon: material/brightness-4
-        name: Switch to dark mode
+        icon: lucide/moon-star
+        name: Switch to light mode
       primary: blue
       accent: indigo
-
     # light theme
     - scheme: default
       toggle:
-        icon: material/brightness-7
+        icon: lucide/sun
         name: Switch to dark mode
       primary: blue
       accent: indigo
-
-  # Navigation features
   features:
-    # Navigation
-    - navigation.instant # Faster page loading (SPA-like behavior)
-    - navigation.instant.prefetch # Prefetch pages on hover
-    - navigation.instant.progress # Show loading progress bar
-    - navigation.tracking # Update URL with active anchor
-    - navigation.tabs # Top-level sections as tabs
-    - navigation.tabs.sticky # Tabs remain visible when scrolling
-    - navigation.sections # Top-level sections are rendered as groups
-    - navigation.expand # Expand all sections by default
-    - navigation.path # Show breadcrumb navigation path
-    - navigation.indexes # Allow section index pages
-    - navigation.top # "Back to top" button
-
-    # Search
-    - search.suggest # Show search suggestions
-    - search.highlight # Highlight search terms on page
-    - search.share # Share search results via URL
-
-    # Table of contents
-    - toc.follow # Sidebar automatically scrolls to active heading
-    - toc.integrate # Integrate TOC into navigation (left sidebar only)
-
-    # Content
-    - content.code.copy # Copy button for code blocks
-    - content.code.annotate # Allow annotations in code blocks
-    - content.tabs.link # Link content tabs across pages
-    - content.tooltips # Enable tooltips for abbreviations
-    - content.action.edit # Edit button on pages
-    - content.action.view # View source button on pages
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - toc.follow
+    - toc.integrate
+    - content.code.copy
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
 
 # Extensions
 markdown_extensions:
-  # Python Markdown extensions
-  - abbr # Abbreviations/tooltips
-  - admonition # Call-out blocks (notes, warnings, etc.)
-  - attr_list # Add HTML attributes to elements
-  - def_list # Definition lists
-  - footnotes # Footnote support
-  - md_in_html # Markdown inside HTML
-  - tables # Table support
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
   - toc:
-      permalink: true # Add permanent links to headings
+      permalink: true
       permalink_title: Anchor link to this section
-      toc_depth: 3 # Max depth for TOC
-
-  # PyMdown Extensions (advanced features)
-  - pymdownx.arithmatex: # Math notation support
-      generic: true
-  - pymdownx.betterem: # Better emphasis handling
+      toc_depth: 3
+  - pymdownx.betterem:
       smart_enable: all
-  - pymdownx.caret # Superscript (^text^) and insert (^^text^^)
-  - pymdownx.mark # Highlighting (==text==)
-  - pymdownx.tilde # Subscript (~text~) and delete (~~text~~)
-  - pymdownx.critic # Track changes
-  - pymdownx.details # Collapsible details/summary
-  - pymdownx.highlight: # Code highlighting
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-  - pymdownx.inlinehilite # Inline code highlighting
-  - pymdownx.keys # Keyboard keys (++ctrl+alt+del++)
-  - pymdownx.magiclink: # Auto-link URLs and GitHub references
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
       repo_url_shorthand: true
       user: CurtinFRC
       repo: TimeKeeper
-  - pymdownx.smartsymbols # Smart symbols (arrows, fractions, etc.)
-  - pymdownx.snippets: # Include external files
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
       check_paths: true
-  - pymdownx.superfences: # Nested code blocks, diagrams
-  - pymdownx.tabbed: # Tabbed content blocks
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.tasklist: # Task lists with checkboxes
+  - pymdownx.tasklist:
       custom_checkbox: true
 
 # Plugins
 plugins:
-  - search: # Search functionality
+  - search:
       lang: en
-      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
-  - tags # Tag support for pages
 
 # Extra configuration
 extra:
-  # Social links in footer
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/CurtinFRC/TimeKeeper

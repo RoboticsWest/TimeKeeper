@@ -8,13 +8,12 @@ Before you submit a change request, please check the following:
 - **It's not a bug, it's a feature**: Change requests are not for reporting bugs unless it's related to solving a bug. If you have found a bug, please submit a bug report using the issue tracker.
 
 !!! note "Change requests are not guaranteed"
+
     Change requests are not guaranteed to be implemented. The gremlins have a lot of work to do and may not have time to implement every change request. But they will try their best to implement the most requested features in order or priority.
 
 ## Submitting a change request
-If you have checked the the above and would still like to submit a change request, please raise a change request.
+If you have checked the above and would still like to submit a change request, please raise a change request.
 
-[:octicons-bell-16:&nbsp; Raise a Change Request][issue tracker]{ .md-button }
+**Raise a Change Request** — [github.com/CurtinFRC/TimeKeeper/issues](https://github.com/CurtinFRC/TimeKeeper/issues)
 
-
-[issue tracker]: https://github.com/CurtinFRC/TimeKeeper/issues
 [discussions]: https://github.com/CurtinFRC/TimeKeeper/discussions

@@ -79,8 +79,7 @@ pub fn help_text() -> String {
    `!link Name` — Link your Discord account to a team member\n\
    `!checkout` — Check yourself out of the current session\n\
    `!mystats` — Your own attendance stats, title and leaderboard rank\n\
-   `!achievements` — Your unlocked achievements (`all` ranks every member)\n\
-   `!badges` — Browse every achievement and how rare it is\n\
+   `!awards` — Your unlocked achievements (`all` browses the whole catalogue)\n\
    `!help` — Show this message"
     .to_string()
 }
@@ -314,7 +313,7 @@ pub fn my_stats(stats: &MyStats) -> CreateEmbed {
   inline_fields(header, &items)
 }
 
-/// One line per achievement in a `!achievements` listing.
+/// One line per achievement in a `!awards` listing.
 pub struct AchievementLine {
   pub emoji: String,
   pub name: String,
@@ -353,46 +352,13 @@ pub fn achievements(name: &str, earned: &[AchievementLine], locked: &[Achievemen
   base(&format!("Achievements for {name}"), BRAND_BLUE).description(truncate_description(&body))
 }
 
-/// The `!achievements` subcommand reference — a family of three ways in, modelled on the
+/// The `!awards` subcommand reference — a family of three ways in, modelled on the
 /// leaderboard's own help page.
-pub fn achievements_help() -> CreateEmbed {
-  base("Achievements", BRAND_BLUE)
-    .field("`!achievements`", "Your unlocked achievements, and what is left", true)
-    .field("`!achievements all`", "Every member, ranked by how many they hold", true)
-    .field("`!badges`", "Browse every achievement in the catalogue and how rare it is", true)
-}
-
-/// One row of the achievements leaderboard — the member's name and where they stand in the
-/// catalogue, ready for the same medal treatment the hours leaderboard gives its podium.
-pub struct AccoladesRow {
-  pub name: String,
-  /// Their derived title, for the flavour a bare count would not carry.
-  pub title: String,
-  /// (achievements held, achievements in the catalogue).
-  pub earned: usize,
-  pub total: usize,
-}
-
-/// Every member ranked by achievements held, most decorated first.
-///
-/// The same shape as `!leaderboard` — a description of one line per person, medals for the top
-/// three — because it is the same question: who is winning the collection.
-pub fn achievements_leaderboard(rows: &[AccoladesRow], subtitle: &str) -> CreateEmbed {
-  let body: Vec<String> = rows
-    .iter()
-    .enumerate()
-    .map(|(i, row)| {
-      let medal = match i {
-        0 => "\u{1f947} ",
-        1 => "\u{1f948} ",
-        2 => "\u{1f949} ",
-        _ => "",
-      };
-      format!("{medal}**{}.** {} — **{} of {}** badges \u{b7} *{}*", i + 1, row.name, row.earned, row.total, row.title)
-    })
-    .collect();
-
-  base("Achievements", BRAND_BLUE).description(format!("{subtitle}\n\n{}", body.join("\n")))
+pub fn awards_help() -> CreateEmbed {
+  base("Awards", BRAND_BLUE)
+    .field("`!awards`", "Your unlocked achievements, and what is left", true)
+    .field("`!awards all`", "Browse the whole catalogue — every badge and how rare it is", true)
+    .field("`!awards help`", "Show this page", true)
 }
 
 /// How many unearned achievements a listing previews before collapsing into a count.
@@ -426,7 +392,7 @@ pub struct CatalogueEntry {
   pub earned: Option<bool>,
 }
 
-/// How many achievements one page of `!badges` shows.
+/// How many achievements one page of `!awards all` shows.
 ///
 /// Sixty-seven of them in a single embed is both unreadable and close enough to Discord's 4096
 /// character description limit to be a real risk, which is what pagination is here to solve.
