@@ -9,6 +9,7 @@ import 'package:time_keeper/views/setup/database_setup.dart';
 import 'package:time_keeper/views/setup/integrations_setup.dart';
 import 'package:time_keeper/views/setup/member_setup.dart';
 import 'package:time_keeper/views/setup/session_setup.dart';
+import 'package:time_keeper/views/setup/system_setup.dart';
 
 /// One entry in the Setup section list.
 class _Section {
@@ -41,6 +42,7 @@ class SetupView extends HookConsumerWidget {
     _Section(label: 'Integrations', icon: Icons.hub, colorSlot: 6, build: IntegrationsSetupTab.new),
     _Section(label: 'Data', icon: Icons.table_chart, colorSlot: 3, build: DataSetupTab.new),
     _Section(label: 'Database', icon: Icons.storage, colorSlot: 7, build: DatabaseSetupTab.new),
+    _Section(label: 'System', icon: Icons.build_circle, colorSlot: 5, build: SystemSetupTab.new),
   ];
 
   @override

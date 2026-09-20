@@ -30,6 +30,14 @@ class Settings {
   final bool discordAutoDeleteEndReminder;
   final bool quickPinEnabled;
 
+  /// Puts the system into maintenance mode: the client shows a banner and the Discord bot
+  /// refuses every command.
+  final bool maintenanceMode;
+
+  /// Operator-supplied reason. Empty means "use the built-in wording" — see
+  /// [Settings.maintenanceBannerText].
+  final String maintenanceMessage;
+
   Settings({
     required this.checkInWindowSecs,
     required this.autoCheckoutAfterSecs,
@@ -57,6 +65,8 @@ class Settings {
     required this.discordAutoDeleteStartReminder,
     required this.discordAutoDeleteEndReminder,
     required this.quickPinEnabled,
+    this.maintenanceMode = false,
+    this.maintenanceMessage = '',
   });
 
   factory Settings.fromJson(Map<String, dynamic> json) {
@@ -87,8 +97,21 @@ class Settings {
       discordAutoDeleteStartReminder: json['discordAutoDeleteStartReminder'] as bool,
       discordAutoDeleteEndReminder: json['discordAutoDeleteEndReminder'] as bool,
       quickPinEnabled: json['quickPinEnabled'] as bool,
+      // Defaulted rather than required: an older server that predates the maintenance migration
+      // simply has no such field, and the client should still parse its settings.
+      maintenanceMode: json['maintenanceMode'] as bool? ?? false,
+      maintenanceMessage: json['maintenanceMessage'] as String? ?? '',
     );
   }
+
+  /// Fallback wording when maintenance mode is on but no reason was given, mirroring
+  /// `DEFAULT_MAINTENANCE_MESSAGE` on the server so both surfaces read the same.
+  static const defaultMaintenanceMessage =
+      'TimeKeeper is under maintenance. Some features may be unavailable \u2014 please try again shortly.';
+
+  /// What the banner should actually show.
+  String get maintenanceBannerText =>
+      maintenanceMessage.trim().isEmpty ? defaultMaintenanceMessage : maintenanceMessage.trim();
 }
 
 class DiscordRole {

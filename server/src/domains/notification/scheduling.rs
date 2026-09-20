@@ -184,6 +184,8 @@ mod tests {
       discord_auto_delete_start_reminder: false,
       discord_auto_delete_end_reminder: false,
       quick_pin_enabled: false,
+      maintenance_mode: false,
+      maintenance_message: String::new(),
     }
   }
 

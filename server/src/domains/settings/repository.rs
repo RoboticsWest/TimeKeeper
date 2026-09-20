@@ -42,6 +42,9 @@ fn default_settings() -> Settings {
     discord_auto_delete_start_reminder: false,
     discord_auto_delete_end_reminder: false,
     quick_pin_enabled: false,
+    // A fresh install is not under maintenance.
+    maintenance_mode: false,
+    maintenance_message: String::new(),
   }
 }
 
@@ -75,35 +78,7 @@ impl SettingsRepository for PgSettingsRepository {
     let defaults = default_settings();
     Ok(
       diesel::insert_into(settings::table)
-        .values((
-          settings::id.eq(defaults.id),
-          settings::check_in_window_secs.eq(defaults.check_in_window_secs),
-          settings::auto_checkout_after_secs.eq(defaults.auto_checkout_after_secs),
-          settings::discord_bot_token.eq(&defaults.discord_bot_token),
-          settings::discord_guild_id.eq(&defaults.discord_guild_id),
-          settings::discord_announcement_channel_id.eq(&defaults.discord_announcement_channel_id),
-          settings::discord_notification_channel_id.eq(&defaults.discord_notification_channel_id),
-          settings::discord_self_link_enabled.eq(defaults.discord_self_link_enabled),
-          settings::discord_name_sync_enabled.eq(defaults.discord_name_sync_enabled),
-          settings::discord_start_reminder_mins.eq(defaults.discord_start_reminder_mins),
-          settings::discord_end_reminder_mins.eq(defaults.discord_end_reminder_mins),
-          settings::discord_start_reminder_message.eq(&defaults.discord_start_reminder_message),
-          settings::discord_end_reminder_message.eq(&defaults.discord_end_reminder_message),
-          settings::discord_overtime_dm_enabled.eq(defaults.discord_overtime_dm_enabled),
-          settings::discord_overtime_dm_mins.eq(defaults.discord_overtime_dm_mins),
-          settings::discord_overtime_dm_message.eq(&defaults.discord_overtime_dm_message),
-          settings::discord_auto_checkout_dm_enabled.eq(defaults.discord_auto_checkout_dm_enabled),
-          settings::discord_auto_checkout_dm_message.eq(&defaults.discord_auto_checkout_dm_message),
-          settings::discord_checkout_enabled.eq(defaults.discord_checkout_enabled),
-          settings::discord_enabled.eq(defaults.discord_enabled),
-          settings::timezone.eq(&defaults.timezone),
-          settings::leaderboard_show_overtime.eq(defaults.leaderboard_show_overtime),
-          settings::leaderboard_member_types.eq(&defaults.leaderboard_member_types),
-          settings::discord_rsvp_reactions_enabled.eq(defaults.discord_rsvp_reactions_enabled),
-          settings::discord_auto_delete_start_reminder.eq(defaults.discord_auto_delete_start_reminder),
-          settings::discord_auto_delete_end_reminder.eq(defaults.discord_auto_delete_end_reminder),
-          settings::quick_pin_enabled.eq(defaults.quick_pin_enabled),
-        ))
+        .values(&defaults)
         .on_conflict(settings::id)
         .do_update()
         .set(settings::id.eq(defaults.id))
@@ -117,65 +92,11 @@ impl SettingsRepository for PgSettingsRepository {
     let mut conn = self.pool.get().await?;
     Ok(
       diesel::insert_into(settings::table)
-        .values((
-          settings::id.eq(true),
-          settings::check_in_window_secs.eq(record.check_in_window_secs),
-          settings::auto_checkout_after_secs.eq(record.auto_checkout_after_secs),
-          settings::discord_bot_token.eq(&record.discord_bot_token),
-          settings::discord_guild_id.eq(&record.discord_guild_id),
-          settings::discord_announcement_channel_id.eq(&record.discord_announcement_channel_id),
-          settings::discord_notification_channel_id.eq(&record.discord_notification_channel_id),
-          settings::discord_self_link_enabled.eq(record.discord_self_link_enabled),
-          settings::discord_name_sync_enabled.eq(record.discord_name_sync_enabled),
-          settings::discord_start_reminder_mins.eq(record.discord_start_reminder_mins),
-          settings::discord_end_reminder_mins.eq(record.discord_end_reminder_mins),
-          settings::discord_start_reminder_message.eq(&record.discord_start_reminder_message),
-          settings::discord_end_reminder_message.eq(&record.discord_end_reminder_message),
-          settings::discord_overtime_dm_enabled.eq(record.discord_overtime_dm_enabled),
-          settings::discord_overtime_dm_mins.eq(record.discord_overtime_dm_mins),
-          settings::discord_overtime_dm_message.eq(&record.discord_overtime_dm_message),
-          settings::discord_auto_checkout_dm_enabled.eq(record.discord_auto_checkout_dm_enabled),
-          settings::discord_auto_checkout_dm_message.eq(&record.discord_auto_checkout_dm_message),
-          settings::discord_checkout_enabled.eq(record.discord_checkout_enabled),
-          settings::discord_enabled.eq(record.discord_enabled),
-          settings::timezone.eq(&record.timezone),
-          settings::leaderboard_show_overtime.eq(record.leaderboard_show_overtime),
-          settings::leaderboard_member_types.eq(&record.leaderboard_member_types),
-          settings::discord_rsvp_reactions_enabled.eq(record.discord_rsvp_reactions_enabled),
-          settings::discord_auto_delete_start_reminder.eq(record.discord_auto_delete_start_reminder),
-          settings::discord_auto_delete_end_reminder.eq(record.discord_auto_delete_end_reminder),
-          settings::quick_pin_enabled.eq(record.quick_pin_enabled),
-        ))
+        .values(record)
         .on_conflict(settings::id)
+        // `AsChangeset` skips the primary key, so this updates every other column from `record`.
         .do_update()
-        .set((
-          settings::check_in_window_secs.eq(record.check_in_window_secs),
-          settings::auto_checkout_after_secs.eq(record.auto_checkout_after_secs),
-          settings::discord_bot_token.eq(&record.discord_bot_token),
-          settings::discord_guild_id.eq(&record.discord_guild_id),
-          settings::discord_announcement_channel_id.eq(&record.discord_announcement_channel_id),
-          settings::discord_notification_channel_id.eq(&record.discord_notification_channel_id),
-          settings::discord_self_link_enabled.eq(record.discord_self_link_enabled),
-          settings::discord_name_sync_enabled.eq(record.discord_name_sync_enabled),
-          settings::discord_start_reminder_mins.eq(record.discord_start_reminder_mins),
-          settings::discord_end_reminder_mins.eq(record.discord_end_reminder_mins),
-          settings::discord_start_reminder_message.eq(&record.discord_start_reminder_message),
-          settings::discord_end_reminder_message.eq(&record.discord_end_reminder_message),
-          settings::discord_overtime_dm_enabled.eq(record.discord_overtime_dm_enabled),
-          settings::discord_overtime_dm_mins.eq(record.discord_overtime_dm_mins),
-          settings::discord_overtime_dm_message.eq(&record.discord_overtime_dm_message),
-          settings::discord_auto_checkout_dm_enabled.eq(record.discord_auto_checkout_dm_enabled),
-          settings::discord_auto_checkout_dm_message.eq(&record.discord_auto_checkout_dm_message),
-          settings::discord_checkout_enabled.eq(record.discord_checkout_enabled),
-          settings::discord_enabled.eq(record.discord_enabled),
-          settings::timezone.eq(&record.timezone),
-          settings::leaderboard_show_overtime.eq(record.leaderboard_show_overtime),
-          settings::leaderboard_member_types.eq(&record.leaderboard_member_types),
-          settings::discord_rsvp_reactions_enabled.eq(record.discord_rsvp_reactions_enabled),
-          settings::discord_auto_delete_start_reminder.eq(record.discord_auto_delete_start_reminder),
-          settings::discord_auto_delete_end_reminder.eq(record.discord_auto_delete_end_reminder),
-          settings::quick_pin_enabled.eq(record.quick_pin_enabled),
-        ))
+        .set(record)
         .returning(Settings::as_select())
         .get_result(&mut conn)
         .await?,

@@ -1,6 +1,7 @@
 use chrono::Utc;
 use serenity::all::{Context, CreateEmbed, CreateMessage, Message};
 
+use crate::domains::settings::DEFAULT_MAINTENANCE_MESSAGE;
 use crate::domains::team_member::TeamMember;
 use crate::time::{format_datetime, parse_tz};
 
@@ -35,6 +36,18 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
   let cmd = parts[0].to_lowercase();
   let args = parts.get(1).unwrap_or(&"").trim();
 
+  // Maintenance mode short-circuits every command before it can touch a domain.
+  //
+  // Only *known* commands are answered: an unrecognised `!something` stays silent exactly as it
+  // does normally, so turning maintenance on does not start replying to unrelated chatter that
+  // happens to begin with the prefix.
+  if is_known_command(&cmd)
+    && let Some(reply) = maintenance_notice(deps).await
+  {
+    send(ctx, msg, reply).await;
+    return;
+  }
+
   let response: Option<Reply> = match cmd.as_str() {
     "ping" => Some(embeds::success("Pong!", "The bot is alive.").into()),
     "help" => Some(Reply::Content(embeds::help_text())),
@@ -48,13 +61,45 @@ pub async fn handle_command(ctx: &Context, msg: &Message, deps: &DiscordDeps) {
   };
 
   if let Some(reply) = response {
-    let message = match reply {
-      Reply::Embed(embed) => CreateMessage::new().embed(*embed),
-      Reply::Content(text) => CreateMessage::new().content(text),
-    };
-    if let Err(e) = msg.channel_id.send_message(&ctx.http, message).await {
-      log::error!("Failed to send Discord message: {e}");
-    }
+    send(ctx, msg, reply).await;
+  }
+}
+
+/// Commands the bot recognises. Kept next to the dispatch `match` — a command added there and
+/// forgotten here still works, it just answers normally during maintenance.
+const COMMANDS: &[&str] = &["ping", "help", "leaderboard", "sessions", "checkedin", "locations", "link", "checkout"];
+
+fn is_known_command(cmd: &str) -> bool {
+  COMMANDS.contains(&cmd)
+}
+
+/// The maintenance reply, or `None` when maintenance mode is off.
+///
+/// A settings lookup failure is treated as "not in maintenance": the bot staying useful when the
+/// database is briefly unreachable is better than it refusing every command because it could not
+/// read a flag.
+async fn maintenance_notice(deps: &DiscordDeps) -> Option<Reply> {
+  let settings = deps.settings.get().await.ok()?;
+  if !settings.maintenance_mode {
+    return None;
+  }
+
+  let message = if settings.maintenance_message.trim().is_empty() {
+    DEFAULT_MAINTENANCE_MESSAGE
+  } else {
+    settings.maintenance_message.trim()
+  };
+
+  Some(embeds::warning("Maintenance Mode", message).into())
+}
+
+async fn send(ctx: &Context, msg: &Message, reply: Reply) {
+  let message = match reply {
+    Reply::Embed(embed) => CreateMessage::new().embed(*embed),
+    Reply::Content(text) => CreateMessage::new().content(text),
+  };
+  if let Err(e) = msg.channel_id.send_message(&ctx.http, message).await {
+    log::error!("Failed to send Discord message: {e}");
   }
 }
 
@@ -365,5 +410,36 @@ async fn checkout(msg: &Message, deps: &DiscordDeps) -> CreateEmbed {
       "Checked out",
       &format!("**{name}** was checked out at {}.", format_datetime(checkout_time.timestamp(), tz)),
     )
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn every_documented_command_is_gated_by_maintenance_mode() {
+    // `!help` lists what the bot answers; anything it advertises must also be recognised by the
+    // maintenance gate, or that command would keep running mid-deploy while the rest are blocked.
+    let help = embeds::help_text();
+    for command in COMMANDS {
+      // Leading backtick only: some entries carry an argument (`!link Name`).
+      assert!(help.contains(&format!("`!{command}")), "help should document !{command}");
+    }
+  }
+
+  #[test]
+  fn known_commands_are_matched_case_insensitively() {
+    // `handle_command` lowercases before dispatching, so the gate sees lowercase too.
+    assert!(is_known_command("leaderboard"));
+    assert!(is_known_command("checkedin"));
+  }
+
+  #[test]
+  fn unknown_commands_are_not_gated() {
+    // An unrecognised `!something` must stay silent during maintenance rather than start
+    // drawing a reply it would never normally get.
+    assert!(!is_known_command("banana"));
+    assert!(!is_known_command(""));
   }
 }

@@ -18,9 +18,18 @@ pub const DEFAULT_END_REMINDER_MESSAGE: &str =
   "@here Session @ **{location}** is ending in ~{mins} minutes \u{2014} don't forget to sign out!";
 pub const DEFAULT_OVERTIME_DM_MINS: i64 = 10;
 pub const DEFAULT_OVERTIME_DM_MESSAGE: &str = "Hey {username}, you're now in overtime for the session @ **{location}**. The session ended at **{end_time}**. Don't forget to check out!";
+/// Shown when maintenance mode is on but no reason was given. Deliberately says what the user
+/// should do rather than only what is happening.
+pub const DEFAULT_MAINTENANCE_MESSAGE: &str =
+  "TimeKeeper is under maintenance. Some features may be unavailable \u{2014} please try again shortly.";
+
 pub const DEFAULT_AUTO_CHECKOUT_DM_MESSAGE: &str = "Hey {username}, you've been auto-checked-out from the session @ **{location}** (ended at **{end_time}**) because you were still signed in after it finished.";
 
-#[derive(Debug, Clone, Queryable, Selectable, SimpleObject)]
+/// `Insertable` + `AsChangeset` are load-bearing: the repository writes this whole struct rather
+/// than a hand-written column list. Three such lists (defaults insert, upsert values, upsert
+/// `do_update`) used to be maintained by hand, and a column missing from them still compiled —
+/// it just silently never persisted. Deriving them means a new field here cannot be forgotten.
+#[derive(Debug, Clone, Queryable, Selectable, Insertable, AsChangeset, SimpleObject)]
 #[diesel(table_name = settings)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 #[allow(clippy::struct_excessive_bools)]
@@ -54,6 +63,11 @@ pub struct Settings {
   pub quick_pin_enabled: bool,
   /// Grace period after a session's scheduled end before lingering members are checked out.
   pub auto_checkout_after_secs: i64,
+  /// Puts the system into maintenance mode: the client shows a banner and the Discord bot
+  /// refuses every command.
+  pub maintenance_mode: bool,
+  /// Operator-supplied reason. Empty means "use [`DEFAULT_MAINTENANCE_MESSAGE`]".
+  pub maintenance_message: String,
 }
 
 #[derive(Debug, Clone, Queryable, Selectable)]

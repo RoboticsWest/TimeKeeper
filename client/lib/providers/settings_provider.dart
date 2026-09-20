@@ -13,7 +13,7 @@ const _settingsFields =
     'discordOvertimeDmMins discordOvertimeDmMessage discordAutoCheckoutDmEnabled discordAutoCheckoutDmMessage '
     'discordCheckoutEnabled discordEnabled timezone leaderboardShowOvertime '
     'leaderboardMemberTypes discordRsvpReactionsEnabled discordAutoDeleteStartReminder discordAutoDeleteEndReminder '
-    'quickPinEnabled';
+    'quickPinEnabled maintenanceMode maintenanceMessage';
 
 const _settingsQuery =
     '''
@@ -111,6 +111,22 @@ Future<List<DiscordRole>> discordRolesQuery(Ref ref) async {
 class SettingsService extends _$SettingsService {
   @override
   void build() {}
+
+  /// Turns maintenance mode on or off, and optionally sets the reason shown to users.
+  ///
+  /// Separate from [updateGeneral] so flipping maintenance mid-deploy cannot clobber the rest of
+  /// the general settings.
+  Future<ApiCallResult> setMaintenanceMode({bool? maintenanceMode, String? maintenanceMessage}) {
+    // Raw string: the `$name` tokens are GraphQL variables, not Dart interpolation.
+    return _mutate(
+      r'''
+      mutation SetMaintenanceMode($maintenanceMode: Boolean, $maintenanceMessage: String) {
+        setMaintenanceMode(maintenanceMode: $maintenanceMode, maintenanceMessage: $maintenanceMessage)
+      }
+    ''',
+      {'maintenanceMode': maintenanceMode, 'maintenanceMessage': maintenanceMessage},
+    );
+  }
 
   Future<ApiCallResult> updateGeneral({
     int? checkInWindowSecs,

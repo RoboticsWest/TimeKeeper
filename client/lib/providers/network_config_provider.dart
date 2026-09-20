@@ -110,11 +110,21 @@ class Tls extends _$Tls {
 ///
 /// Native builds (desktop, Android) genuinely do have to be pointed at a
 /// server, so there the configured host, port and TLS toggle apply.
+///
+/// The one exception is a *debug* web build. `flutter run -d chrome` serves the
+/// app from the Flutter tool's own dev server on a random port, and that server
+/// knows nothing about `/graphql`: the origin is the dev server, not the API.
+/// Same-origin requests there hit a 404 whose empty body surfaces as
+/// `OperationException(SyntaxError: Unexpected end of JSON input)` with no
+/// `graphQLErrors`, plus a `WebSocketException: Failed to connect WebSocket`
+/// from the subscription link. So debug web falls back to the configured host
+/// and port, exactly like a native build. Release web is unchanged and still
+/// always same-origin.
 @Riverpod(keepAlive: true)
 class ServerBaseUri extends _$ServerBaseUri {
   @override
   Uri build() {
-    if (kIsWeb) {
+    if (kIsWeb && !kDebugMode) {
       return Uri.parse(Uri.base.origin);
     }
 

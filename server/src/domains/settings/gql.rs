@@ -11,7 +11,7 @@ use crate::events::EVENT_BUS;
 
 use super::logic::{
   DiscordBehaviorUpdate, DiscordCoreUpdate, DiscordReminderUpdate, DiscordRole, GeneralUpdate,
-  ImportDiscordMembersResult, LeaderboardUpdate, SettingsLogic,
+  ImportDiscordMembersResult, LeaderboardUpdate, MaintenanceUpdate, SettingsLogic,
 };
 use super::model::Settings;
 
@@ -69,6 +69,22 @@ impl SettingsMutation {
     logic(ctx)?
       .update_general(GeneralUpdate { check_in_window_secs, auto_checkout_after_secs, timezone, quick_pin_enabled })
       .await?;
+    Ok(true)
+  }
+
+  /// Turns maintenance mode on or off, and optionally sets the reason shown to users.
+  ///
+  /// Deliberately its own mutation rather than a field on `updateGeneralSettings`: this gets
+  /// flipped mid-deploy, often from a script, and it should not require sending the rest of the
+  /// general settings along with it.
+  async fn set_maintenance_mode(
+    &self,
+    ctx: &Context<'_>,
+    maintenance_mode: Option<bool>,
+    maintenance_message: Option<String>,
+  ) -> Result<bool> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
+    logic(ctx)?.update_maintenance(MaintenanceUpdate { maintenance_mode, maintenance_message }).await?;
     Ok(true)
   }
 

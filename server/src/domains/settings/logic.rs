@@ -58,6 +58,14 @@ pub struct DiscordBehaviorUpdate {
   pub discord_rsvp_reactions_enabled: Option<bool>,
 }
 
+/// Narrowing update for maintenance mode. Separate from `GeneralUpdate` so an operator can flip
+/// maintenance on without resubmitting (and possibly clobbering) the rest of the general tab.
+#[derive(Debug, Clone, Default)]
+pub struct MaintenanceUpdate {
+  pub maintenance_mode: Option<bool>,
+  pub maintenance_message: Option<String>,
+}
+
 #[derive(SimpleObject)]
 pub struct DiscordRole {
   pub id: String,
@@ -75,6 +83,7 @@ pub struct ImportDiscordMembersResult {
 pub trait SettingsLogic: Send + Sync {
   async fn get(&self) -> anyhow::Result<Settings>;
   async fn update_general(&self, update: GeneralUpdate) -> anyhow::Result<()>;
+  async fn update_maintenance(&self, update: MaintenanceUpdate) -> anyhow::Result<()>;
   async fn update_leaderboard(&self, update: LeaderboardUpdate) -> anyhow::Result<()>;
   async fn update_discord_core(&self, update: DiscordCoreUpdate) -> anyhow::Result<()>;
   async fn update_discord_reminder(&self, update: DiscordReminderUpdate) -> anyhow::Result<()>;
@@ -163,6 +172,19 @@ impl<R: SettingsRepository, L: LogoRepository> SettingsLogic for DefaultSettings
     }
     if let Some(v) = update.quick_pin_enabled {
       settings.quick_pin_enabled = v;
+    }
+    self.save(&settings).await
+  }
+
+  async fn update_maintenance(&self, update: MaintenanceUpdate) -> anyhow::Result<()> {
+    let mut settings = self.repo.get().await?;
+    if let Some(v) = update.maintenance_mode {
+      settings.maintenance_mode = v;
+    }
+    if let Some(v) = update.maintenance_message {
+      // Trimmed so a message of only whitespace counts as "no reason given" and falls back to
+      // the default wording rather than rendering a blank banner.
+      settings.maintenance_message = v.trim().to_string();
     }
     self.save(&settings).await
   }

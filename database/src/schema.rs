@@ -133,6 +133,8 @@ diesel::table! {
         discord_auto_delete_end_reminder -> Bool,
         quick_pin_enabled -> Bool,
         auto_checkout_after_secs -> Int8,
+        maintenance_mode -> Bool,
+        maintenance_message -> Text,
     }
 }
 

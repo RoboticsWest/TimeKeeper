@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:time_keeper/models/notification.dart';
+import 'package:time_keeper/models/settings.dart';
 import 'package:time_keeper/providers/location_page_provider.dart';
 import 'package:time_keeper/providers/notification_page_provider.dart';
 import 'package:time_keeper/providers/user_page_provider.dart';
@@ -86,6 +87,63 @@ void main() {
 
     test('an unknown type degrades rather than throwing', () {
       expect(NotificationType.label('nope'), 'Unknown');
+    });
+  });
+
+  group('Settings maintenance mode', () {
+    Settings parse(Map<String, dynamic> overrides) => Settings.fromJson({
+      'checkInWindowSecs': 0,
+      'autoCheckoutAfterSecs': 0,
+      'discordBotToken': '',
+      'discordGuildId': '',
+      'discordAnnouncementChannelId': '',
+      'discordNotificationChannelId': '',
+      'discordSelfLinkEnabled': false,
+      'discordNameSyncEnabled': false,
+      'discordStartReminderMins': 0,
+      'discordEndReminderMins': 0,
+      'discordStartReminderMessage': '',
+      'discordEndReminderMessage': '',
+      'discordOvertimeDmEnabled': false,
+      'discordOvertimeDmMins': 0,
+      'discordOvertimeDmMessage': '',
+      'discordAutoCheckoutDmEnabled': false,
+      'discordAutoCheckoutDmMessage': '',
+      'discordCheckoutEnabled': false,
+      'discordEnabled': false,
+      'timezone': '',
+      'leaderboardShowOvertime': false,
+      'leaderboardMemberTypes': <String>[],
+      'discordRsvpReactionsEnabled': false,
+      'discordAutoDeleteStartReminder': false,
+      'discordAutoDeleteEndReminder': false,
+      'quickPinEnabled': false,
+      ...overrides,
+    });
+
+    test('defaults to off when the server predates the migration', () {
+      final s = parse({});
+      expect(s.maintenanceMode, isFalse);
+      expect(s.maintenanceMessage, '');
+    });
+
+    test('a blank message falls back to the default wording', () {
+      expect(parse({'maintenanceMode': true}).maintenanceBannerText, Settings.defaultMaintenanceMessage);
+      expect(
+        parse({'maintenanceMode': true, 'maintenanceMessage': '   '}).maintenanceBannerText,
+        Settings.defaultMaintenanceMessage,
+      );
+    });
+
+    test('an operator message is used verbatim, trimmed', () {
+      expect(
+        parse({'maintenanceMode': true, 'maintenanceMessage': '  Upgrading the database  '}).maintenanceBannerText,
+        'Upgrading the database',
+      );
+    });
+
+    test('the flag round-trips', () {
+      expect(parse({'maintenanceMode': true}).maintenanceMode, isTrue);
     });
   });
 }

@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/base/app_bar/app_bar.dart';
 import 'package:time_keeper/base/base_rail/base_rail.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
+import 'package:time_keeper/widgets/maintenance_banner.dart';
 
 class BaseScaffold extends HookConsumerWidget {
   final GoRouterState state;
@@ -52,6 +53,9 @@ class BaseScaffold extends HookConsumerWidget {
               ),
             ),
           if (showRail) BaseRail(isExtended: isExtended.value, onToggle: () => isExtended.value = !isExtended.value),
+          // Last in the stack so it floats over the page, and outside the rail inset so it is
+          // not pushed sideways on the views that show a rail.
+          const Align(alignment: Alignment.bottomCenter, child: MaintenanceBanner()),
         ],
       ),
     );
