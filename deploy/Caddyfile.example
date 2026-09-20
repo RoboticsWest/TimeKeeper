@@ -1,0 +1,48 @@
+# Reference Caddy site block for the TimeKeeper web client (versioned-deploy scheme).
+#
+# This is the timed block to use inside your single Caddyfile, matching the deploy
+# pipeline in deploy.yml - NOT a standalone `:443` site. Keep `import errors` like every
+# other site on this host (the shared snippet that renders the error pages you saw).
+#
+# Deploy layout: `flutter build web --release --wasm --base-href=/v/<commit>/ ...`, then
+# the build is uploaded to /srv/timekeeper/web/v/<commit>/ and the root index.html is
+# swapped in as the current entry. See deploy/README.md.
+#
+# Cache policy:
+#   - /v/<commit>/* URLs are unique per release -> safe to cache forever (immutable,
+#     max-age=1y), zero revalidation round-trips. Also: no SPA fallback under /v - a
+#     missing release file must 404 (-> your errors snippet -> heal fires), never serve
+#     the wrong index.html into the immutable cache.
+#   - Root index.html stays "no-cache": one small file, always fresh (the self-heal
+#     script lives in it) and it points each load at the current release.
+#   - With the base-href scheme, assets/icons/favicon/manifest all resolve under /v/<sha>/,
+#     so the old @stable /assets/* matcher is no longer needed - root serves only the entry.
+#
+# `handle` blocks are mutually exclusive (first match wins), so /v/* must come first.
+
+timekeeper.roboticswest.org, tk.roboticswest.org {
+    import errors
+
+    # Versioned release files: unique per commit, cache forever.
+    handle /v/* {
+        root * /srv/timekeeper/web
+        file_server
+        header Cache-Control "public, max-age=31536000, immutable"
+    }
+
+    handle /graphql* {
+        reverse_proxy timekeeper:4000
+    }
+
+    handle /health {
+        reverse_proxy timekeeper:4000
+    }
+
+    # Root entry + SPA fallback (outside /v only).
+    handle {
+        root * /srv/timekeeper/web
+        try_files {path} /index.html
+        file_server
+        header Cache-Control "no-cache"
+    }
+}

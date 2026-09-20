@@ -68,9 +68,13 @@ jobs:
           version=$(grep 'name: tk_version' vars.yml -A1 | grep 'value:' | awk '{print $2}')
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # Versioned base-href: every asset gets a URL unique to this commit under /v/<sha>/.
+      # That makes the whole release safe to cache forever and impossible to mix with a
+      # fresh shell (no stale main.dart.js_*.part.js can be served next to a new one).
       - working-directory: client
         run: >-
           flutter build web --release --wasm --no-web-resources-cdn
+          --base-href=/v/${{ github.sha }}/
           --dart-define=TK_VERSION=${{ steps.vars.outputs.version }}
 
       - uses: actions/upload-artifact@v4
@@ -97,8 +101,9 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      # Emptied first so files removed between builds don't linger and get served.
-      - name: Prepare target directories
+      # Releases live one-per-commit under /v/<sha>/. A leftover of the same commit
+      # from a retried deploy is cleared first; root is never wiped any more.
+      - name: Prepare version directory
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -106,8 +111,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            mkdir -p /srv/timekeeper/web
-            find /srv/timekeeper/web -mindepth 1 -delete
+            set -e
+            mkdir -p /srv/timekeeper/web/v
+            rm -rf "/srv/timekeeper/web/v/${{ github.sha }}"
+            mkdir -p "/srv/timekeeper/web/v/${{ github.sha }}"
 
       # Keeps the server's compose file identical to what's in git.
       - name: Upload compose file
@@ -130,9 +137,34 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           source: "web/*"
-          target: "/srv/timekeeper/web"
+          target: "/srv/timekeeper/web/v/${{ github.sha }}"
           strip_components: 1
           overwrite: true
+
+      # Swaps the root entry atomically (copy-to-temp + mv, so a torn index.html is
+      # never served), then prunes every release dir but the newest two. The previous
+      # release is kept one cycle so a client already running it can finish its lazy
+      # loads instead of 404ing mid-session.
+      - name: Activate version and prune old releases
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cp -p "/srv/timekeeper/web/v/${{ github.sha }}/index.html" /srv/timekeeper/web/index.html.new
+            mv -f /srv/timekeeper/web/index.html.new /srv/timekeeper/web/index.html
+            SAVE_RELEASES=2
+            counter=0
+            for d in $(ls -1dt /srv/timekeeper/web/v/*/ 2>/dev/null); do
+              counter=$((counter + 1))
+              if [ "$counter" -le "$SAVE_RELEASES" ]; then
+                continue
+              fi
+              rm -rf "${d%/}"
+            done
 
       - name: Roll out API container
         uses: appleboy/ssh-action@v1
