@@ -65,7 +65,19 @@
             return Promise.all(names.map(function (n) { return window.caches.delete(n); }));
           });
           Promise.all([unregister, clearCaches]).then(function () {
-            try { window.location.reload(); } catch (e) {}
+            // Force the document itself too: a plain .reload() can be answered
+            // from the HTTP cache / a still-controlling old service worker with
+            // the previous deploy's index.html, which has no heal script in it
+            // and re-registers the old app. Navigating to a fresh URL makes the
+            // request go to the network, so the new shell loads and a new
+            // service worker registers in its place.
+            try {
+              var url = window.location.href.split('#')[0];
+              var sep = url.indexOf('?') >= 0 ? '&' : '?';
+              window.location.replace(url + sep + 'tkHeal=' + Date.now());
+            } catch (e) {
+              try { window.location.reload(); } catch (e2) {}
+            }
           });
         }
 
