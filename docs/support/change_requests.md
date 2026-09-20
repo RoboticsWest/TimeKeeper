@@ -14,6 +14,6 @@ Before you submit a change request, please check the following:
 ## Submitting a change request
 If you have checked the above and would still like to submit a change request, please raise a change request.
 
-**Raise a Change Request** — [github.com/CurtinFRC/TimeKeeper/issues](https://github.com/CurtinFRC/TimeKeeper/issues)
+**Raise a Change Request** — [github.com/RoboticsWest/TimeKeeper/issues](https://github.com/RoboticsWest/TimeKeeper/issues)
 
-[discussions]: https://github.com/CurtinFRC/TimeKeeper/discussions
+[discussions]: https://github.com/RoboticsWest/TimeKeeper/discussions
