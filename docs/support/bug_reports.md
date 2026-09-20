@@ -14,6 +14,6 @@ Before you submit a bug report, please check the following:
 ## Submitting a bug report
 If you have checked the above and are confident that you have found a bug, please raise an issue.
 
-**Raise an Issue** — [github.com/CurtinFRC/TimeKeeper/issues](https://github.com/CurtinFRC/TimeKeeper/issues)
+**Raise an Issue** — [github.com/RoboticsWest/TimeKeeper/issues](https://github.com/RoboticsWest/TimeKeeper/issues)
 
-[Q&A]: https://github.com/CurtinFRC/TimeKeeper/discussions
+[Q&A]: https://github.com/RoboticsWest/TimeKeeper/discussions
