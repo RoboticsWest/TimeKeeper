@@ -5,14 +5,24 @@ have no name; identity is *date / time / location*.
 
 ## Sessions page
 
-The **Sessions** view (admin) has a **Calendar / Table** toggle:
+The **Sessions** view (admin) has a **Calendar / Table** toggle. Both modes
+show the **same** server-paged list below, **newest start first** — the toggle
+only decides whether the month grid sits above it, so switching modes never
+reorders the rows.
 
 - **Calendar** — a month grid; day markers are coloured by session status.
-  "Showing: &lt;date&gt;" + *Clear filter*.
-- **Table** — server-paged rows with filters:
-  - **Location** (searchable dropdown),
-  - **All / Scheduled / Finished**,
-  - **Pick a day** date filter, *Clear filters*, and a free-text **TableFilter**.
+  Selecting a day narrows the list to it ("Showing: &lt;date&gt;" + *Clear
+  filter*).
+- **Table** — the same list with a **Pick a day** date filter instead of the
+  grid.
+
+Filters (both modes, all applied server-side over every page):
+
+- **Location** (searchable dropdown),
+- **All / Scheduled / Finished**,
+- a free-text search over the **location name**,
+- the day — from the calendar selection, or **Pick a day** in table mode,
+- *Clear filters*.
 
 Above the table, the KPI row shows **Total · Active · Upcoming · This Month ·
 Unique Members**.

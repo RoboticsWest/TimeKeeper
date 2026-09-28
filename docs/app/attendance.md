@@ -9,8 +9,14 @@ it lands in the same table: **team_member_sessions**.
 A **records-management grid** rather than a "who's in the room" board (that live
 list is the kiosk's checked-in panel).
 
-Columns: `Member`, `Session`, `Check In`, `Check Out`, `Status`
-(**Checked In** / **Completed**).
+Columns: `Member`, `Session`, `Check In`, `Check Out`, `Last Update`,
+`Status` (**Checked In** / **Completed**).
+
+**Order: most recent activity first.** A record's last activity is its
+check-out if it has one, otherwise its check-in — so a visit closed an hour ago
+sits above one opened this morning, and the `Last Update` column is the key the
+list is sorted on. The ordering happens in SQL, so it holds across pages rather
+than only within the page on screen.
 
 Filters:
 
@@ -22,6 +28,12 @@ Filters:
 | Member type | All / Students / Mentors |
 | State | All states / Checked in / Completed |
 | Search | *"Search members..."* |
+
+Every filter, the search included, is applied **server-side across the whole
+table** — not to the rows currently on screen. Searching a name finds it
+whether or not it is on the current page, and the pager then reports how many
+records matched ("*N* matches", "Page 2 of 7"). When nothing matches, the table
+says so and offers **Clear filters** rather than simply going blank.
 
 Row actions:
 
@@ -40,7 +52,17 @@ The same mutation powers everything, and **toggles**: if the member is checked
 in anywhere they are checked out, otherwise checked in.
 
 - **Team table** rows carry per-member **Check In** / **Check Out** buttons.
-- The kiosk's **Kiosk Check In / Out** dialog searches members and toggles rows.
+    - **Check In** asks *where*: a dialog lists every location with the session
+      a check-in there would join ("today, 6:00 PM – 9:00 PM"), and greys out
+      the ones with nothing running. The location belongs to the check-in, not
+      to the machine — an admin's laptop has no kiosk location and does not need
+      one.
+    - **Check Out** only confirms, naming the session it will close. No location
+      is involved: the open record already knows which session it belongs to.
+    - Both are recorded with a source of `admin`, so the statistics do not claim
+      a member tagged in at a reader they never touched.
+- The kiosk's **Kiosk Check In / Out** dialog searches members and toggles rows,
+  using **that device's** configured location (its checkout needs none either).
 - The **Discord** `!checkout` lets a linked member check themselves out.
 
 These write to `team_member_sessions`, which the `kiosk` role and any

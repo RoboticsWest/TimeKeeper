@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use diesel::dsl::sql;
 use diesel::prelude::*;
+use diesel::sql_types::Timestamptz;
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
@@ -244,11 +246,20 @@ impl TeamMemberSessionRepository for PgTeamMemberSessionRepository {
     // rows it is paging through rather than just how many it received.
     let total: i64 = filtered_attendance!(filter).count().get_result(&mut conn).await?;
 
-    // Newest first, with the id as a tiebreaker: two check-ins can share a timestamp to the
+    // Ordered by the row's last activity, newest first: a visit that was closed an hour ago is
+    // more recent news than one opened this morning, and the list is read as a log of what just
+    // happened. `check_out_time` is always at or after `check_in_time`, so COALESCE of the two is
+    // that instant; NULL means "still checked in", for which the check-in is the latest change.
+    //
+    // The remaining keys make the order total: two check-ins can share a timestamp to the
     // microsecond after a CSV import, and without a total order the same row can appear on two
     // pages or on neither.
     let items = filtered_attendance!(filter)
-      .order((team_member_sessions::check_in_time.desc(), team_member_sessions::id.desc()))
+      .order((
+        sql::<Timestamptz>("COALESCE(team_member_sessions.check_out_time, team_member_sessions.check_in_time)").desc(),
+        team_member_sessions::check_in_time.desc(),
+        team_member_sessions::id.desc(),
+      ))
       .limit(limit)
       .offset(offset)
       .select(TeamMemberSession::as_select())

@@ -221,7 +221,7 @@ List<MemberHoursRow> memberHoursRows(Ref ref, StatsQuery query) {
     rows.add(
       MemberHoursRow(
         memberId: entry.key,
-        name: member?.displayName ?? entry.key,
+        name: member?.displayLabel ?? entry.key,
         memberType: member?.memberType ?? TeamMemberType.student,
         regular: regular,
         overtime: overtime,
@@ -461,7 +461,7 @@ List<DayMemberRow> dayDetail(Ref ref, StatsQuery query, DateTime day) {
     for (final id in regular.keys)
       DayMemberRow(
         memberId: id,
-        name: scope.members[id]?.displayName ?? id,
+        name: scope.members[id]?.displayLabel ?? id,
         memberType: scope.members[id]?.memberType ?? TeamMemberType.student,
         firstCheckIn: firstIn[id]!,
         lastCheckOut: lastOut[id],

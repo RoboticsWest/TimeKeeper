@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/location.dart';
 import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/models/session_rsvp.dart';
+import 'package:time_keeper/helpers/session_helper.dart';
 import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/models/team_member_session.dart';
@@ -26,8 +27,10 @@ void showSessionDetailDialog(
   final locationName = locations[session.locationId]?.location ?? session.locationId;
   final status = getSessionStatus(session);
 
+  // Newest activity first, the same order the Attendance list uses: a checkout is the latest thing
+  // to have happened to a visit, so it sorts by that when there is one.
   final memberSessions = teamMemberSessions.values.where((ms) => ms.sessionId == sessionId).toList()
-    ..sort((a, b) => a.checkInTime.compareTo(b.checkInTime));
+    ..sort((a, b) => lastActivityOf(b).compareTo(lastActivityOf(a)));
 
   final checkedOutCount = memberSessions.where((ms) => ms.checkOutTime != null).length;
 
@@ -71,7 +74,7 @@ void showSessionDetailDialog(
                   mainAxisSize: MainAxisSize.min,
                   children: memberSessions.map((ms) {
                     final member = teamMembers[ms.teamMemberId];
-                    final name = member?.displayName ?? ms.teamMemberId;
+                    final name = member?.displayLabel ?? ms.teamMemberId;
 
                     final checkIn = formatTime(ms.checkInTime);
                     final checkOut = ms.checkOutTime != null ? formatTime(ms.checkOutTime!) : '\u2014';

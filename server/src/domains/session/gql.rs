@@ -15,7 +15,7 @@ use crate::gql_common::{Change, Page, page_bounds};
 
 use crate::domains::notification::{LateReminderPolicy, plan_session_reminders};
 use crate::domains::settings::SettingsLogic;
-use crate::domains::statistics::{SOURCE_KIOSK, SOURCE_RFID};
+use crate::domains::statistics::{SOURCE_ADMIN, SOURCE_KIOSK, SOURCE_RFID};
 use crate::domains::team_member::TeamMemberLogic;
 
 use super::logic::SessionLogic;
@@ -84,6 +84,8 @@ pub struct SessionFilterInput {
   pub location_ids: Option<Vec<Uuid>>,
   /// True for finished sessions only, false for unfinished, omitted for both.
   pub finished: Option<bool>,
+  /// Case-insensitive substring of the session's location name.
+  pub search: Option<String>,
 }
 
 impl From<SessionFilterInput> for SessionFilter {
@@ -93,6 +95,7 @@ impl From<SessionFilterInput> for SessionFilter {
       to: input.to,
       location_ids: input.location_ids.unwrap_or_default(),
       finished: input.finished,
+      search: input.search,
     }
   }
 }
@@ -233,9 +236,26 @@ impl SessionMutation {
   }
 
   /// Kiosk check-in/out by RFID scan - creates or closes a `team_member_sessions` row.
-  async fn check_in_out(&self, ctx: &Context<'_>, team_member_id: Uuid, location_id: Uuid) -> Result<bool> {
+  ///
+  /// `locationId` may be omitted when the member is being checked *out*: the visit being closed
+  /// already knows which session it belongs to. A check-in without one is rejected.
+  async fn check_in_out(&self, ctx: &Context<'_>, team_member_id: Uuid, location_id: Option<Uuid>) -> Result<bool> {
     require_permission(ctx, "team_member_sessions", PermissionLevel::Write)?;
     Ok(logic(ctx)?.check_in_out(team_member_id, location_id, SOURCE_RFID).await?)
+  }
+
+  /// Check-in/out performed by an administrator from the roster rather than at a kiosk.
+  ///
+  /// Identical to `checkInOut` apart from attribution: recording these as `rfid` would make the
+  /// statistics claim a member tagged in at a reader they never touched.
+  async fn admin_check_in_out(
+    &self,
+    ctx: &Context<'_>,
+    team_member_id: Uuid,
+    location_id: Option<Uuid>,
+  ) -> Result<bool> {
+    require_permission(ctx, "team_member_sessions", PermissionLevel::Write)?;
+    Ok(logic(ctx)?.check_in_out(team_member_id, location_id, SOURCE_ADMIN).await?)
   }
 
   /// Kiosk check-in/out by quick PIN. Returns true for checked in, false for checked out.
@@ -263,7 +283,7 @@ impl SessionMutation {
       return Err(Error::new("PIN not recognised."));
     };
 
-    let checked_in = logic(ctx)?.check_in_out(member.id, location_id, SOURCE_KIOSK).await?;
+    let checked_in = logic(ctx)?.check_in_out(member.id, Some(location_id), SOURCE_KIOSK).await?;
     Ok(PinCheckInOut { checked_in, team_member_id: member.id })
   }
 }

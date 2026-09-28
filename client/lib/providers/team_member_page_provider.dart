@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/models/paged_result.dart';
 import 'package:time_keeper/models/team_member.dart';
@@ -39,6 +40,18 @@ class TeamMemberFilterState {
   const TeamMemberFilterState({this.search = '', this.memberTypes = const [], this.discord = DiscordLinkFilter.all});
 
   bool get isEmpty => search.trim().isEmpty && memberTypes.isEmpty && discord == DiscordLinkFilter.all;
+
+  // Value equality, so pushing an unchanged filter from a rebuild is a no-op rather than a
+  // refetch that yanks the reader back to page one.
+  @override
+  bool operator ==(Object other) =>
+      other is TeamMemberFilterState &&
+      other.search == search &&
+      other.discord == discord &&
+      listEquals(other.memberTypes, memberTypes);
+
+  @override
+  int get hashCode => Object.hash(search, discord, Object.hashAll(memberTypes));
 
   Map<String, dynamic>? toServerFilter() {
     final filter = <String, dynamic>{
@@ -83,7 +96,7 @@ class TeamMemberPage extends _$TeamMemberPage with PagedAsyncNotifier<TeamMember
   }
 
   void setFilter(TeamMemberFilterState filter) {
-    if (identical(filter, _filter)) return;
+    if (filter == _filter) return;
     _filter = filter;
     resetToFirstPage();
   }

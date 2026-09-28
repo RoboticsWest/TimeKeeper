@@ -8,6 +8,11 @@ client only reads and (re)cancels.
 
 Columns: `Type`, `Session`, `Member`, `Status`, `When`.
 
+Ordered **newest first by the instant in `When`** — the send time once a message
+has gone out, otherwise the time it is due. (Sorting purely on the due time made
+the column look unsorted, because a message sent late shows its send time.)
+Condition-driven kinds with no schedule at all sort last.
+
 | Type | Trigger |
 |------|---------|
 | **Session Start Reminder** | `start - mins` before a session (announcement channel) |

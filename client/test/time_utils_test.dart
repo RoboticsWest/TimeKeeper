@@ -112,4 +112,28 @@ void main() {
       expect(formatRelativeDay(DateTime(2026, 9, 29, 9), now: now), 'Tue, Sep 29');
     });
   });
+
+  /// The Attendance list is ordered by a row's last activity, and this is the column that says so.
+  group('formatRelativeTime', () {
+    final now = DateTime(2026, 9, 28, 19, 30);
+
+    test('the last minute reads as just now', () {
+      expect(formatRelativeTime(now.subtract(const Duration(seconds: 20)), now: now), 'just now');
+    });
+
+    test('minutes and hours are counted back', () {
+      expect(formatRelativeTime(now.subtract(const Duration(minutes: 12)), now: now), '12m ago');
+      expect(formatRelativeTime(now.subtract(const Duration(hours: 5)), now: now), '5h ago');
+    });
+
+    test('past a day it names the day and the time', () {
+      final result = formatRelativeTime(now.subtract(const Duration(days: 1)), now: now);
+      expect(result, startsWith('yesterday, '));
+    });
+
+    test('a future instant falls back to the full timestamp rather than a negative count', () {
+      final ahead = now.add(const Duration(hours: 2));
+      expect(formatRelativeTime(ahead, now: now), formatDateTime(ahead));
+    });
+  });
 }

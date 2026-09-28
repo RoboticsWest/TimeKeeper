@@ -2,7 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:time_keeper/models/notification.dart';
 import 'package:time_keeper/models/settings.dart';
 import 'package:time_keeper/providers/location_page_provider.dart';
+import 'package:time_keeper/providers/attendance_page_provider.dart';
 import 'package:time_keeper/providers/notification_page_provider.dart';
+import 'package:time_keeper/providers/session_page_provider.dart';
+import 'package:time_keeper/providers/team_member_page_provider.dart';
 import 'package:time_keeper/providers/user_page_provider.dart';
 
 void main() {
@@ -144,6 +147,73 @@ void main() {
 
     test('the flag round-trips', () {
       expect(parse({'maintenanceMode': true}).maintenanceMode, isTrue);
+    });
+  });
+
+  /// Filter states are compared by value before a refetch is triggered.
+  ///
+  /// The views rebuild a filter object on every frame and push it at the provider; when the
+  /// comparison was `identical`, every rebuild counted as a filter change and reset the reader to
+  /// page one mid-read.
+  group('filter equality', () {
+    test('two filters built from the same values are equal', () {
+      expect(const LocationFilterState(search: 'shop'), const LocationFilterState(search: 'shop'));
+      expect(const UserFilterState(search: 'ada'), const UserFilterState(search: 'ada'));
+      expect(
+        const TeamMemberFilterState(search: 'ada', memberTypes: ['student'], discord: DiscordLinkFilter.linked),
+        const TeamMemberFilterState(search: 'ada', memberTypes: ['student'], discord: DiscordLinkFilter.linked),
+      );
+      expect(
+        const AttendanceFilterState(search: 'ada', memberTypes: ['mentor'], status: AttendanceStatusFilter.checkedIn),
+        const AttendanceFilterState(search: 'ada', memberTypes: ['mentor'], status: AttendanceStatusFilter.checkedIn),
+      );
+      expect(
+        const SessionFilterState(search: 'shop', finished: true),
+        const SessionFilterState(search: 'shop', finished: true),
+      );
+      expect(
+        const NotificationFilterState(search: 'ada', statuses: ['pending']),
+        const NotificationFilterState(search: 'ada', statuses: ['pending']),
+      );
+    });
+
+    test('equal filters hash the same, so they are interchangeable as keys', () {
+      expect(
+        const TeamMemberFilterState(memberTypes: ['student']).hashCode,
+        const TeamMemberFilterState(memberTypes: ['student']).hashCode,
+      );
+    });
+
+    test('a changed field is not equal', () {
+      expect(const LocationFilterState(search: 'shop'), isNot(const LocationFilterState(search: 'bay')));
+      expect(
+        const TeamMemberFilterState(memberTypes: ['student']),
+        isNot(const TeamMemberFilterState(memberTypes: ['mentor'])),
+      );
+      expect(
+        const TeamMemberFilterState(discord: DiscordLinkFilter.linked),
+        isNot(const TeamMemberFilterState(discord: DiscordLinkFilter.unlinked)),
+      );
+      expect(
+        const AttendanceFilterState(dateRange: AttendanceDateRange.today),
+        isNot(const AttendanceFilterState(dateRange: AttendanceDateRange.last7Days)),
+      );
+      expect(const SessionFilterState(search: 'shop'), isNot(const SessionFilterState(search: 'shop', finished: true)));
+    });
+  });
+
+  group('SessionFilterState search', () {
+    test('an empty search sends no filter at all', () {
+      expect(const SessionFilterState().toServerFilter(), isNull);
+      expect(const SessionFilterState(search: '  ').toServerFilter(), isNull);
+    });
+
+    test('a search is trimmed and sent as the location-name match', () {
+      expect(const SessionFilterState(search: '  shop ').toServerFilter(), {'search': 'shop'});
+    });
+
+    test('isEmpty accounts for the search term', () {
+      expect(const SessionFilterState(search: 'shop').isEmpty, isFalse);
     });
   });
 }

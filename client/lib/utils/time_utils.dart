@@ -184,3 +184,22 @@ String formatSecsAsHoursMinutes(double secs) {
   if (minutes > 0) return '${minutes}m';
   return '0m';
 }
+
+/// How long ago [value] was, in the shape a log column wants: "just now", "12m ago", "3h ago",
+/// "yesterday, 6:04 PM", then the full date once it is older than that.
+///
+/// Used where a list is *ordered* by an instant and the reader mainly needs to see that the top
+/// row is the most recent one; the exact timestamp is still in its own column beside it.
+String formatRelativeTime(DateTime value, {DateTime? now}) {
+  final target = _local(value);
+  final reference = _local(now ?? DateTime.now());
+  final elapsed = reference.difference(target);
+
+  if (elapsed.isNegative) return formatDateTime(target);
+  if (elapsed.inMinutes < 1) return 'just now';
+  if (elapsed.inMinutes < 60) return '${elapsed.inMinutes}m ago';
+  if (elapsed.inHours < 24) return '${elapsed.inHours}h ago';
+
+  final day = formatRelativeDay(target, now: reference);
+  return '$day, ${formatTime(target)}';
+}

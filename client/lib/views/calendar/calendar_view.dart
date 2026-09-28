@@ -19,7 +19,7 @@ class CalendarView extends HookConsumerWidget {
     final showCalendar = useState(true);
     final selectedDate = useState<DateTime?>(null);
 
-    final sorted = sessions.entries.toList()..sort(compareSessionEntries);
+    final sorted = sessions.entries.toList()..sort(compareSessionEntriesNewestFirst);
 
     final filtered = selectedDate.value != null
         ? sorted.where((entry) {

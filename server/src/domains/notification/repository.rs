@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use diesel::dsl::sql;
 use diesel::prelude::*;
+use diesel::sql_types::Timestamptz;
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
@@ -176,11 +178,19 @@ impl NotificationRepository for PgNotificationRepository {
     let total: i64 = filtered_notifications!(filter).count().get_result(&mut conn).await?;
 
     let items = filtered_notifications!(filter)
-      // Newest first. `scheduled_for` is nullable, and Postgres sorts NULLs first under DESC,
-      // which would float the condition-driven kinds (overtime, auto-checkout) above every
-      // scheduled reminder; `nulls_last` keeps them at the end where the UI expects them.
-      // `id` is a v7 UUID, so it breaks ties in creation order rather than arbitrarily.
-      .order((notifications::scheduled_for.desc().nulls_last(), notifications::id.desc()))
+      // Newest first by the instant the list puts in its "When" column: `sent_at` once it has
+      // gone out, otherwise the time it is due. Sorting on `scheduled_for` alone made the column
+      // look unsorted, because a notification sent late shows its send time but sorted by its
+      // due time.
+      //
+      // Both are nullable and Postgres sorts NULLs first under DESC, which would float the
+      // condition-driven kinds (overtime, auto-checkout) above every scheduled reminder;
+      // `nulls_last` keeps them at the end where the UI expects them. `id` is a v7 UUID, so it
+      // breaks remaining ties in creation order rather than arbitrarily.
+      .order((
+        sql::<Timestamptz>("COALESCE(notifications.sent_at, notifications.scheduled_for)").desc().nulls_last(),
+        notifications::id.desc(),
+      ))
       .limit(limit)
       .offset(offset)
       .select(Notification::as_select())

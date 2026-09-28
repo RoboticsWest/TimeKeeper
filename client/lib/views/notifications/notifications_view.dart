@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/hooks/use_debounced_text.dart';
 import 'package:time_keeper/models/location.dart';
 import 'package:time_keeper/models/notification.dart';
 import 'package:time_keeper/models/session.dart';
@@ -18,6 +17,7 @@ import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/no_rows_notice.dart';
 import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
@@ -90,12 +90,7 @@ class NotificationsView extends HookConsumerWidget {
 
   String _formatMemberName(Map<String, TeamMember> teamMembers, String? memberId) {
     if (memberId == null || memberId.isEmpty) return '-';
-    final member = teamMembers[memberId];
-    if (member == null) return memberId;
-    if (member.displayName != null && member.displayName!.isNotEmpty) {
-      return member.displayName!;
-    }
-    return '${member.firstName} ${member.lastName}';
+    return teamMembers[memberId]?.displayLabel ?? memberId;
   }
 
   @override
@@ -116,21 +111,16 @@ class NotificationsView extends HookConsumerWidget {
     final currentPage = page.value;
 
     final filterController = useTextEditingController();
-    final searchText = useState('');
+    final search = useDebouncedText(filterController);
 
-    // Debounce the search term before it hits the server query.
+    // Push the filter to the paged provider, restarting at page one. The term comes from
+    // `useDebouncedText`, which subscribes to the controller — keying an effect on
+    // `filterController.text` directly looks right but never fires, because a `TextField` writing
+    // to its controller does not rebuild this widget.
     useEffect(() {
-      final timer = Timer(const Duration(milliseconds: 350), () {
-        searchText.value = filterController.text;
-      });
-      return timer.cancel;
-    }, [filterController.text]);
-
-    // Push the filter to the paged provider, restarting at page one.
-    useEffect(() {
-      notifier.setFilter(NotificationFilterState(search: searchText.value));
+      notifier.setFilter(NotificationFilterState(search: search.value));
       return null;
-    }, [searchText.value]);
+    }, [search.value]);
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -150,7 +140,13 @@ class NotificationsView extends HookConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          TableFilter(controller: filterController),
+          TableFilter(
+            controller: filterController,
+            hintText: 'Search by type, status, session or member...',
+            onSubmitted: search.submit,
+            isPending: search.isPending,
+            matchCount: currentPage?.totalCount,
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: currentPage == null
@@ -194,6 +190,15 @@ class NotificationsView extends HookConsumerWidget {
                     onAdd: () => showNotificationDialog(context, ref),
                   ),
           ),
+          if (currentPage != null && currentPage.items.isEmpty)
+            NoRowsNotice(
+              noun: 'notifications',
+              filtered: search.value.trim().isNotEmpty,
+              onClearFilters: () {
+                filterController.clear();
+                search.submit();
+              },
+            ),
           if (currentPage != null)
             PaginationBar(
               totalCount: currentPage.totalCount,
@@ -203,6 +208,8 @@ class NotificationsView extends HookConsumerWidget {
               onPageSizeChanged: notifier.setPageSize,
               onPrevious: notifier.previousPage,
               onNext: notifier.nextPage,
+              onFirst: notifier.firstPage,
+              onLast: notifier.lastPage,
             ),
         ],
       ),

@@ -1,8 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/helpers/session_helper.dart';
+import 'package:time_keeper/hooks/use_debounced_text.dart';
 import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/providers/attendance_page_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
@@ -16,6 +16,7 @@ import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/searchable_dropdown.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
+import 'package:time_keeper/widgets/tables/no_rows_notice.dart';
 import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
@@ -41,27 +42,22 @@ class AttendanceView extends HookConsumerWidget {
 
     // --- Filter state ---------------------------------------------------------------
     final filterController = useTextEditingController();
-    final searchText = useState('');
+    final search = useDebouncedText(filterController);
     final selectedSessionId = useState<String?>(null);
     final selectedLocationId = useState<String?>(null);
     final dateRange = useState(AttendanceDateRange.allTime);
     final memberType = useState<String>('all');
     final status = useState(AttendanceStatusFilter.all);
 
-    // Debounce the search terms before they hit the server query.
-    useEffect(() {
-      final timer = Timer(const Duration(milliseconds: 350), () {
-        searchText.value = filterController.text;
-      });
-      return timer.cancel;
-    }, [filterController.text]);
-
-    // Push every filter change to the paged provider, restarting at page one.
+    // Push every filter change to the paged provider, restarting at page one. The search term
+    // comes from `useDebouncedText`, which subscribes to the controller — keying this effect on
+    // `filterController.text` directly looks right but never fires, because a `TextField` writing
+    // to its controller does not rebuild this widget.
     useEffect(
       () {
         notifier.setFilter(
           AttendanceFilterState(
-            search: searchText.value,
+            search: search.value,
             sessionId: selectedSessionId.value,
             locationId: selectedLocationId.value,
             dateRange: dateRange.value,
@@ -72,7 +68,7 @@ class AttendanceView extends HookConsumerWidget {
         return null;
       },
       [
-        searchText.value,
+        search.value,
         selectedSessionId.value,
         selectedLocationId.value,
         dateRange.value,
@@ -102,7 +98,7 @@ class AttendanceView extends HookConsumerWidget {
         dateRange.value != AttendanceDateRange.allTime ||
         memberType.value != 'all' ||
         status.value != AttendanceStatusFilter.all ||
-        searchText.value.trim().isNotEmpty;
+        search.value.trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -189,6 +185,7 @@ class AttendanceView extends HookConsumerWidget {
                 IconButton(
                   onPressed: () {
                     filterController.clear();
+                    search.submit();
                     selectedSessionId.value = null;
                     selectedLocationId.value = null;
                     dateRange.value = AttendanceDateRange.allTime;
@@ -203,7 +200,13 @@ class AttendanceView extends HookConsumerWidget {
           const SizedBox(height: 12),
 
           // Text search (debounced, applied in SQL)
-          TableFilter(controller: filterController, hintText: 'Search members...'),
+          TableFilter(
+            controller: filterController,
+            hintText: 'Search members...',
+            onSubmitted: search.submit,
+            isPending: search.isPending,
+            matchCount: currentPage?.totalCount,
+          ),
           const SizedBox(height: 12),
 
           Expanded(
@@ -211,19 +214,21 @@ class AttendanceView extends HookConsumerWidget {
                 ? _LoadingOrError(page: page, onRetry: notifier.refresh)
                 : EditTable(
                     alternatingRows: true,
+                    // Six dense columns; the same per-flex minimum the notifications table uses
+                    // keeps them from forcing a horizontal scrollbar in a half-width pane.
+                    minFlexWidth: 90,
                     headers: [
                       BaseTableCell(child: TableHeaderText('Member'), flex: 2),
                       BaseTableCell(child: TableHeaderText('Session'), flex: 2),
                       BaseTableCell(child: TableHeaderText('Check In'), flex: 2),
                       BaseTableCell(child: TableHeaderText('Check Out'), flex: 2),
+                      BaseTableCell(child: TableHeaderText('Last Update'), flex: 2),
                       BaseTableCell(child: TableHeaderText('Status')),
                     ],
                     headerDecoration: tableHeaderDecoration(context),
                     editRows: currentPage.items.map((ms) {
                       final member = teamMembers[ms.teamMemberId];
-                      final memberName =
-                          member?.displayName ??
-                          (member != null ? '${member.firstName} ${member.lastName}' : 'Unknown');
+                      final memberName = member?.displayLabel ?? 'Unknown';
 
                       final session = sessions[ms.sessionId];
                       final location = session != null ? locations[session.locationId] : null;
@@ -236,6 +241,9 @@ class AttendanceView extends HookConsumerWidget {
                           ? '${formatDate(ms.checkOutTime!)} ${formatTime(ms.checkOutTime!)}'
                           : '—';
                       final isCheckedIn = ms.checkOutTime == null;
+                      // The column the list is ordered by, spelled out — otherwise a table sorted
+                      // on "whichever of these two is later" reads as sorted on neither.
+                      final lastUpdate = lastActivityOf(ms);
 
                       return EditTableRow(
                         key: ValueKey(ms.id),
@@ -254,6 +262,10 @@ class AttendanceView extends HookConsumerWidget {
                           BaseTableCell(child: Text(checkInStr), flex: 2),
                           BaseTableCell(child: Text(checkOutStr), flex: 2),
                           BaseTableCell(
+                            child: Text(formatRelativeTime(lastUpdate), style: theme.textTheme.bodySmall),
+                            flex: 2,
+                          ),
+                          BaseTableCell(
                             child: Text(
                               isCheckedIn ? 'Checked In' : 'Completed',
                               style: TextStyle(
@@ -267,6 +279,20 @@ class AttendanceView extends HookConsumerWidget {
                     }).toList(),
                   ),
           ),
+          if (currentPage != null && currentPage.items.isEmpty)
+            NoRowsNotice(
+              noun: 'attendance records',
+              filtered: hasActiveFilters,
+              onClearFilters: () {
+                filterController.clear();
+                search.submit();
+                selectedSessionId.value = null;
+                selectedLocationId.value = null;
+                dateRange.value = AttendanceDateRange.allTime;
+                memberType.value = 'all';
+                status.value = AttendanceStatusFilter.all;
+              },
+            ),
           if (currentPage != null)
             PaginationBar(
               totalCount: currentPage.totalCount,
@@ -276,6 +302,8 @@ class AttendanceView extends HookConsumerWidget {
               onPageSizeChanged: notifier.setPageSize,
               onPrevious: notifier.previousPage,
               onNext: notifier.nextPage,
+              onFirst: notifier.firstPage,
+              onLast: notifier.lastPage,
             ),
         ],
       ),

@@ -42,12 +42,19 @@ class StatisticsView extends HookConsumerWidget {
     final metric = useState(ActivityMetric.hours);
     final selectedDay = useState<DateTime?>(null);
     final overtimeOnly = useState(false);
+    // The members grid can hold the whole team, and it is ranked rather than alphabetical, so
+    // finding one person in it was a scrolling exercise. The rows are already in memory.
+    final memberFilter = useTextEditingController();
+    final memberQuery = useValueListenable(memberFilter).text.trim().toLowerCase();
 
     final dayRows = selectedDay.value == null
         ? const <DayMemberRow>[]
         : ref.watch(dayDetailProvider(query, selectedDay.value!));
 
-    final memberRows = overtimeOnly.value ? members.where((row) => row.overtime > Duration.zero).toList() : members;
+    final memberRows = members
+        .where((row) => !overtimeOnly.value || row.overtime > Duration.zero)
+        .where((row) => memberQuery.isEmpty || row.name.toLowerCase().contains(memberQuery))
+        .toList();
 
     Future<void> exportCsv() async {
       final csv = buildCsv(
@@ -126,8 +133,23 @@ class StatisticsView extends HookConsumerWidget {
 
     Widget membersPanel() => DashboardPanel(
       title: 'Members',
-      subtitle: '${memberRows.length} in range',
+      subtitle: memberQuery.isEmpty
+          ? '${memberRows.length} in range'
+          : '${memberRows.length} of ${members.length} in range',
       actions: [
+        SizedBox(
+          width: 180,
+          child: TextField(
+            controller: memberFilter,
+            decoration: const InputDecoration(
+              hintText: 'Find a member...',
+              prefixIcon: Icon(Icons.search, size: 16),
+              isDense: true,
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
         FilterChip(
           label: const Text('Overtime only'),
           selected: overtimeOnly.value,
@@ -135,6 +157,9 @@ class StatisticsView extends HookConsumerWidget {
         ),
       ],
       isEmpty: memberRows.isEmpty,
+      emptyMessage: memberQuery.isEmpty
+          ? 'No members in this range'
+          : 'No members in this range match "${memberFilter.text.trim()}"',
       child: MembersGrid(rows: memberRows),
     );
 

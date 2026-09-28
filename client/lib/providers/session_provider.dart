@@ -62,8 +62,16 @@ const _checkInOutByPinMutation = r'''
 ''';
 
 const _checkInOutMutation = r'''
-  mutation CheckInOut($teamMemberId: UUID!, $locationId: UUID!) {
+  mutation CheckInOut($teamMemberId: UUID!, $locationId: UUID) {
     checkInOut(teamMemberId: $teamMemberId, locationId: $locationId)
+  }
+''';
+
+/// The same operation performed by an administrator from the roster rather than at a kiosk. Kept
+/// separate so the statistics do not record an admin's button press as an RFID tag-in.
+const _adminCheckInOutMutation = r'''
+  mutation AdminCheckInOut($teamMemberId: UUID!, $locationId: UUID) {
+    adminCheckInOut(teamMemberId: $teamMemberId, locationId: $locationId)
   }
 ''';
 
@@ -191,12 +199,35 @@ class SessionCheckInOut extends _$SessionCheckInOut {
   @override
   void build() {}
 
-  Future<ApiResult<bool>> checkInOut(String teamMemberId, String locationId) async {
+  /// Checks a member in at [locationId], or out if they already are.
+  ///
+  /// [locationId] is nullable because a checkout does not need one — the visit being closed
+  /// already knows its session. Passing an empty string used to be the way this was called with
+  /// "no location set", which the server could only reject as a malformed UUID.
+  Future<ApiResult<bool>> checkInOut(String teamMemberId, String? locationId) =>
+      _checkInOut(_checkInOutMutation, 'checkInOut', teamMemberId, locationId);
+
+  /// Check-in/out triggered by an admin from the roster, attributed to them rather than to a
+  /// kiosk reader.
+  Future<ApiResult<bool>> adminCheckInOut(String teamMemberId, String? locationId) =>
+      _checkInOut(_adminCheckInOutMutation, 'adminCheckInOut', teamMemberId, locationId);
+
+  Future<ApiResult<bool>> _checkInOut(
+    String document,
+    String rootField,
+    String teamMemberId,
+    String? locationId,
+  ) async {
     final client = ref.read(timeKeeperGraphQLClientProvider);
     final result = await client.mutate(
       MutationOptions(
-        document: gql(_checkInOutMutation),
-        variables: {'teamMemberId': teamMemberId, 'locationId': locationId},
+        document: gql(document),
+        // An empty selection is sent as null: the server treats that as "checking out", and a
+        // check-in without a location is refused with a message worth reading.
+        variables: {
+          'teamMemberId': teamMemberId,
+          'locationId': (locationId != null && locationId.isNotEmpty) ? locationId : null,
+        },
         fetchPolicy: FetchPolicy.noCache,
       ),
     );
@@ -206,7 +237,7 @@ class SessionCheckInOut extends _$SessionCheckInOut {
           : result.exception.toString();
       return ApiFailure(userMessage: message);
     }
-    return ApiSuccess(result.data!['checkInOut'] as bool);
+    return ApiSuccess(result.data![rootField] as bool);
   }
 
   /// Checks in/out by quick PIN. The PIN is resolved server-side — kiosks never

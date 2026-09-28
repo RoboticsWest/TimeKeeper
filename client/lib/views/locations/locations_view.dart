@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:time_keeper/hooks/use_debounced_text.dart';
 import 'package:time_keeper/providers/location_page_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/views/locations/location_dialog.dart';
@@ -11,6 +10,7 @@ import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
 import 'package:time_keeper/widgets/tables/edit_table.dart';
 import 'package:time_keeper/widgets/tables/header_text.dart';
+import 'package:time_keeper/widgets/tables/no_rows_notice.dart';
 import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 
@@ -56,21 +56,16 @@ class LocationsView extends HookConsumerWidget {
     final currentPage = page.value;
 
     final filterController = useTextEditingController();
-    final searchText = useState('');
+    final search = useDebouncedText(filterController);
 
-    // Debounce the search term before it hits the server query.
+    // Push the filter to the paged provider, restarting at page one. The term comes from
+    // `useDebouncedText`, which subscribes to the controller — keying an effect on
+    // `filterController.text` directly looks right but never fires, because a `TextField` writing
+    // to its controller does not rebuild this widget.
     useEffect(() {
-      final timer = Timer(const Duration(milliseconds: 350), () {
-        searchText.value = filterController.text;
-      });
-      return timer.cancel;
-    }, [filterController.text]);
-
-    // Push the filter to the paged provider, restarting at page one.
-    useEffect(() {
-      notifier.setFilter(LocationFilterState(search: searchText.value));
+      notifier.setFilter(LocationFilterState(search: search.value));
       return null;
-    }, [searchText.value]);
+    }, [search.value]);
 
     return Padding(
       padding: const EdgeInsets.all(32),
@@ -90,7 +85,13 @@ class LocationsView extends HookConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          TableFilter(controller: filterController),
+          TableFilter(
+            controller: filterController,
+            hintText: 'Search locations...',
+            onSubmitted: search.submit,
+            isPending: search.isPending,
+            matchCount: currentPage?.totalCount,
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: currentPage == null
@@ -111,6 +112,15 @@ class LocationsView extends HookConsumerWidget {
                     onAdd: () => showLocationDialog(context, ref),
                   ),
           ),
+          if (currentPage != null && currentPage.items.isEmpty)
+            NoRowsNotice(
+              noun: 'locations',
+              filtered: search.value.trim().isNotEmpty,
+              onClearFilters: () {
+                filterController.clear();
+                search.submit();
+              },
+            ),
           if (currentPage != null)
             PaginationBar(
               totalCount: currentPage.totalCount,
@@ -120,6 +130,8 @@ class LocationsView extends HookConsumerWidget {
               onPageSizeChanged: notifier.setPageSize,
               onPrevious: notifier.previousPage,
               onNext: notifier.nextPage,
+              onFirst: notifier.firstPage,
+              onLast: notifier.lastPage,
             ),
         ],
       ),

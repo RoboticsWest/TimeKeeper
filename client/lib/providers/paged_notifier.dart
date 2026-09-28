@@ -49,7 +49,6 @@ mixin PagedAsyncNotifier<T> {
     // rows get deleted, or a realtime delta arrives and `loadDebounced` refetches at an offset
     // that no longer exists. The server answers honestly with an empty page, which would leave
     // a blank table under a "0-150 of 150" label. Re-fetch at the last real page instead.
-    // `ClientPaginationState` clamps for the same reason; this is the server-paged equivalent.
     final page = next.value;
     if (page != null && page.items.isEmpty && page.totalCount > 0) {
       final lastOffset = ((page.totalCount - 1) ~/ _pageSize) * _pageSize;
@@ -111,6 +110,22 @@ mixin PagedAsyncNotifier<T> {
     final current = state.value;
     if (current == null || current.offset <= 0) return;
     _offset = _offset >= _pageSize ? _offset - _pageSize : 0;
+    unawaited(load());
+  }
+
+  void firstPage() {
+    if (_offset == 0) return;
+    _offset = 0;
+    unawaited(load());
+  }
+
+  /// Jumps to the page holding the last row of the current result set.
+  void lastPage() {
+    final current = state.value;
+    if (current == null || current.totalCount == 0) return;
+    final lastOffset = ((current.totalCount - 1) ~/ _pageSize) * _pageSize;
+    if (lastOffset == _offset) return;
+    _offset = lastOffset;
     unawaited(load());
   }
 }

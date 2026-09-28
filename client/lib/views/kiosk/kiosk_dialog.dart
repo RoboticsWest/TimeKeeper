@@ -7,6 +7,7 @@ import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/helpers/session_helper.dart';
+import 'package:time_keeper/views/kiosk/kiosk_scan_handler.dart' show kNoDeviceLocationMessage;
 import 'package:time_keeper/widgets/dialogs/base_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/popup_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -40,7 +41,7 @@ class _KioskDialogContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final teamMembers = ref.watch(teamMembersProvider);
     final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
-    final currentLocation = ref.watch(currentLocationProvider) ?? '';
+    final currentLocation = ref.watch(currentLocationProvider);
 
     return SizedBox(
       width: 400,
@@ -57,15 +58,28 @@ class _KioskDialogContent extends ConsumerWidget {
               backgroundColor: checkedIn ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.primary,
             ),
             onPressed: () async {
-              final result = await ref.read(sessionCheckInOutProvider.notifier).checkInOut(memberId, currentLocation);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-                switch (result) {
-                  case ApiSuccess():
-                    SnackBarDialog.success(message: 'Success').show(context);
-                  case ApiFailure(userMessage: final msg):
-                    SnackBarDialog.error(message: msg).show(context);
-                }
+              // Checking out needs no location — the open visit knows its session. Checking in
+              // does, and this kiosk's is a device setting: without it the mutation used to be
+              // sent an empty string and come back as a UUID parse error.
+              if (!checkedIn && (currentLocation == null || currentLocation.isEmpty)) {
+                SnackBarDialog.error(message: kNoDeviceLocationMessage).show(context);
+                return;
+              }
+
+              final name = member.displayLabel;
+              // The navigator's context outlives the dialog route, so the outcome can still be
+              // reported once the dialog has been popped.
+              final host = Navigator.of(context).context;
+              final result = await ref
+                  .read(sessionCheckInOutProvider.notifier)
+                  .checkInOut(memberId, checkedIn ? null : currentLocation);
+              if (context.mounted) Navigator.of(context).pop();
+              if (!host.mounted) return;
+              switch (result) {
+                case ApiSuccess():
+                  SnackBarDialog.success(message: checkedIn ? '$name checked out' : '$name checked in').show(host);
+                case ApiFailure(userMessage: final msg):
+                  SnackBarDialog.error(message: msg).show(host);
               }
             },
           );

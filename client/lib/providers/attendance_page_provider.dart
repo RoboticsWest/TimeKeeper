@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/models/paged_result.dart';
 import 'package:time_keeper/models/team_member_session.dart';
@@ -67,6 +68,21 @@ class AttendanceFilterState {
       dateRange == AttendanceDateRange.allTime &&
       memberTypes.isEmpty &&
       status == AttendanceStatusFilter.all;
+
+  // Value equality, so pushing an unchanged filter from a rebuild is a no-op rather than a
+  // refetch that yanks the reader back to page one.
+  @override
+  bool operator ==(Object other) =>
+      other is AttendanceFilterState &&
+      other.search == search &&
+      other.sessionId == sessionId &&
+      other.locationId == locationId &&
+      other.dateRange == dateRange &&
+      other.status == status &&
+      listEquals(other.memberTypes, memberTypes);
+
+  @override
+  int get hashCode => Object.hash(search, sessionId, locationId, dateRange, status, Object.hashAll(memberTypes));
 
   /// Builds the `AttendanceFilterInput` value, or null when nothing is constrained.
   Map<String, dynamic>? toServerFilter() {
@@ -139,7 +155,7 @@ class AttendancePage extends _$AttendancePage with PagedAsyncNotifier<TeamMember
   }
 
   void setFilter(AttendanceFilterState filter) {
-    if (identical(filter, _filter)) return;
+    if (filter == _filter) return;
     _filter = filter;
     resetToFirstPage();
   }

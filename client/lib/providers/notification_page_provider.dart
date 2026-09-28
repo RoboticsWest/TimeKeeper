@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:time_keeper/models/notification.dart';
 import 'package:time_keeper/models/paged_result.dart';
@@ -69,6 +70,30 @@ class NotificationFilterState {
       statuses.isEmpty &&
       from == null &&
       to == null;
+
+  // Value equality, so pushing an unchanged filter from a rebuild is a no-op rather than a
+  // refetch that yanks the reader back to page one.
+  @override
+  bool operator ==(Object other) =>
+      other is NotificationFilterState &&
+      other.search == search &&
+      other.sessionId == sessionId &&
+      other.teamMemberId == teamMemberId &&
+      other.from == from &&
+      other.to == to &&
+      listEquals(other.notificationTypes, notificationTypes) &&
+      listEquals(other.statuses, statuses);
+
+  @override
+  int get hashCode => Object.hash(
+    search,
+    sessionId,
+    teamMemberId,
+    from,
+    to,
+    Object.hashAll(notificationTypes),
+    Object.hashAll(statuses),
+  );
 
   /// The term actually sent to the server.
   ///
@@ -142,7 +167,7 @@ class NotificationPage extends _$NotificationPage with PagedAsyncNotifier<Notifi
   }
 
   void setFilter(NotificationFilterState filter) {
-    if (identical(filter, _filter)) return;
+    if (filter == _filter) return;
     _filter = filter;
     resetToFirstPage();
   }

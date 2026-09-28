@@ -119,5 +119,51 @@ void main() {
       expect(pager.currentOffset, 0);
       expect(pager.currentPageSize, 100);
     });
+
+    test('jumping to the last page lands on the page holding the final row', () async {
+      final pager = _FakePager(230);
+      pager.setPageSize(50);
+      await pager.load();
+
+      pager.lastPage();
+      await Future<void>.delayed(Duration.zero);
+      expect(pager.currentOffset, 200);
+      expect(pager.state.value!.items.length, 30);
+      expect(pager.state.value!.hasMore, isFalse);
+    });
+
+    test('jumping back to the first page returns to offset zero', () async {
+      final pager = _FakePager(230);
+      pager.setPageSize(50);
+      await pager.load();
+      pager.lastPage();
+      await Future<void>.delayed(Duration.zero);
+
+      pager.firstPage();
+      await Future<void>.delayed(Duration.zero);
+      expect(pager.currentOffset, 0);
+    });
+
+    test('jumping to a page already shown does not refetch', () async {
+      final pager = _FakePager(230);
+      pager.setPageSize(50);
+      await pager.load();
+      final before = pager.fetchCount;
+
+      pager.firstPage();
+      await Future<void>.delayed(Duration.zero);
+      expect(pager.fetchCount, before);
+    });
+
+    test('jumping to the last page of an empty collection is a no-op', () async {
+      final pager = _FakePager(0);
+      await pager.load();
+      final before = pager.fetchCount;
+
+      pager.lastPage();
+      await Future<void>.delayed(Duration.zero);
+      expect(pager.currentOffset, 0);
+      expect(pager.fetchCount, before);
+    });
   });
 }

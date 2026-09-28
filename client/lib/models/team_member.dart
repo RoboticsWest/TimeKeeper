@@ -41,6 +41,21 @@ class TeamMember {
     this.quickPin,
   });
 
+  /// The name to show, and to sort by.
+  ///
+  /// Sorting on `displayName` alone put everybody without one at the top of the list under an
+  /// empty string, which is what made the member lists look unsorted. A member always has a first
+  /// and last name, so this is never empty.
+  String get displayLabel {
+    final nickname = displayName?.trim();
+    if (nickname != null && nickname.isNotEmpty) return nickname;
+    return '$firstName $lastName'.trim();
+  }
+
+  /// Case-insensitive name ordering, for any client-side member list.
+  static int compareByName(TeamMember a, TeamMember b) =>
+      a.displayLabel.toLowerCase().compareTo(b.displayLabel.toLowerCase());
+
   factory TeamMember.fromJson(Map<String, dynamic> json) {
     return TeamMember(
       id: json['id'] as String,

@@ -45,10 +45,12 @@ class CheckedInList extends ConsumerWidget {
       checkedInList.add(CheckedInMember(location: location, timeIn: ms.checkInTime, teamMember: teamMember));
     }
 
-    checkedInList.sort(
-      (a, b) =>
-          (a.teamMember.displayName ?? '').toLowerCase().compareTo((b.teamMember.displayName ?? '').toLowerCase()),
-    );
+    // Most recent arrival first: on a board people watch, the line that just changed should be
+    // the one at the top. Name breaks ties so two simultaneous scans have a stable order.
+    checkedInList.sort((a, b) {
+      final byTime = b.timeIn.compareTo(a.timeIn);
+      return byTime != 0 ? byTime : TeamMember.compareByName(a.teamMember, b.teamMember);
+    });
 
     double childHeight = 40;
 

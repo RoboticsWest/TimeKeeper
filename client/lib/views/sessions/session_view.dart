@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/models/session_status.dart';
+import 'package:time_keeper/hooks/use_debounced_text.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_page_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
@@ -13,7 +13,7 @@ import 'package:time_keeper/views/sessions/session_table.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
 import 'package:time_keeper/widgets/searchable_dropdown.dart';
-import 'package:time_keeper/widgets/tables/client_pagination.dart';
+import 'package:time_keeper/widgets/tables/no_rows_notice.dart';
 import 'package:time_keeper/widgets/tables/pagination_bar.dart';
 import 'package:time_keeper/widgets/tables/table_filter.dart';
 
@@ -56,13 +56,16 @@ class SessionView extends HookConsumerWidget {
     final theme = Theme.of(context);
 
     final showCalendar = useState(true);
+
+    // The day the calendar has selected. It feeds the *same* server filter the table mode's day
+    // picker does, so both modes read one list in one order — they used to be two code paths
+    // with two different sorts, which is why the table looked like it reshuffled when the mode
+    // was switched.
     final selectedDate = useState<DateTime?>(null);
 
-    // Calendar mode keeps its own full-set text filter.
     final filterController = useTextEditingController();
-    final filterText = useValueListenable(filterController).text.toLowerCase();
+    final search = useDebouncedText(filterController);
 
-    // Table mode filters, applied server-side on a paged slice.
     final selectedLocationId = useState<String?>(null);
     final finishedFilter = useState<String>('all');
     final dayFilter = useState<DateTime?>(null);
@@ -71,50 +74,29 @@ class SessionView extends HookConsumerWidget {
     final notifier = ref.read(sessionPageProvider.notifier);
     final currentPage = page.value;
 
+    final activeDay = showCalendar.value ? selectedDate.value : dayFilter.value;
+
     useEffect(() {
       notifier.setFilter(
         SessionFilterState(
           locationId: selectedLocationId.value,
           finished: finishedFilter.value == 'all' ? null : finishedFilter.value == 'finished',
-          day: dayFilter.value,
+          day: activeDay,
+          search: search.value,
         ),
       );
       return null;
-    }, [selectedLocationId.value, finishedFilter.value, dayFilter.value]);
-
-    // Filter by selected calendar date (calendar mode, client-side).
-    final sorted = sessions.entries.toList()..sort(compareSessionEntries);
-    final dateFiltered = selectedDate.value != null
-        ? sorted.where((entry) {
-            final dt = entry.value.startTime;
-            final sel = selectedDate.value!;
-            return dt.year == sel.year && dt.month == sel.month && dt.day == sel.day;
-          }).toList()
-        : sorted;
-
-    // Filter by text (calendar mode, client-side).
-    final filtered = dateFiltered.where((entry) {
-      if (filterText.isEmpty) return true;
-      final session = entry.value;
-      final start = session.startTime;
-      final locationName = locations[session.locationId]?.location ?? '';
-      final status = getSessionStatus(session).name.toLowerCase();
-      final dateStr = formatDate(start).toLowerCase();
-      return dateStr.contains(filterText) ||
-          locationName.toLowerCase().contains(filterText) ||
-          status.contains(filterText);
-    }).toList();
-
-    // Calendar mode holds the full (client-filtered) set in memory, so its table pages on the
-    // client while table mode pages server-side through `sessionPageProvider`.
-    final clientPaging = useClientPagination(filtered.length);
+    }, [selectedLocationId.value, finishedFilter.value, activeDay, search.value]);
 
     final locationItems = locations.entries.toList()
       ..sort((a, b) => a.value.location.toLowerCase().compareTo(b.value.location.toLowerCase()));
     final locationDropdownItems = locationItems.map((entry) => (key: entry.key, label: entry.value.location)).toList();
 
     final hasTableFilters =
-        selectedLocationId.value != null || finishedFilter.value != 'all' || dayFilter.value != null;
+        selectedLocationId.value != null ||
+        finishedFilter.value != 'all' ||
+        activeDay != null ||
+        search.value.trim().isNotEmpty;
 
     Future<void> pickDay() async {
       final now = DateTime.now();
@@ -194,75 +176,88 @@ class SessionView extends HookConsumerWidget {
           SessionStats(sessions: sessions, teamMemberSessions: teamMemberSessions),
           const SizedBox(height: 16),
 
-          // Table-mode filters
-          if (!showCalendar.value) ...[
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: 220,
-                  child: SearchableDropdown(
-                    label: 'Location',
-                    items: locationDropdownItems,
-                    selectedKey: selectedLocationId.value,
-                    onSelected: (key) {
-                      selectedLocationId.value = key == selectedLocationId.value ? null : key;
-                    },
-                  ),
+          // Filters. Shown in both modes: they narrow the one list below, and hiding them in
+          // calendar mode only meant the calendar's table could not be narrowed at all.
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SizedBox(
+                width: 220,
+                child: SearchableDropdown(
+                  label: 'Location',
+                  items: locationDropdownItems,
+                  selectedKey: selectedLocationId.value,
+                  onSelected: (key) {
+                    selectedLocationId.value = key == selectedLocationId.value ? null : key;
+                  },
                 ),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'all', label: Text('All')),
-                    ButtonSegment(value: 'scheduled', label: Text('Scheduled')),
-                    ButtonSegment(value: 'finished', label: Text('Finished')),
-                  ],
-                  selected: {finishedFilter.value},
-                  onSelectionChanged: (value) => finishedFilter.value = value.first,
-                ),
+              ),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'all', label: Text('All')),
+                  ButtonSegment(value: 'scheduled', label: Text('Scheduled')),
+                  ButtonSegment(value: 'finished', label: Text('Finished')),
+                ],
+                selected: {finishedFilter.value},
+                onSelectionChanged: (value) => finishedFilter.value = value.first,
+              ),
+              // In calendar mode the day comes from the calendar itself, so a second day
+              // picker beside it would be two controls fighting over one filter.
+              if (!showCalendar.value)
                 OutlinedButton.icon(
                   onPressed: pickDay,
                   icon: const Icon(Icons.calendar_today, size: 16),
                   label: Text(dayFilter.value == null ? 'Pick a day' : formatDate(dayFilter.value!)),
                 ),
-                if (hasTableFilters)
-                  IconButton(
-                    onPressed: () {
-                      selectedLocationId.value = null;
-                      finishedFilter.value = 'all';
-                      dayFilter.value = null;
-                    },
-                    icon: const Icon(Icons.clear),
-                    tooltip: 'Clear filters',
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
+              if (hasTableFilters)
+                IconButton(
+                  onPressed: () {
+                    selectedLocationId.value = null;
+                    finishedFilter.value = 'all';
+                    dayFilter.value = null;
+                    selectedDate.value = null;
+                    filterController.clear();
+                    search.submit();
+                  },
+                  icon: const Icon(Icons.clear),
+                  tooltip: 'Clear filters',
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
 
-          // Filter (calendar mode is client-side over the full set)
-          if (showCalendar.value) ...[TableFilter(controller: filterController), const SizedBox(height: 12)],
+          // Searching by location name happens in SQL, so it reaches sessions on later pages.
+          TableFilter(
+            controller: filterController,
+            hintText: 'Search by location...',
+            onSubmitted: search.submit,
+            isPending: search.isPending,
+            matchCount: currentPage?.totalCount,
+          ),
+          const SizedBox(height: 12),
 
           // Table
           Expanded(
-            child: showCalendar.value
-                ? SessionTable(sessions: clientPaging.slice(filtered))
-                : currentPage == null
+            child: currentPage == null
                 ? _LoadingOrError(page: page, onRetry: notifier.refresh)
                 : SessionTable(sessions: currentPage.items.map((session) => MapEntry(session.id, session)).toList()),
           ),
-          if (showCalendar.value)
-            PaginationBar(
-              totalCount: filtered.length,
-              offset: clientPaging.clampedOffset(filtered.length),
-              pageSize: clientPaging.pageSize,
-              hasMore: clientPaging.offset + clientPaging.pageSize < filtered.length,
-              onPageSizeChanged: clientPaging.setPageSize,
-              onPrevious: clientPaging.previousPage,
-              onNext: clientPaging.nextPage,
-            )
-          else if (currentPage != null)
+          if (currentPage != null && currentPage.items.isEmpty)
+            NoRowsNotice(
+              noun: 'sessions',
+              filtered: hasTableFilters,
+              onClearFilters: () {
+                selectedLocationId.value = null;
+                finishedFilter.value = 'all';
+                dayFilter.value = null;
+                selectedDate.value = null;
+                filterController.clear();
+                search.submit();
+              },
+            ),
+          if (currentPage != null)
             PaginationBar(
               totalCount: currentPage.totalCount,
               offset: currentPage.offset,
@@ -271,6 +266,8 @@ class SessionView extends HookConsumerWidget {
               onPageSizeChanged: notifier.setPageSize,
               onPrevious: notifier.previousPage,
               onNext: notifier.nextPage,
+              onFirst: notifier.firstPage,
+              onLast: notifier.lastPage,
             ),
         ],
       ),

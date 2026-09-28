@@ -2,6 +2,8 @@ import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/notification.dart';
+import 'package:time_keeper/models/session_status.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/notification_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
@@ -55,16 +57,10 @@ class _NotificationForm extends HookConsumerWidget {
     final selectedMemberId = useState<String?>(existing?.teamMemberId);
     final isLoading = useState(false);
 
-    // Build sorted session list (oldest first)
-    final sortedSessions = sessions.entries.toList()..sort((a, b) => a.value.startTime.compareTo(b.value.startTime));
-
-    // Build sorted member list
-    final sortedMembers = teamMembers.entries.toList()
-      ..sort((a, b) {
-        final aName = (a.value.displayName?.isNotEmpty ?? false) ? a.value.displayName! : a.value.firstName;
-        final bName = (b.value.displayName?.isNotEmpty ?? false) ? b.value.displayName! : b.value.firstName;
-        return aName.compareTo(bName);
-      });
+    // Sessions in picker order (what is running now first), members by the name they are shown
+    // under — sorting on first names while displaying nicknames made the list look unordered.
+    final sortedSessions = sessions.entries.toList()..sort(compareSessionEntries);
+    final sortedMembers = teamMembers.entries.toList()..sort((a, b) => TeamMember.compareByName(a.value, b.value));
 
     return SizedBox(
       width: 500,
@@ -113,13 +109,7 @@ class _NotificationForm extends HookConsumerWidget {
             label: 'Team Member (optional)',
             items: [
               (key: '', label: 'None'),
-              for (final entry in sortedMembers)
-                (
-                  key: entry.key,
-                  label: (entry.value.displayName?.isNotEmpty ?? false)
-                      ? entry.value.displayName!
-                      : '${entry.value.firstName} ${entry.value.lastName}',
-                ),
+              for (final entry in sortedMembers) (key: entry.key, label: entry.value.displayLabel),
             ],
             selectedKey: selectedMemberId.value ?? '',
             onSelected: (key) => selectedMemberId.value = key.isEmpty ? null : key,

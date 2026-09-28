@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
-use database::{DbPool, schema::sessions};
+use database::{DbPool, schema::locations, schema::sessions};
 
 use super::model::Session;
 
@@ -18,6 +18,11 @@ pub struct SessionFilter {
   pub location_ids: Vec<Uuid>,
   /// `Some(true)` for finished sessions only, `Some(false)` for unfinished.
   pub finished: Option<bool>,
+  /// Case-insensitive substring of the session's location name.
+  ///
+  /// The only free text a session carries is where it is: its date is covered by `from`/`to` and
+  /// its state by `finished`, both of which the UI drives with a picker rather than a search box.
+  pub search: Option<String>,
 }
 
 macro_rules! filtered_sessions {
@@ -35,6 +40,14 @@ macro_rules! filtered_sessions {
     }
     if let Some(finished) = $filter.finished {
       query = query.filter(sessions::finished.eq(finished));
+    }
+    if let Some(search) = $filter.search.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+      // A subselect rather than a join: the page selects whole `Session` rows, and joining would
+      // change the query's type in both the count and select positions for one ILIKE.
+      let pattern = format!("%{search}%");
+      query = query.filter(
+        sessions::location_id.eq_any(locations::table.filter(locations::location.ilike(pattern)).select(locations::id)),
+      );
     }
 
     query

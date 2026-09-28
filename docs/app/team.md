@@ -6,11 +6,14 @@ The **Team** view is where the tracked roster lives — the students and mentors
 whose hours are counted.
 
 Columns: `First Name`, `Last Name`, `Type`, `Display Name`, `RFID Tags`,
-`Discord`, `PIN`, `Status`.
+`Discord`, `PIN`, `Attendance` (the check-in/check-out button). Ordered by
+surname, then first name.
 
 Filters: member type (*All / Students / Mentors*), link state (*All links /
-Linked / Unlinked*), free text, refresh, and destructive **Clear Students** /
-**Clear Mentors** / **Clear All** buttons.
+Linked / Unlinked*), and a free-text search over first, last and display name —
+all resolved in SQL over the **whole** roster, so a name is found whether or not
+it is on the page currently shown. Plus refresh and the destructive **Clear
+Students** / **Clear Mentors** / **Clear All** buttons.
 
 ### Add / edit a member
 
@@ -51,7 +54,9 @@ kiosk duty. The Locations view is a simple list with add/edit/delete and
 **Clear All**.
 
 Set each device's **Device Location** in the gear Settings — the kiosk only
-interacts with *its* location's current session.
+interacts with *its* location's current session. It is a **kiosk** setting: the
+Team table's manual **Check In** asks which location to use instead of assuming
+this one (see [Manual check-in / check-out](attendance.md#manual-check-in-check-out)).
 
 ## Leaderboard configuration
 

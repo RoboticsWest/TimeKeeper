@@ -34,9 +34,29 @@ class SessionFilterState {
   /// Restricts to sessions starting within this day (local time), or null for every day.
   final DateTime? day;
 
-  const SessionFilterState({this.locationId, this.finished, this.day});
+  /// Case-insensitive match on the session's location name.
+  ///
+  /// A session's other columns are dates and a state, both of which have their own control, so
+  /// the free-text box only has the location to match on — matching it in SQL is what lets the
+  /// search cross page boundaries.
+  final String search;
 
-  bool get isEmpty => locationId == null && finished == null && day == null;
+  const SessionFilterState({this.locationId, this.finished, this.day, this.search = ''});
+
+  bool get isEmpty => locationId == null && finished == null && day == null && search.trim().isEmpty;
+
+  // Value equality, so pushing an unchanged filter from a rebuild is a no-op rather than a
+  // refetch that yanks the reader back to page one.
+  @override
+  bool operator ==(Object other) =>
+      other is SessionFilterState &&
+      other.locationId == locationId &&
+      other.finished == finished &&
+      other.day == day &&
+      other.search == search;
+
+  @override
+  int get hashCode => Object.hash(locationId, finished, day, search);
 
   Map<String, dynamic>? toServerFilter() {
     final (from, to) = day == null
@@ -47,6 +67,7 @@ class SessionFilterState {
           );
 
     final filter = <String, dynamic>{
+      if (search.trim().isNotEmpty) 'search': search.trim(),
       if (locationId != null) 'locationIds': [locationId],
       if (finished != null) 'finished': finished,
       if (from != null) 'from': toServerTime(from),
@@ -85,7 +106,7 @@ class SessionPage extends _$SessionPage with PagedAsyncNotifier<Session> {
   }
 
   void setFilter(SessionFilterState filter) {
-    if (identical(filter, _filter)) return;
+    if (filter == _filter) return;
     _filter = filter;
     resetToFirstPage();
   }

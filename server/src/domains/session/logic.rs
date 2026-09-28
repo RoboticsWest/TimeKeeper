@@ -59,10 +59,15 @@ pub trait SessionLogic: Send + Sync {
   /// Checks a team member in to the eligible session at `location_id`, or checks them out if
   /// they're already checked in to any session. Returns `true` if now checked in, `false` if
   /// checked out.
-  /// Checks a member in, or out if they already are. `source` records *how* the checkout was
-  /// made (one of the `SOURCE_*` constants) — not recoverable from the attendance row afterwards,
-  /// and the thing that tells a deliberate late sign-out apart from a forgotten one.
-  async fn check_in_out(&self, team_member_id: Uuid, location_id: Uuid, source: &str) -> anyhow::Result<bool>;
+  ///
+  /// `location_id` is optional because only the check-in half needs it: a checkout closes
+  /// whichever session the member is actually in, wherever that is. A kiosk always knows its
+  /// location, but an admin pressing "Check Out" in the roster should not have to.
+  ///
+  /// `source` records *how* the checkout was made (one of the `SOURCE_*` constants) — not
+  /// recoverable from the attendance row afterwards, and the thing that tells a deliberate late
+  /// sign-out apart from a forgotten one.
+  async fn check_in_out(&self, team_member_id: Uuid, location_id: Option<Uuid>, source: &str) -> anyhow::Result<bool>;
   /// Finishes sessions past their end time: marks them finished once every member has checked
   /// out, or force-checks-out lingering members (enqueuing auto-checkout notifications) once
   /// either the configured grace period has elapsed or the next session at that location has
@@ -232,7 +237,7 @@ impl<R: SessionRepository> SessionLogic for DefaultSessionLogic<R> {
     self.repo.remove(id).await
   }
 
-  async fn check_in_out(&self, team_member_id: Uuid, location_id: Uuid, source: &str) -> anyhow::Result<bool> {
+  async fn check_in_out(&self, team_member_id: Uuid, location_id: Option<Uuid>, source: &str) -> anyhow::Result<bool> {
     let now = Utc::now();
 
     let member_sessions = self.team_member_sessions.get_by_member_id(team_member_id).await?;
@@ -255,6 +260,11 @@ impl<R: SessionRepository> SessionLogic for DefaultSessionLogic<R> {
         return Ok(false);
       }
     }
+
+    // Nothing to close, so this is a check-in — which does need to know where.
+    let Some(location_id) = location_id else {
+      return Err(anyhow::anyhow!("Select a location to check into"));
+    };
 
     let window = self.check_in_window_secs().await;
     let unfinished = self.unfinished_sorted().await?;

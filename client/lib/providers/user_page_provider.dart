@@ -32,6 +32,14 @@ class UserFilterState {
 
   bool get isEmpty => search.trim().isEmpty;
 
+  // Value equality, so pushing an unchanged filter from a rebuild is a no-op rather than a
+  // refetch that yanks the reader back to page one.
+  @override
+  bool operator ==(Object other) => other is UserFilterState && other.search == search;
+
+  @override
+  int get hashCode => search.hashCode;
+
   Map<String, dynamic>? toServerFilter() {
     final filter = <String, dynamic>{if (search.trim().isNotEmpty) 'search': search.trim()};
     return filter.isEmpty ? null : filter;
@@ -69,7 +77,7 @@ class UserPage extends _$UserPage with PagedAsyncNotifier<User> {
   }
 
   void setFilter(UserFilterState filter) {
-    if (identical(filter, _filter)) return;
+    if (filter == _filter) return;
     _filter = filter;
     resetToFirstPage();
   }

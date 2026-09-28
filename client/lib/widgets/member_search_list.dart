@@ -25,9 +25,7 @@ class MemberSearchList extends HookWidget {
                       member.lastName.toLowerCase().contains(query) ||
                       (member.displayName ?? '').toLowerCase().contains(query);
                 }).toList()
-          ..sort(
-            (a, b) => (a.value.displayName ?? '').toLowerCase().compareTo((b.value.displayName ?? '').toLowerCase()),
-          );
+          ..sort((a, b) => TeamMember.compareByName(a.value, b.value));
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -62,7 +60,7 @@ class MemberSearchList extends HookWidget {
                     final member = entry.value;
                     final memberId = entry.key;
                     return ListTile(
-                      title: Text(member.displayName ?? '${member.firstName} ${member.lastName}'),
+                      title: Text(member.displayLabel),
                       subtitle: Text(member.memberType.name),
                       trailing: trailingBuilder(memberId, member),
                     );

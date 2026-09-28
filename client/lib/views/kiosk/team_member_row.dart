@@ -13,7 +13,7 @@ class TeamMemberRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = teamMember.displayName ?? '${teamMember.firstName} ${teamMember.lastName}';
+    final name = teamMember.displayLabel;
     final timeStr = formatTime(timeIn);
     return Row(
       children: [

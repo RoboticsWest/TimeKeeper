@@ -81,7 +81,11 @@ class AchievementsView extends HookConsumerWidget {
 }
 
 /// The roster, ranked by how much of the catalogue each member holds.
-class _MemberList extends StatelessWidget {
+///
+/// Searchable because the ranking is the point of the order — with a full team the person being
+/// looked up is somewhere in the middle of it, and scrolling a ranked list for one name is the
+/// worst case of every list. The whole set is already in memory here, so the filter is local.
+class _MemberList extends HookWidget {
   final List<MemberAccolades> members;
   final String selectedId;
   final ValueChanged<String> onSelect;
@@ -90,17 +94,48 @@ class _MemberList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = useTextEditingController();
+    final query = useValueListenable(controller).text.trim().toLowerCase();
+    final shown = query.isEmpty
+        ? members
+        : members.where((m) => m.name.toLowerCase().contains(query) || m.title.toLowerCase().contains(query)).toList();
+
     return DashboardPanel(
       title: 'Team',
-      subtitle: '${members.length} members',
-      child: ListView.builder(
-        padding: EdgeInsets.zero,
-        itemCount: members.length,
-        itemBuilder: (context, i) => _MemberTile(
-          member: members[i],
-          selected: members[i].teamMemberId == selectedId,
-          onTap: () => onSelect(members[i].teamMemberId),
-        ),
+      subtitle: query.isEmpty ? '${members.length} members' : '${shown.length} of ${members.length} members',
+      child: Column(
+        children: [
+          TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'Search name or title...',
+              prefixIcon: Icon(Icons.search, size: 18),
+              isDense: true,
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: shown.isEmpty
+                ? Center(
+                    child: Text(
+                      'No members match "${controller.text.trim()}"',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: shown.length,
+                    itemBuilder: (context, i) => _MemberTile(
+                      member: shown[i],
+                      selected: shown[i].teamMemberId == selectedId,
+                      onTap: () => onSelect(shown[i].teamMemberId),
+                    ),
+                  ),
+          ),
+        ],
       ),
     );
   }

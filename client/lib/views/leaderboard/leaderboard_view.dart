@@ -122,7 +122,7 @@ class _LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final member = entry.teamMember;
-    final name = member.displayName ?? '${member.firstName} ${member.lastName}';
+    final name = member.displayLabel;
 
     return Row(
       children: [
