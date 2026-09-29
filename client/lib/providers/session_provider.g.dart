@@ -70,7 +70,7 @@ final class SessionsProvider extends $NotifierProvider<Sessions, Map<String, Ses
   }
 }
 
-String _$sessionsHash() => r'cc5065c71aa673663db173348cc6a6cea547e3cb';
+String _$sessionsHash() => r'0ef624e130777ff230261c009d4c1a53534e6585';
 
 abstract class _$Sessions extends $Notifier<Map<String, Session>> {
   Map<String, Session> build();
@@ -157,7 +157,7 @@ final class SessionCheckInOutProvider extends $NotifierProvider<SessionCheckInOu
   }
 }
 
-String _$sessionCheckInOutHash() => r'6131d6ea6e8f33ca65853cb7e477676104a94349';
+String _$sessionCheckInOutHash() => r'37cfeee7ed09e412ec18e4a7a8f9876b7a2da0d3';
 
 /// Kiosk RFID check-in/out. Returns `true` if the member is now checked in, `false` if checked out.
 

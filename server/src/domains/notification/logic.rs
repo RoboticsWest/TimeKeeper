@@ -22,7 +22,8 @@ pub trait NotificationLogic: Send + Sync {
   async fn mark_sent(&self, id: Uuid, discord_message_id: Option<&str>) -> anyhow::Result<Option<Notification>>;
   async fn clear_message_id(&self, id: Uuid) -> anyhow::Result<()>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  async fn clear(&self) -> anyhow::Result<usize>;
 
   /// All notifications belonging to a given session.
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<Notification>>;
@@ -87,7 +88,7 @@ impl<R: NotificationRepository> NotificationLogic for DefaultNotificationLogic<R
     self.repo.remove(id).await
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     self.repo.clear().await
   }
 

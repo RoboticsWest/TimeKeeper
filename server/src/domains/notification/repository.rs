@@ -106,6 +106,16 @@ pub struct NewNotification<'a> {
 
 #[async_trait]
 pub trait NotificationRepository: Send + Sync {
+  /// Fetches every row whose `team_member_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Notification>>;
+  /// Fetches every row whose `session_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_session_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Notification>>;
   /// One page of notifications matching `filter`, soonest-scheduled last, with the total match
   /// count.
   async fn query_page(
@@ -135,7 +145,11 @@ pub trait NotificationRepository: Send + Sync {
   async fn clear_message_id(&self, id: Uuid) -> anyhow::Result<()>;
 
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  ///
+  /// The count is reported because the callers are "Clear All" buttons that tell the operator what
+  /// they just destroyed, and it comes free from the statement.
+  async fn clear(&self) -> anyhow::Result<usize>;
 
   /// All notifications belonging to a given session.
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<Notification>>;
@@ -165,6 +179,34 @@ impl PgNotificationRepository {
 
 #[async_trait]
 impl NotificationRepository for PgNotificationRepository {
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Notification>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      notifications::table
+        .filter(notifications::team_member_id.eq_any(ids.to_vec()))
+        .select(Notification::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
+  async fn get_many_by_session_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Notification>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      notifications::table
+        .filter(notifications::session_id.eq_any(ids.to_vec()))
+        .select(Notification::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
   async fn query_page(
     &self,
     filter: &NotificationFilter,
@@ -306,10 +348,9 @@ impl NotificationRepository for PgNotificationRepository {
     Ok(())
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     let mut conn = self.pool.get().await?;
-    diesel::delete(notifications::table).execute(&mut conn).await?;
-    Ok(())
+    Ok(diesel::delete(notifications::table).execute(&mut conn).await?)
   }
 
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<Notification>> {

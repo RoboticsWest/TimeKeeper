@@ -7,8 +7,8 @@ import 'package:time_keeper/models/session_status.dart';
 import 'package:time_keeper/providers/attendance_page_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
-import 'package:time_keeper/providers/team_member_provider.dart';
 import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/attendance/attendance_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
@@ -27,10 +27,10 @@ class AttendanceView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(teamMembersSyncProvider);
+    // Only the filter dropdowns read these collections now — the *rows* carry their own member and
+    // session, resolved server-side in the page query. That is what the nested fields are for.
     ref.watch(sessionsSyncProvider);
     ref.watch(locationsSyncProvider);
-    final teamMembers = ref.watch(teamMembersProvider);
     final sessions = ref.watch(sessionsProvider);
     final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
@@ -110,7 +110,7 @@ class AttendanceView extends HookConsumerWidget {
               Text('Attendance', style: theme.textTheme.headlineMedium),
               const Spacer(),
               OutlinedButton.icon(
-                onPressed: () => _showClearDialog(context, ref),
+                onPressed: () => _showClearDialog(context, ref, currentPage?.totalCount ?? 0),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
                 style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
@@ -227,14 +227,14 @@ class AttendanceView extends HookConsumerWidget {
                     ],
                     headerDecoration: tableHeaderDecoration(context),
                     editRows: currentPage.items.map((ms) {
-                      final member = teamMembers[ms.teamMemberId];
-                      final memberName = member?.displayLabel ?? 'Unknown';
+                      // Straight off the row: the query asked for the member and the session's
+                      // location, so there is nothing to look up.
+                      final memberName = ms.teamMember?.displayLabel ?? 'Unknown';
 
-                      final session = sessions[ms.sessionId];
-                      final location = session != null ? locations[session.locationId] : null;
-                      final sessionLabel = session != null
-                          ? '${formatDate(session.startTime)} @ ${location?.location ?? 'Unknown'}'
-                          : 'Unknown session';
+                      final rowSession = ms.session;
+                      final sessionLabel = rowSession == null
+                          ? 'Unknown session'
+                          : '${formatDate(rowSession.startTime)} @ ${rowSession.location?.location ?? 'Unknown'}';
 
                       final checkInStr = '${formatDate(ms.checkInTime)} ${formatTime(ms.checkInTime)}';
                       final checkOutStr = ms.checkOutTime != null
@@ -310,11 +310,13 @@ class AttendanceView extends HookConsumerWidget {
     );
   }
 
-  Future<void> _showClearDialog(BuildContext context, WidgetRef ref) async {
-    // Reads the whole collection only when the destructive action is actually invoked.
-    final teamMemberSessions = ref.read(teamMemberSessionsProvider);
-    final ids = teamMemberSessions.keys.toList();
-    if (ids.isEmpty) {
+  /// Deletes every attendance record in one request.
+  ///
+  /// [total] is the pager's unfiltered count. This used to read the whole collection to build a
+  /// list of ids and then delete them one HTTP request at a time — on a remote server, minutes of
+  /// sequential round trips and one change event per row to every connected client.
+  Future<void> _showClearDialog(BuildContext context, WidgetRef ref, int total) async {
+    if (total == 0) {
       SnackBarDialog.info(message: 'No attendance records to delete').show(context);
       return;
     }
@@ -323,17 +325,21 @@ class AttendanceView extends HookConsumerWidget {
       title: 'Clear All Attendance',
       message: Text(
         'Are you sure you want to delete all attendance records? '
-        '(${ids.length} ${ids.length == 1 ? 'record' : 'records'})',
+        '($total ${total == 1 ? 'record' : 'records'})',
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final notifier = ref.read(teamMemberSessionsProvider.notifier);
-        for (final id in ids) {
-          await notifier.delete(id);
+        final result = await ref.read(teamMemberSessionsProvider.notifier).clearAll();
+        if (!context.mounted) return;
+        switch (result) {
+          case ApiSuccess(data: final deleted):
+            SnackBarDialog.success(
+              message: 'Deleted $deleted attendance ${deleted == 1 ? 'record' : 'records'}',
+            ).show(context);
+          case ApiFailure(userMessage: final message):
+            SnackBarDialog.error(message: message).show(context);
         }
       },
-      showResultDialog: true,
-      successMessage: Text('Deleted ${ids.length} attendance records'),
     ).show(context);
   }
 }

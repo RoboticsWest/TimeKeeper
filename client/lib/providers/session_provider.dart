@@ -9,7 +9,11 @@ import 'package:time_keeper/utils/time_utils.dart';
 
 part 'session_provider.g.dart';
 
-const _sessionFields = 'id startTime endTime locationId finished actualStartTime actualEndTime';
+/// Sessions always carry their location, because every screen that shows a session shows where it
+/// is. Resolved server-side and batched, so the set costs one extra query rather than the client
+/// holding the locations table to look ids up in.
+const _sessionFields =
+    'id startTime endTime locationId finished actualStartTime actualEndTime location { id location }';
 
 const _sessionsQuery =
     '''
@@ -72,6 +76,12 @@ const _checkInOutMutation = r'''
 const _adminCheckInOutMutation = r'''
   mutation AdminCheckInOut($teamMemberId: UUID!, $locationId: UUID) {
     adminCheckInOut(teamMemberId: $teamMemberId, locationId: $locationId)
+  }
+''';
+
+const _clearSessionsMutation = r'''
+  mutation ClearSessions {
+    clearSessions
   }
 ''';
 
@@ -166,6 +176,28 @@ class Sessions extends _$Sessions {
       });
 
   Future<ApiCallResult> delete(String id) => _mutate(_deleteSessionMutation, {'id': id});
+
+  /// Deletes every sessions in one request, returning how many rows went.
+  ///
+  /// The views used to loop `delete(id)` over every row: one HTTP round trip and one change event
+  /// each, which on a link with real latency made clearing a season's data a minutes-long sequence
+  /// of requests that also drowned every connected client in deltas.
+  Future<ApiResult<int>> clearAll() => _mutateCount(_clearSessionsMutation, 'clearSessions');
+
+  /// Runs a mutation whose payload is a plain row count.
+  Future<ApiResult<int>> _mutateCount(String document, String rootField, [Map<String, dynamic>? variables]) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(document: gql(document), variables: variables ?? const {}, fetchPolicy: FetchPolicy.noCache),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiFailure(userMessage: message);
+    }
+    return ApiSuccess((result.data?[rootField] as num?)?.toInt() ?? 0);
+  }
 
   Future<ApiCallResult> _mutate(String document, Map<String, dynamic> variables) async {
     final client = ref.read(timeKeeperGraphQLClientProvider);

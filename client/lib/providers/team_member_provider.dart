@@ -56,6 +56,13 @@ const _deleteTeamMemberMutation = r'''
   }
 ''';
 
+/// Omitting `memberTypes` clears the whole roster; passing one narrows it to students or mentors.
+const _clearTeamMembersMutation = r'''
+  mutation ClearTeamMembers($memberTypes: [String!]) {
+    clearTeamMembers(memberTypes: $memberTypes)
+  }
+''';
+
 @riverpod
 Stream<ChangeEvent<TeamMember>> teamMemberChanges(Ref ref) {
   final client = ref.watch(timeKeeperGraphQLClientProvider);
@@ -140,6 +147,31 @@ class TeamMembers extends _$TeamMembers {
   });
 
   Future<ApiCallResult> delete(String id) => _mutate(_deleteTeamMemberMutation, {'id': id});
+
+  /// Deletes the whole roster, or only the given member types, in one request.
+  ///
+  /// The view used to loop `delete(id)` over every row: one HTTP round trip and one change event
+  /// each, which on a link with real latency made clearing an imported roster a minutes-long
+  /// sequence of requests that also drowned every connected client in deltas.
+  ///
+  /// Their attendance, RFID tags and RSVPs cascade at the database level.
+  Future<ApiResult<int>> clearAll({List<String>? memberTypes}) =>
+      _mutateCount(_clearTeamMembersMutation, 'clearTeamMembers', {'memberTypes': memberTypes});
+
+  /// Runs a mutation whose payload is a plain row count.
+  Future<ApiResult<int>> _mutateCount(String document, String rootField, [Map<String, dynamic>? variables]) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(document: gql(document), variables: variables ?? const {}, fetchPolicy: FetchPolicy.noCache),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiFailure(userMessage: message);
+    }
+    return ApiSuccess((result.data?[rootField] as num?)?.toInt() ?? 0);
+  }
 
   Future<ApiCallResult> _mutate(String document, Map<String, dynamic> variables) async {
     final client = ref.read(timeKeeperGraphQLClientProvider);

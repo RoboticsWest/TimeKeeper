@@ -12,6 +12,16 @@ use super::model::{SessionRsvp, SessionRsvpMessage};
 
 #[async_trait]
 pub trait SessionRsvpRepository: Send + Sync {
+  /// Fetches every row whose `team_member_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<SessionRsvp>>;
+  /// Fetches every row whose `session_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_session_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<SessionRsvp>>;
   async fn get_all(&self) -> anyhow::Result<Vec<SessionRsvp>>;
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<SessionRsvp>>;
   async fn upsert(&self, session_id: Uuid, team_member_id: Uuid, status: &str) -> anyhow::Result<SessionRsvp>;
@@ -32,6 +42,34 @@ impl PgSessionRsvpRepository {
 
 #[async_trait]
 impl SessionRsvpRepository for PgSessionRsvpRepository {
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<SessionRsvp>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      session_rsvps::table
+        .filter(session_rsvps::team_member_id.eq_any(ids.to_vec()))
+        .select(SessionRsvp::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
+  async fn get_many_by_session_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<SessionRsvp>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      session_rsvps::table
+        .filter(session_rsvps::session_id.eq_any(ids.to_vec()))
+        .select(SessionRsvp::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
   async fn get_all(&self) -> anyhow::Result<Vec<SessionRsvp>> {
     let mut conn = self.pool.get().await?;
     Ok(session_rsvps::table.select(SessionRsvp::as_select()).load(&mut conn).await?)

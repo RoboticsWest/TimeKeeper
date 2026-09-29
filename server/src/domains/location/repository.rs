@@ -39,13 +39,24 @@ macro_rules! filtered_locations {
 #[async_trait]
 pub trait LocationRepository: Send + Sync {
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Location>>;
+  /// Fetches many rows by id in one statement.
+  ///
+  /// Exists for the GraphQL data loaders: a page of rows that each resolve a nested `Location` would
+  /// otherwise be one query per row (the N+1 every relational GraphQL schema has to answer for).
+  /// Ids not present are simply absent from the result.
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Location>>;
+
   async fn get_all(&self) -> anyhow::Result<Vec<Location>>;
   /// Used by CSV/ICS schedule import to check whether a location already exists by name.
   async fn get_by_name(&self, location: &str) -> anyhow::Result<Vec<Location>>;
   async fn add(&self, location: &str) -> anyhow::Result<Location>;
   async fn update(&self, id: Uuid, location: &str) -> anyhow::Result<Option<Location>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  ///
+  /// The count is reported because the callers are "Clear All" buttons that tell the operator what
+  /// they just destroyed, and it comes free from the statement.
+  async fn clear(&self) -> anyhow::Result<usize>;
   /// One page of locations matching `filter`, ordered by name, with the total match count.
   async fn query_page(&self, filter: &LocationFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Location>, i64)>;
 }
@@ -62,6 +73,14 @@ impl PgLocationRepository {
 
 #[async_trait]
 impl LocationRepository for PgLocationRepository {
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Location>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(locations::table.filter(locations::id.eq_any(ids.to_vec())).select(Location::as_select()).load(&mut conn).await?)
+  }
+
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Location>> {
     let mut conn = self.pool.get().await?;
     Ok(locations::table.filter(locations::id.eq(id)).select(Location::as_select()).first(&mut conn).await.optional()?)
@@ -107,10 +126,9 @@ impl LocationRepository for PgLocationRepository {
     Ok(())
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     let mut conn = self.pool.get().await?;
-    diesel::delete(locations::table).execute(&mut conn).await?;
-    Ok(())
+    Ok(diesel::delete(locations::table).execute(&mut conn).await?)
   }
 
   async fn query_page(&self, filter: &LocationFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Location>, i64)> {

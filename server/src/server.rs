@@ -5,7 +5,7 @@ use anyhow::Result;
 use tokio_util::sync::CancellationToken;
 
 use crate::{
-  api::{self, Api},
+  api::{self, Api, Repositories},
   auth::{
     jwt::init_jwt_secret,
     permissions_repository::{PermissionsRepository, PgPermissionsRepository},
@@ -30,7 +30,7 @@ use crate::{
     settings::{DefaultSettingsLogic, PgLogoRepository, PgSettingsRepository, SettingsLogic, SettingsRepository},
     statistics::{
       AccoladesLogic, DefaultAccoladesLogic, DefaultMemberStatsLogic, DefaultStatisticsLogic, MemberStatsLogic,
-      PgMemberStatsRepository, StatisticsLogic,
+      MemberStatsRepository, PgMemberStatsRepository, StatisticsLogic,
     },
     team_member::{DefaultTeamMemberLogic, PgTeamMemberRepository, TeamMemberLogic, TeamMemberRepository},
     team_member_session::{
@@ -129,6 +129,7 @@ impl Server {
     // auto-checkout all write through it.
     let member_stats_logic: Arc<dyn MemberStatsLogic> =
       Arc::new(DefaultMemberStatsLogic::new(PgMemberStatsRepository::new(pool.clone())));
+    let member_stats_repo: Arc<dyn MemberStatsRepository> = Arc::new(PgMemberStatsRepository::new(pool.clone()));
     let session_logic: Arc<dyn SessionLogic> = Arc::new(DefaultSessionLogic::new(
       PgSessionRepository::new(pool.clone()),
       team_member_session_repo.clone(),
@@ -152,7 +153,6 @@ impl Server {
       team_member_session_repo.clone(),
       settings_repo.clone(),
       Arc::new(PgMemberStatsRepository::new(pool.clone())),
-      statistics_logic.clone(),
     ));
     let schedule_logic: Arc<dyn ScheduleLogic> =
       Arc::new(DefaultScheduleLogic::new(location_repo.clone(), session_repo.clone()));
@@ -235,7 +235,20 @@ impl Server {
 
     let graphql_addr: std::net::SocketAddr =
       format!("{}:{}", config.addr, config.graphql_port).parse().expect("Error parsing API address");
-    let graphql_server = Api::new(graphql_addr, schema.clone());
+    // The repositories the GraphQL data loaders read through, to batch the schema's nested
+    // relationship lookups (see `api::insert_loaders`).
+    let loader_repos = Repositories {
+      team_members: team_member_repo.clone(),
+      sessions: session_repo.clone(),
+      locations: location_repo.clone(),
+      attendance: team_member_session_repo.clone(),
+      rfid_tags: rfid_tag_repo.clone(),
+      rsvps: session_rsvp_repo.clone(),
+      notifications: notification_repo.clone(),
+      member_stats: member_stats_repo.clone(),
+    };
+
+    let graphql_server = Api::new(graphql_addr, schema.clone(), loader_repos.clone());
     let api_cancel = cancel.clone();
     let mut graphql_handle = tokio::spawn(async move {
       if let Err(e) = graphql_server.serve(api_cancel).await {
@@ -248,7 +261,7 @@ impl Server {
       None
     } else {
       let web_addr = format!("{}:{}", config.addr, config.web_port).parse().expect("Error parsing web address");
-      let web_server = Web::new(web_addr, config.web_dir.clone(), schema.clone());
+      let web_server = Web::new(web_addr, config.web_dir.clone(), schema.clone(), loader_repos.clone());
       let web_cancel = cancel.clone();
       Some(tokio::spawn(async move {
         if let Err(e) = web_server.serve(web_cancel).await {

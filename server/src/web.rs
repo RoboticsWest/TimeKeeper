@@ -15,6 +15,7 @@ use tower_http::{
   services::{ServeDir, ServeFile},
 };
 
+use crate::api::Repositories;
 use crate::schema::AppSchema;
 
 async fn set_wasm_headers(req: Request<Body>, next: Next) -> Response {
@@ -41,11 +42,13 @@ pub struct Web {
   addr: SocketAddr,
   static_dir: String,
   schema: AppSchema,
+  /// Passed through to the GraphQL routes, which build per-request data loaders from it.
+  repos: Repositories,
 }
 
 impl Web {
-  pub fn new(addr: SocketAddr, static_dir: String, schema: AppSchema) -> Self {
-    Self { addr, static_dir, schema }
+  pub fn new(addr: SocketAddr, static_dir: String, schema: AppSchema, repos: Repositories) -> Self {
+    Self { addr, static_dir, schema, repos }
   }
 
   pub async fn serve(&self, cancel: CancellationToken) -> Result<()> {
@@ -55,7 +58,7 @@ impl Web {
     let app = Router::new()
       // The API answers on this port too, so a browser served the app from here reaches
       // `/graphql`, `/graphql/ws` and `/health` same-origin without any configuration.
-      .merge(crate::api::routes(self.schema.clone()))
+      .merge(crate::api::routes(self.schema.clone(), self.repos.clone()))
       // Static file serving as fallback
       .fallback_service(
         ServiceBuilder::new().layer(cors).service(

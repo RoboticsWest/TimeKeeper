@@ -61,7 +61,7 @@ final class AppDataSyncProvider extends $NotifierProvider<AppDataSync, void> {
   }
 }
 
-String _$appDataSyncHash() => r'da2e8e51ffdf29c37c9e782bbb0b02e995f37e44';
+String _$appDataSyncHash() => r'b46cbe9726be455e3bcce716e3f25f2ed37c92d4';
 
 /// App-lifetime data bootstrap, wired once from [App].
 ///

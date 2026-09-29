@@ -70,7 +70,7 @@ final class LocationsProvider extends $NotifierProvider<Locations, Map<String, L
   }
 }
 
-String _$locationsHash() => r'2768ca7cf3e6fbb07754dc3cef8f90101ec130d5';
+String _$locationsHash() => r'e88b7cd7e2b40d04eb8972bce016136a81bc3a03';
 
 abstract class _$Locations extends $Notifier<Map<String, Location>> {
   Map<String, Location> build();

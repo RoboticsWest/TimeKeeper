@@ -10,7 +10,19 @@ import 'package:time_keeper/utils/time_utils.dart';
 
 part 'attendance_page_provider.g.dart';
 
-const _teamMemberSessionFields = 'id teamMemberId sessionId checkInTime checkOutTime';
+/// The shape the Attendance table renders: the visit, plus the names it prints.
+///
+/// The nested `teamMember` and `session { location }` are resolved server-side and batched, so a
+/// page costs one query for the rows and one per relationship — not one per row, and not a local
+/// copy of three whole tables to look ids up in.
+const _teamMemberSessionFields = '''
+        id
+        teamMemberId
+        sessionId
+        checkInTime
+        checkOutTime
+        teamMember { id firstName lastName memberType displayName }
+        session { id startTime endTime locationId finished location { id location } }''';
 
 const _attendancePageQuery =
     '''

@@ -10,7 +10,7 @@ use crate::domains::session::SessionRepository;
 use crate::domains::team_member::TeamMemberRepository;
 
 use super::csv_parser::AttendanceCsvParser;
-use super::model::TeamMemberSession;
+use super::model::{AttendanceSummary, SessionAttendanceCount, TeamMemberSession};
 use super::repository::{AttendanceFilter, TeamMemberSessionRepository};
 
 #[async_trait]
@@ -19,6 +19,18 @@ pub trait TeamMemberSessionLogic: Send + Sync {
   async fn get_all(&self) -> anyhow::Result<Vec<TeamMemberSession>>;
   async fn get_by_member_id(&self, team_member_id: Uuid) -> anyhow::Result<Vec<TeamMemberSession>>;
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<TeamMemberSession>>;
+
+  /// Every visit nobody has checked out of yet — "who is here right now".
+  async fn get_open(&self) -> anyhow::Result<Vec<TeamMemberSession>>;
+
+  /// Per-session attendance counters for the given sessions.
+  async fn counts_by_session(&self, session_ids: &[Uuid]) -> anyhow::Result<Vec<SessionAttendanceCount>>;
+
+  /// Table-wide attendance totals.
+  async fn summary(&self) -> anyhow::Result<AttendanceSummary>;
+
+  /// When this member last checked in or out.
+  async fn last_activity_for_member(&self, team_member_id: Uuid) -> anyhow::Result<Option<DateTime<Utc>>>;
   async fn add(
     &self,
     team_member_id: Uuid,
@@ -35,7 +47,9 @@ pub trait TeamMemberSessionLogic: Send + Sync {
     check_out_time: Option<DateTime<Utc>>,
   ) -> anyhow::Result<TeamMemberSession>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every attendance row, returning how many there were, and resets the affected
+  /// sessions' actual start/end times.
+  async fn clear(&self) -> anyhow::Result<usize>;
   /// Parses an attendance CSV (`FIRST_NAME,LAST_NAME,LOCATION,CHECK_IN_TIME,CHECK_OUT_TIME`),
   /// resolves each row's team member (by name) and session (by location + a generous time
   /// window around check-in), and adds a check-in record for it - skipping rows it can't resolve
@@ -88,6 +102,22 @@ impl<R: TeamMemberSessionRepository> TeamMemberSessionLogic for DefaultTeamMembe
     self.repo.get_by_session_id(session_id).await
   }
 
+  async fn get_open(&self) -> anyhow::Result<Vec<TeamMemberSession>> {
+    self.repo.get_open().await
+  }
+
+  async fn counts_by_session(&self, session_ids: &[Uuid]) -> anyhow::Result<Vec<SessionAttendanceCount>> {
+    self.repo.counts_by_session(session_ids).await
+  }
+
+  async fn summary(&self) -> anyhow::Result<AttendanceSummary> {
+    self.repo.summary().await
+  }
+
+  async fn last_activity_for_member(&self, team_member_id: Uuid) -> anyhow::Result<Option<DateTime<Utc>>> {
+    self.repo.last_activity_for_member(team_member_id).await
+  }
+
   async fn add(
     &self,
     team_member_id: Uuid,
@@ -138,14 +168,14 @@ impl<R: TeamMemberSessionRepository> TeamMemberSessionLogic for DefaultTeamMembe
     Ok(())
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     let session_ids: Vec<Uuid> = self.repo.get_all().await?.into_iter().map(|ms| ms.session_id).collect();
-    self.repo.clear().await?;
+    let deleted = self.repo.clear().await?;
     // Every session just lost all its attendance, so all of them revert to "never started".
     for session_id in session_ids.into_iter().collect::<std::collections::HashSet<_>>() {
       self.sessions.refresh_actual_times(session_id).await?;
     }
-    Ok(())
+    Ok(deleted)
   }
 
   async fn query_page(

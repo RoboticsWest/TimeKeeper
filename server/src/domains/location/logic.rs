@@ -11,7 +11,8 @@ pub trait LocationLogic: Send + Sync {
   async fn add(&self, location: &str) -> anyhow::Result<Location>;
   async fn update(&self, id: Uuid, location: &str) -> anyhow::Result<Option<Location>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  async fn clear(&self) -> anyhow::Result<usize>;
   /// One page of locations matching `filter`, ordered by name, with the total match count.
   async fn query_page(&self, filter: &LocationFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Location>, i64)>;
 }
@@ -48,7 +49,7 @@ impl<R: LocationRepository> LocationLogic for DefaultLocationLogic<R> {
     self.repo.remove(id).await
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     self.repo.clear().await
   }
 

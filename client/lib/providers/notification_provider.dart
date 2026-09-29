@@ -52,6 +52,12 @@ const _deleteNotificationMutation = r'''
   }
 ''';
 
+const _clearNotificationsMutation = r'''
+  mutation ClearNotifications {
+    clearNotifications
+  }
+''';
+
 @riverpod
 Stream<ChangeEvent<Notification>> notificationChanges(Ref ref) {
   final client = ref.watch(timeKeeperGraphQLClientProvider);
@@ -68,10 +74,11 @@ Stream<ChangeEvent<Notification>> notificationChanges(Ref ref) {
 class Notifications extends _$Notifications {
   @override
   Map<String, Notification> build() {
-    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
-    // Without this a fetch that failed at startup is never retried.
+    // Deliberately does **not** fetch. Nothing renders this collection any more — the Notifications view is
+    // server-paged and subscribes to the change stream itself — so seeding it would download the
+    // whole table for the sake of a mutation call site reaching for `.notifier`. The map stays
+    // empty unless something calls [refresh]; the mutations below are what this is kept for.
     ref.watch(timeKeeperGraphQLClientProvider);
-    _fetchInitial();
     return {};
   }
 
@@ -119,6 +126,28 @@ class Notifications extends _$Notifications {
   Future<ApiCallResult> cancel(String id) => _mutate(_cancelNotificationMutation, {'id': id});
 
   Future<ApiCallResult> delete(String id) => _mutate(_deleteNotificationMutation, {'id': id});
+
+  /// Deletes every notifications in one request, returning how many rows went.
+  ///
+  /// The views used to loop `delete(id)` over every row: one HTTP round trip and one change event
+  /// each, which on a link with real latency made clearing a season's data a minutes-long sequence
+  /// of requests that also drowned every connected client in deltas.
+  Future<ApiResult<int>> clearAll() => _mutateCount(_clearNotificationsMutation, 'clearNotifications');
+
+  /// Runs a mutation whose payload is a plain row count.
+  Future<ApiResult<int>> _mutateCount(String document, String rootField, [Map<String, dynamic>? variables]) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(document: gql(document), variables: variables ?? const {}, fetchPolicy: FetchPolicy.noCache),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiFailure(userMessage: message);
+    }
+    return ApiSuccess((result.data?[rootField] as num?)?.toInt() ?? 0);
+  }
 
   Future<ApiCallResult> _mutate(String document, Map<String, dynamic> variables) async {
     final client = ref.read(timeKeeperGraphQLClientProvider);

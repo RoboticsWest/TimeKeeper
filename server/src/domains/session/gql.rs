@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
-use crate::events::{ChangeOperation, EVENT_BUS};
+use crate::events::{ChangeOperation, EVENT_BUS, resolve_once};
 use crate::gql_common::{Change, Page, page_bounds};
 
 use crate::domains::notification::{LateReminderPolicy, plan_session_reminders};
@@ -235,6 +235,19 @@ impl SessionMutation {
     Ok(true)
   }
 
+  /// Deletes every session, returning how many there were.
+  ///
+  /// One statement rather than the client looping a delete per row: that loop was one HTTP round
+  /// trip *and* one change event per row, which over a link with any latency turned clearing a
+  /// season's worth of data into minutes of sequential requests.
+  ///
+  /// Attendance, notifications and RSVPs belonging to them cascade-delete at the database level.
+  async fn clear_sessions(&self, ctx: &Context<'_>) -> Result<i32> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Delete)?;
+    let deleted = logic(ctx)?.clear().await?;
+    Ok(i32::try_from(deleted).unwrap_or(i32::MAX))
+  }
+
   /// Kiosk check-in/out by RFID scan - creates or closes a `team_member_sessions` row.
   ///
   /// `locationId` may be omitted when the member is being checked *out*: the visit being closed
@@ -304,9 +317,13 @@ impl SessionSubscription {
       let logic = logic.clone();
       async move {
         let change = change.ok()?;
-        let data = match change.operation {
-          ChangeOperation::Delete => None,
-          _ => logic.get(change.id.parse().ok()?).await.ok().flatten(),
+        // A delete carries no row. Anything else is fetched once per event rather than once per
+        // subscriber - see `resolve_once`.
+        let data = if change.operation == ChangeOperation::Delete {
+          None
+        } else {
+          let id = change.id.parse().ok()?;
+          resolve_once(&change, || async move { logic.get(id).await.ok().flatten() }).await
         };
         Some(Change { operation: change.operation, id: ID(change.id), data })
       }

@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/models/location.dart';
-import 'package:time_keeper/models/session.dart';
-import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/models/team_member_session.dart';
 import 'package:time_keeper/helpers/session_helper.dart';
 import 'package:time_keeper/hooks/use_debounced_text.dart';
-import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/providers/open_attendance_provider.dart';
 import 'package:time_keeper/providers/rfid_tag_provider.dart';
-import 'package:time_keeper/providers/session_provider.dart' show sessionsProvider, sessionsSyncProvider;
 import 'package:time_keeper/providers/team_member_page_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/team/check_in_dialog.dart';
 import 'package:time_keeper/views/team/check_in_out_button.dart';
@@ -31,47 +27,49 @@ import 'package:time_keeper/colors.dart';
 class TeamView extends HookConsumerWidget {
   const TeamView({super.key});
 
+  /// Deletes a slice of the roster in one request.
+  ///
+  /// [memberTypes] null clears everybody; otherwise it narrows to students or mentors. This used
+  /// to collect ids from the in-memory roster and delete them one HTTP request at a time, which on
+  /// a remote server took minutes for an imported roster and sent one change event per member to
+  /// every connected client.
   void _showClearDialog(
     BuildContext context,
     WidgetRef ref, {
     required String title,
     required String description,
-    required List<String> ids,
+    List<String>? memberTypes,
   }) {
-    if (ids.isEmpty) {
-      SnackBarDialog.info(message: 'No members to delete').show(context);
-      return;
-    }
-
     ConfirmDialog.warn(
       title: title,
       message: Text(
         'Are you sure you want to delete $description? '
-        '(${ids.length} ${ids.length == 1 ? 'member' : 'members'})',
+        'Their attendance records, RFID tags and RSVPs go with them.',
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final notifier = ref.read(teamMembersProvider.notifier);
-        for (final id in ids) {
-          await notifier.delete(id);
+        final result = await ref.read(teamMembersProvider.notifier).clearAll(memberTypes: memberTypes);
+        if (!context.mounted) return;
+        switch (result) {
+          case ApiSuccess(data: final deleted):
+            SnackBarDialog.success(
+              message: deleted == 0
+                  ? 'No members to delete'
+                  : 'Deleted $deleted ${deleted == 1 ? 'member' : 'members'}',
+            ).show(context);
+          case ApiFailure(userMessage: final message):
+            SnackBarDialog.error(message: message).show(context);
         }
       },
-      showResultDialog: true,
-      successMessage: Text('Deleted ${ids.length} members'),
     ).show(context);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(teamMembersSyncProvider);
-    ref.watch(teamMemberSessionsSyncProvider);
-    ref.watch(sessionsSyncProvider);
-    ref.watch(locationsSyncProvider);
-    final teamMembers = ref.watch(teamMembersProvider);
-    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
-    // Only used to name the session a checkout would close.
-    final sessions = ref.watch(sessionsProvider);
-    final locations = ref.watch(locationsProvider);
+    // Only who is currently checked in - the button's state and the checkout label are all this
+    // view ever asked of attendance, and that is a bounded set.
+    final openVisits = ref.watch(openAttendanceProvider);
     final theme = Theme.of(context);
 
     // The roster itself is paged server-side.
@@ -134,10 +132,7 @@ class TeamView extends HookConsumerWidget {
                       ref,
                       title: 'Clear Students',
                       description: 'all students',
-                      ids: teamMembers.entries
-                          .where((e) => e.value.memberType == TeamMemberType.student)
-                          .map((e) => e.key)
-                          .toList(),
+                      memberTypes: const ['student'],
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -150,10 +145,7 @@ class TeamView extends HookConsumerWidget {
                       ref,
                       title: 'Clear Mentors',
                       description: 'all mentors',
-                      ids: teamMembers.entries
-                          .where((e) => e.value.memberType == TeamMemberType.mentor)
-                          .map((e) => e.key)
-                          .toList(),
+                      memberTypes: const ['mentor'],
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -161,13 +153,8 @@ class TeamView extends HookConsumerWidget {
                     label: 'Clear All',
                     icon: Icons.delete_sweep,
                     color: theme.colorScheme.error,
-                    onPressed: () => _showClearDialog(
-                      context,
-                      ref,
-                      title: 'Clear All Members',
-                      description: 'all team members',
-                      ids: teamMembers.keys.toList(),
-                    ),
+                    onPressed: () =>
+                        _showClearDialog(context, ref, title: 'Clear All Members', description: 'all team members'),
                   ),
                   const SizedBox(width: 8),
                   IconButton(
@@ -245,7 +232,7 @@ class TeamView extends HookConsumerWidget {
                     headerDecoration: tableHeaderDecoration(context),
                     editRows: currentPage.items.map((member) {
                       final id = member.id;
-                      final checkedIn = isMemberCheckedIn(id, teamMemberSessions.values);
+                      final checkedIn = isMemberCheckedIn(id, openVisits.values);
                       final memberLabel = member.displayLabel;
                       final memberTags = ref.watch(rfidTagsByMemberProvider(id));
                       final tagDisplay = memberTags.isEmpty ? '—' : memberTags.values.map((t) => t.tag).join(', ');
@@ -283,7 +270,7 @@ class TeamView extends HookConsumerWidget {
                                       ref,
                                       memberId: id,
                                       memberName: memberLabel,
-                                      whereLabel: _openVisitLabel(id, teamMemberSessions, sessions, locations),
+                                      whereLabel: _openVisitLabel(id, openVisits),
                                     )
                                   : showCheckInDialog(context, ref, memberId: id, memberName: memberLabel),
                             ),
@@ -326,17 +313,12 @@ class TeamView extends HookConsumerWidget {
 
 /// Names the session a checkout would close ("the Machine Shop session (6:00 PM – 9:00 PM)"), so
 /// the confirmation says what is about to happen rather than just "check out".
-String _openVisitLabel(
-  String memberId,
-  Map<String, TeamMemberSession> teamMemberSessions,
-  Map<String, Session> sessions,
-  Map<String, Location> locations,
-) {
-  final visit = openVisitOf(memberId, teamMemberSessions);
-  final session = visit == null ? null : sessions[visit.value.sessionId];
+String _openVisitLabel(String memberId, Map<String, TeamMemberSession> openVisits) {
+  final visit = openVisitOf(memberId, openVisits);
+  final session = visit?.value.session;
   if (session == null) return 'their current session';
 
-  final location = locations[session.locationId]?.location;
+  final location = session.location?.location;
   final times = '${formatTime(session.startTime)} \u2013 ${formatTime(session.endTime)}';
   return location == null ? 'their session ($times)' : 'the $location session ($times)';
 }

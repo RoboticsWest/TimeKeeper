@@ -64,10 +64,11 @@ Stream<ChangeEvent<User>> userChanges(Ref ref) {
 class Users extends _$Users {
   @override
   Map<String, User> build() {
-    // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
-    // Without this a fetch that failed at startup is never retried.
+    // Deliberately does **not** fetch. Nothing renders this collection any more — the Users view is
+    // server-paged and subscribes to the change stream itself — so seeding it would download the
+    // whole table for the sake of a mutation call site reaching for `.notifier`. The map stays
+    // empty unless something calls [refresh]; the mutations below are what this is kept for.
     ref.watch(timeKeeperGraphQLClientProvider);
-    _fetchInitial();
     return {};
   }
 

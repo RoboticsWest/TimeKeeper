@@ -40,7 +40,8 @@ Row actions:
 - **Edit Check-In** — opens pickers for check-in and check-out times (correct a
   mis-tap, or fix a scanned time).
 - **Delete** — remove a record.
-- **Clear All Attendance** — wipe the whole table (with confirmation).
+- **Clear All Attendance** — wipe the whole table (with confirmation). One request, one
+  transaction: it used to delete a row per request, which on a remote server took minutes.
 
 ![Attendance grid](../assets/screenshots/attendance.svg)
 

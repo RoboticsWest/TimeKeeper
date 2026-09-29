@@ -9,6 +9,11 @@ use super::model::RfidTag;
 
 #[async_trait]
 pub trait RfidTagRepository: Send + Sync {
+  /// Fetches every row whose `team_member_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<RfidTag>>;
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<RfidTag>>;
   async fn get_all(&self) -> anyhow::Result<Vec<RfidTag>>;
   async fn add(&self, team_member_id: Uuid, tag: &str) -> anyhow::Result<RfidTag>;
@@ -35,6 +40,20 @@ impl PgRfidTagRepository {
 
 #[async_trait]
 impl RfidTagRepository for PgRfidTagRepository {
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<RfidTag>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      rfid_tags::table
+        .filter(rfid_tags::team_member_id.eq_any(ids.to_vec()))
+        .select(RfidTag::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<RfidTag>> {
     let mut conn = self.pool.get().await?;
     Ok(rfid_tags::table.filter(rfid_tags::id.eq(id)).select(RfidTag::as_select()).first(&mut conn).await.optional()?)

@@ -35,8 +35,25 @@ pub async fn migrate(database_url: &str) -> anyhow::Result<()> {
   Ok(())
 }
 
+/// Connections the pool will open. Above bb8's default of 10, which was a real ceiling: the
+/// GraphQL API, the change-notify republisher, the Discord bot and the session scheduler all draw
+/// from this one pool, and a handful of concurrent aggregate requests (the achievements board
+/// reads five tables at once) could hold every connection while the rest queued.
+///
+/// Postgres defaults to `max_connections = 100`, so this leaves plenty of headroom for the
+/// embedded instance and for a deploy sharing a database container.
+const POOL_MAX_SIZE: u32 = 48;
+
+/// How long a request waits for a free connection before failing.
+///
+/// bb8 defaults to 30 seconds, which is long enough that a starved request looks like a hang and
+/// then surfaces as an ordinary query error far from its cause — the achievements page spent half
+/// a minute loading and then reported "no team members". Ten seconds is still generous for a
+/// checkout and fails while the reason is still obvious.
+const POOL_CONNECTION_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+
 pub async fn open(database_url: &str) -> anyhow::Result<DbPool> {
   let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
-  let pool = Pool::builder().build(config).await?;
+  let pool = Pool::builder().max_size(POOL_MAX_SIZE).connection_timeout(POOL_CONNECTION_TIMEOUT).build(config).await?;
   Ok(pool)
 }

@@ -10,11 +10,11 @@ use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
 use crate::domains::session::SessionLogic;
 use crate::domains::statistics::{MemberStatsLogic, SOURCE_ADMIN};
-use crate::events::{ChangeOperation, EVENT_BUS};
+use crate::events::{ChangeOperation, EVENT_BUS, resolve_once};
 use crate::gql_common::{Change, Page, page_bounds};
 
 use super::logic::TeamMemberSessionLogic;
-use super::model::TeamMemberSession;
+use super::model::{AttendanceSummary, SessionAttendanceCount, TeamMemberSession};
 use super::repository::AttendanceFilter;
 
 const RESOURCE: &str = "team_member_sessions";
@@ -75,6 +75,42 @@ impl TeamMemberSessionQuery {
   /// grows without bound and will not stay loadable in one request.
   async fn team_member_sessions(&self, ctx: &Context<'_>) -> Result<Vec<TeamMemberSession>> {
     Ok(logic(ctx)?.get_all().await?)
+  }
+
+  /// Every visit nobody has checked out of yet — who is in the building right now.
+  ///
+  /// This exists so a client does not have to hold the entire attendance table to answer "is this
+  /// member checked in?". That is all the kiosk board, the roster's check-in button and the RFID
+  /// scan path ever asked of it, and the whole table grows without bound while this is bounded by
+  /// the size of the team. Clients used to download every row at login to compute it.
+  async fn open_attendance(&self, ctx: &Context<'_>) -> Result<Vec<TeamMemberSession>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    Ok(logic(ctx)?.get_open().await?)
+  }
+
+  /// Attendance counters for the given sessions: people seen, and people still in.
+  ///
+  /// Asked for a page of sessions at a time. The Sessions table used to count these in Dart over a
+  /// client-side copy of every attendance row ever recorded.
+  async fn session_attendance_counts(
+    &self,
+    ctx: &Context<'_>,
+    session_ids: Vec<Uuid>,
+  ) -> Result<Vec<SessionAttendanceCount>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    Ok(logic(ctx)?.counts_by_session(&session_ids).await?)
+  }
+
+  /// Table-wide attendance totals, for the KPI tiles that only ever showed a count.
+  async fn attendance_summary(&self, ctx: &Context<'_>) -> Result<AttendanceSummary> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    Ok(logic(ctx)?.summary().await?)
+  }
+
+  /// When a member last checked in or out — what the kiosk's scan debounce compares against.
+  async fn last_attendance_activity(&self, ctx: &Context<'_>, team_member_id: Uuid) -> Result<Option<DateTime<Utc>>> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Read)?;
+    Ok(logic(ctx)?.last_activity_for_member(team_member_id).await?)
   }
 
   /// One filtered, paged slice of attendance, newest check-in first.
@@ -139,6 +175,17 @@ impl TeamMemberSessionMutation {
     Ok(true)
   }
 
+  /// Deletes every attendance record, returning how many there were.
+  ///
+  /// One statement rather than the client looping a delete per row: that loop was one HTTP round
+  /// trip *and* one change event per row, which over a link with any latency turned clearing a
+  /// season's worth of data into minutes of sequential requests.
+  async fn clear_attendance(&self, ctx: &Context<'_>) -> Result<i32> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Delete)?;
+    let deleted = logic(ctx)?.clear().await?;
+    Ok(i32::try_from(deleted).unwrap_or(i32::MAX))
+  }
+
   async fn import_attendance_csv(&self, ctx: &Context<'_>, csv_data: String) -> Result<bool> {
     require_permission(ctx, RESOURCE, PermissionLevel::Write)?;
     logic(ctx)?.import_attendance_csv(&csv_data).await.map_err(|e| Error::new(e.to_string()))?;
@@ -165,9 +212,13 @@ impl TeamMemberSessionSubscription {
       let logic = logic.clone();
       async move {
         let change = change.ok()?;
-        let data = match change.operation {
-          ChangeOperation::Delete => None,
-          _ => logic.get(change.id.parse().ok()?).await.ok().flatten(),
+        // A delete carries no row. Anything else is fetched once per event rather than once per
+        // subscriber - see `resolve_once`.
+        let data = if change.operation == ChangeOperation::Delete {
+          None
+        } else {
+          let id = change.id.parse().ok()?;
+          resolve_once(&change, || async move { logic.get(id).await.ok().flatten() }).await
         };
         Some(Change { operation: change.operation, id: ID(change.id), data })
       }

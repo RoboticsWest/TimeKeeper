@@ -38,7 +38,7 @@ final class SessionPageProvider extends $AsyncNotifierProvider<SessionPage, Page
   SessionPage create() => SessionPage();
 }
 
-String _$sessionPageHash() => r'01d31eb4342528a30215690e44001743fc17f8c6';
+String _$sessionPageHash() => r'970d92a464d4c141bd5646ffa6abe710f538fc18';
 
 /// A paged, filtered slice of sessions for the table mode of the Sessions view. The calendar and
 /// stats still read the whole set from the collection providers.

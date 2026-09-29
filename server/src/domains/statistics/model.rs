@@ -4,12 +4,19 @@
 //! 0013). Nothing in here is needed to run a session; it exists so the stat card and the
 //! achievements have something durable and unambiguous to read.
 
-use async_graphql::SimpleObject;
+use async_graphql::dataloader::DataLoader;
+use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
 
 use database::schema::{attendance_stats, team_member_stats};
+
+use crate::auth::auth_helpers::require_permission;
+use crate::auth::permissions::PermissionLevel;
+use crate::domains::team_member::TeamMember;
+use crate::domains::team_member_session::TeamMemberSession;
+use crate::loaders::{AttendanceLoader, TeamMemberLoader};
 
 /// Nobody has checked out of this attendance yet.
 pub const CHECKOUT_NONE: &str = "none";
@@ -29,6 +36,7 @@ pub const SOURCE_UNKNOWN: &str = "unknown";
 
 /// What happened to one specific attendance, recorded at the moment it happened.
 #[derive(Debug, Clone, Queryable, Selectable, SimpleObject)]
+#[graphql(complex)]
 #[diesel(table_name = attendance_stats)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct AttendanceStats {
@@ -61,6 +69,7 @@ impl AttendanceStats {
 /// Lifetime counters for one member. Monotonic by design: deleting an old session must not cost
 /// somebody an achievement they already earned.
 #[derive(Debug, Clone, Queryable, Selectable, SimpleObject)]
+#[graphql(complex)]
 #[diesel(table_name = team_member_stats)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct TeamMemberStats {
@@ -82,5 +91,25 @@ impl TeamMemberStats {
   #[must_use]
   pub fn zeroed(team_member_id: Uuid) -> Self {
     Self { team_member_id, check_ins: 0, overtime_warnings: 0, updated_at: Utc::now(), joined_at: None }
+  }
+}
+
+#[ComplexObject]
+impl AttendanceStats {
+  /// The visit these facts were recorded about.
+  async fn team_member_session(&self, ctx: &Context<'_>) -> Result<Option<TeamMemberSession>> {
+    require_permission(ctx, "team_member_sessions", PermissionLevel::Read)?;
+    let loader = ctx.data::<DataLoader<AttendanceLoader>>()?;
+    Ok(loader.load_one(self.team_member_session_id).await?)
+  }
+}
+
+#[ComplexObject]
+impl TeamMemberStats {
+  /// The member these counters belong to.
+  async fn team_member(&self, ctx: &Context<'_>) -> Result<Option<TeamMember>> {
+    require_permission(ctx, "team_members", PermissionLevel::Read)?;
+    let loader = ctx.data::<DataLoader<TeamMemberLoader>>()?;
+    Ok(loader.load_one(self.team_member_id).await?)
   }
 }

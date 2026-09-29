@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
-use crate::events::{ChangeOperation, EVENT_BUS};
+use crate::events::{ChangeOperation, EVENT_BUS, resolve_once};
 use crate::gql_common::{Change, Page, page_bounds};
 
 use super::logic::NotificationLogic;
@@ -163,6 +163,17 @@ impl NotificationMutation {
     logic.remove(id).await?;
     Ok(true)
   }
+
+  /// Deletes every notification, returning how many there were.
+  ///
+  /// One statement rather than the client looping a delete per row: that loop was one HTTP round
+  /// trip *and* one change event per row, which over a link with any latency turned clearing a
+  /// season's worth of data into minutes of sequential requests.
+  async fn clear_notifications(&self, ctx: &Context<'_>) -> Result<i32> {
+    require_permission(ctx, RESOURCE, PermissionLevel::Delete)?;
+    let deleted = logic(ctx)?.clear().await?;
+    Ok(i32::try_from(deleted).unwrap_or(i32::MAX))
+  }
 }
 
 #[derive(Default)]
@@ -181,9 +192,13 @@ impl NotificationSubscription {
       let logic = logic.clone();
       async move {
         let change = change.ok()?;
-        let data = match change.operation {
-          ChangeOperation::Delete => None,
-          _ => logic.get(change.id.parse().ok()?).await.ok().flatten(),
+        // A delete carries no row. Anything else is fetched once per event rather than once per
+        // subscriber - see `resolve_once`.
+        let data = if change.operation == ChangeOperation::Delete {
+          None
+        } else {
+          let id = change.id.parse().ok()?;
+          resolve_once(&change, || async move { logic.get(id).await.ok().flatten() }).await
         };
         Some(Change { operation: change.operation, id: ID(change.id), data })
       }

@@ -34,6 +34,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Virtual clock for tests of debounced/timed behaviour, so they assert in microseconds rather
+  # than waiting out real seconds. Already present transitively via flutter_test; named here
+  # because the analyzer requires a direct dependency for a direct import.
+  fake_async: ^1.3.3
   flutter_lints: ^6.0.0
   riverpod_generator: 4.0.0+1
   build_runner: ^2.10.4

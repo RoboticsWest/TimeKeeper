@@ -64,6 +64,70 @@ There is **no onboarding wizard**: on first run the client talks to
 `127.0.0.1:4000` (default) — change that in the gear **Settings**. On web the
 API is always the page's own origin, so those fields are hidden.
 
+## What the app holds, and what it asks for
+
+TimeKeeper is an application, not a web page, and it keeps a small amount of reference data live in
+memory so navigating between views is instant and every screen agrees with every other one. What it
+holds is deliberately bounded:
+
+| Held live from login | Why | Size |
+|---|---|---|
+| Locations, Team Members, Sessions, RFID Tags, RSVPs | Resolving ids to names on almost every screen, and matching a scanned card at the kiosk | hundreds of rows |
+| Who is checked in right now (`openAttendance`) | The kiosk board, the roster's Check In/Out button, the scan path | bounded by the size of the team |
+
+The API returns **nested relationships**, so a view asks for the shape it renders rather than for
+ids it then has to look up. An attendance row can carry its member and its session's location:
+
+```graphql
+attendance(filter: { ... }, limit: 25) {
+  items {
+    checkInTime
+    checkOutTime
+    teamMember { displayName memberType }
+    session { startTime location { location } }
+  }
+}
+```
+
+**Every foreign key in the database is a nested field, in both directions.** A session resolves its
+`location`, `attendance`, `rsvps` and `notifications`; a member resolves their `attendance`,
+`rfidTags`, `rsvps`, `notifications` and `stats`; an attendance row resolves its `teamMember`,
+`session` and `stats`. The id stays available alongside the object for callers that only want it.
+
+Three rules keep that safe rather than merely convenient:
+
+- **Batched.** Each relationship is resolved by a data loader, so a page of any size costs one query
+  per relationship *level*, not one per row.
+- **Capped.** A has-many field returns 100 rows by default and 1000 at most, and takes a `limit`.
+  An unbounded nested list is a way to ask for a member's entire history by accident.
+- **Permission-checked.** A nested field enforces the same read permission its top-level query does.
+  A relationship is not a way around the permission model.
+
+Queries may nest up to 20 levels deep; beyond that the server rejects them, because with
+relationships in the schema the caller chooses the depth.
+
+A selection set that only wants ids still only pays for ids.
+
+Every list view now asks this way, so **no screen resolves an id against a local copy of a table**.
+What the client still holds live is the sets that are genuinely *whole-set* questions: the location
+dropdowns, the member and session pickers, the calendar's month grid, and the kiosk's RFID tag set
+(matching a scanned card without a round trip).
+
+Everything else is **asked for when it is needed**, in the shape it is needed:
+
+- **Lists** are server-paged and server-filtered — the page you see is the rows that were fetched.
+- **Counts** are counted in SQL (`sessionAttendanceCounts`, `attendanceSummary`), not by walking a
+  local copy of a table.
+- **Aggregates** (leaderboard, achievements) are computed server-side and re-requested once the
+  underlying data has been quiet for a moment, so a burst of check-ins costs one recomputation.
+- **The attendance history** — the one table that grows without bound — is downloaded only by the
+  two things that genuinely need every row: the Statistics dashboard and the CSV export. Opening
+  either is the only time the client pulls it.
+
+That last point used to be false: every login downloaded the entire attendance table (several
+megabytes after a season or two) before the first screen settled, which is what made the app feel
+slow on a server that is not on the same continent.
+
 ## Connection health & updates
 
 - The app polls `/health` every 10 s; an unreachable server turns the app bar red

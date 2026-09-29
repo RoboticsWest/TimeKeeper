@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/models/team_member_session.dart';
 
+/// "still in / seen" for a running session, or just "seen" for one that is over.
+///
+/// Takes the two counts rather than the rows they came from: they are counted in SQL now, so the
+/// caller no longer holds a list of attendance records to hand over.
 class MemberCount extends StatelessWidget {
+  /// Distinct members the session has seen.
   final int total;
-  final SessionStatus status;
-  final List<TeamMemberSession> sessionMemberSessions;
 
-  const MemberCount({super.key, required this.total, required this.status, required this.sessionMemberSessions});
+  /// Of those, how many have not checked out.
+  final int checkedIn;
+
+  final SessionStatus status;
+
+  const MemberCount({super.key, required this.total, required this.checkedIn, required this.status});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final activeCount = sessionMemberSessions.where((ms) => ms.checkOutTime == null).length;
-    final text = status == SessionStatus.current || status == SessionStatus.overtime
-        ? '$activeCount / $total'
-        : '$total';
+    final text = status == SessionStatus.current || status == SessionStatus.overtime ? '$checkedIn / $total' : '$total';
 
     return Row(
       mainAxisSize: MainAxisSize.min,

@@ -11,9 +11,9 @@ part of 'statistics_provider.dart';
 /// The leaderboard, recomputed server-side.
 ///
 /// Unlike the id-keyed collections this cannot be patched from a delta — it is an aggregate, so
-/// any change to its inputs invalidates the whole thing. Watching those collections re-runs the
-/// query; without it the leaderboard silently showed whatever was true when the page first
-/// loaded, which is the same "the UI doesn't update" failure as everywhere else.
+/// any change to its inputs invalidates the whole thing. [aggregateRevisionProvider] re-runs the
+/// query when they change; without it the leaderboard silently showed whatever was true when the
+/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.
 
 @ProviderFor(leaderboard)
 final leaderboardProvider = LeaderboardProvider._();
@@ -21,9 +21,9 @@ final leaderboardProvider = LeaderboardProvider._();
 /// The leaderboard, recomputed server-side.
 ///
 /// Unlike the id-keyed collections this cannot be patched from a delta — it is an aggregate, so
-/// any change to its inputs invalidates the whole thing. Watching those collections re-runs the
-/// query; without it the leaderboard silently showed whatever was true when the page first
-/// loaded, which is the same "the UI doesn't update" failure as everywhere else.
+/// any change to its inputs invalidates the whole thing. [aggregateRevisionProvider] re-runs the
+/// query when they change; without it the leaderboard silently showed whatever was true when the
+/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.
 
 final class LeaderboardProvider
     extends
@@ -36,9 +36,9 @@ final class LeaderboardProvider
   /// The leaderboard, recomputed server-side.
   ///
   /// Unlike the id-keyed collections this cannot be patched from a delta — it is an aggregate, so
-  /// any change to its inputs invalidates the whole thing. Watching those collections re-runs the
-  /// query; without it the leaderboard silently showed whatever was true when the page first
-  /// loaded, which is the same "the UI doesn't update" failure as everywhere else.
+  /// any change to its inputs invalidates the whole thing. [aggregateRevisionProvider] re-runs the
+  /// query when they change; without it the leaderboard silently showed whatever was true when the
+  /// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.
   LeaderboardProvider._()
     : super(
         from: null,
@@ -64,4 +64,4 @@ final class LeaderboardProvider
   }
 }
 
-String _$leaderboardHash() => r'3b016a8675d47359ebf174632b7caf87e6eb0fe6';
+String _$leaderboardHash() => r'302a232175694b952384f88ffa8a745035c8d70b';

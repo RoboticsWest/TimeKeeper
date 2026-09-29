@@ -9,7 +9,9 @@ import 'package:time_keeper/utils/time_utils.dart';
 
 part 'session_page_provider.g.dart';
 
-const _sessionFields = 'id startTime endTime locationId finished actualStartTime actualEndTime';
+/// The shape the Sessions table renders, location included — see the note in `session_provider`.
+const _sessionFields =
+    'id startTime endTime locationId finished actualStartTime actualEndTime location { id location }';
 
 const _sessionPageQuery =
     '''

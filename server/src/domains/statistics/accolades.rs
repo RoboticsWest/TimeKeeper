@@ -19,12 +19,13 @@ use uuid::Uuid;
 
 use crate::domains::session::SessionRepository;
 use crate::domains::settings::SettingsRepository;
-use crate::domains::team_member::TeamMemberRepository;
+use crate::domains::team_member::{TeamMember, TeamMemberRepository};
 use crate::domains::team_member_session::TeamMemberSessionRepository;
 use crate::time::parse_tz;
 
+use super::logic::build_leaderboard;
+
 use super::achievements::{self, ACHIEVEMENTS};
-use super::logic::StatisticsLogic;
 use super::model::{AttendanceStats, TeamMemberStats};
 use super::profile::{self, MemberProfile, ProfileInput};
 use super::repository::MemberStatsRepository;
@@ -129,7 +130,6 @@ pub struct DefaultAccoladesLogic {
   team_member_sessions: std::sync::Arc<dyn TeamMemberSessionRepository>,
   settings: std::sync::Arc<dyn SettingsRepository>,
   member_stats: std::sync::Arc<dyn MemberStatsRepository>,
-  statistics: std::sync::Arc<dyn StatisticsLogic>,
 }
 
 impl DefaultAccoladesLogic {
@@ -139,9 +139,8 @@ impl DefaultAccoladesLogic {
     team_member_sessions: std::sync::Arc<dyn TeamMemberSessionRepository>,
     settings: std::sync::Arc<dyn SettingsRepository>,
     member_stats: std::sync::Arc<dyn MemberStatsRepository>,
-    statistics: std::sync::Arc<dyn StatisticsLogic>,
   ) -> Self {
-    Self { sessions, team_members, team_member_sessions, settings, member_stats, statistics }
+    Self { sessions, team_members, team_member_sessions, settings, member_stats }
   }
 
   /// Builds a profile for every member from a single load of the whole picture.
@@ -150,15 +149,20 @@ impl DefaultAccoladesLogic {
     let tz = parse_tz(&settings.timezone);
     let now = Utc::now();
 
-    let sessions = self.sessions.get_all().await?;
-    let members = self.team_members.get_all().await?;
-    let all_attendance = self.team_member_sessions.get_all().await?;
-    let all_stats = self.member_stats.get_all_attendance().await?;
-    let member_stats = self.member_stats.get_all_members().await?;
+    // Concurrently, and once each: five independent whole-table reads that used to run one after
+    // another, and the leaderboard below used to re-read three of them a second time. On a remote
+    // database the serial version cost five round trips of latency before any work started.
+    let (sessions, members, all_attendance, all_stats, member_stats) = tokio::try_join!(
+      self.sessions.get_all(),
+      self.team_members.get_all(),
+      self.team_member_sessions.get_all(),
+      self.member_stats.get_all_attendance(),
+      self.member_stats.get_all_members()
+    )?;
 
-    // Unfiltered: the configured `leaderboard_member_types` default is about what the *board*
-    // shows, and must never decide whose rank exists.
-    let entries = self.statistics.get_leaderboard(Some(Vec::new())).await?;
+    // Ranked from the rows already loaded. Unfiltered: the configured `leaderboard_member_types`
+    // default is about what the *board* shows, and must never decide whose rank exists.
+    let entries = build_leaderboard(&sessions, &members, &all_attendance, &[], settings.leaderboard_show_overtime);
     let total_ranked = entries.len();
 
     let mut attendance_by_member: HashMap<Uuid, Vec<_>> = HashMap::new();
@@ -185,7 +189,7 @@ impl DefaultAccoladesLogic {
     }
 
     let mut snapshots = HashMap::new();
-    for member in members {
+    for member in &members {
       let entry = entries.iter().find(|e| e.team_member_id == member.id);
       let global_rank =
         entries.iter().position(|e| e.team_member_id == member.id).map(|i| (i + 1, total_ranked.max(1)));
@@ -217,13 +221,16 @@ impl DefaultAccoladesLogic {
       snapshots.insert(member.id, MemberSnapshot { profile, first_check_in, member_since });
     }
 
-    Ok(SnapshotSet { by_member: snapshots, active_members: attendance_by_member.len() })
+    Ok(SnapshotSet { by_member: snapshots, members, active_members: attendance_by_member.len() })
   }
 }
 
 /// Everything one accolade pass needs from the database, in one load.
 struct SnapshotSet {
   by_member: HashMap<Uuid, MemberSnapshot>,
+  /// The roster as loaded, so [AccoladesLogic::for_all] can name and order its output without
+  /// reading `team_members` a second time.
+  members: Vec<TeamMember>,
   /// The pool rarity is measured against: distinct members with at least one attendance record.
   ///
   /// This is the same "unique members" figure the app's stats dashboards call a member "active"
@@ -280,8 +287,8 @@ impl AccoladesLogic for DefaultAccoladesLogic {
   }
 
   async fn for_all(&self) -> anyhow::Result<Vec<MemberAccolades>> {
-    let set = self.snapshot_all().await?;
-    let members = self.team_members.get_all().await?;
+    let mut set = self.snapshot_all().await?;
+    let members = std::mem::take(&mut set.members);
 
     // Profiles cover every member so nobody's badges are missed, but rarity is measured against
     // the ones actually in use — a roster can outnumber the club by ten to one. Counting only

@@ -10,7 +10,19 @@ import 'package:time_keeper/utils/time_utils.dart';
 
 part 'notification_page_provider.g.dart';
 
-const _notificationFields = 'id notificationType sessionId teamMemberId discordMessageId scheduledFor sentAt status';
+/// The shape the Notifications table renders: the message, plus the session (with its location)
+/// and member whose names it prints. Resolved server-side and batched.
+const _notificationFields = '''
+        id
+        notificationType
+        sessionId
+        teamMemberId
+        discordMessageId
+        scheduledFor
+        sentAt
+        status
+        session { id startTime endTime locationId finished location { id location } }
+        teamMember { id firstName lastName memberType displayName }''';
 
 const _notificationPageQuery =
     '''

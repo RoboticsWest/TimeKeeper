@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_rsvp_provider.dart';
-import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/providers/attendance_counts_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/sessions/session_detail_dialog.dart';
 import 'package:time_keeper/views/sessions/session_dialog.dart';
@@ -24,11 +22,12 @@ class SessionTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locations = ref.watch(locationsProvider);
-    final teamMembers = ref.watch(teamMembersProvider);
-    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final sessionRsvps = ref.watch(sessionRsvpsProvider);
     final theme = Theme.of(context);
+
+    // Counted in SQL for the sessions on this page. This column used to be computed by filtering a
+    // client-side copy of the whole attendance table once per row.
+    final counts = ref.watch(sessionAttendanceCountsProvider(sessions.map((e) => e.key).toList())).value;
 
     return EditTable(
       alternatingRows: true,
@@ -49,9 +48,8 @@ class SessionTable extends ConsumerWidget {
         final start = session.startTime;
         final end = session.endTime;
         final duration = end.difference(start);
-        final locationName = locations[session.locationId]?.location ?? session.locationId;
-        final sessionMemberSessions = teamMemberSessions.values.where((ms) => ms.sessionId == id).toList();
-        final memberCount = sessionMemberSessions.length;
+        final locationName = session.location?.location ?? session.locationId;
+        final sessionCounts = counts?[id] ?? SessionAttendanceCount.empty;
         final status = getSessionStatus(session);
 
         return EditTableRow(
@@ -64,7 +62,7 @@ class SessionTable extends ConsumerWidget {
             BaseTableCell(child: Text(formatDuration(duration)), flex: 1),
             BaseTableCell(child: Text(locationName), flex: 2),
             BaseTableCell(
-              child: MemberCount(total: memberCount, status: status, sessionMemberSessions: sessionMemberSessions),
+              child: MemberCount(total: sessionCounts.members, checkedIn: sessionCounts.checkedIn, status: status),
               flex: 1,
             ),
             BaseTableCell(
@@ -77,16 +75,8 @@ class SessionTable extends ConsumerWidget {
               child: IconButton(
                 icon: Icon(Icons.visibility, color: theme.colorScheme.primary, size: 20),
                 tooltip: 'View details',
-                onPressed: () => showSessionDetailDialog(
-                  context,
-                  ref,
-                  sessionId: id,
-                  session: session,
-                  locations: locations,
-                  teamMembers: teamMembers,
-                  teamMemberSessions: teamMemberSessions,
-                  sessionRsvps: sessionRsvps,
-                ),
+                onPressed: () =>
+                    showSessionDetailDialog(context, ref, sessionId: id, session: session, sessionRsvps: sessionRsvps),
               ),
             ),
           ],

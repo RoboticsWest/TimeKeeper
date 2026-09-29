@@ -5,7 +5,7 @@ import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/providers/open_attendance_provider.dart';
 import 'package:time_keeper/helpers/session_helper.dart';
 import 'package:time_keeper/views/kiosk/kiosk_scan_handler.dart' show kNoDeviceLocationMessage;
 import 'package:time_keeper/widgets/dialogs/base_dialog.dart';
@@ -40,7 +40,7 @@ class _KioskDialogContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teamMembers = ref.watch(teamMembersProvider);
-    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
+    final openVisits = ref.watch(openAttendanceProvider);
     final currentLocation = ref.watch(currentLocationProvider);
 
     return SizedBox(
@@ -49,7 +49,7 @@ class _KioskDialogContent extends ConsumerWidget {
       child: MemberSearchList(
         teamMembers: teamMembers,
         trailingBuilder: (memberId, member) {
-          final checkedIn = isMemberCheckedIn(memberId, teamMemberSessions.values);
+          final checkedIn = isMemberCheckedIn(memberId, openVisits.values);
 
           return FilledButton.icon(
             icon: Icon(checkedIn ? Icons.logout : Icons.login, color: Colors.white),

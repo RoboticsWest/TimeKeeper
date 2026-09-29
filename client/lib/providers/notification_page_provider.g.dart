@@ -44,7 +44,7 @@ final class NotificationPageProvider extends $AsyncNotifierProvider<Notification
   NotificationPage create() => NotificationPage();
 }
 
-String _$notificationPageHash() => r'30c5444cce9085ab8cd0c8d9c891ccfc7075991c';
+String _$notificationPageHash() => r'bf92a19c5d0638ed69a022baa93daffb02b6abf3';
 
 /// A paged, filtered slice of the notifications table, newest-scheduled first.
 ///

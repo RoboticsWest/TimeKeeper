@@ -2,15 +2,10 @@ import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/hooks/use_debounced_text.dart';
-import 'package:time_keeper/models/location.dart';
 import 'package:time_keeper/models/notification.dart';
-import 'package:time_keeper/models/session.dart';
-import 'package:time_keeper/models/team_member.dart';
-import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/notification_page_provider.dart';
 import 'package:time_keeper/providers/notification_provider.dart';
-import 'package:time_keeper/providers/session_provider.dart';
-import 'package:time_keeper/providers/team_member_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/notifications/notification_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
@@ -51,9 +46,10 @@ String _scheduleLabel(Notification n) {
 class NotificationsView extends HookConsumerWidget {
   const NotificationsView({super.key});
 
-  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, Notification> notifications) {
-    final ids = notifications.keys.toList();
-    if (ids.isEmpty) {
+  /// Deletes every notification in one request. [total] comes from the pager rather than from a
+  /// copy of the whole table held in memory.
+  void _showClearDialog(BuildContext context, WidgetRef ref, int total) {
+    if (total == 0) {
       SnackBarDialog.info(message: 'No notifications to delete').show(context);
       return;
     }
@@ -62,50 +58,49 @@ class NotificationsView extends HookConsumerWidget {
       title: 'Clear All Notifications',
       message: Text(
         'Are you sure you want to delete all notifications? '
-        '(${ids.length} ${ids.length == 1 ? 'notification' : 'notifications'})',
+        '($total ${total == 1 ? 'notification' : 'notifications'})',
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final notifier = ref.read(notificationsProvider.notifier);
-        for (final id in ids) {
-          await notifier.delete(id);
+        final result = await ref.read(notificationsProvider.notifier).clearAll();
+        if (!context.mounted) return;
+        switch (result) {
+          case ApiSuccess(data: final deleted):
+            SnackBarDialog.success(
+              message: 'Deleted $deleted ${deleted == 1 ? 'notification' : 'notifications'}',
+            ).show(context);
+          case ApiFailure(userMessage: final message):
+            SnackBarDialog.error(message: message).show(context);
         }
       },
-      showResultDialog: true,
-      successMessage: Text('Deleted ${ids.length} notifications'),
     ).show(context);
   }
 
-  String _formatSessionLabel(Map<String, Session> sessions, Map<String, Location> locations, String sessionId) {
-    final session = sessions[sessionId];
-    if (session == null) return sessionId;
+  /// Both labels come off the row: the query asks for the session (with its location) and the
+  /// member, so there is nothing to look up against a local copy of those tables.
+  String _formatSessionLabel(Notification n) {
+    final session = n.session;
+    if (session == null) return n.sessionId;
+
     final start = session.startTime;
-    final end = session.endTime;
-    final location = locations[session.locationId]?.location ?? '';
-    if (location.isNotEmpty) {
-      return '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)} @ $location';
-    }
-    return '${formatDate(start)} ${formatTime(start)} - ${formatTime(end)}';
+    final times = '${formatDate(start)} ${formatTime(start)} - ${formatTime(session.endTime)}';
+    final location = session.location?.location ?? '';
+    return location.isEmpty ? times : '$times @ $location';
   }
 
-  String _formatMemberName(Map<String, TeamMember> teamMembers, String? memberId) {
+  String _formatMemberName(Notification n) {
+    final memberId = n.teamMemberId;
     if (memberId == null || memberId.isEmpty) return '-';
-    return teamMembers[memberId]?.displayLabel ?? memberId;
+    return n.teamMember?.displayLabel ?? memberId;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(notificationsSyncProvider);
-    ref.watch(sessionsSyncProvider);
-    ref.watch(locationsSyncProvider);
-    ref.watch(teamMembersSyncProvider);
-    final notifications = ref.watch(notificationsProvider);
-    final sessions = ref.watch(sessionsProvider);
-    final locations = ref.watch(locationsProvider);
-    final teamMembers = ref.watch(teamMembersProvider);
+    // No collection is watched or built here. The list is server-paged and its rows carry the
+    // session and member they name, so there is nothing local to resolve ids against; the dialogs
+    // this view opens pick from the full sets themselves.
     final theme = Theme.of(context);
 
-    // The list itself is paged server-side; the maps above only resolve ids to display names.
     final page = ref.watch(notificationPageProvider);
     final notifier = ref.read(notificationPageProvider.notifier);
     final currentPage = page.value;
@@ -132,7 +127,7 @@ class NotificationsView extends HookConsumerWidget {
               Text('Notifications', style: theme.textTheme.headlineMedium),
               const Spacer(),
               OutlinedButton.icon(
-                onPressed: () => _showClearDialog(context, ref, notifications),
+                onPressed: () => _showClearDialog(context, ref, currentPage?.totalCount ?? 0),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
                 style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
@@ -174,8 +169,8 @@ class NotificationsView extends HookConsumerWidget {
                         onDelete: () => showDeleteNotificationDialog(context, ref, id: id),
                         cells: [
                           BaseTableCell(child: Text(notificationTypeLabel(n.notificationType)), flex: 3),
-                          BaseTableCell(child: Text(_formatSessionLabel(sessions, locations, n.sessionId)), flex: 4),
-                          BaseTableCell(child: Text(_formatMemberName(teamMembers, n.teamMemberId)), flex: 2),
+                          BaseTableCell(child: Text(_formatSessionLabel(n)), flex: 4),
+                          BaseTableCell(child: Text(_formatMemberName(n)), flex: 2),
                           BaseTableCell(
                             child: Text(
                               NotificationStatus.label(n.status),

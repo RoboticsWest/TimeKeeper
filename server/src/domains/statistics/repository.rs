@@ -40,6 +40,12 @@ pub trait MemberStatsRepository: Send + Sync {
   async fn get_member(&self, team_member_id: Uuid) -> anyhow::Result<TeamMemberStats>;
 
   /// Every attendance stats row. For building the whole team's accolades in one pass.
+  /// Fetches recorded attendance facts for many attendance rows, for the GraphQL data loader.
+  async fn get_many_attendance(&self, ids: &[Uuid]) -> anyhow::Result<Vec<AttendanceStats>>;
+
+  /// Fetches recorded counters for many members, for the GraphQL data loader.
+  async fn get_many_members(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberStats>>;
+
   async fn get_all_attendance(&self) -> anyhow::Result<Vec<AttendanceStats>>;
 
   /// Every member's counters.
@@ -136,6 +142,34 @@ impl MemberStatsRepository for PgMemberStatsRepository {
       .await
       .optional()?;
     Ok(found.unwrap_or_else(|| TeamMemberStats::zeroed(team_member_id)))
+  }
+
+  async fn get_many_attendance(&self, ids: &[Uuid]) -> anyhow::Result<Vec<AttendanceStats>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      attendance_stats::table
+        .filter(attendance_stats::team_member_session_id.eq_any(ids.to_vec()))
+        .select(AttendanceStats::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
+  async fn get_many_members(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberStats>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      team_member_stats::table
+        .filter(team_member_stats::team_member_id.eq_any(ids.to_vec()))
+        .select(TeamMemberStats::as_select())
+        .load(&mut conn)
+        .await?,
+    )
   }
 
   async fn get_all_attendance(&self) -> anyhow::Result<Vec<AttendanceStats>> {

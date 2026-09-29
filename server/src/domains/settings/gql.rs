@@ -7,7 +7,7 @@ use tokio_stream::wrappers::BroadcastStream;
 
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
-use crate::events::EVENT_BUS;
+use crate::events::{EVENT_BUS, resolve_once};
 
 use super::logic::{
   DiscordBehaviorUpdate, DiscordCoreUpdate, DiscordReminderUpdate, DiscordRole, GeneralUpdate,
@@ -229,8 +229,10 @@ impl SettingsSubscription {
     Ok(BroadcastStream::new(rx).filter_map(move |change| {
       let logic = logic.clone();
       async move {
-        change.ok()?;
-        logic.get().await.ok()
+        let change = change.ok()?;
+        // Shared across subscribers: a settings change used to read the row once per connected
+        // client, and every client subscribes to it.
+        resolve_once(&change, || async move { logic.get().await.ok() }).await
       }
     }))
   }
@@ -259,9 +261,12 @@ impl LogoSubscription {
     Ok(BroadcastStream::new(rx).filter_map(move |change| {
       let logic = logic.clone();
       async move {
-        change.ok()?;
-        let bytes = logic.get_logo().await.ok()?;
-        Some(bytes.map(|b| base64::engine::general_purpose::STANDARD.encode(b)))
+        let change = change.ok()?;
+        resolve_once(&change, || async move {
+          let bytes = logic.get_logo().await.ok()?;
+          Some(bytes.map(|b| base64::engine::general_purpose::STANDARD.encode(b)))
+        })
+        .await
       }
     }))
   }

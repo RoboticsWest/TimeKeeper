@@ -87,7 +87,6 @@ StatsScope statsScope(Ref ref, StatsQuery query) {
   ref.watch(sessionsSyncProvider);
   ref.watch(teamMembersSyncProvider);
   ref.watch(locationsSyncProvider);
-  ref.watch(teamMemberSessionsSyncProvider);
 
   final allSessions = ref.watch(sessionsProvider);
   final members = ref.watch(teamMembersProvider);

@@ -64,6 +64,13 @@ pub trait TeamMemberRepository: Send + Sync {
     limit: i64,
   ) -> anyhow::Result<(Vec<TeamMember>, i64)>;
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<TeamMember>>;
+  /// Fetches many rows by id in one statement.
+  ///
+  /// Exists for the GraphQL data loaders: a page of rows that each resolve a nested `TeamMember` would
+  /// otherwise be one query per row (the N+1 every relational GraphQL schema has to answer for).
+  /// Ids not present are simply absent from the result.
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMember>>;
+
   async fn get_all(&self) -> anyhow::Result<Vec<TeamMember>>;
   /// Filters by the `member_type` column (`"student"` or `"mentor"`).
   async fn get_by_member_type(&self, member_type: &str) -> anyhow::Result<Vec<TeamMember>>;
@@ -97,7 +104,16 @@ pub trait TeamMemberRepository: Send + Sync {
     quick_pin: Option<&str>,
   ) -> anyhow::Result<Option<TeamMember>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  ///
+  /// The count is reported because the callers are "Clear All" buttons that tell the operator what
+  /// they just destroyed, and it comes free from the statement.
+  async fn clear(&self) -> anyhow::Result<usize>;
+
+  /// Deletes every member whose type is in `member_types`, returning how many there were. An empty
+  /// list deletes nobody — "no types selected" is not "every type", or a mis-wired filter would
+  /// quietly wipe the roster.
+  async fn clear_by_member_types(&self, member_types: &[String]) -> anyhow::Result<usize>;
 }
 
 pub struct PgTeamMemberRepository {
@@ -131,6 +147,20 @@ impl TeamMemberRepository for PgTeamMemberRepository {
       .await?;
 
     Ok((items, total))
+  }
+
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMember>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      team_members::table
+        .filter(team_members::id.eq_any(ids.to_vec()))
+        .select(TeamMember::as_select())
+        .load(&mut conn)
+        .await?,
+    )
   }
 
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<TeamMember>> {
@@ -263,9 +293,20 @@ impl TeamMemberRepository for PgTeamMemberRepository {
     Ok(())
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     let mut conn = self.pool.get().await?;
-    diesel::delete(team_members::table).execute(&mut conn).await?;
-    Ok(())
+    Ok(diesel::delete(team_members::table).execute(&mut conn).await?)
+  }
+
+  async fn clear_by_member_types(&self, member_types: &[String]) -> anyhow::Result<usize> {
+    if member_types.is_empty() {
+      return Ok(0);
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      diesel::delete(team_members::table.filter(team_members::member_type.eq_any(member_types.to_vec())))
+        .execute(&mut conn)
+        .await?,
+    )
   }
 }

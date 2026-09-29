@@ -6,12 +6,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:time_keeper/models/session_rsvp.dart';
 import 'package:time_keeper/providers/auth_provider.dart';
+import 'package:time_keeper/providers/attendance_counts_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/session_rsvp_provider.dart';
 import 'package:time_keeper/providers/settings_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
 import 'package:time_keeper/hooks/use_rfid_scanner.dart';
 import 'package:time_keeper/views/kiosk/checked_in_list.dart';
 import 'package:time_keeper/views/kiosk/kiosk_dialog.dart';
@@ -31,11 +31,9 @@ class HomeView extends HookConsumerWidget {
     ref.watch(sessionsSyncProvider);
     ref.watch(locationsSyncProvider);
     ref.watch(teamMembersSyncProvider);
-    ref.watch(teamMemberSessionsSyncProvider);
     final sessionList = ref.watch(sessionsProvider);
     final deviceLocationId = ref.watch(currentLocationProvider);
     final locations = ref.watch(locationsProvider);
-    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final sessionRsvps = ref.watch(sessionRsvpsProvider);
     final thresholdDuration = useState<Duration>(Duration.zero);
     final isUpcoming = useState(false);
@@ -57,15 +55,23 @@ class HomeView extends HookConsumerWidget {
         ? sessionList.entries.where((e) => e.value == currentSession).map((e) => e.key).firstOrNull
         : null;
 
-    final checkedInCount = currentSessionId != null
-        ? teamMemberSessions.values.where((ms) => ms.sessionId == currentSessionId && ms.checkOutTime == null).length
-        : 0;
+    // Counted in SQL for this one session. This used to be a filter over a client-side copy of
+    // every attendance row ever recorded, which is why the kiosk - the screen every device opens
+    // on - had to download the whole table before it could show a number.
+    final counts = ref
+        .watch(sessionAttendanceCountsProvider(currentSessionId == null ? const [] : [currentSessionId]))
+        .value;
+    final sessionCounts = currentSessionId == null
+        ? SessionAttendanceCount.empty
+        : counts?[currentSessionId] ?? SessionAttendanceCount.empty;
+
+    final checkedInCount = sessionCounts.checkedIn;
 
     // RSVP "going"/"not going" and distinct people who have checked in (at all,
     // even if already gone) for the current session.
     var rsvpGoingCount = 0;
     var rsvpNotGoingCount = 0;
-    var uniqueSeenCount = 0;
+    final uniqueSeenCount = sessionCounts.members;
     if (currentSessionId != null) {
       for (final rsvp in sessionRsvps.values) {
         if (rsvp.sessionId != currentSessionId) continue;
@@ -75,11 +81,6 @@ class HomeView extends HookConsumerWidget {
           rsvpNotGoingCount++;
         }
       }
-      uniqueSeenCount = teamMemberSessions.values
-          .where((ms) => ms.sessionId == currentSessionId)
-          .map((ms) => ms.teamMemberId)
-          .toSet()
-          .length;
     }
 
     final hasKiosk = ref.watch(hasAnyPermissionProvider);

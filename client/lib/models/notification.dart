@@ -1,3 +1,5 @@
+import 'package:time_keeper/models/session.dart';
+import 'package:time_keeper/models/team_member.dart';
 import 'package:time_keeper/utils/time_utils.dart';
 
 class Notification {
@@ -10,6 +12,13 @@ class Notification {
   /// When this is due. Null for kinds that fire on a condition rather than a clock.
   final DateTime? scheduledFor;
   final DateTime? sentAt;
+
+  /// The session this message is about, when the query asked for it.
+  final Session? session;
+
+  /// The member it is aimed at, for the per-member kinds. Null for the channel-wide
+  /// announcements, and null when the query only asked for ids.
+  final TeamMember? teamMember;
 
   /// One of [NotificationStatus].
   ///
@@ -26,6 +35,8 @@ class Notification {
     this.discordMessageId,
     this.scheduledFor,
     this.sentAt,
+    this.session,
+    this.teamMember,
     required this.status,
   });
 
@@ -41,6 +52,8 @@ class Notification {
       discordMessageId: json['discordMessageId'] as String?,
       scheduledFor: parseServerTimeOrNull(json['scheduledFor']),
       sentAt: parseServerTimeOrNull(json['sentAt']),
+      session: json['session'] == null ? null : Session.fromJson(json['session'] as Map<String, dynamic>),
+      teamMember: json['teamMember'] == null ? null : TeamMember.fromJson(json['teamMember'] as Map<String, dynamic>),
       status: json['status'] as String,
     );
   }

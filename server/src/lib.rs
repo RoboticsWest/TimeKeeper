@@ -6,6 +6,7 @@ pub mod domains;
 pub mod events;
 pub mod gql_common;
 pub mod integrations;
+pub mod loaders;
 pub mod logging;
 pub mod scheduler;
 pub mod schema;

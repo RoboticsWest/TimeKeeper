@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/session.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/models/team_member_session.dart';
+import 'package:time_keeper/providers/attendance_counts_provider.dart';
 import 'package:time_keeper/widgets/dashboard/kpi_tile.dart';
 
-class SessionStats extends StatelessWidget {
+class SessionStats extends ConsumerWidget {
   final Map<String, Session> sessions;
-  final Map<String, TeamMemberSession> teamMemberSessions;
 
-  const SessionStats({super.key, required this.sessions, required this.teamMemberSessions});
+  const SessionStats({super.key, required this.sessions});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final now = DateTime.now();
+    // One aggregate row from the server. This tile used to be a `Set` built by walking every
+    // attendance record the client had downloaded.
+    final uniqueMembers = ref.watch(attendanceSummaryProvider).value?.members;
 
     final activeSessions = sessions.values.where((s) {
       final status = getSessionStatus(s);
@@ -24,11 +27,6 @@ class SessionStats extends StatelessWidget {
       return dt.year == now.year && dt.month == now.month;
     }).length;
 
-    final uniqueMembers = <String>{};
-    for (final ms in teamMemberSessions.values) {
-      uniqueMembers.add(ms.teamMemberId);
-    }
-
     return Row(
       children: [
         for (final tile in [
@@ -36,7 +34,7 @@ class SessionStats extends StatelessWidget {
           (icon: Icons.play_circle, label: 'Active', value: '$activeSessions'),
           (icon: Icons.schedule, label: 'Upcoming', value: '$upcomingSessions'),
           (icon: Icons.calendar_month, label: 'This Month', value: '$thisMonth'),
-          (icon: Icons.people, label: 'Unique Members', value: '${uniqueMembers.length}'),
+          (icon: Icons.people, label: 'Unique Members', value: uniqueMembers?.toString() ?? '—'),
         ])
           Expanded(
             child: Padding(

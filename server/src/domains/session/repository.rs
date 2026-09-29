@@ -56,7 +56,19 @@ macro_rules! filtered_sessions {
 
 #[async_trait]
 pub trait SessionRepository: Send + Sync {
+  /// Fetches every row whose `location_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_location_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Session>>;
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Session>>;
+  /// Fetches many rows by id in one statement.
+  ///
+  /// Exists for the GraphQL data loaders: a page of rows that each resolve a nested `Session` would
+  /// otherwise be one query per row (the N+1 every relational GraphQL schema has to answer for).
+  /// Ids not present are simply absent from the result.
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Session>>;
+
   async fn get_all(&self) -> anyhow::Result<Vec<Session>>;
   async fn add(
     &self,
@@ -74,7 +86,11 @@ pub trait SessionRepository: Send + Sync {
     finished: bool,
   ) -> anyhow::Result<Option<Session>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  ///
+  /// The count is reported because the callers are "Clear All" buttons that tell the operator what
+  /// they just destroyed, and it comes free from the statement.
+  async fn clear(&self) -> anyhow::Result<usize>;
   /// One page of sessions matching `filter`, newest start first, with the total match count.
   async fn query_page(&self, filter: &SessionFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Session>, i64)>;
 
@@ -97,6 +113,28 @@ impl PgSessionRepository {
 
 #[async_trait]
 impl SessionRepository for PgSessionRepository {
+  async fn get_many_by_location_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Session>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      sessions::table
+        .filter(sessions::location_id.eq_any(ids.to_vec()))
+        .select(Session::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<Session>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(sessions::table.filter(sessions::id.eq_any(ids.to_vec())).select(Session::as_select()).load(&mut conn).await?)
+  }
+
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<Session>> {
     let mut conn = self.pool.get().await?;
     Ok(sessions::table.filter(sessions::id.eq(id)).select(Session::as_select()).first(&mut conn).await.optional()?)
@@ -161,10 +199,9 @@ impl SessionRepository for PgSessionRepository {
     Ok(())
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     let mut conn = self.pool.get().await?;
-    diesel::delete(sessions::table).execute(&mut conn).await?;
-    Ok(())
+    Ok(diesel::delete(sessions::table).execute(&mut conn).await?)
   }
 
   async fn query_page(&self, filter: &SessionFilter, offset: i64, limit: i64) -> anyhow::Result<(Vec<Session>, i64)> {

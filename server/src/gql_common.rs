@@ -81,6 +81,24 @@ impl<T: OutputType> Page<T> {
   }
 }
 
+/// Default rows returned by a nested has-many field when the caller does not say.
+pub const DEFAULT_NESTED_LIMIT: usize = 100;
+
+/// Hard ceiling on a nested has-many field, whatever the caller asks for.
+pub const MAX_NESTED_LIMIT: usize = 1000;
+
+/// Caps a nested relationship list.
+///
+/// An unbounded list field is a way to ask for a member's entire history — or a location's every
+/// session — by accident, one nesting level at a time. The cap is what keeps a nested list the
+/// convenience it is meant to be; anything that genuinely wants the whole set should page the
+/// top-level query for it instead.
+pub fn capped<T>(mut rows: Vec<T>, limit: Option<usize>) -> Vec<T> {
+  let limit = limit.unwrap_or(DEFAULT_NESTED_LIMIT).min(MAX_NESTED_LIMIT);
+  rows.truncate(limit);
+  rows
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -126,5 +144,28 @@ mod tests {
     let page: Page<i32> = Page::new(vec![], 0, 0, 50);
     assert!(!page.has_more);
     assert_eq!(page.total_count, 0);
+  }
+
+  #[test]
+  fn a_nested_list_uses_the_default_cap_when_unasked() {
+    let rows: Vec<i32> = (0..500).collect();
+    assert_eq!(capped(rows, None).len(), DEFAULT_NESTED_LIMIT);
+  }
+
+  #[test]
+  fn a_nested_list_honours_a_smaller_limit() {
+    let rows: Vec<i32> = (0..500).collect();
+    assert_eq!(capped(rows, Some(5)), vec![0, 1, 2, 3, 4]);
+  }
+
+  #[test]
+  fn a_nested_list_cannot_be_asked_for_more_than_the_ceiling() {
+    let rows: Vec<i32> = (0..5000).collect();
+    assert_eq!(capped(rows, Some(usize::MAX)).len(), MAX_NESTED_LIMIT);
+  }
+
+  #[test]
+  fn a_short_list_is_returned_whole() {
+    assert_eq!(capped(vec![1, 2, 3], Some(10)), vec![1, 2, 3]);
   }
 }

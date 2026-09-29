@@ -56,6 +56,10 @@ pub trait SessionLogic: Send + Sync {
     finished: bool,
   ) -> anyhow::Result<Session>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
+
+  /// Deletes every session, returning how many there were. Attendance rows, notifications and
+  /// RSVPs go with them by `ON DELETE CASCADE`, which is why this does not touch them itself.
+  async fn clear(&self) -> anyhow::Result<usize>;
   /// Checks a team member in to the eligible session at `location_id`, or checks them out if
   /// they're already checked in to any session. Returns `true` if now checked in, `false` if
   /// checked out.
@@ -235,6 +239,10 @@ impl<R: SessionRepository> SessionLogic for DefaultSessionLogic<R> {
 
   async fn remove(&self, id: Uuid) -> anyhow::Result<()> {
     self.repo.remove(id).await
+  }
+
+  async fn clear(&self) -> anyhow::Result<usize> {
+    self.repo.clear().await
   }
 
   async fn check_in_out(&self, team_member_id: Uuid, location_id: Option<Uuid>, source: &str) -> anyhow::Result<bool> {

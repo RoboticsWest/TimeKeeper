@@ -47,10 +47,47 @@ final class TeamMemberSessionChangesProvider
 
 String _$teamMemberSessionChangesHash() => r'd4c306695fec6a0cac13daa460754eb134de8710';
 
+/// The whole attendance table, keyed by id.
+///
+/// **Built on demand, not at login.** This table grows without bound — a season is tens of
+/// thousands of rows, several megabytes of JSON — and downloading it at startup was most of what
+/// made the app feel slow on a remote server. Only the things that genuinely need the history read
+/// it now: the statistics dashboard and the CSV export. Everything on a hot path
+/// ("is this member checked in?", "how many are in this session?") asks a bounded question
+/// instead, through [openAttendanceProvider] or the attendance count queries.
+///
+/// It subscribes to its own change stream rather than relying on a separate sync bridge: with the
+/// collection built lazily, a bridge that reached for `.notifier` on the first change event would
+/// have quietly re-downloaded the whole table on every client the moment anybody checked in.
+
 @ProviderFor(TeamMemberSessions)
 final teamMemberSessionsProvider = TeamMemberSessionsProvider._();
 
+/// The whole attendance table, keyed by id.
+///
+/// **Built on demand, not at login.** This table grows without bound — a season is tens of
+/// thousands of rows, several megabytes of JSON — and downloading it at startup was most of what
+/// made the app feel slow on a remote server. Only the things that genuinely need the history read
+/// it now: the statistics dashboard and the CSV export. Everything on a hot path
+/// ("is this member checked in?", "how many are in this session?") asks a bounded question
+/// instead, through [openAttendanceProvider] or the attendance count queries.
+///
+/// It subscribes to its own change stream rather than relying on a separate sync bridge: with the
+/// collection built lazily, a bridge that reached for `.notifier` on the first change event would
+/// have quietly re-downloaded the whole table on every client the moment anybody checked in.
 final class TeamMemberSessionsProvider extends $NotifierProvider<TeamMemberSessions, Map<String, TeamMemberSession>> {
+  /// The whole attendance table, keyed by id.
+  ///
+  /// **Built on demand, not at login.** This table grows without bound — a season is tens of
+  /// thousands of rows, several megabytes of JSON — and downloading it at startup was most of what
+  /// made the app feel slow on a remote server. Only the things that genuinely need the history read
+  /// it now: the statistics dashboard and the CSV export. Everything on a hot path
+  /// ("is this member checked in?", "how many are in this session?") asks a bounded question
+  /// instead, through [openAttendanceProvider] or the attendance count queries.
+  ///
+  /// It subscribes to its own change stream rather than relying on a separate sync bridge: with the
+  /// collection built lazily, a bridge that reached for `.notifier` on the first change event would
+  /// have quietly re-downloaded the whole table on every client the moment anybody checked in.
   TeamMemberSessionsProvider._()
     : super(
         from: null,
@@ -75,7 +112,20 @@ final class TeamMemberSessionsProvider extends $NotifierProvider<TeamMemberSessi
   }
 }
 
-String _$teamMemberSessionsHash() => r'0695a0635883fc4379232bb6240f5c9d3b39464e';
+String _$teamMemberSessionsHash() => r'ca1f99e9436523c0486636e1518566dec1a53f6e';
+
+/// The whole attendance table, keyed by id.
+///
+/// **Built on demand, not at login.** This table grows without bound — a season is tens of
+/// thousands of rows, several megabytes of JSON — and downloading it at startup was most of what
+/// made the app feel slow on a remote server. Only the things that genuinely need the history read
+/// it now: the statistics dashboard and the CSV export. Everything on a hot path
+/// ("is this member checked in?", "how many are in this session?") asks a bounded question
+/// instead, through [openAttendanceProvider] or the attendance count queries.
+///
+/// It subscribes to its own change stream rather than relying on a separate sync bridge: with the
+/// collection built lazily, a bridge that reached for `.notifier` on the first change event would
+/// have quietly re-downloaded the whole table on every client the moment anybody checked in.
 
 abstract class _$TeamMemberSessions extends $Notifier<Map<String, TeamMemberSession>> {
   Map<String, TeamMemberSession> build();
@@ -94,38 +144,3 @@ abstract class _$TeamMemberSessions extends $Notifier<Map<String, TeamMemberSess
     element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(teamMemberSessionsSync)
-final teamMemberSessionsSyncProvider = TeamMemberSessionsSyncProvider._();
-
-final class TeamMemberSessionsSyncProvider extends $FunctionalProvider<void, void, void> with $Provider<void> {
-  TeamMemberSessionsSyncProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'teamMemberSessionsSyncProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$teamMemberSessionsSyncHash();
-
-  @$internal
-  @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
-
-  @override
-  void create(Ref ref) {
-    return teamMemberSessionsSync(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<void>(value));
-  }
-}
-
-String _$teamMemberSessionsSyncHash() => r'9c0fa960d2e65f29660b421fc337d75e186870bc';

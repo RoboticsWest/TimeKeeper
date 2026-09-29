@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/hooks/use_debounced_text.dart';
 import 'package:time_keeper/providers/location_page_provider.dart';
 import 'package:time_keeper/providers/location_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/views/locations/location_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/confirm_dialog.dart';
 import 'package:time_keeper/widgets/dialogs/snackbar_dialog.dart';
@@ -17,9 +18,13 @@ import 'package:time_keeper/widgets/tables/table_filter.dart';
 class LocationsView extends HookConsumerWidget {
   const LocationsView({super.key});
 
-  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> locations) {
-    final ids = locations.keys.toList();
-    if (ids.isEmpty) {
+  /// Deletes every location in one request.
+  ///
+  /// [total] comes from the pager, which already counts every row matching no filter — so this no
+  /// longer needs the whole table in memory just to say how many rows it is about to remove, and
+  /// the confirmed count comes back from the server.
+  void _showClearDialog(BuildContext context, WidgetRef ref, int total) {
+    if (total == 0) {
       SnackBarDialog.info(message: 'No locations to delete').show(context);
       return;
     }
@@ -28,26 +33,29 @@ class LocationsView extends HookConsumerWidget {
       title: 'Clear All Locations',
       message: Text(
         'Are you sure you want to delete all locations? '
-        '(${ids.length} ${ids.length == 1 ? 'location' : 'locations'})',
+        '($total ${total == 1 ? 'location' : 'locations'})',
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final notifier = ref.read(locationsProvider.notifier);
-        for (final id in ids) {
-          await notifier.delete(id);
+        final result = await ref.read(locationsProvider.notifier).clearAll();
+        if (!context.mounted) return;
+        switch (result) {
+          case ApiSuccess(data: final deleted):
+            SnackBarDialog.success(
+              message: 'Deleted $deleted ${deleted == 1 ? 'location' : 'locations'}',
+            ).show(context);
+          case ApiFailure(userMessage: final message):
+            SnackBarDialog.error(message: message).show(context);
         }
       },
-      showResultDialog: true,
-      successMessage: Text('Deleted ${ids.length} locations'),
     ).show(context);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // The unpaged map still backs "Clear All", which deletes every location rather than the
-    // page on screen.
+    // Subscribed for the live updates the pager refetches on; the unpaged map itself is not read
+    // here — "Clear All" is one server-side mutation now, not a loop over every id.
     ref.watch(locationsSyncProvider);
-    final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
 
     // The table itself is paged server-side.
@@ -77,7 +85,7 @@ class LocationsView extends HookConsumerWidget {
               Text('Locations', style: theme.textTheme.headlineMedium),
               const Spacer(),
               OutlinedButton.icon(
-                onPressed: () => _showClearDialog(context, ref, locations),
+                onPressed: () => _showClearDialog(context, ref, currentPage?.totalCount ?? 0),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
                 style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),

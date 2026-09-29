@@ -1,9 +1,16 @@
-use async_graphql::SimpleObject;
+use async_graphql::dataloader::DataLoader;
+use async_graphql::{ComplexObject, Context, Result, SimpleObject};
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
 
 use database::schema::notifications;
+
+use crate::auth::auth_helpers::require_permission;
+use crate::auth::permissions::PermissionLevel;
+use crate::domains::session::Session;
+use crate::domains::team_member::TeamMember;
+use crate::loaders::{SessionLoader, TeamMemberLoader};
 
 /// Notification kinds. Mirrors the `notification_type` CHECK constraint in `0001_init`.
 pub const TYPE_SESSION_START_REMINDER: &str = "session_start_reminder";
@@ -38,6 +45,7 @@ pub const VALID_STATUSES: &[&str] = &[STATUS_PENDING, STATUS_SENT, STATUS_SKIPPE
 /// inference from what is missing, and it means deleting a session takes its notifications with
 /// it via `ON DELETE CASCADE`.
 #[derive(Debug, Clone, Queryable, Selectable, SimpleObject)]
+#[graphql(complex)]
 #[diesel(table_name = notifications)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Notification {
@@ -62,5 +70,24 @@ impl Notification {
   /// Whether this is due at `now`. A null `scheduled_for` means "as soon as noticed".
   pub fn is_due(&self, now: DateTime<Utc>) -> bool {
     self.is_pending() && self.scheduled_for.is_none_or(|due| due <= now)
+  }
+}
+
+#[ComplexObject]
+impl Notification {
+  /// The session this message is about.
+  async fn session(&self, ctx: &Context<'_>) -> Result<Option<Session>> {
+    require_permission(ctx, "sessions", PermissionLevel::Read)?;
+    let loader = ctx.data::<DataLoader<SessionLoader>>()?;
+    Ok(loader.load_one(self.session_id).await?)
+  }
+
+  /// The member this message is aimed at, for the per-member kinds. `None` for the session-wide
+  /// announcements, which are addressed to the channel rather than to anybody.
+  async fn team_member(&self, ctx: &Context<'_>) -> Result<Option<TeamMember>> {
+    require_permission(ctx, "team_members", PermissionLevel::Read)?;
+    let Some(id) = self.team_member_id else { return Ok(None) };
+    let loader = ctx.data::<DataLoader<TeamMemberLoader>>()?;
+    Ok(loader.load_one(id).await?)
   }
 }

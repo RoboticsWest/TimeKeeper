@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:time_keeper/models/session_status.dart';
-import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/widgets/status_chip.dart';
 import 'package:time_keeper/widgets/tables/base_table.dart';
@@ -15,8 +14,6 @@ class CalendarTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locations = ref.watch(locationsProvider);
-
     return BaseTable(
       alternatingRows: true,
       headerDecoration: tableHeaderDecoration(context),
@@ -32,7 +29,7 @@ class CalendarTable extends ConsumerWidget {
         final start = session.startTime;
         final end = session.endTime;
         final duration = end.difference(start);
-        final locationName = locations[session.locationId]?.location ?? session.locationId;
+        final locationName = session.location?.location ?? session.locationId;
         final status = getSessionStatus(session);
 
         return BaseTableRow(

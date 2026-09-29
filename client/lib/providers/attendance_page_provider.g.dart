@@ -47,7 +47,7 @@ final class AttendancePageProvider extends $AsyncNotifierProvider<AttendancePage
   AttendancePage create() => AttendancePage();
 }
 
-String _$attendancePageHash() => r'a179fca0335a773ece8008794174f5d8aafe9f90';
+String _$attendancePageHash() => r'42eb5680268e233e52886884b624b320f1011ebf';
 
 /// The administrator's attendance history, rendered one page at a time.
 ///

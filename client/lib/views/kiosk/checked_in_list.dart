@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:time_keeper/providers/location_provider.dart';
-import 'package:time_keeper/providers/session_provider.dart';
-import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/providers/open_attendance_provider.dart';
 import 'package:time_keeper/views/kiosk/team_member_header.dart';
 import 'package:time_keeper/views/kiosk/team_member_row.dart';
 import 'package:time_keeper/widgets/animated/infinite_vertical_list.dart';
@@ -23,24 +20,16 @@ class CheckedInList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final teamMembers = ref.watch(teamMembersProvider);
-    final locations = ref.watch(locationsProvider);
-    final sessions = ref.watch(sessionsProvider);
-    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
+    // The open visits, and nothing else: each row carries the member and the location it prints, so
+    // this board holds no copy of the roster, the sessions or the locations to look ids up in.
+    final openVisits = ref.watch(openAttendanceProvider);
 
     final List<CheckedInMember> checkedInList = [];
 
-    for (final ms in teamMemberSessions.values) {
-      if (ms.checkOutTime != null) {
-        continue;
-      }
-
-      final teamMember = teamMembers[ms.teamMemberId];
-      if (teamMember == null) continue;
-
-      final session = sessions[ms.sessionId];
-      final location = session != null ? locations[session.locationId] : null;
-      if (location == null) continue;
+    for (final ms in openVisits.values) {
+      final teamMember = ms.teamMember;
+      final location = ms.session?.location;
+      if (teamMember == null || location == null) continue;
 
       checkedInList.add(CheckedInMember(location: location, timeIn: ms.checkInTime, teamMember: teamMember));
     }

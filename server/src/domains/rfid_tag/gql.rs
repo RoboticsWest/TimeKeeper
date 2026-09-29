@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::auth::auth_helpers::require_permission;
 use crate::auth::permissions::PermissionLevel;
-use crate::events::{ChangeOperation, EVENT_BUS};
+use crate::events::{ChangeOperation, EVENT_BUS, resolve_once};
 use crate::gql_common::Change;
 
 use super::logic::RfidTagLogic;
@@ -76,9 +76,13 @@ impl RfidTagSubscription {
       let logic = logic.clone();
       async move {
         let change = change.ok()?;
-        let data = match change.operation {
-          ChangeOperation::Delete => None,
-          _ => logic.get(change.id.parse().ok()?).await.ok().flatten(),
+        // A delete carries no row. Anything else is fetched once per event rather than once per
+        // subscriber - see `resolve_once`.
+        let data = if change.operation == ChangeOperation::Delete {
+          None
+        } else {
+          let id = change.id.parse().ok()?;
+          resolve_once(&change, || async move { logic.get(id).await.ok().flatten() }).await
         };
         Some(Change { operation: change.operation, id: ID(change.id), data })
       }

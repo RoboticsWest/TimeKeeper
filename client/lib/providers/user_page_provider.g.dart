@@ -44,7 +44,7 @@ final class UserPageProvider extends $AsyncNotifierProvider<UserPage, PagedResul
   UserPage create() => UserPage();
 }
 
-String _$userPageHash() => r'e9d6cd2d603b2851ecd22b25c326982ac57b3cf6';
+String _$userPageHash() => r'9ebb7132e3ea1413d09c1b57c65e3a76c1879e83';
 
 /// A paged, filtered slice of the admin users table, ordered by username.
 ///

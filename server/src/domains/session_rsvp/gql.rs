@@ -4,7 +4,7 @@ use async_graphql::{Context, Error, ID, Object, Result, Subscription};
 use futures_util::{Stream, StreamExt};
 use tokio_stream::wrappers::BroadcastStream;
 
-use crate::events::{ChangeOperation, EVENT_BUS};
+use crate::events::{ChangeOperation, EVENT_BUS, resolve_once};
 use crate::gql_common::Change;
 
 use super::logic::SessionRsvpLogic;
@@ -42,9 +42,18 @@ impl SessionRsvpSubscription {
       let logic = logic.clone();
       async move {
         let change = change.ok()?;
-        let data = match change.operation {
-          ChangeOperation::Delete => None,
-          _ => logic.get_all().await.ok()?.into_iter().find(|r| r.id.to_string() == change.id),
+        // No get-by-id on this repository, so finding the row means reading the table. Sharing the
+        // result across subscribers at least makes that once per event rather than once per
+        // connected client.
+        let data = if change.operation == ChangeOperation::Delete {
+          None
+        } else {
+          let id = change.id.clone();
+          resolve_once(
+            &change,
+            || async move { logic.get_all().await.ok()?.into_iter().find(|r| r.id.to_string() == id) },
+          )
+          .await
         };
         Some(Change { operation: change.operation, id: ID(change.id), data })
       }

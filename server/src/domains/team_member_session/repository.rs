@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use diesel::dsl::sql;
+use diesel::dsl::{count_distinct, count_star, sql};
 use diesel::prelude::*;
-use diesel::sql_types::Timestamptz;
+use diesel::sql_types::{BigInt, Timestamptz};
 use diesel_async::RunQueryDsl;
 use uuid::Uuid;
 
@@ -11,7 +11,7 @@ use database::{
   schema::{sessions, team_member_sessions, team_members},
 };
 
-use super::model::TeamMemberSession;
+use super::model::{AttendanceSummary, SessionAttendanceCount, TeamMemberSession};
 
 /// Narrows an attendance query. Every field is optional; an empty list means "no constraint"
 /// rather than "match nothing", which is what a UI with no chips selected means.
@@ -88,6 +88,19 @@ macro_rules! filtered_attendance {
 
 #[async_trait]
 pub trait TeamMemberSessionRepository: Send + Sync {
+  /// Fetches many attendance rows by id in one statement, for the GraphQL data loaders.
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberSession>>;
+
+  /// Fetches every row whose `session_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_session_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberSession>>;
+  /// Fetches every row whose `team_member_id` is in `ids`, in one statement.
+  ///
+  /// Exists for the GraphQL data loaders behind the has-many relationship fields: resolving them
+  /// per parent row would be the N+1 problem one level down.
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberSession>>;
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<TeamMemberSession>>;
   async fn get_all(&self) -> anyhow::Result<Vec<TeamMemberSession>>;
   /// All session check-in records for a given team member (e.g. to check if they're already
@@ -95,6 +108,28 @@ pub trait TeamMemberSessionRepository: Send + Sync {
   async fn get_by_member_id(&self, team_member_id: Uuid) -> anyhow::Result<Vec<TeamMemberSession>>;
   /// All team members checked into a given session.
   async fn get_by_session_id(&self, session_id: Uuid) -> anyhow::Result<Vec<TeamMemberSession>>;
+
+  /// How many people a session has seen, and how many are still in it.
+  ///
+  /// Grouped in SQL for the sessions asked about, so the Sessions table and the kiosk's counters
+  /// stop needing the whole attendance table in memory to count rows in it.
+  async fn counts_by_session(&self, session_ids: &[Uuid]) -> anyhow::Result<Vec<SessionAttendanceCount>>;
+
+  /// Total attendance rows and how many distinct members they cover.
+  async fn summary(&self) -> anyhow::Result<AttendanceSummary>;
+
+  /// When this member last checked in or out, or None if they never have.
+  ///
+  /// The kiosk's scan debounce asks this. It used to answer it by scanning a client-side copy of
+  /// every attendance row ever recorded.
+  async fn last_activity_for_member(&self, team_member_id: Uuid) -> anyhow::Result<Option<DateTime<Utc>>>;
+
+  /// Every visit that has not been checked out of yet.
+  ///
+  /// Bounded by how many people are in the building, not by how long the club has existed, which
+  /// is what makes it safe to hold client-side. The `team_member_sessions_open_idx` partial index
+  /// from `0010` covers exactly this predicate, so the read stays proportional to the answer.
+  async fn get_open(&self) -> anyhow::Result<Vec<TeamMemberSession>>;
   async fn add(
     &self,
     team_member_id: Uuid,
@@ -111,7 +146,11 @@ pub trait TeamMemberSessionRepository: Send + Sync {
     check_out_time: Option<DateTime<Utc>>,
   ) -> anyhow::Result<Option<TeamMemberSession>>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  ///
+  /// The count is reported because the callers are "Clear All" buttons that tell the operator what
+  /// they just destroyed, and it comes free from the statement.
+  async fn clear(&self) -> anyhow::Result<usize>;
 
   /// One page of attendance matching `filter`, newest check-in first, with the total number of
   /// matching rows so a pager can size itself.
@@ -135,6 +174,48 @@ impl PgTeamMemberSessionRepository {
 
 #[async_trait]
 impl TeamMemberSessionRepository for PgTeamMemberSessionRepository {
+  async fn get_many(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberSession>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      team_member_sessions::table
+        .filter(team_member_sessions::id.eq_any(ids.to_vec()))
+        .select(TeamMemberSession::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
+  async fn get_many_by_session_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberSession>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      team_member_sessions::table
+        .filter(team_member_sessions::session_id.eq_any(ids.to_vec()))
+        .select(TeamMemberSession::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
+  async fn get_many_by_team_member_ids(&self, ids: &[Uuid]) -> anyhow::Result<Vec<TeamMemberSession>> {
+    if ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    Ok(
+      team_member_sessions::table
+        .filter(team_member_sessions::team_member_id.eq_any(ids.to_vec()))
+        .select(TeamMemberSession::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
   async fn get(&self, id: Uuid) -> anyhow::Result<Option<TeamMemberSession>> {
     let mut conn = self.pool.get().await?;
     Ok(
@@ -172,6 +253,67 @@ impl TeamMemberSessionRepository for PgTeamMemberSessionRepository {
         .load(&mut conn)
         .await?,
     )
+  }
+
+  async fn get_open(&self) -> anyhow::Result<Vec<TeamMemberSession>> {
+    let mut conn = self.pool.get().await?;
+    Ok(
+      team_member_sessions::table
+        .filter(team_member_sessions::check_out_time.is_null())
+        .order((team_member_sessions::check_in_time.desc(), team_member_sessions::id.desc()))
+        .select(TeamMemberSession::as_select())
+        .load(&mut conn)
+        .await?,
+    )
+  }
+
+  async fn counts_by_session(&self, session_ids: &[Uuid]) -> anyhow::Result<Vec<SessionAttendanceCount>> {
+    if session_ids.is_empty() {
+      return Ok(Vec::new());
+    }
+    let mut conn = self.pool.get().await?;
+    let rows: Vec<(Uuid, i64, i64)> = team_member_sessions::table
+      .filter(team_member_sessions::session_id.eq_any(session_ids.to_vec()))
+      .group_by(team_member_sessions::session_id)
+      .select((
+        team_member_sessions::session_id,
+        count_distinct(team_member_sessions::team_member_id),
+        // `FILTER` rather than a second query: one grouped pass answers both counters.
+        sql::<BigInt>("COUNT(*) FILTER (WHERE check_out_time IS NULL)"),
+      ))
+      .load(&mut conn)
+      .await?;
+
+    Ok(
+      rows
+        .into_iter()
+        .map(|(session_id, members, checked_in)| SessionAttendanceCount { session_id, members, checked_in })
+        .collect(),
+    )
+  }
+
+  async fn summary(&self) -> anyhow::Result<AttendanceSummary> {
+    let mut conn = self.pool.get().await?;
+    let (records, members): (i64, i64) = team_member_sessions::table
+      .select((count_star(), count_distinct(team_member_sessions::team_member_id)))
+      .first(&mut conn)
+      .await?;
+    Ok(AttendanceSummary { records, members })
+  }
+
+  async fn last_activity_for_member(&self, team_member_id: Uuid) -> anyhow::Result<Option<DateTime<Utc>>> {
+    let mut conn = self.pool.get().await?;
+    // Ordered by the same expression `team_member_sessions_last_activity_idx` covers, so this is
+    // one index lookup rather than a scan of the member's history.
+    let latest: Option<(DateTime<Utc>, Option<DateTime<Utc>>)> = team_member_sessions::table
+      .filter(team_member_sessions::team_member_id.eq(team_member_id))
+      .order(sql::<Timestamptz>("COALESCE(check_out_time, check_in_time)").desc())
+      .select((team_member_sessions::check_in_time, team_member_sessions::check_out_time))
+      .first(&mut conn)
+      .await
+      .optional()?;
+
+    Ok(latest.map(|(check_in, check_out)| check_out.unwrap_or(check_in)))
   }
 
   async fn add(
@@ -228,10 +370,9 @@ impl TeamMemberSessionRepository for PgTeamMemberSessionRepository {
     Ok(())
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     let mut conn = self.pool.get().await?;
-    diesel::delete(team_member_sessions::table).execute(&mut conn).await?;
-    Ok(())
+    Ok(diesel::delete(team_member_sessions::table).execute(&mut conn).await?)
   }
 
   async fn query_page(

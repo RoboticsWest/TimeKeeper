@@ -44,6 +44,12 @@ const _importAttendanceCsvMutation = r'''
   }
 ''';
 
+const _clearAttendanceMutation = r'''
+  mutation ClearAttendance {
+    clearAttendance
+  }
+''';
+
 @riverpod
 Stream<ChangeEvent<TeamMemberSession>> teamMemberSessionChanges(Ref ref) {
   final client = ref.watch(timeKeeperGraphQLClientProvider);
@@ -58,10 +64,27 @@ Stream<ChangeEvent<TeamMemberSession>> teamMemberSessionChanges(Ref ref) {
       );
 }
 
+/// The whole attendance table, keyed by id.
+///
+/// **Built on demand, not at login.** This table grows without bound — a season is tens of
+/// thousands of rows, several megabytes of JSON — and downloading it at startup was most of what
+/// made the app feel slow on a remote server. Only the things that genuinely need the history read
+/// it now: the statistics dashboard and the CSV export. Everything on a hot path
+/// ("is this member checked in?", "how many are in this session?") asks a bounded question
+/// instead, through [openAttendanceProvider] or the attendance count queries.
+///
+/// It subscribes to its own change stream rather than relying on a separate sync bridge: with the
+/// collection built lazily, a bridge that reached for `.notifier` on the first change event would
+/// have quietly re-downloaded the whole table on every client the moment anybody checked in.
 @Riverpod(keepAlive: true)
 class TeamMemberSessions extends _$TeamMemberSessions {
   @override
   Map<String, TeamMemberSession> build() {
+    ref.listen(
+      teamMemberSessionChangesProvider,
+      changeListener<TeamMemberSession>(apply: applyChange, refresh: refresh),
+    );
+
     // Re-seed whenever the client is rebuilt (endpoint, TLS or token changed).
     // Without this a fetch that failed at startup is never retried.
     ref.watch(timeKeeperGraphQLClientProvider);
@@ -98,6 +121,28 @@ class TeamMemberSessions extends _$TeamMemberSessions {
   Future<ApiCallResult> importAttendanceCsv(String csvData) =>
       _mutate(_importAttendanceCsvMutation, {'csvData': csvData});
 
+  /// Deletes every attendance records in one request, returning how many rows went.
+  ///
+  /// The views used to loop `delete(id)` over every row: one HTTP round trip and one change event
+  /// each, which on a link with real latency made clearing a season's data a minutes-long sequence
+  /// of requests that also drowned every connected client in deltas.
+  Future<ApiResult<int>> clearAll() => _mutateCount(_clearAttendanceMutation, 'clearAttendance');
+
+  /// Runs a mutation whose payload is a plain row count.
+  Future<ApiResult<int>> _mutateCount(String document, String rootField, [Map<String, dynamic>? variables]) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(document: gql(document), variables: variables ?? const {}, fetchPolicy: FetchPolicy.noCache),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiFailure(userMessage: message);
+    }
+    return ApiSuccess((result.data?[rootField] as num?)?.toInt() ?? 0);
+  }
+
   Future<ApiCallResult> _mutate(String document, Map<String, dynamic> variables) async {
     final client = ref.read(timeKeeperGraphQLClientProvider);
     final result = await client.mutate(
@@ -111,15 +156,4 @@ class TeamMemberSessions extends _$TeamMemberSessions {
     }
     return const ApiCallResult(success: true);
   }
-}
-
-@Riverpod(keepAlive: true)
-void teamMemberSessionsSync(Ref ref) {
-  ref.listen(
-    teamMemberSessionChangesProvider,
-    changeListener<TeamMemberSession>(
-      apply: (change) => ref.read(teamMemberSessionsProvider.notifier).applyChange(change),
-      refresh: () => ref.read(teamMemberSessionsProvider.notifier).refresh(),
-    ),
-  );
 }

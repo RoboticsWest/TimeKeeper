@@ -60,7 +60,11 @@ pub trait TeamMemberLogic: Send + Sync {
     quick_pin: Option<&str>,
   ) -> anyhow::Result<TeamMember>;
   async fn remove(&self, id: Uuid) -> anyhow::Result<()>;
-  async fn clear(&self) -> anyhow::Result<()>;
+  /// Deletes every row, returning how many there were.
+  async fn clear(&self) -> anyhow::Result<usize>;
+
+  /// Deletes every member of the given types, returning how many there were.
+  async fn clear_by_member_types(&self, member_types: &[String]) -> anyhow::Result<usize>;
   /// Parses a CSV upload (`FIRST_NAME,LAST_NAME,DISPLAY_NAME,RFID_TAG,DISCORD_ID`) and adds
   /// every row not already present (matched by first + last name) as a team member of
   /// `member_type` ("student"/"mentor"), assigning the RFID tag column if present. Used by
@@ -154,8 +158,12 @@ impl<R: TeamMemberRepository> TeamMemberLogic for DefaultTeamMemberLogic<R> {
     self.repo.remove(id).await
   }
 
-  async fn clear(&self) -> anyhow::Result<()> {
+  async fn clear(&self) -> anyhow::Result<usize> {
     self.repo.clear().await
+  }
+
+  async fn clear_by_member_types(&self, member_types: &[String]) -> anyhow::Result<usize> {
+    self.repo.clear_by_member_types(member_types).await
   }
 
   async fn import_csv(&self, csv: &str, member_type: &str) -> anyhow::Result<()> {

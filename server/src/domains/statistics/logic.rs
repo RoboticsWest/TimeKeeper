@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use chrono::{Datelike, Utc};
 use uuid::Uuid;
 
-use crate::domains::session::SessionRepository;
+use crate::domains::session::{Session, SessionRepository};
 use crate::domains::settings::SettingsRepository;
 use crate::domains::team_member::{TeamMember, TeamMemberRepository};
 use crate::domains::team_member_session::{TeamMemberSession, TeamMemberSessionRepository};
@@ -139,67 +139,89 @@ impl StatisticsLogic for DefaultStatisticsLogic {
       None => settings.leaderboard_member_types.into_iter().flatten().collect(),
     };
 
-    let sessions: HashMap<Uuid, _> = self.sessions.get_all().await?.into_iter().map(|s| (s.id, s)).collect();
-    let team_members: HashMap<Uuid, TeamMember> =
-      self.team_members.get_all().await?.into_iter().map(|m| (m.id, m)).collect();
-    let member_sessions = self.team_member_sessions.get_all().await?;
+    // Concurrently: three independent whole-table reads, so the request costs one round trip's
+    // latency rather than three.
+    let (sessions, members, member_sessions) =
+      tokio::try_join!(self.sessions.get_all(), self.team_members.get_all(), self.team_member_sessions.get_all())?;
 
-    let now_secs = Utc::now().timestamp();
-    let week_start = week_start_secs();
-    let week_end = week_start + 7 * 24 * 60 * 60;
-
-    let mut accumulators: HashMap<Uuid, MemberAccumulator> = HashMap::new();
-
-    for ms in &member_sessions {
-      let Some(session) = sessions.get(&ms.session_id) else { continue };
-
-      let session_start_secs = session.start_time.timestamp();
-      let session_end_secs = session.end_time.timestamp();
-      let is_active = !session.finished;
-      let is_this_week = session_start_secs >= week_start && session_start_secs < week_end;
-
-      let (regular, overtime) = compute_hours(ms, session_start_secs, session_end_secs, now_secs);
-
-      accumulators.entry(ms.team_member_id).or_insert_with(MemberAccumulator::new).add(
-        regular,
-        overtime,
-        is_active,
-        is_this_week,
-      );
-    }
-
-    let mut entries: Vec<LeaderboardEntry> = accumulators
-      .into_iter()
-      .filter_map(|(member_id, mut acc)| {
-        let member = team_members.get(&member_id)?.clone();
-
-        if !member_types.is_empty() && !member_types.contains(&member.member_type) {
-          return None;
-        }
-
-        if !show_overtime {
-          combine_overtime(&mut acc.active_session);
-          combine_overtime(&mut acc.this_week);
-          combine_overtime(&mut acc.all_time);
-        }
-
-        let total_secs = acc.all_time.regular_secs + acc.all_time.overtime_secs;
-
-        Some(LeaderboardEntry {
-          team_member_id: member_id,
-          team_member: member,
-          active_session: acc.active_session,
-          this_week: acc.this_week,
-          all_time: acc.all_time,
-          total_secs,
-        })
-      })
-      .collect();
-
-    entries.sort_by(|a, b| b.total_secs.partial_cmp(&a.total_secs).unwrap_or(std::cmp::Ordering::Equal));
-
-    Ok(entries)
+    Ok(build_leaderboard(&sessions, &members, &member_sessions, &member_types, show_overtime))
   }
+}
+
+/// Ranks the leaderboard from data already in hand.
+///
+/// Split out of [StatisticsLogic::get_leaderboard] so a caller that has *already* loaded these
+/// three tables can rank without reading them again. The accolades pass is exactly that caller:
+/// it needs every member's rank, and asking the logic for it re-read the whole of sessions,
+/// team_members and team_member_sessions — the largest table in the database — a second time on
+/// every load of the achievements page.
+pub fn build_leaderboard(
+  sessions: &[Session],
+  team_members: &[TeamMember],
+  member_sessions: &[TeamMemberSession],
+  member_types: &[String],
+  show_overtime: bool,
+) -> Vec<LeaderboardEntry> {
+  // Slices rather than maps at the boundary: both callers hold the rows as loaded, and the
+  // lookups below are this function's business rather than its callers'.
+  let sessions: HashMap<Uuid, &Session> = sessions.iter().map(|s| (s.id, s)).collect();
+  let team_members: HashMap<Uuid, &TeamMember> = team_members.iter().map(|m| (m.id, m)).collect();
+
+  let now_secs = Utc::now().timestamp();
+  let week_start = week_start_secs();
+  let week_end = week_start + 7 * 24 * 60 * 60;
+
+  let mut accumulators: HashMap<Uuid, MemberAccumulator> = HashMap::new();
+
+  for ms in member_sessions {
+    let Some(session) = sessions.get(&ms.session_id) else { continue };
+
+    let session_start_secs = session.start_time.timestamp();
+    let session_end_secs = session.end_time.timestamp();
+    let is_active = !session.finished;
+    let is_this_week = session_start_secs >= week_start && session_start_secs < week_end;
+
+    let (regular, overtime) = compute_hours(ms, session_start_secs, session_end_secs, now_secs);
+
+    accumulators.entry(ms.team_member_id).or_insert_with(MemberAccumulator::new).add(
+      regular,
+      overtime,
+      is_active,
+      is_this_week,
+    );
+  }
+
+  let mut entries: Vec<LeaderboardEntry> = accumulators
+    .into_iter()
+    .filter_map(|(member_id, mut acc)| {
+      let member = (*team_members.get(&member_id)?).clone();
+
+      if !member_types.is_empty() && !member_types.contains(&member.member_type) {
+        return None;
+      }
+
+      if !show_overtime {
+        combine_overtime(&mut acc.active_session);
+        combine_overtime(&mut acc.this_week);
+        combine_overtime(&mut acc.all_time);
+      }
+
+      let total_secs = acc.all_time.regular_secs + acc.all_time.overtime_secs;
+
+      Some(LeaderboardEntry {
+        team_member_id: member_id,
+        team_member: member,
+        active_session: acc.active_session,
+        this_week: acc.this_week,
+        all_time: acc.all_time,
+        total_secs,
+      })
+    })
+    .collect();
+
+  entries.sort_by(|a, b| b.total_secs.partial_cmp(&a.total_secs).unwrap_or(std::cmp::Ordering::Equal));
+
+  entries
 }
 
 /// Recording of the statistics that cannot be derived from attendance rows.

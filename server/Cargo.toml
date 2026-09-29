@@ -6,7 +6,8 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.101"
 base64 = "0.22"
-async-graphql = { version = "7", features = ["chrono", "uuid"] }
+# `dataloader` batches the schema's nested relationship lookups - see `src/loaders.rs`.
+async-graphql = { version = "7", features = ["chrono", "uuid", "dataloader"] }
 async-graphql-axum = "7"
 async-stream = "0.3.6"
 async-trait = "0.1"

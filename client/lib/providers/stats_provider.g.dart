@@ -152,7 +152,7 @@ final class StatsScopeProvider extends $FunctionalProvider<StatsScope, StatsScop
   }
 }
 
-String _$statsScopeHash() => r'aa4bdcc083afdaf268ddce7fd5132162ccbf0ea6';
+String _$statsScopeHash() => r'0ee238a124bd9a2793e8346099702707b73fdd0f';
 
 /// Filters sessions and member sessions by the query, then indexes them.
 
@@ -332,7 +332,7 @@ final class MemberHoursRowsProvider
   }
 }
 
-String _$memberHoursRowsHash() => r'fb600b7f14003ec17fa8014c245d024df69d10ef';
+String _$memberHoursRowsHash() => r'aecf0dccf69c4e3d63de39a206937976a7092e00';
 
 /// Per-member totals, sorted by total time descending.
 
@@ -855,7 +855,7 @@ final class DayDetailProvider extends $FunctionalProvider<List<DayMemberRow>, Li
   }
 }
 
-String _$dayDetailHash() => r'681aca39c4ca3e471d33210d029ab1772b552672';
+String _$dayDetailHash() => r'673872637128462febcafbf19302a06f5035fc3c';
 
 /// Per-member breakdown for a drilled-into bucket.
 

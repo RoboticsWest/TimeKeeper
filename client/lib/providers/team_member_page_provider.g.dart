@@ -44,7 +44,7 @@ final class TeamMemberPageProvider extends $AsyncNotifierProvider<TeamMemberPage
   TeamMemberPage create() => TeamMemberPage();
 }
 
-String _$teamMemberPageHash() => r'8f241fd1c8959ca3c5ab163bdd8425f809ed419b';
+String _$teamMemberPageHash() => r'd161c6d1455abc732c0cd8bd55c34bea646d9653';
 
 /// A paged, filtered slice of the roster, ordered by name.
 ///

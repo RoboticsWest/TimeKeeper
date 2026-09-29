@@ -5,7 +5,7 @@ import 'package:time_keeper/hooks/use_debounced_text.dart';
 import 'package:time_keeper/providers/location_provider.dart';
 import 'package:time_keeper/providers/session_page_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/sessions/session_calendar.dart';
 import 'package:time_keeper/views/sessions/session_stats.dart';
@@ -20,9 +20,9 @@ import 'package:time_keeper/widgets/tables/table_filter.dart';
 class SessionView extends HookConsumerWidget {
   const SessionView({super.key});
 
-  void _showClearDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> sessions) {
-    final ids = sessions.keys.toList();
-    if (ids.isEmpty) {
+  /// Deletes every session in one request. Their attendance, notifications and RSVPs cascade.
+  void _showClearDialog(BuildContext context, WidgetRef ref, int total) {
+    if (total == 0) {
       SnackBarDialog.info(message: 'No sessions to delete').show(context);
       return;
     }
@@ -31,27 +31,27 @@ class SessionView extends HookConsumerWidget {
       title: 'Clear All Sessions',
       message: Text(
         'Are you sure you want to delete all sessions? '
-        '(${ids.length} ${ids.length == 1 ? 'session' : 'sessions'})',
+        '($total ${total == 1 ? 'session' : 'sessions'}, along with their attendance and reminders)',
       ),
       confirmText: 'Delete',
       onConfirmAsync: () async {
-        final notifier = ref.read(sessionsProvider.notifier);
-        for (final id in ids) {
-          await notifier.delete(id);
+        final result = await ref.read(sessionsProvider.notifier).clearAll();
+        if (!context.mounted) return;
+        switch (result) {
+          case ApiSuccess(data: final deleted):
+            SnackBarDialog.success(message: 'Deleted $deleted ${deleted == 1 ? 'session' : 'sessions'}').show(context);
+          case ApiFailure(userMessage: final message):
+            SnackBarDialog.error(message: message).show(context);
         }
       },
-      showResultDialog: true,
-      successMessage: Text('Deleted ${ids.length} sessions'),
     ).show(context);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(sessionsSyncProvider);
-    ref.watch(teamMemberSessionsSyncProvider);
     ref.watch(locationsSyncProvider);
     final sessions = ref.watch(sessionsProvider);
-    final teamMemberSessions = ref.watch(teamMemberSessionsProvider);
     final locations = ref.watch(locationsProvider);
     final theme = Theme.of(context);
 
@@ -120,7 +120,7 @@ class SessionView extends HookConsumerWidget {
               Text('Sessions', style: theme.textTheme.headlineMedium),
               const Spacer(),
               OutlinedButton.icon(
-                onPressed: () => _showClearDialog(context, ref, sessions),
+                onPressed: () => _showClearDialog(context, ref, sessions.length),
                 icon: Icon(Icons.delete_sweep, size: 18, color: theme.colorScheme.error),
                 label: Text('Clear All', style: TextStyle(color: theme.colorScheme.error)),
                 style: OutlinedButton.styleFrom(side: BorderSide(color: theme.colorScheme.error)),
@@ -173,7 +173,7 @@ class SessionView extends HookConsumerWidget {
           ],
 
           // Stats
-          SessionStats(sessions: sessions, teamMemberSessions: teamMemberSessions),
+          SessionStats(sessions: sessions),
           const SizedBox(height: 16),
 
           // Filters. Shown in both modes: they narrow the one list below, and hiding them in

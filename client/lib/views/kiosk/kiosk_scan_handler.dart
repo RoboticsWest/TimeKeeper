@@ -9,7 +9,8 @@ import 'package:time_keeper/providers/rfid_tag_provider.dart';
 import 'package:time_keeper/providers/scan_debounce_provider.dart';
 import 'package:time_keeper/providers/session_provider.dart';
 import 'package:time_keeper/providers/team_member_provider.dart';
-import 'package:time_keeper/providers/team_member_session_provider.dart';
+import 'package:time_keeper/providers/graphql_client_provider.dart';
+import 'package:time_keeper/providers/open_attendance_provider.dart';
 import 'package:time_keeper/utils/api_result.dart';
 import 'package:time_keeper/utils/formatting.dart';
 import 'package:time_keeper/views/kiosk/link_card_dialog.dart';
@@ -57,22 +58,14 @@ Future<void> handleKioskScan({required String input, required BuildContext conte
 
   _log.i('Scan matched member: $name');
 
-  // Debounce: prevent accidental rapid check-in/check-out toggles
+  // Debounce: prevent accidental rapid check-in/check-out toggles. The member's last activity is
+  // asked of the server, which answers it from an index — the kiosk used to hold every attendance
+  // row ever recorded purely to compute this one timestamp.
   final debounceMins = ref.read(scanDebounceMinsProvider);
   if (debounceMins > 0) {
-    final sessions = ref.read(teamMemberSessionsProvider);
     final debounceWindow = Duration(minutes: debounceMins);
+    final mostRecent = await fetchLastAttendanceActivity(ref.read(timeKeeperGraphQLClientProvider), memberId);
     final now = DateTime.now();
-
-    // Find the most recent check-in or check-out for this member
-    DateTime? mostRecent;
-    for (final ms in sessions.values) {
-      if (ms.teamMemberId != memberId) continue;
-      final checkIn = ms.checkInTime;
-      if (mostRecent == null || checkIn.isAfter(mostRecent)) mostRecent = checkIn;
-      final checkOut = ms.checkOutTime;
-      if (checkOut != null && checkOut.isAfter(mostRecent)) mostRecent = checkOut;
-    }
 
     if (mostRecent != null && now.difference(mostRecent) < debounceWindow) {
       final remaining = debounceWindow - now.difference(mostRecent);

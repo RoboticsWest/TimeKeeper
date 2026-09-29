@@ -39,6 +39,12 @@ const _deleteLocationMutation = r'''
   }
 ''';
 
+const _clearLocationsMutation = r'''
+  mutation ClearLocations {
+    clearLocations
+  }
+''';
+
 @riverpod
 Stream<ChangeEvent<Location>> locationChanges(Ref ref) {
   final client = ref.watch(timeKeeperGraphQLClientProvider);
@@ -86,6 +92,28 @@ class Locations extends _$Locations {
       _mutate(_updateLocationMutation, {'id': id, 'location': location});
 
   Future<ApiCallResult> delete(String id) => _mutate(_deleteLocationMutation, {'id': id});
+
+  /// Deletes every locations in one request, returning how many rows went.
+  ///
+  /// The views used to loop `delete(id)` over every row: one HTTP round trip and one change event
+  /// each, which on a link with real latency made clearing a season's data a minutes-long sequence
+  /// of requests that also drowned every connected client in deltas.
+  Future<ApiResult<int>> clearAll() => _mutateCount(_clearLocationsMutation, 'clearLocations');
+
+  /// Runs a mutation whose payload is a plain row count.
+  Future<ApiResult<int>> _mutateCount(String document, String rootField, [Map<String, dynamic>? variables]) async {
+    final client = ref.read(timeKeeperGraphQLClientProvider);
+    final result = await client.mutate(
+      MutationOptions(document: gql(document), variables: variables ?? const {}, fetchPolicy: FetchPolicy.noCache),
+    );
+    if (result.hasException) {
+      final message = result.exception!.graphqlErrors.isNotEmpty
+          ? result.exception!.graphqlErrors.map((e) => e.message).join('; ')
+          : result.exception.toString();
+      return ApiFailure(userMessage: message);
+    }
+    return ApiSuccess((result.data?[rootField] as num?)?.toInt() ?? 0);
+  }
 
   Future<ApiCallResult> _mutate(String document, Map<String, dynamic> variables) async {
     final client = ref.read(timeKeeperGraphQLClientProvider);

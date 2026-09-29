@@ -1,3 +1,4 @@
+import 'package:time_keeper/models/location.dart';
 import 'package:time_keeper/utils/time_utils.dart';
 
 class Session {
@@ -5,6 +6,10 @@ class Session {
   final DateTime startTime;
   final DateTime endTime;
   final String locationId;
+
+  /// Where the session is held, when the query asked for it. Null when only `locationId` was
+  /// requested.
+  final Location? location;
   final bool finished;
 
   /// When the session really began: the first check-in. Null until somebody arrives.
@@ -23,6 +28,7 @@ class Session {
     required this.startTime,
     required this.endTime,
     required this.locationId,
+    this.location,
     required this.finished,
     this.actualStartTime,
     this.actualEndTime,
@@ -69,6 +75,7 @@ class Session {
       startTime: parseServerTime(json['startTime'] as String),
       endTime: parseServerTime(json['endTime'] as String),
       locationId: json['locationId'] as String,
+      location: json['location'] == null ? null : Location.fromJson(json['location'] as Map<String, dynamic>),
       finished: json['finished'] as bool,
       actualStartTime: parseServerTimeOrNull(json['actualStartTime']),
       actualEndTime: parseServerTimeOrNull(json['actualEndTime']),

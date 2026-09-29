@@ -47,7 +47,7 @@ final class LocationPageProvider extends $AsyncNotifierProvider<LocationPage, Pa
   LocationPage create() => LocationPage();
 }
 
-String _$locationPageHash() => r'84c581baddd9a4a69ddbb35d202cc84677f309a0';
+String _$locationPageHash() => r'ef983725d085c515aa053f1fdf923dcb7c5c7155';
 
 /// A paged, filtered slice of the locations table, ordered by name.
 ///

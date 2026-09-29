@@ -9,7 +9,7 @@ use crate::auth::auth_helpers::require_permission;
 use crate::auth::jwt::Auth;
 use crate::auth::permissions::{PermissionLevel, Role, to_claim_strings};
 use crate::auth::permissions_repository::PermissionsRepository;
-use crate::events::{ChangeOperation, EVENT_BUS};
+use crate::events::{ChangeOperation, EVENT_BUS, resolve_once};
 use crate::gql_common::{Change, Page, page_bounds};
 
 use super::logic::{DEFAULT_ADMIN_USERNAME, UserLogic};
@@ -211,12 +211,17 @@ impl UserSubscription {
       let logic = logic.clone();
       async move {
         let change = change.ok()?;
-        let data = match change.operation {
-          ChangeOperation::Delete => None,
-          _ => match logic.get(change.id.parse().ok()?).await.ok().flatten() {
+        // Fetched once per event rather than once per subscriber - see `resolve_once`. The
+        // built-in admin is filtered out *after* the shared fetch, so hiding it from this stream
+        // does not cost the other subscribers their cached row.
+        let data = if change.operation == ChangeOperation::Delete {
+          None
+        } else {
+          let id = change.id.parse().ok()?;
+          match resolve_once(&change, || async move { logic.get(id).await.ok().flatten() }).await {
             Some(user) if user.username != DEFAULT_ADMIN_USERNAME => Some(user),
             _ => None,
-          },
+          }
         };
         Some(Change { operation: change.operation, id: ID(change.id), data })
       }
