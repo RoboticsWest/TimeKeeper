@@ -114,7 +114,11 @@ final class SessionAttendanceCountsFamily extends $Family
 /// Table-wide attendance totals, for the KPI tiles that only ever showed a count.
 ///
 /// One aggregate row instead of the whole table: the Sessions page's "Unique Members" tile used to
-/// be a `Set` built by walking every attendance record the client had downloaded.
+/// be a `Set` built by walking every attendance record the client had downloaded.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
 
 @ProviderFor(attendanceSummary)
 final attendanceSummaryProvider = AttendanceSummaryProvider._();
@@ -122,7 +126,11 @@ final attendanceSummaryProvider = AttendanceSummaryProvider._();
 /// Table-wide attendance totals, for the KPI tiles that only ever showed a count.
 ///
 /// One aggregate row instead of the whole table: the Sessions page's "Unique Members" tile used to
-/// be a `Set` built by walking every attendance record the client had downloaded.
+/// be a `Set` built by walking every attendance record the client had downloaded.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
 
 final class AttendanceSummaryProvider
     extends $FunctionalProvider<AsyncValue<AttendanceSummary>, AttendanceSummary, FutureOr<AttendanceSummary>>
@@ -130,14 +138,18 @@ final class AttendanceSummaryProvider
   /// Table-wide attendance totals, for the KPI tiles that only ever showed a count.
   ///
   /// One aggregate row instead of the whole table: the Sessions page's "Unique Members" tile used to
-  /// be a `Set` built by walking every attendance record the client had downloaded.
+  /// be a `Set` built by walking every attendance record the client had downloaded.///
+  /// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+  /// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+  /// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+  /// the debounce window.
   AttendanceSummaryProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'attendanceSummaryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -155,7 +167,7 @@ final class AttendanceSummaryProvider
   }
 }
 
-String _$attendanceSummaryHash() => r'e0beb916073411cd80dc89f1add5b94063a41517';
+String _$attendanceSummaryHash() => r'311b36e700af34e600040a81787e3cf88b2844e2';
 
 /// One session's attendance rows, newest activity first.
 ///

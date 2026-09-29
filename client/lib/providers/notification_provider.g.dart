@@ -75,7 +75,7 @@ final class NotificationsProvider extends $NotifierProvider<Notifications, Map<S
   }
 }
 
-String _$notificationsHash() => r'264b8f5337700f050d1759a92762a4b58fb5be85';
+String _$notificationsHash() => r'1f2f61b89bd429f65d83f7db01ee6dfe1a497070';
 
 abstract class _$Notifications extends $Notifier<Map<String, Notification>> {
   Map<String, Notification> build();

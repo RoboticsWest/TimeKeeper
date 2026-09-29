@@ -14,7 +14,11 @@ part of 'accolades_provider.dart';
 /// patched from a change delta — any attendance or roster change invalidates the whole thing.
 /// [aggregateRevisionProvider] is what makes a badge appear the moment somebody earns it rather
 /// than whenever the page next happens to be rebuilt; see the note there for why watching the
-/// collections directly instead cost four recomputations per visit.
+/// collections directly instead cost four recomputations per visit.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
 
 @ProviderFor(memberAccolades)
 final memberAccoladesProvider = MemberAccoladesProvider._();
@@ -25,7 +29,11 @@ final memberAccoladesProvider = MemberAccoladesProvider._();
 /// patched from a change delta — any attendance or roster change invalidates the whole thing.
 /// [aggregateRevisionProvider] is what makes a badge appear the moment somebody earns it rather
 /// than whenever the page next happens to be rebuilt; see the note there for why watching the
-/// collections directly instead cost four recomputations per visit.
+/// collections directly instead cost four recomputations per visit.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
 
 final class MemberAccoladesProvider
     extends
@@ -37,14 +45,18 @@ final class MemberAccoladesProvider
   /// patched from a change delta — any attendance or roster change invalidates the whole thing.
   /// [aggregateRevisionProvider] is what makes a badge appear the moment somebody earns it rather
   /// than whenever the page next happens to be rebuilt; see the note there for why watching the
-  /// collections directly instead cost four recomputations per visit.
+  /// collections directly instead cost four recomputations per visit.///
+  /// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+  /// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+  /// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+  /// the debounce window.
   MemberAccoladesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'memberAccoladesProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -63,4 +75,4 @@ final class MemberAccoladesProvider
   }
 }
 
-String _$memberAccoladesHash() => r'4e124cf3f1df3fd0601a91e65a49dc9526fcf069';
+String _$memberAccoladesHash() => r'f32dcc84406324595830224906b4d6f9e62c0518';

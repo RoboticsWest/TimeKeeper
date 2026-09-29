@@ -69,7 +69,7 @@ final class UsersProvider extends $NotifierProvider<Users, Map<String, User>> {
   }
 }
 
-String _$usersHash() => r'8ccfad6a0049c31629356edbed10bb8bbd424e5a';
+String _$usersHash() => r'a560fa0c32fe363dfa57faaed250b7f1ec15740d';
 
 abstract class _$Users extends $Notifier<Map<String, User>> {
   Map<String, User> build();

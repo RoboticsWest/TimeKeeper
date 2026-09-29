@@ -13,7 +13,11 @@ part of 'statistics_provider.dart';
 /// Unlike the id-keyed collections this cannot be patched from a delta — it is an aggregate, so
 /// any change to its inputs invalidates the whole thing. [aggregateRevisionProvider] re-runs the
 /// query when they change; without it the leaderboard silently showed whatever was true when the
-/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.
+/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
 
 @ProviderFor(leaderboard)
 final leaderboardProvider = LeaderboardProvider._();
@@ -23,7 +27,11 @@ final leaderboardProvider = LeaderboardProvider._();
 /// Unlike the id-keyed collections this cannot be patched from a delta — it is an aggregate, so
 /// any change to its inputs invalidates the whole thing. [aggregateRevisionProvider] re-runs the
 /// query when they change; without it the leaderboard silently showed whatever was true when the
-/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.
+/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
 
 final class LeaderboardProvider
     extends
@@ -38,14 +46,18 @@ final class LeaderboardProvider
   /// Unlike the id-keyed collections this cannot be patched from a delta — it is an aggregate, so
   /// any change to its inputs invalidates the whole thing. [aggregateRevisionProvider] re-runs the
   /// query when they change; without it the leaderboard silently showed whatever was true when the
-  /// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.
+  /// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.///
+  /// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+  /// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+  /// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+  /// the debounce window.
   LeaderboardProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'leaderboardProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -64,4 +76,4 @@ final class LeaderboardProvider
   }
 }
 
-String _$leaderboardHash() => r'302a232175694b952384f88ffa8a745035c8d70b';
+String _$leaderboardHash() => r'b6191f7308ebbd030cd7dcb03a988906a4387a30';

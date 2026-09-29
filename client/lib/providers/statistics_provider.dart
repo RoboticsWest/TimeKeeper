@@ -25,8 +25,12 @@ const _leaderboardQuery = r'''
 /// Unlike the id-keyed collections this cannot be patched from a delta — it is an aggregate, so
 /// any change to its inputs invalidates the whole thing. [aggregateRevisionProvider] re-runs the
 /// query when they change; without it the leaderboard silently showed whatever was true when the
-/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.
-@riverpod
+/// page first loaded, which is the same "the UI doesn't update" failure as everywhere else.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
+@Riverpod(keepAlive: true)
 Future<List<LeaderboardEntry>> leaderboard(Ref ref) async {
   ref.watch(aggregateRevisionProvider);
   // The leaderboard's shape (overtime shown, which member types count) is a setting.

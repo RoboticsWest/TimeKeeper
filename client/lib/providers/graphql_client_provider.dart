@@ -79,6 +79,15 @@ class TimeKeeperGraphQLClient extends _$TimeKeeperGraphQLClient {
 
     logger.i('GraphQL client created: $httpScheme://$baseHost (TLS: $tls)');
 
+    // The cache is constructed because `GraphQLClient` requires one, and left unused: every read
+    // passes `FetchPolicy.noCache` on purpose.
+    //
+    // Not an oversight, and not worth "turning on". A cache hit under `cacheAndNetwork` makes
+    // `query()` return the cached result and *discard* the network response (see
+    // `QueryManager.query`) — the refresh only reaches the cache, never the caller. Getting the
+    // update would mean moving every read onto `watchQuery` and its rebroadcast stream. Meanwhile
+    // the collection and paged providers are `keepAlive`, so they already retain their last result
+    // for the session; a normalised cache would be a second copy of what Riverpod is holding.
     return GraphQLClient(link: link, cache: GraphQLCache());
   }
 }

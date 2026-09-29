@@ -74,8 +74,12 @@ class AttendanceSummary {
 /// Table-wide attendance totals, for the KPI tiles that only ever showed a count.
 ///
 /// One aggregate row instead of the whole table: the Sessions page's "Unique Members" tile used to
-/// be a `Set` built by walking every attendance record the client had downloaded.
-@riverpod
+/// be a `Set` built by walking every attendance record the client had downloaded.///
+/// `keepAlive` so navigating away and back does not recompute it. That is safe here precisely
+/// because [aggregateRevisionProvider] advances only when the data behind it actually changes —
+/// the result is retained, not cached-and-hoped-for, and a real change still invalidates it within
+/// the debounce window.
+@Riverpod(keepAlive: true)
 Future<AttendanceSummary> attendanceSummary(Ref ref) async {
   ref.watch(aggregateRevisionProvider);
 
